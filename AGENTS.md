@@ -574,3 +574,14 @@ comparison. Client preferences/Store scope remain in the shared active details
 preview. Keep the two-query/four-store seed budget and balance merchants.
 Cloud Build retains every gate and final authority with a bounded 1800s deadline;
 START/PASS elapsed diagnostics do not change exit handling or log preservation.
+
+
+## WR workspace
+
+`backend/wr.html` is the single WR page, served at `/wr.html` and linked from
+Admin Systems. `aesthetics/ui/wr.{js,css}` holds its layout and client logic;
+`docs/server/wr-store.mjs` stores idempotent, generation-checked leads privately
+per authenticated Admin. WR reads the existing Admin submission feed. Never mix
+accounts or expose private lead records. Run `tests/wr-store.mjs`,
+`tests/wr-ui.mjs`, container-contract, app-regression and the final
+aesthetic-authority gate. `docs/CLO3D-RESEARCH.md` is research only.

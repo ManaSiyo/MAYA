@@ -113,6 +113,8 @@ steps:
         node tests/message-stress.mjs
         node tests/founder-conversation-stress.mjs
         node tests/message-compose-ui.mjs
+        node tests/wr-store.mjs
+        node tests/wr-ui.mjs
         node tests/aesthetic-authority.mjs
   - id: Build server
     name: gcr.io/cloud-builders/docker

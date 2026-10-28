@@ -38,6 +38,7 @@ import { createOwnerCRM } from './owner-crm.mjs';
 import { createLeadAlerts, mountLeadAlertRoutes } from './lead-alerts.mjs';
 import { createBookingLinks } from './booking-link.mjs';
 import { jsonStore } from './crm-store.mjs';
+import { createWrStore } from './wr-store.mjs';
 import { createLeadStore, createLeadNoteStore } from './lead-store.mjs';
 import { BUILD_COMMIT } from './build-info.mjs';
 import crypto from 'node:crypto';
@@ -2110,6 +2111,17 @@ app.get('/api/pinterest/everywhere', requireAuthHeader, async (req, res) => {
     }
   }
   res.status(501).json({ error: 'not_available', partner: partnerNote || 'not tried', web: 'no key' });
+});
+
+// WR leads are private to the authenticated Admin account.
+const wrStore=createWrStore({read:gcsGet,write:gcsPut});
+app.get('/api/admin/wr/leads',requireAuthHeader,async(req,res)=>{
+ try{const user=await requireAdmin(req);res.set('Cache-Control','no-store');res.json({ok:true,leads:await wrStore.list(user.sub)});}
+ catch(e){res.status(e.status||503).json({error:e.status===401||e.status===403?'unauthorized':'WR leads unavailable'});}
+});
+app.post('/api/admin/wr/leads',requireAuthHeader,express.json({limit:'8kb'}),async(req,res)=>{
+ try{const user=await requireAdmin(req);res.set('Cache-Control','no-store');res.json({ok:true,lead:await wrStore.add(user.sub,req.body)});}
+ catch(e){res.status(e.status||503).json({error:e.status&&e.status<500?e.message:'WR lead could not be saved'});}
 });
 
 // GET /api/admin/submissions — every submission in MAYA's own store, newest

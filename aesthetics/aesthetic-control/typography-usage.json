@@ -14,12 +14,14 @@
     "aesthetics/ui/presentation-runtime.js",
     "aesthetics/ui/typography-controls.js",
     "aesthetics/ui/voice-preparation.js",
+    "aesthetics/ui/wr.js",
     "backend/backend.html",
     "backend/operations.html",
     "backend/privacy.html",
     "backend/status.html",
     "backend/terms.html",
     "backend/verify.html",
+    "backend/wr.html",
     "frontend/index.html"
   ],
   "categories": {
@@ -189,7 +191,7 @@
       }
     },
     "H2": {
-      "count": 6,
+      "count": 8,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -230,6 +232,26 @@
           "reason": "subheadline",
           "role": "subheadline",
           "snippet": "<h2 data-maya-type=\"H2\" class=\"grp\">Feature requests <span class=\"new-dot\"></span></h2></summary>"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 18,
+          "tag": "h2",
+          "id": "submissions-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 data-maya-type=\"H2\" id=\"submissions-title\">Submissions</h2><p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">Loading subm"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 19,
+          "tag": "h2",
+          "id": "leads-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 data-maya-type=\"H2\" id=\"leads-title\">Leads</h2><div data-maya-panel=\"inner\" class=\"wr-panel\"><form id=\"lead-form\" data-maya-fie"
         },
         {
           "page": "frontend/index.html",
@@ -275,7 +297,7 @@
           ]
         },
         "subheadline": {
-          "count": 2,
+          "count": 4,
           "locations": [
             {
               "page": "backend/operations.html",
@@ -284,6 +306,14 @@
             {
               "page": "backend/status.html",
               "line": 1290
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 18
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 19
             }
           ]
         }
@@ -1326,7 +1356,7 @@
       }
     },
     "P1": {
-      "count": 174,
+      "count": 183,
       "locations": [
         {
           "page": "aesthetics/ui/admin-systems.js",
@@ -1357,6 +1387,16 @@
           "reason": "paragraph",
           "role": "paragraph",
           "snippet": "<p class=\"small\" role=\"status\">Checking owner tools\u2026</p><button type=\"button\" class=\"enable-owner\">Enable my text command"
+        },
+        {
+          "page": "aesthetics/ui/wr.js",
+          "line": 19,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created p",
+          "role": "paragraph",
+          "snippet": "createElement('p')"
         },
         {
           "page": "backend/backend.html",
@@ -2809,6 +2849,86 @@
           "snippet": "<p class=\"note\">Cloud Build takes about four minutes after a push. \"Watch for a new deploy\""
         },
         {
+          "page": "backend/wr.html",
+          "line": 16,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Sign in through Admin to view submissions and work with leads.</p><a class=\"maya-glass-but"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 18,
+          "tag": "p",
+          "id": "submissions-message",
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">Loading submissions\u2026</p><div class=\"wr-submissions\" id=\"submissions\"></div></section>"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "input",
+          "id": null,
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"name\" maxlength=\"120\" required autocomplete=\"name\"></label><label data-maya-type=\"P3\" data-maya-field"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "input",
+          "id": null,
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"phone\" type=\"tel\" maxlength=\"40\" autocomplete=\"tel\"></label><label data-maya-type=\"P3\" data-maya-fiel"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "input",
+          "id": null,
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"wave\" type=\"number\" step=\"any\"></label><label data-maya-type=\"P3\" data-maya-field-row>Color<input dat"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "input",
+          "id": null,
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"color\" maxlength=\"120\"></label><label data-maya-type=\"P3\" data-maya-field-row>Look<input data-maya-co"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "input",
+          "id": null,
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"look\" maxlength=\"240\"></label></div>"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 21,
+          "tag": "span",
+          "id": "lead-message",
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<span data-maya-type=\"P1\" id=\"lead-message\" role=\"status\"></span></div></form><div id=\"leads\"></div></div></section>"
+        },
+        {
           "page": "frontend/index.html",
           "line": 4540,
           "tag": "p",
@@ -3071,7 +3191,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 115,
+          "count": 119,
           "locations": [
             {
               "page": "aesthetics/ui/admin-systems.js",
@@ -3084,6 +3204,10 @@
             {
               "page": "aesthetics/ui/owner-crm.js",
               "line": 3
+            },
+            {
+              "page": "aesthetics/ui/wr.js",
+              "line": 19
             },
             {
               "page": "backend/backend.html",
@@ -3430,6 +3554,18 @@
               "line": 75
             },
             {
+              "page": "backend/wr.html",
+              "line": 16
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 18
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 21
+            },
+            {
               "page": "frontend/index.html",
               "line": 4540
             },
@@ -3536,7 +3672,7 @@
           ]
         },
         "field": {
-          "count": 16,
+          "count": 21,
           "locations": [
             {
               "page": "backend/operations.html",
@@ -3601,6 +3737,26 @@
             {
               "page": "backend/status.html",
               "line": 989
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
             }
           ]
         },
@@ -4063,7 +4219,7 @@
       }
     },
     "P3": {
-      "count": 307,
+      "count": 316,
       "locations": [
         {
           "page": "aesthetics/ui/fabric-search-details.js",
@@ -5100,6 +5256,16 @@
           "line": 951,
           "tag": "a",
           "id": null,
+          "class": "maya-glass-button",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a data-maya-type=\"P3\" class=\"maya-glass-button\" href=\"/wr.html\">WR</a><a data-maya-type=\"P3\" class=\"maya-glass-button design-quicklink\" href=\"/aesthetics/"
+        },
+        {
+          "page": "backend/status.html",
+          "line": 951,
+          "tag": "a",
+          "id": null,
           "class": "maya-glass-button design-quicklink",
           "reason": "paragraph",
           "role": "paragraph",
@@ -5734,6 +5900,86 @@
           "reason": "pill",
           "role": "pill",
           "snippet": "<button id=\"watch\">Watch for a new deploy</button>"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 14,
+          "tag": "a",
+          "id": null,
+          "class": "maya-glass-button",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a class=\"maya-glass-button\" data-maya-type=\"P3\" href=\"/status.html\">Admin</a></nav></header>"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 16,
+          "tag": "a",
+          "id": null,
+          "class": "maya-glass-button",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a class=\"maya-glass-button\" data-maya-type=\"P3\" href=\"/status.html\">Open Admin</a></div>"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Name<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"name\" maxlength=\"120\" requi"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>#<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"phone\" type=\"tel\" maxlength=\"4"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Wave<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"wave\" type=\"number\" step=\"a"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Color<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"color\" maxlength=\"120\"></l"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Look<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"look\" maxlength=\"240\"></lab"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 21,
+          "tag": "button",
+          "id": null,
+          "class": "maya-glass-button",
+          "reason": "pill",
+          "role": "pill",
+          "snippet": "<button class=\"maya-glass-button\" data-maya-type=\"P3\" type=\"submit\">Add lead</button><span data-maya-type=\"P1\" id=\"lead-message\" role=\"status\"></span></div></"
         },
         {
           "page": "frontend/index.html",
@@ -7138,7 +7384,7 @@
       ],
       "roles": {
         "pill": {
-          "count": 268,
+          "count": 269,
           "locations": [
             {
               "page": "aesthetics/ui/fabric-search-details.js",
@@ -7655,6 +7901,10 @@
             {
               "page": "backend/verify.html",
               "line": 74
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 21
             },
             {
               "page": "frontend/index.html",
@@ -8215,7 +8465,7 @@
           ]
         },
         "label": {
-          "count": 14,
+          "count": 19,
           "locations": [
             {
               "page": "backend/operations.html",
@@ -8272,11 +8522,31 @@
             {
               "page": "backend/status.html",
               "line": 989
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
             }
           ]
         },
         "paragraph": {
-          "count": 5,
+          "count": 8,
           "locations": [
             {
               "page": "backend/operations.html",
@@ -8292,11 +8562,23 @@
             },
             {
               "page": "backend/status.html",
+              "line": 951
+            },
+            {
+              "page": "backend/status.html",
               "line": 1337
             },
             {
               "page": "backend/status.html",
               "line": 1338
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 14
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 16
             }
           ]
         },

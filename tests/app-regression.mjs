@@ -1,3 +1,5 @@
+import './wr-store.mjs';
+import './wr-ui.mjs';
 import './admin-models.mjs';
 import './admin-systems-ui.mjs';
 import './component-gallery.mjs';

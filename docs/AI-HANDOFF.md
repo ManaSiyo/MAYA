@@ -1,6 +1,30 @@
 # Current handoff — October 27, 2026
 
-## Current work — Aesthetic Control and Outbound retirement
+## Current work — WR and CLO research
+
+WR is a single new internal Admin-linked page at `/wr.html` (`backend/wr.html`,
+`aesthetics/ui/wr.{js,css}`). It shows the existing Admin submissions and a new
+private account-scoped lead list with Name, #, numeric Wave, Color and Look.
+`docs/server/wr-store.mjs` stores account-bound records with generation checks and
+retained idempotency keys. Account changes clear the page, cancel requests and
+revoke image URLs. Aesthetic Control shares the existing field, type, panel and
+pill controls and includes a WR field preview. The current Operation Room is
+unchanged. `docs/CLO3D-RESEARCH.md` documents desktop CLO SDK, 2D snapshot and
+DXF options and the limits of the available evidence.
+
+Local release gates, app-regression and smoke passed using installed pinned
+dependencies and isolated browser fixtures. Initial gallery and workspace failures
+were corrected and those suites passed on rerun. The final standalone `tests/aesthetic-authority.mjs` passed after the other
+functional checks. WR has
+synthetic account isolation, idempotency, responsive and Aesthetic Control Save
+coverage; default and modified styles were visually inspected. npm is unavailable
+in this environment, so npm ci was not rerun. Production deployment, actual WR
+account storage and live submissions remain unverified until Fromsa pushes. The
+private live fabric search remains unverified and was not run in this request.
+Next: Fromsa pushes the prepared local commit, then verifies the deployed
+release, WR submissions and private lead persistence.
+
+## Previous work — Aesthetic Control and Outbound retirement
 
 Fromsa requested Outbound removal and a more compact, single-authority Aesthetic
 Control. Outbound's UI, dedicated server/Gmail/Sheets integration and obsolete

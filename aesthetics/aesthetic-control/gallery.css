@@ -254,3 +254,5 @@ html body #cell-format-toolbar{width:100%;backdrop-filter:var(--maya-frost);bord
 .input-control-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}.input-control-group{min-width:0;display:grid;justify-items:center;gap:10px}.input-control-group>p{margin:0}.workspace-preview-grid{grid-template-columns:minmax(0,1fr)}.workspace-preview-card{max-width:480px}.pill-states{margin:12px 0}@media(max-width:700px){.input-control-pair{grid-template-columns:minmax(0,1fr)}}
 
 .traffic-pill-preview{display:inline-flex;gap:8px;align-items:center}.traffic-pill-preview span:last-child{color:#a9c9ff}
+
+.wr-fields-preview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:16px}.wr-fields-preview label,.wr-fields-preview input{min-width:0;width:100%}@media(max-width:700px){.wr-fields-preview{grid-template-columns:repeat(2,minmax(0,1fr))}}

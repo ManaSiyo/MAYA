@@ -1,15 +1,16 @@
-[Codex] Retire Outbound and simplify Aesthetic Control
+Title: [Codex] Add private WR workspace and document CLO integration options
 
-Remove the Outbound page, dedicated outreach and Gmail integrations, and retire
-its URLs and API. Keep shared Leads, Messages, owner text, callback alerts and
-text AI. Stored Outbound data, grants and cloud jobs are unchanged.
+WR is one Admin-linked internal page with existing submissions and a new private,
+account-scoped lead form for name, #, numeric wave, color and look. Lead writes
+are generation checked and retried idempotently. Shared Aesthetic Control governs
+the page, with a compact lead-form preview and responsive layouts.
 
-Keep one fabric preview, place pill states next to Glass and Regular, pair dropdown
-and checkbox controls on desktop, remove duplicated editor shortcuts, and give
-selected Glass pills a clear shared state. Admin traffic metrics use Glass too.
+Research documents CLO desktop SDK, DXF interchange and 2D snapshots; Operation
+Room remains unchanged.
 
-Cloud Build checks, integrated regression, smoke and responsive browser fixtures
-passed locally. The final standalone Aesthetic Control authority runs before commit.
-Local npm ci was unavailable; Cloud Build retains the pinned install. Live provider behavior is not established by fixtures. After push,
-verify the release and the separate callback Scheduler/Wix trigger; the retired
-Outbound Scheduler no longer triggers callbacks. Owner manages external cleanup.
+Validation: Cloud Build test commands, integrated app-regression and smoke ran
+locally with installed dependencies and synthetic providers. Initial gallery and
+workspace tests were fixed and rerun successfully. Final Aesthetic Control
+verification covers real local Save propagation and six viewport widths. npm ci
+was unavailable locally. Live deployment and private live fabric search were not
+verified. Fromsa performs the GitHub push and subsequent deployment check.

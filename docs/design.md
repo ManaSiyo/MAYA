@@ -547,3 +547,10 @@ settings, anchored popups and last-Save Restore. At 1100px and wider, typography
 roles share two columns, with the large H0 preview spanning both. Smaller layouts
 remain single-column. Page links move into the existing locations disclosure;
 authored counts and individual source links remain available.
+
+### WR
+
+WR reuses Admin’s background and shared typography, field, inner-panel and pill
+settings. Its compact lead form previews those existing controls in Fields and
+drawer spacing. Page CSS sets only responsive layout. WR uses the same Admin
+submission feed; its new lead list is private to each authenticated Admin account.

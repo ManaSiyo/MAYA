@@ -100,3 +100,6 @@ await import('./admin-systems-ui.mjs?authority');
 await import('./message-compose-ui.mjs?authority');
 
 console.log('Final Aesthetic Control authority passed: active previews, saved settings, actual Admin/Brief/Operations/fabric controls and voice surfaces across responsive widths.');
+
+// WR follows the shared form and panel controls at six widths.
+await import('./wr-ui.mjs?authority');

@@ -126,6 +126,10 @@
         }
       },
       {
+        "source": "/wr.html",
+        "destination": "/backend/wr.html"
+      },
+      {
         "source": "/status.html",
         "destination": "/backend/status.html"
       },
