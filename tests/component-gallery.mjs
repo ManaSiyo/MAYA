@@ -29,7 +29,7 @@ try{
   if(width===1440)await page.locator('.type-hierarchy').screenshot({path:'/private/tmp/maya-typography-compact.png'});
  }
  await page.setViewportSize({width:1440,height:1000});
- assert.equal(await page.locator('.type-group').count(),canonicalRoles.length);assert.equal(await page.locator('#save').innerText(),'');assert.equal(await page.locator('#save svg').count(),1);assert.ok(await page.locator('#admin-back').evaluate(e=>e.getBoundingClientRect().left<30));assert.equal(await page.locator('[data-category="H0"] .role-locations > a').count(),1);
+ assert.equal(await page.locator('.type-group').count(),canonicalRoles.length);assert.equal(await page.locator('#save').innerText(),'');assert.equal(await page.locator('#save svg').count(),1);assert.ok(await page.locator('#admin-back').evaluate(e=>e.getBoundingClientRect().left<30));assert.equal(await page.locator('[data-category="H0"] .role-locations > a').count(),2);
  assert.ok(await page.locator('.type-category').evaluateAll(es=>es.every(e=>/^(?:H[0-5]|P[1-3]) \(\d+\)$/.test(e.textContent))),'Every role shows an authored usage count');
  assert.equal(await page.locator('input[type="range"]').count(),0,'Every Edit uses numeric controls, never sliders');
  await page.locator('.icon-row [aria-label=Settings]').click();assert.equal(await page.locator('.control-size-editor').evaluate(e=>e.open),true,'Preview icons open their actual saved settings');await page.locator('.gallery-header h1').click();
@@ -175,7 +175,7 @@ try{
  await cell('td[data-col="stage"]','align','right');assert.equal(await page.locator('#cell-selection').innerText(),'Third column');assert.equal(await page.locator('#table-preview .cell-selected').count(),2);assert.equal(await page.locator('#table-preview td[data-col="stage"]').nth(1).evaluate(e=>getComputedStyle(e).textAlign),'right');
  await cell('td[data-col="stage"]','align','center');await cell('td[data-col="stage"]','background','green');await cell('td[data-col="stage"]','opacity','50');assert.match(await page.locator('#table-preview td[data-col="stage"]').nth(1).evaluate(e=>getComputedStyle(e).backgroundColor),/0.5/);
  assert.equal(await page.locator('#panels .maya-surface').count(),0,'No intermediate outer wrapper');
- assert.equal(await page.locator('[data-category="H1"] .role-locations > a').count(),8,'Every authored H1, including the workspace and client titles, is listed');
+ assert.equal(await page.locator('[data-category="H1"] .role-locations > a').count(),9,'Every authored H1, including the workspace and client titles, is listed');
  await page.locator('[data-category="H1"] .role-locations > summary').click();
  assert.ok(await page.locator('[data-category="H1"] .role-pages').innerText().then(text=>text.toLowerCase().includes('app')&&text.toLowerCase().includes('status')),'Linked pages remain available in locations');
  await page.locator('[data-category="H1"] .role-locations > summary').click();

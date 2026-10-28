@@ -7,6 +7,7 @@
     "aesthetics/ui/admin-design.js",
     "aesthetics/ui/admin-systems.js",
     "aesthetics/ui/avatar-camera.js",
+    "aesthetics/ui/design-studio-2.js",
     "aesthetics/ui/fabric-assistant.js",
     "aesthetics/ui/fabric-search-details.js",
     "aesthetics/ui/lead-stage-menu.js",
@@ -17,6 +18,7 @@
     "aesthetics/ui/voice-preparation.js",
     "aesthetics/ui/wr.js",
     "backend/backend.html",
+    "backend/design-studio-2.html",
     "backend/operations.html",
     "backend/privacy.html",
     "backend/status.html",
@@ -27,8 +29,18 @@
   ],
   "categories": {
     "H0": {
-      "count": 1,
+      "count": 2,
       "locations": [
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 16,
+          "tag": "div",
+          "id": "studio-title",
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<div id=\"studio-title\" role=\"heading\" aria-level=\"1\" data-maya-type=\"H0\">Wear your imagination.</div><p data-maya-type=\"P1\">One-of-one clothing, made around you"
+        },
         {
           "page": "frontend/index.html",
           "line": 4525,
@@ -41,6 +53,15 @@
         }
       ],
       "roles": {
+        "paragraph": {
+          "count": 1,
+          "locations": [
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 16
+            }
+          ]
+        },
         "signin": {
           "count": 1,
           "locations": [
@@ -53,7 +74,7 @@
       }
     },
     "H1": {
-      "count": 8,
+      "count": 9,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -64,6 +85,16 @@
           "reason": "paragraph",
           "role": "paragraph",
           "snippet": "<span id=\"workspace-title\" data-maya-type=\"H1\">Backend</span></a>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 14,
+          "tag": "span",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<span data-maya-type=\"H1\">Design Studio 2</span></a><nav aria-label=\"Studio navigation\"><a data-maya-type=\"P3\" href="
         },
         {
           "page": "backend/operations.html",
@@ -138,11 +169,15 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 1,
+          "count": 2,
           "locations": [
             {
               "page": "backend/backend.html",
               "line": 1411
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 14
             }
           ]
         },
@@ -192,7 +227,7 @@
       }
     },
     "H2": {
-      "count": 6,
+      "count": 12,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -203,6 +238,56 @@
           "reason": "drawer",
           "role": "drawer",
           "snippet": "<div class=\"drawer-title\">Submissions</div>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 17,
+          "tag": "h2",
+          "id": "experiences-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 id=\"experiences-title\" data-maya-type=\"H2\">Choose your experience</h2><p data-maya-type=\"P1\">From a personal favorite to a completely"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "h2",
+          "id": "why-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 id=\"why-title\" data-maya-type=\"H2\">Why Mana Siyo</h2></header><div class=\"studio-benefits\"><article data-maya-panel=\"inner\"><"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "h2",
+          "id": "process-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 id=\"process-title\" data-maya-type=\"H2\">How it works</h2></header><div class=\"studio-steps\"><article data-maya-panel=\"inner\"><span"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 25,
+          "tag": "h2",
+          "id": "stories-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 id=\"stories-title\" data-maya-type=\"H2\">Their stories</h2></header><div class=\"studio-story-grid\"><article data-maya-panel=\"inner\""
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "h2",
+          "id": "consultation-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 data-maya-type=\"H2\" id=\"consultation-title\">Let's talk about your idea.</h2><p data-maya-type=\"P1\">Tell us what you're picturing, even"
         },
         {
           "page": "backend/operations.html",
@@ -226,7 +311,17 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1290,
+          "line": 1037,
+          "tag": "b",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<b data-maya-type=\"H2\">DESIGN STUDIO 2</b></a>"
+        },
+        {
+          "page": "backend/status.html",
+          "line": 1291,
           "tag": "h2",
           "id": null,
           "class": "grp",
@@ -278,22 +373,51 @@
           ]
         },
         "subheadline": {
-          "count": 2,
+          "count": 7,
           "locations": [
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 17
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 25
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
             {
               "page": "backend/operations.html",
               "line": 431
             },
             {
               "page": "backend/status.html",
-              "line": 1290
+              "line": 1291
+            }
+          ]
+        },
+        "paragraph": {
+          "count": 1,
+          "locations": [
+            {
+              "page": "backend/status.html",
+              "line": 1037
             }
           ]
         }
       }
     },
     "H3": {
-      "count": 69,
+      "count": 80,
       "locations": [
         {
           "page": "aesthetics/ui/fabric-search-details.js",
@@ -324,6 +448,116 @@
           "reason": "paragraph",
           "role": "paragraph",
           "snippet": "<time id=\"op-date\" data-maya-type=\"H3\"></time></div>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 18,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Ceremonial</h3><p data-maya-type=\"P2\">$5,000+</p><p data-maya-type=\"P1\">A one-of-one look "
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 19,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Suits</h3><p data-maya-type=\"P2\">$3,000+</p><p data-maya-type=\"P1\">A tailored three-piece "
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 20,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Designer</h3><p data-maya-type=\"P2\">$1,500+</p><p data-maya-type=\"P1\">Bring an original id"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 21,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Signature</h3><p data-maya-type=\"P2\">$600+</p><p data-maya-type=\"P1\">Start with an existin"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Made for you</h3><p data-maya-type=\"P1\">Each piece is one of one, shaped around your ideas"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">100+ designs</h3><p data-maya-type=\"P1\">Start with a design you love or bring an idea of y"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Signature, next day</h3><p data-maya-type=\"P1\">The Signature experience is designed for a "
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Fit comes first</h3><p data-maya-type=\"P1\">Adjustments are part of making the piece feel r"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Consultation</h3><p data-maya-type=\"P1\">Bring a photo, sketch, Pinterest board or an idea."
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Fabrication</h3><p data-maya-type=\"P1\">Choose fabrics, refine the design and fit it to you"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h3 data-maya-type=\"H3\">Delivery</h3><p data-maya-type=\"P1\">Meet your finished piece and make any final adjustment"
         },
         {
           "page": "backend/operations.html",
@@ -527,7 +761,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1045,
+          "line": 1046,
           "tag": "h2",
           "id": "submissions-heading",
           "class": "grp",
@@ -537,7 +771,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1052,
+          "line": 1053,
           "tag": "h2",
           "id": null,
           "class": "grp",
@@ -547,7 +781,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1069,
+          "line": 1070,
           "tag": "h2",
           "id": null,
           "class": "grp",
@@ -557,7 +791,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1077,
+          "line": 1078,
           "tag": "h2",
           "id": null,
           "class": "grp",
@@ -567,7 +801,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1115,
+          "line": 1116,
           "tag": "h2",
           "id": null,
           "class": "grp",
@@ -577,7 +811,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1130,
+          "line": 1131,
           "tag": "h2",
           "id": null,
           "class": "grp",
@@ -587,7 +821,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1339,
+          "line": 1340,
           "tag": "div",
           "id": null,
           "class": "fr-sec",
@@ -597,7 +831,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2967,
+          "line": 2968,
           "tag": "h4",
           "id": "inv-title",
           "class": "",
@@ -607,7 +841,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4058,
+          "line": 4059,
           "tag": "h2",
           "id": "maya-confirmation-title",
           "class": "",
@@ -988,11 +1222,55 @@
       ],
       "roles": {
         "subheadline": {
-          "count": 57,
+          "count": 68,
           "locations": [
             {
               "page": "aesthetics/ui/fabric-search-details.js",
               "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 18
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 19
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 20
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 21
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
             },
             {
               "page": "backend/privacy.html",
@@ -1068,11 +1346,11 @@
             },
             {
               "page": "backend/status.html",
-              "line": 2967
+              "line": 2968
             },
             {
               "page": "backend/status.html",
-              "line": 4058
+              "line": 4059
             },
             {
               "page": "backend/terms.html",
@@ -1237,7 +1515,7 @@
             },
             {
               "page": "backend/status.html",
-              "line": 1339
+              "line": 1340
             }
           ]
         },
@@ -1255,27 +1533,27 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 1045
+              "line": 1046
             },
             {
               "page": "backend/status.html",
-              "line": 1052
+              "line": 1053
             },
             {
               "page": "backend/status.html",
-              "line": 1069
+              "line": 1070
             },
             {
               "page": "backend/status.html",
-              "line": 1077
+              "line": 1078
             },
             {
               "page": "backend/status.html",
-              "line": 1115
+              "line": 1116
             },
             {
               "page": "backend/status.html",
-              "line": 1130
+              "line": 1131
             },
             {
               "page": "backend/verify.html",
@@ -1290,7 +1568,7 @@
       "locations": [
         {
           "page": "backend/status.html",
-          "line": 2593,
+          "line": 2594,
           "tag": "div",
           "id": null,
           "class": "v",
@@ -1300,7 +1578,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2796,
+          "line": 2797,
           "tag": "span",
           "id": null,
           "class": "lead-identity",
@@ -1310,7 +1588,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2629,
+          "line": 2630,
           "tag": "div",
           "id": null,
           "class": "bl-tile v",
@@ -1325,11 +1603,11 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 2593
+              "line": 2594
             },
             {
               "page": "backend/status.html",
-              "line": 2629
+              "line": 2630
             }
           ]
         },
@@ -1338,7 +1616,7 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 2796
+              "line": 2797
             }
           ]
         }
@@ -1349,7 +1627,7 @@
       "locations": [
         {
           "page": "backend/status.html",
-          "line": 2796,
+          "line": 2797,
           "tag": "time",
           "id": null,
           "class": "lead-signup",
@@ -1364,14 +1642,14 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 2796
+              "line": 2797
             }
           ]
         }
       }
     },
     "P1": {
-      "count": 187,
+      "count": 211,
       "locations": [
         {
           "page": "aesthetics/ui/admin-systems.js",
@@ -1442,6 +1720,246 @@
           "reason": "paragraph",
           "role": "paragraph",
           "snippet": "<p class=\"op-text\" id=\"op-vision\">\u2026</p>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 16,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">One-of-one clothing, made around you. Your vision, brought to life in San Francisco.</p><d"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 17,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">From a personal favorite to a completely original idea.</p></header><div class=\"studio-gri"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 18,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">A one-of-one look for weddings, galas and the moments that matter.</p><button class=\"maya-"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 19,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">A tailored three-piece suit, designed to fit and made to last.</p><button class=\"maya-glas"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 20,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Bring an original idea to life with room to explore every detail.</p><button class=\"maya-g"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 21,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Start with an existing design and make it yours through fit, fabric and finish.</p><button"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Each piece is one of one, shaped around your ideas and your body.</p></article><article da"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Start with a design you love or bring an idea of your own.</p></article><article data-maya"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">The Signature experience is designed for a faster turnaround.</p></article><article data-m"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Adjustments are part of making the piece feel right.</p></article></div></section>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Bring a photo, sketch, Pinterest board or an idea. Together we shape your vision.</p></art"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Choose fabrics, refine the design and fit it to your body.</p></article><article data-maya"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Meet your finished piece and make any final adjustments.</p></article></div></section>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 25,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">\u201cI loved how thoughtfully my ideas were brought to life.\u201d</p><p data-maya-type=\"P3\">Jesica"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 25,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">\u201cMana Siyo let me design the exact look I imagined.\u201d</p><p data-maya-type=\"P3\">Dylan</p></"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">Tell us what you're picturing, even if it's still taking shape.</p><p data-maya-type=\"P3\">"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "input",
+          "id": "studio-name",
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input id=\"studio-name\" data-maya-control=\"field\" data-maya-type=\"P1\" autocomplete=\"name\" required></label><label data-maya-type=\"P3\" data-maya-field-row>Phone<"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "input",
+          "id": "studio-phone",
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input id=\"studio-phone\" data-maya-control=\"field\" data-maya-type=\"P1\" type=\"tel\" autocomplete=\"tel\" required></label><label class=\"studio-form-wide\" data-maya-"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "input",
+          "id": "studio-occasion",
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input id=\"studio-occasion\" data-maya-control=\"field\" data-maya-type=\"P1\"></label><label class=\"studio-form-wide\" data-maya-type=\"P3\" data-maya-field-row>What a"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "textarea",
+          "id": "studio-idea",
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<textarea id=\"studio-idea\" data-maya-control=\"field\" data-maya-type=\"P1\" rows=\"3\"></textarea></label><label class=\"studio-form-wide\" data-maya-type=\"P3\" data-ma"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "select",
+          "id": "studio-experience",
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<select id=\"studio-experience\" data-maya-control=\"field\" data-maya-type=\"P1\"><option value=\"\">Choose an experience</option><option>Ceremonial</option><option>Su"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "label",
+          "id": null,
+          "class": "studio-consent",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label class=\"studio-consent\" data-maya-type=\"P1\"><input type=\"checkbox\" id=\"studio-sms\">Text me updates about my inquiry</label><p data-may"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P1\">SMS is optional. Message frequency varies; message and data rates may apply. Reply STOP to"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "p",
+          "id": "studio-feedback",
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p id=\"studio-feedback\" role=\"status\" data-maya-type=\"P1\"></p></form></section>"
         },
         {
           "page": "backend/operations.html",
@@ -2225,7 +2743,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1067,
+          "line": 1068,
           "tag": "div",
           "id": "mkt-wix-note",
           "class": "note",
@@ -2235,7 +2753,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1072,
+          "line": 1073,
           "tag": "div",
           "id": "leads-note",
           "class": "note",
@@ -2245,7 +2763,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1073,
+          "line": 1074,
           "tag": "div",
           "id": "callback-alert-note",
           "class": "note",
@@ -2255,7 +2773,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1105,
+          "line": 1106,
           "tag": "div",
           "id": "ad-combined-note",
           "class": "note",
@@ -2265,7 +2783,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1124,
+          "line": 1125,
           "tag": "div",
           "id": "bl-note",
           "class": "note",
@@ -2275,7 +2793,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1292,
+          "line": 1293,
           "tag": "div",
           "id": null,
           "class": "note",
@@ -2285,7 +2803,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1337,
+          "line": 1338,
           "tag": "span",
           "id": null,
           "class": "ask",
@@ -2295,7 +2813,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1340,
+          "line": 1341,
           "tag": "div",
           "id": null,
           "class": "note",
@@ -2305,7 +2823,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1346,
+          "line": 1347,
           "tag": "div",
           "id": null,
           "class": "note",
@@ -2315,7 +2833,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1629,
+          "line": 1630,
           "tag": "pre",
           "id": null,
           "class": "cmd",
@@ -2325,7 +2843,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2542,
+          "line": 2543,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2335,7 +2853,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2542,
+          "line": 2543,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2345,7 +2863,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2542,
+          "line": 2543,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2355,7 +2873,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2549,
+          "line": 2550,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2365,7 +2883,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2549,
+          "line": 2550,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2375,7 +2893,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2550,
+          "line": 2551,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2385,7 +2903,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2710,
+          "line": 2711,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2395,7 +2913,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2716,
+          "line": 2717,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2405,7 +2923,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2750,
+          "line": 2751,
           "tag": "th",
           "id": null,
           "class": "' + cls + '",
@@ -2415,7 +2933,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2761,
+          "line": 2762,
           "tag": "td",
           "id": null,
           "class": "' + cls + '",
@@ -2425,7 +2943,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2968,
+          "line": 2969,
           "tag": "p",
           "id": null,
           "class": "inv-lede",
@@ -2435,7 +2953,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3290,
+          "line": 3291,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2445,7 +2963,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3290,
+          "line": 3291,
           "tag": "p",
           "id": null,
           "class": "note",
@@ -2455,7 +2973,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3326,
+          "line": 3327,
           "tag": "div",
           "id": null,
           "class": "msg-main",
@@ -2465,7 +2983,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3473,
+          "line": 3474,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2475,7 +2993,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3582,
+          "line": 3583,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2485,7 +3003,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3614,
+          "line": 3615,
           "tag": "p",
           "id": "lead-note-feedback",
           "class": "",
@@ -2495,7 +3013,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3764,
+          "line": 3765,
           "tag": "code",
           "id": null,
           "class": "",
@@ -2505,7 +3023,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3929,
+          "line": 3930,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2515,7 +3033,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3937,
+          "line": 3938,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2525,7 +3043,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3937,
+          "line": 3938,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2535,7 +3053,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3937,
+          "line": 3938,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2545,7 +3063,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3938,
+          "line": 3939,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2555,7 +3073,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3938,
+          "line": 3939,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2565,7 +3083,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3938,
+          "line": 3939,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2575,7 +3093,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3938,
+          "line": 3939,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2585,7 +3103,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3938,
+          "line": 3939,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2595,7 +3113,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3942,
+          "line": 3943,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2605,7 +3123,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3944,
+          "line": 3945,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2615,7 +3133,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3945,
+          "line": 3946,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2625,7 +3143,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3946,
+          "line": 3947,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2635,7 +3153,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3947,
+          "line": 3948,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2645,7 +3163,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3948,
+          "line": 3949,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2655,7 +3173,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3949,
+          "line": 3950,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2665,7 +3183,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3950,
+          "line": 3951,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3246,7 +3764,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 122,
+          "count": 140,
           "locations": [
             {
               "page": "aesthetics/ui/admin-systems.js",
@@ -3275,6 +3793,78 @@
             {
               "page": "backend/backend.html",
               "line": 1453
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 16
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 17
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 18
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 19
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 20
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 21
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 25
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 25
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
             },
             {
               "page": "backend/operations.html",
@@ -3474,11 +4064,7 @@
             },
             {
               "page": "backend/status.html",
-              "line": 1067
-            },
-            {
-              "page": "backend/status.html",
-              "line": 1072
+              "line": 1068
             },
             {
               "page": "backend/status.html",
@@ -3486,51 +4072,55 @@
             },
             {
               "page": "backend/status.html",
-              "line": 1105
+              "line": 1074
             },
             {
               "page": "backend/status.html",
-              "line": 1124
+              "line": 1106
             },
             {
               "page": "backend/status.html",
-              "line": 1292
+              "line": 1125
             },
             {
               "page": "backend/status.html",
-              "line": 1337
+              "line": 1293
             },
             {
               "page": "backend/status.html",
-              "line": 1340
+              "line": 1338
             },
             {
               "page": "backend/status.html",
-              "line": 1346
+              "line": 1341
             },
             {
               "page": "backend/status.html",
-              "line": 2968
+              "line": 1347
             },
             {
               "page": "backend/status.html",
-              "line": 3290
+              "line": 2969
             },
             {
               "page": "backend/status.html",
-              "line": 3290
+              "line": 3291
             },
             {
               "page": "backend/status.html",
-              "line": 3473
+              "line": 3291
             },
             {
               "page": "backend/status.html",
-              "line": 3582
+              "line": 3474
             },
             {
               "page": "backend/status.html",
-              "line": 3614
+              "line": 3583
+            },
+            {
+              "page": "backend/status.html",
+              "line": 3615
             },
             {
               "page": "backend/terms.html",
@@ -3739,8 +4329,28 @@
           ]
         },
         "field": {
-          "count": 22,
+          "count": 27,
           "locations": [
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
             {
               "page": "backend/operations.html",
               "line": 314
@@ -3831,6 +4441,15 @@
             }
           ]
         },
+        "label": {
+          "count": 1,
+          "locations": [
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            }
+          ]
+        },
         "technical": {
           "count": 4,
           "locations": [
@@ -3844,11 +4463,11 @@
             },
             {
               "page": "backend/status.html",
-              "line": 1629
+              "line": 1630
             },
             {
               "page": "backend/status.html",
-              "line": 3764
+              "line": 3765
             }
           ]
         },
@@ -3906,23 +4525,15 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 2542
+              "line": 2543
             },
             {
               "page": "backend/status.html",
-              "line": 2542
+              "line": 2543
             },
             {
               "page": "backend/status.html",
-              "line": 2542
-            },
-            {
-              "page": "backend/status.html",
-              "line": 2549
-            },
-            {
-              "page": "backend/status.html",
-              "line": 2549
+              "line": 2543
             },
             {
               "page": "backend/status.html",
@@ -3930,35 +4541,31 @@
             },
             {
               "page": "backend/status.html",
-              "line": 2710
+              "line": 2550
             },
             {
               "page": "backend/status.html",
-              "line": 2716
+              "line": 2551
             },
             {
               "page": "backend/status.html",
-              "line": 2750
+              "line": 2711
             },
             {
               "page": "backend/status.html",
-              "line": 2761
+              "line": 2717
             },
             {
               "page": "backend/status.html",
-              "line": 3929
+              "line": 2751
             },
             {
               "page": "backend/status.html",
-              "line": 3937
+              "line": 2762
             },
             {
               "page": "backend/status.html",
-              "line": 3937
-            },
-            {
-              "page": "backend/status.html",
-              "line": 3937
+              "line": 3930
             },
             {
               "page": "backend/status.html",
@@ -3974,19 +4581,27 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3938
+              "line": 3939
             },
             {
               "page": "backend/status.html",
-              "line": 3938
+              "line": 3939
             },
             {
               "page": "backend/status.html",
-              "line": 3942
+              "line": 3939
             },
             {
               "page": "backend/status.html",
-              "line": 3944
+              "line": 3939
+            },
+            {
+              "page": "backend/status.html",
+              "line": 3939
+            },
+            {
+              "page": "backend/status.html",
+              "line": 3943
             },
             {
               "page": "backend/status.html",
@@ -4011,6 +4626,10 @@
             {
               "page": "backend/status.html",
               "line": 3950
+            },
+            {
+              "page": "backend/status.html",
+              "line": 3951
             }
           ]
         },
@@ -4019,14 +4638,14 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 3326
+              "line": 3327
             }
           ]
         }
       }
     },
     "P2": {
-      "count": 18,
+      "count": 22,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -4047,6 +4666,46 @@
           "reason": "paragraph",
           "role": "paragraph",
           "snippet": "<div class=\"op-eyebrow\" data-maya-type=\"P2\">Vision</div>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 18,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P2\">$5,000+</p><p data-maya-type=\"P1\">A one-of-one look for weddings, galas and the moments th"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 19,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P2\">$3,000+</p><p data-maya-type=\"P1\">A tailored three-piece suit, designed to fit and made to"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 20,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P2\">$1,500+</p><p data-maya-type=\"P1\">Bring an original idea to life with room to explore ever"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 21,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P2\">$600+</p><p data-maya-type=\"P1\">Start with an existing design and make it yours through fi"
         },
         {
           "page": "backend/operations.html",
@@ -4211,7 +4870,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 18,
+          "count": 22,
           "locations": [
             {
               "page": "backend/backend.html",
@@ -4220,6 +4879,22 @@
             {
               "page": "backend/backend.html",
               "line": 1452
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 18
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 19
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 20
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 21
             },
             {
               "page": "backend/operations.html",
@@ -4290,7 +4965,7 @@
       }
     },
     "P3": {
-      "count": 322,
+      "count": 354,
       "locations": [
         {
           "page": "aesthetics/ui/fabric-search-details.js",
@@ -4681,6 +5356,316 @@
           "reason": "JavaScript-created button",
           "role": "pill",
           "snippet": "createElement('button')"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 14,
+          "tag": "a",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a data-maya-type=\"P3\" href=\"#experiences\">Experiences</a><a data-maya-type=\"P3\" href=\"#process\">Process</a><a class=\"maya-glass-butt"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 14,
+          "tag": "a",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a data-maya-type=\"P3\" href=\"#process\">Process</a><a class=\"maya-glass-button\" data-maya-type=\"P3\" href=\"#consultation\">Start her"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 14,
+          "tag": "a",
+          "id": null,
+          "class": "maya-glass-button",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a class=\"maya-glass-button\" data-maya-type=\"P3\" href=\"#consultation\">Start here</a></nav></header>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 16,
+          "tag": "span",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<span data-maya-type=\"P3\">Mana Siyo \u00b7 San Francisco</span><div id=\"studio-title\" role=\"heading\" aria-level=\"1\" data-"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 16,
+          "tag": "a",
+          "id": null,
+          "class": "maya-glass-button",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a class=\"maya-glass-button\" data-maya-type=\"P3\" href=\"#consultation\">Start your design</a><a class=\"maya-glass-button\" data-maya-type=\"P3\" href=\"#experiences\">"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 16,
+          "tag": "a",
+          "id": null,
+          "class": "maya-glass-button",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a class=\"maya-glass-button\" data-maya-type=\"P3\" href=\"#experiences\">Explore experiences</a></div><p class=\"preview-label\" data-maya-type=\"P3\">Design preview \u00b7"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 16,
+          "tag": "p",
+          "id": null,
+          "class": "preview-label",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p class=\"preview-label\" data-maya-type=\"P3\">Design preview \u00b7 consultation form is not live</p></div></section>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 17,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P3\">Four ways to create</p><h2 id=\"experiences-title\" data-maya-type=\"H2\">Choose your experien"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 18,
+          "tag": "button",
+          "id": null,
+          "class": "maya-glass-button studio-choose",
+          "reason": "pill",
+          "role": "pill",
+          "snippet": "<button class=\"maya-glass-button studio-choose\" data-maya-type=\"P3\" type=\"button\" data-tier=\"Ceremonial\">Choose Ceremonial</button></div></article>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 19,
+          "tag": "button",
+          "id": null,
+          "class": "maya-glass-button studio-choose",
+          "reason": "pill",
+          "role": "pill",
+          "snippet": "<button class=\"maya-glass-button studio-choose\" data-maya-type=\"P3\" type=\"button\" data-tier=\"Suits\">Choose Suits</button></div></article>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 20,
+          "tag": "button",
+          "id": null,
+          "class": "maya-glass-button studio-choose",
+          "reason": "pill",
+          "role": "pill",
+          "snippet": "<button class=\"maya-glass-button studio-choose\" data-maya-type=\"P3\" type=\"button\" data-tier=\"Designer\">Choose Designer</button></div></article>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 21,
+          "tag": "button",
+          "id": null,
+          "class": "maya-glass-button studio-choose",
+          "reason": "pill",
+          "role": "pill",
+          "snippet": "<button class=\"maya-glass-button studio-choose\" data-maya-type=\"P3\" type=\"button\" data-tier=\"Signature\">Choose Signature</button></div></article>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 23,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P3\">The studio</p><h2 id=\"why-title\" data-maya-type=\"H2\">Why Mana Siyo</h2></header><div class"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P3\">From idea to garment</p><h2 id=\"process-title\" data-maya-type=\"H2\">How it works</h2></head"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "span",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<span data-maya-type=\"P3\">01</span><h3 data-maya-type=\"H3\">Consultation</h3><p data-maya-type=\"P1\">Bring a photo, sk"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "span",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<span data-maya-type=\"P3\">02</span><h3 data-maya-type=\"H3\">Fabrication</h3><p data-maya-type=\"P1\">Choose fabrics, re"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 24,
+          "tag": "span",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<span data-maya-type=\"P3\">03</span><h3 data-maya-type=\"H3\">Delivery</h3><p data-maya-type=\"P1\">Meet your finished pi"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 25,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P3\">Made personal</p><h2 id=\"stories-title\" data-maya-type=\"H2\">Their stories</h2></header><di"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 25,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P3\">Jesica</p></article><article data-maya-panel=\"inner\"><p data-maya-type=\"P1\">\u201cMana Siyo let"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 25,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P3\">Dylan</p></article></div></section>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P3\">Begin here</p><h2 data-maya-type=\"H2\" id=\"consultation-title\">Let's talk about your idea.<"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p data-maya-type=\"P3\">Preview only \u00b7 This form does not send or save information.</p></div><form id=\"studio-form"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Name<input id=\"studio-name\" data-maya-control=\"field\" data-maya-type=\"P1\" autocomplete=\"na"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Phone<input id=\"studio-phone\" data-maya-control=\"field\" data-maya-type=\"P1\" type=\"tel\" aut"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "label",
+          "id": null,
+          "class": "studio-form-wide",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label class=\"studio-form-wide\" data-maya-type=\"P3\" data-maya-field-row>What's the occasion?<input id=\"studio-occasion\" data-maya-control=\"field\" data-maya-type"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "label",
+          "id": null,
+          "class": "studio-form-wide",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label class=\"studio-form-wide\" data-maya-type=\"P3\" data-maya-field-row>What are you picturing?<textarea id=\"studio-idea\" data-maya-control=\"field\" data-maya-ty"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "label",
+          "id": null,
+          "class": "studio-form-wide",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label class=\"studio-form-wide\" data-maya-type=\"P3\" data-maya-field-row>Which experience?<select id=\"studio-experience\" data-maya-control=\"field\" data-maya-type"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 26,
+          "tag": "button",
+          "id": null,
+          "class": "maya-glass-button",
+          "reason": "pill",
+          "role": "pill",
+          "snippet": "<button class=\"maya-glass-button\" data-maya-type=\"P3\" type=\"submit\">Preview consultation</button><p id=\"studio-feedback\" role=\"status\" data-maya-type=\"P1\"></p"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 27,
+          "tag": "a",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a href=\"/status.html\" data-maya-type=\"P3\">Admin</a><a href=\"/\" data-maya-type=\"P3\">MAYA</a><span data-maya-type=\"P3\">Mana Siyo \u00b7 San"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 27,
+          "tag": "a",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a href=\"/\" data-maya-type=\"P3\">MAYA</a><span data-maya-type=\"P3\">Mana Siyo \u00b7 San Francisco</span></footer>"
+        },
+        {
+          "page": "backend/design-studio-2.html",
+          "line": 27,
+          "tag": "span",
+          "id": null,
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<span data-maya-type=\"P3\">Mana Siyo \u00b7 San Francisco</span></footer>"
         },
         {
           "page": "backend/operations.html",
@@ -5330,7 +6315,17 @@
           "class": "maya-glass-button",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<a data-maya-type=\"P3\" class=\"maya-glass-button\" href=\"/wr.html\">WR</a><a data-maya-type=\"P3\" class=\"maya-glass-button design-quicklink\" href=\"/aesthetics/"
+          "snippet": "<a data-maya-type=\"P3\" class=\"maya-glass-button\" href=\"/wr.html\">WR</a><a data-maya-type=\"P3\" class=\"maya-glass-button\" href=\"/design-studio-2.html\">Design"
+        },
+        {
+          "page": "backend/status.html",
+          "line": 951,
+          "tag": "a",
+          "id": null,
+          "class": "maya-glass-button",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<a data-maya-type=\"P3\" class=\"maya-glass-button\" href=\"/design-studio-2.html\">Design Studio 2</a><a data-maya-type=\"P3\" class=\"maya-glass-button design-quicklin"
         },
         {
           "page": "backend/status.html",
@@ -5504,7 +6499,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1081,
+          "line": 1082,
           "tag": "button",
           "id": null,
           "class": "range-chip",
@@ -5514,7 +6509,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1082,
+          "line": 1083,
           "tag": "button",
           "id": null,
           "class": "range-chip on",
@@ -5524,7 +6519,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1083,
+          "line": 1084,
           "tag": "button",
           "id": null,
           "class": "range-chip",
@@ -5534,7 +6529,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1089,
+          "line": 1090,
           "tag": "button",
           "id": null,
           "class": "metric-chip on",
@@ -5544,7 +6539,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1090,
+          "line": 1091,
           "tag": "button",
           "id": null,
           "class": "metric-chip",
@@ -5554,7 +6549,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1091,
+          "line": 1092,
           "tag": "button",
           "id": null,
           "class": "metric-chip",
@@ -5564,7 +6559,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1092,
+          "line": 1093,
           "tag": "button",
           "id": null,
           "class": "metric-chip",
@@ -5574,7 +6569,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1337,
+          "line": 1338,
           "tag": "span",
           "id": null,
           "class": "who",
@@ -5584,7 +6579,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1338,
+          "line": 1339,
           "tag": "span",
           "id": null,
           "class": "when",
@@ -5594,7 +6589,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1338,
+          "line": 1339,
           "tag": "button",
           "id": null,
           "class": "fr-done maya-icon-button",
@@ -5604,7 +6599,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1842,
+          "line": 1843,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5614,7 +6609,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1843,
+          "line": 1844,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5624,7 +6619,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1872,
+          "line": 1873,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5634,7 +6629,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1874,
+          "line": 1875,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5644,7 +6639,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1876,
+          "line": 1877,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5654,7 +6649,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1877,
+          "line": 1878,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5664,7 +6659,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 1878,
+          "line": 1879,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5674,7 +6669,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2523,
+          "line": 2524,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5684,7 +6679,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2593,
+          "line": 2594,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5694,7 +6689,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2629,
+          "line": 2630,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5704,7 +6699,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2753,
+          "line": 2754,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5714,7 +6709,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2796,
+          "line": 2797,
           "tag": "button",
           "id": null,
           "class": "lead-open",
@@ -5724,7 +6719,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2799,
+          "line": 2800,
           "tag": "span",
           "id": null,
           "class": "status-pill lead-status",
@@ -5734,7 +6729,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2801,
+          "line": 2802,
           "tag": "button",
           "id": null,
           "class": "lead-note-vp lead-note-edit",
@@ -5744,7 +6739,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2966,
+          "line": 2967,
           "tag": "button",
           "id": null,
           "class": "inv-close",
@@ -5754,7 +6749,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2969,
+          "line": 2970,
           "tag": "label",
           "id": null,
           "class": "inv-label",
@@ -5764,7 +6759,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2971,
+          "line": 2972,
           "tag": "label",
           "id": null,
           "class": "inv-label",
@@ -5774,7 +6769,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2973,
+          "line": 2974,
           "tag": "label",
           "id": null,
           "class": "inv-label",
@@ -5784,7 +6779,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2975,
+          "line": 2976,
           "tag": "button",
           "id": "inv-create",
           "class": "inv-btn primary",
@@ -5794,7 +6789,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2978,
+          "line": 2979,
           "tag": "button",
           "id": "inv-email",
           "class": "inv-btn",
@@ -5804,7 +6799,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2979,
+          "line": 2980,
           "tag": "button",
           "id": "inv-text",
           "class": "inv-btn",
@@ -5814,7 +6809,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2981,
+          "line": 2982,
           "tag": "label",
           "id": null,
           "class": "inv-label",
@@ -5824,7 +6819,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2983,
+          "line": 2984,
           "tag": "button",
           "id": "inv-save",
           "class": "inv-btn",
@@ -5834,7 +6829,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3290,
+          "line": 3291,
           "tag": "small",
           "id": null,
           "class": "",
@@ -5844,7 +6839,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3326,
+          "line": 3327,
           "tag": "small",
           "id": null,
           "class": "",
@@ -5854,7 +6849,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3473,
+          "line": 3474,
           "tag": "small",
           "id": null,
           "class": "",
@@ -5864,7 +6859,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3474,
+          "line": 3475,
           "tag": "div",
           "id": null,
           "class": "bub-when",
@@ -5874,7 +6869,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3582,
+          "line": 3583,
           "tag": "button",
           "id": "'+esc(p.id)+'",
           "class": "msg-call",
@@ -5884,7 +6879,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3614,
+          "line": 3615,
           "tag": "button",
           "id": "lead-note-cancel",
           "class": "msg-call",
@@ -5894,7 +6889,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3614,
+          "line": 3615,
           "tag": "button",
           "id": "lead-note-save",
           "class": "msg-call",
@@ -5904,7 +6899,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4057,
+          "line": 4058,
           "tag": "button",
           "id": "voice-chip",
           "class": "maya-pill",
@@ -5914,7 +6909,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4058,
+          "line": 4059,
           "tag": "button",
           "id": null,
           "class": "",
@@ -5924,7 +6919,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2007,
+          "line": 2008,
           "tag": "button",
           "id": null,
           "class": "",
@@ -5934,7 +6929,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2068,
+          "line": 2069,
           "tag": "button",
           "id": null,
           "class": "",
@@ -5944,7 +6939,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2071,
+          "line": 2072,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7515,7 +8510,7 @@
       ],
       "roles": {
         "pill": {
-          "count": 274,
+          "count": 279,
           "locations": [
             {
               "page": "aesthetics/ui/fabric-search-details.js",
@@ -7672,6 +8667,26 @@
             {
               "page": "backend/backend.html",
               "line": 3286
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 18
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 19
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 20
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 21
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
             },
             {
               "page": "backend/operations.html",
@@ -7911,10 +8926,6 @@
             },
             {
               "page": "backend/status.html",
-              "line": 1081
-            },
-            {
-              "page": "backend/status.html",
               "line": 1082
             },
             {
@@ -7923,7 +8934,7 @@
             },
             {
               "page": "backend/status.html",
-              "line": 1089
+              "line": 1084
             },
             {
               "page": "backend/status.html",
@@ -7939,47 +8950,47 @@
             },
             {
               "page": "backend/status.html",
-              "line": 1338
+              "line": 1093
             },
             {
               "page": "backend/status.html",
-              "line": 2753
+              "line": 1339
             },
             {
               "page": "backend/status.html",
-              "line": 2796
+              "line": 2754
             },
             {
               "page": "backend/status.html",
-              "line": 2799
+              "line": 2797
             },
             {
               "page": "backend/status.html",
-              "line": 2801
+              "line": 2800
             },
             {
               "page": "backend/status.html",
-              "line": 2966
+              "line": 2802
             },
             {
               "page": "backend/status.html",
-              "line": 2969
+              "line": 2967
             },
             {
               "page": "backend/status.html",
-              "line": 2971
+              "line": 2970
             },
             {
               "page": "backend/status.html",
-              "line": 2973
+              "line": 2972
             },
             {
               "page": "backend/status.html",
-              "line": 2975
+              "line": 2974
             },
             {
               "page": "backend/status.html",
-              "line": 2978
+              "line": 2976
             },
             {
               "page": "backend/status.html",
@@ -7987,27 +8998,27 @@
             },
             {
               "page": "backend/status.html",
-              "line": 2981
+              "line": 2980
             },
             {
               "page": "backend/status.html",
-              "line": 2983
+              "line": 2982
             },
             {
               "page": "backend/status.html",
-              "line": 3582
+              "line": 2984
             },
             {
               "page": "backend/status.html",
-              "line": 3614
+              "line": 3583
             },
             {
               "page": "backend/status.html",
-              "line": 3614
+              "line": 3615
             },
             {
               "page": "backend/status.html",
-              "line": 4057
+              "line": 3615
             },
             {
               "page": "backend/status.html",
@@ -8015,15 +9026,19 @@
             },
             {
               "page": "backend/status.html",
-              "line": 2007
+              "line": 4059
             },
             {
               "page": "backend/status.html",
-              "line": 2068
+              "line": 2008
             },
             {
               "page": "backend/status.html",
-              "line": 2071
+              "line": 2069
+            },
+            {
+              "page": "backend/status.html",
+              "line": 2072
             },
             {
               "page": "backend/verify.html",
@@ -8615,9 +9630,154 @@
             }
           ]
         },
-        "label": {
-          "count": 20,
+        "paragraph": {
+          "count": 30,
           "locations": [
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 14
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 14
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 14
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 16
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 16
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 16
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 16
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 17
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 23
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 24
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 25
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 25
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 25
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 27
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 27
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 27
+            },
+            {
+              "page": "backend/operations.html",
+              "line": 349
+            },
+            {
+              "page": "backend/operations.html",
+              "line": 488
+            },
+            {
+              "page": "backend/status.html",
+              "line": 951
+            },
+            {
+              "page": "backend/status.html",
+              "line": 951
+            },
+            {
+              "page": "backend/status.html",
+              "line": 951
+            },
+            {
+              "page": "backend/status.html",
+              "line": 1338
+            },
+            {
+              "page": "backend/status.html",
+              "line": 1339
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 14
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 16
+            }
+          ]
+        },
+        "label": {
+          "count": 25,
+          "locations": [
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
+            {
+              "page": "backend/design-studio-2.html",
+              "line": 26
+            },
             {
               "page": "backend/operations.html",
               "line": 338
@@ -8700,43 +9860,6 @@
             }
           ]
         },
-        "paragraph": {
-          "count": 8,
-          "locations": [
-            {
-              "page": "backend/operations.html",
-              "line": 349
-            },
-            {
-              "page": "backend/operations.html",
-              "line": 488
-            },
-            {
-              "page": "backend/status.html",
-              "line": 951
-            },
-            {
-              "page": "backend/status.html",
-              "line": 951
-            },
-            {
-              "page": "backend/status.html",
-              "line": 1337
-            },
-            {
-              "page": "backend/status.html",
-              "line": 1338
-            },
-            {
-              "page": "backend/wr.html",
-              "line": 14
-            },
-            {
-              "page": "backend/wr.html",
-              "line": 16
-            }
-          ]
-        },
         "caption": {
           "count": 20,
           "locations": [
@@ -8762,23 +9885,19 @@
             },
             {
               "page": "backend/status.html",
-              "line": 1842
-            },
-            {
-              "page": "backend/status.html",
               "line": 1843
             },
             {
               "page": "backend/status.html",
-              "line": 1872
+              "line": 1844
             },
             {
               "page": "backend/status.html",
-              "line": 1874
+              "line": 1873
             },
             {
               "page": "backend/status.html",
-              "line": 1876
+              "line": 1875
             },
             {
               "page": "backend/status.html",
@@ -8790,31 +9909,35 @@
             },
             {
               "page": "backend/status.html",
-              "line": 2523
+              "line": 1879
             },
             {
               "page": "backend/status.html",
-              "line": 2593
+              "line": 2524
             },
             {
               "page": "backend/status.html",
-              "line": 2629
+              "line": 2594
             },
             {
               "page": "backend/status.html",
-              "line": 3290
+              "line": 2630
             },
             {
               "page": "backend/status.html",
-              "line": 3326
+              "line": 3291
             },
             {
               "page": "backend/status.html",
-              "line": 3473
+              "line": 3327
             },
             {
               "page": "backend/status.html",
               "line": 3474
+            },
+            {
+              "page": "backend/status.html",
+              "line": 3475
             },
             {
               "page": "frontend/index.html",

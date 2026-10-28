@@ -460,10 +460,10 @@ try {
   /* v13.47: the gap between MAYA and its chips is INSIDE the chip strip
      (padding, not margin), and the strip lingers a moment after the cursor
      leaves, so the chips can actually be reached and clicked. */
-  .card-maya .pg-chips{position:absolute;left:100%;top:50%;transform:translateY(-50%);
-    display:flex;gap:6px;white-space:nowrap;padding-left:10px;
+  .card-maya .pg-chips{position:absolute;z-index:20;left:50%;top:100%;transform:translateX(-50%);
+    display:flex;gap:6px;white-space:nowrap;padding:6px 0 0;
     opacity:0;pointer-events:none;transition:opacity .18s ease .4s}
-  .card-maya:hover .pg-chips,.card-maya:focus .pg-chips,.card-maya .pg-chips:hover{
+  .card-maya:hover .pg-chips,.card-maya:focus .pg-chips,.card-maya:focus-within .pg-chips,.card-maya .pg-chips:hover{
     opacity:1;pointer-events:auto;transition-delay:0s}
   .pg-chip{font-family:var(--maya-font-ui);font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
     color:var(--dim);border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:3px 9px;
@@ -948,7 +948,7 @@ try {
     </div>
   </div>
   <div id="drawer-systems">
-  <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button" href="/wr.html">WR</a><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
+  <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button" href="/wr.html">WR</a><a data-maya-type="P3" class="maya-glass-button" href="/design-studio-2.html">Design Studio 2</a><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
   <button data-maya-type="P3" class="maya-glass-button design-quicklink" onclick="admTab('automations')">Automations</button></div>
   <h3>Vault</h3>
   <a data-maya-type="P2" href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small data-maya-type="P1">Data and hosting</small></a>
@@ -1034,6 +1034,7 @@ try {
         <a class="pg-chip" href="/operations.html" target="_blank"
            onclick="event.stopPropagation()" title="The test bench.">operation room</a>
       </span></span>
+    <a class="card card-studio" href="/design-studio-2.html"><b data-maya-type="H2">DESIGN STUDIO 2</b></a>
   </div>
 
 

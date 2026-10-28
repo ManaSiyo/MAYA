@@ -1,3 +1,4 @@
+import './design-studio-2-ui.mjs';
 import './avatar-camera-ui.mjs';
 import './wr-store.mjs';
 import './wr-ui.mjs';
@@ -107,6 +108,9 @@ assertCanon(); // Backend follows frontend chrome; consumer styling stays isolat
 assertContainer(); // Missing runtime files must fail before deploying Cloud Run.
 if(MAP_SOURCE.includes('<maya-owner-crm>'))throw Error('Retired Owner tools must not appear in Systems');
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
+
+// Design Studio 2 stays an internal design preview with a non-sending form.
+{const studio=readFileSync(join(ROOT,'backend/design-studio-2.html'),'utf8');ok('Design Studio 2 presents four experiences and an explicit non-sending form',(studio.match(/class="studio-tier"/g)||[]).length===4&&studio.includes('This form does not send or save information.'));}
 
 // WR retains Admin-sized submissions and an isolated Applicants form.
 {const wr=readFileSync(join(ROOT,'backend/wr.html'),'utf8');ok('WR exposes Applicants with one Wave and Number and an Email field',wr.includes('>Applicants</h2>')&&(wr.match(/name="wave"/g)||[]).length===1&&(wr.match(/name="phone"/g)||[]).length===1&&wr.includes('name="email"'));}
@@ -1125,7 +1129,7 @@ ok('Back in Fabrics or Pinterest keeps the main drawer open',
   INDEX_SOURCE.includes("'#notes-drawer, #hamburger-toggle, #fabrics-drawer, #pinterest-drawer, #feedback-modal, #pg-maya-chip'"));
 // ── v13.47, the numbers audit ──────────────────────────────────────────────
 ok('the MAYA door chips can actually be reached and clicked',
-  MAP_SOURCE.includes('padding-left:10px') &&
+  MAP_SOURCE.includes('padding:6px 0 0') &&
   MAP_SOURCE.includes('transition:opacity .18s ease .4s') &&
   MAP_SOURCE.includes('.card-maya .pg-chips:hover'));
 ok('every traffic pill names what it pairs on hover',

@@ -105,3 +105,5 @@ console.log('Final Aesthetic Control authority passed: active previews, saved se
 await import('./wr-ui.mjs?authority');
 
 await import('./avatar-camera-ui.mjs?authority');
+
+await import('./design-studio-2-ui.mjs?authority');

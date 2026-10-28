@@ -562,3 +562,11 @@ privately per authenticated Admin account.
 The frontend camera dialog uses the shared popup material, H3/P1 typography and
 Glass pills. The collapsible camera sample beside dropdown controls previews the
 same settings. Page CSS owns only placement and video layout.
+
+### Design Studio 2
+
+The internal design preview uses the existing H0 headline (adaptively capped to
+its container), H1 brand, H2 sections, H3 tier titles, P1/P2/P3 text, inner-panel
+material, Glass pills, fields, dropdown and checkbox settings. Its compact
+collapsible Aesthetic Control sample reuses those controls. The demo form never
+sends or stores information. Page CSS owns placement and responsive layout.

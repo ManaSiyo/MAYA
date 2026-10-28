@@ -1,6 +1,27 @@
 # Current handoff — October 27, 2026
 
-## Current work — WR Admin layout and applicants
+## Current work — Design Studio 2 preview
+
+`/design-studio-2.html` serves `backend/design-studio-2.html`, linked from the
+Admin door row and Systems drawer. It recreates the current Mana Siyo studio's
+four experiences, consultation process, stories and form in MAYA's visual
+language. Selecting an experience updates the form; the form is explicitly a
+preview and cannot send or save data. The page uses site-owned Wix image URLs;
+all five loaded in an isolated local browser, but depend on that external host.
+It has no backend or real signup integration. Source page:
+https://www.manasiyo.com/design. Admin's Maya room menu now opens below its door
+so the new door remains reachable.
+
+The page uses Aesthetic Control's existing H0/H1/H2/H3/P1/P2/P3, inner panels,
+Glass pills, input/dropdown and checkbox settings. A compact collapsible sample
+lives within Fields and drawer spacing; `tests/design-studio-2-ui.mjs` checks
+actual selection, no network writes, script failure, shared saved settings and six
+widths. Cloud Build test commands, integrated app regression, smoke, and the
+final aesthetic-authority gate passed with installed dependencies. npm ci and
+the deployed release remain unverified. Next: Fromsa pushes the prepared commit,
+then verifies the deployed page and image delivery.
+
+## Previous work — WR Admin layout and applicants
 
 WR now uses the Admin-style horizontal submissions strip, with cards slightly
 larger (36vh versus Admin's 34vh), and an Applicants table and form constrained

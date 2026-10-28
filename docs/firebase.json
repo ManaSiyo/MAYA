@@ -130,6 +130,10 @@
         "destination": "/backend/wr.html"
       },
       {
+        "source": "/design-studio-2.html",
+        "destination": "/backend/design-studio-2.html"
+      },
+      {
         "source": "/status.html",
         "destination": "/backend/status.html"
       },

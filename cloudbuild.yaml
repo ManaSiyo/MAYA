@@ -116,6 +116,7 @@ steps:
         node tests/wr-store.mjs
         node tests/wr-ui.mjs
         node tests/avatar-camera-ui.mjs
+        node tests/design-studio-2-ui.mjs
         node tests/aesthetic-authority.mjs
   - id: Build server
     name: gcr.io/cloud-builders/docker

@@ -2886,3 +2886,6 @@ OCTOBER 27, 2026 — FRONTEND AVATAR CAMERA
 OCTOBER 27, 2026 — WR APPLICANTS AND ADMIN MATCH
 [x] Match Admin submission cards and Applicants width, make the cards slightly larger, and prioritize early thumbnail reads.
 [x] Applicants has one numeric Wave, one Number, Name, Look, Color and Email; retain private existing records.
+
+OCTOBER 28, 2026 — DESIGN STUDIO 2 PREVIEW
+[x] Create a MAYA-styled replica of Mana Siyo's Design Studio, linked beside MAYA and in Admin Systems; the consultation form is a non-sending visual demo.

@@ -599,3 +599,15 @@ client-bound picker/read guards, explicit Use photo and the existing upload path
 Run `tests/avatar-camera-ui.mjs`, frontend hands/account/project tests, component
 gallery, app-regression and the final aesthetic-authority check. Its camera is a
 synthetic fixture and cannot establish real-device behavior.
+
+
+## Design Studio 2 preview
+
+`backend/design-studio-2.html` is served at `/design-studio-2.html` and is linked
+from the Admin doors and Systems drawer. Its CSS/JS live in `aesthetics/ui/` and
+its form is intentionally non-sending and non-persistent, including if the page
+script fails. Do not connect it to live callbacks, consent, notifications or Wix
+without a new owner instruction. Its images reference the owner's existing Wix
+site. Use existing Aesthetic Control roles, panels, pills, fields and checkbox;
+run `tests/design-studio-2-ui.mjs`, Admin navigation, gallery, app-regression and
+the final aesthetic-authority gate.

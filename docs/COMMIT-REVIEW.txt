@@ -1,10 +1,14 @@
-Title: [Codex] Align WR submissions and applicants with Admin
+Title: [Codex] Add Design Studio 2 visual preview
 
-Match Admin's full-width horizontal submissions strip and centered table width,
-with slightly taller cards. Rename Leads to Applicants and add an Email field;
-Wave, Number, Name, Look and Color remain. Existing private records and idempotent
-retries remain compatible. Prioritize newest thumbnail reads and limit concurrent
-image requests to four.
+Add an Admin-linked Design Studio 2 page modeled on Mana Siyo's existing studio,
+using MAYA's shared typography, materials, fields and pills. Tier selection updates
+the preview form; it never sends or persists the entered data. The page uses images
+from the existing Wix site. Move the MAYA room menu below its door to avoid
+obscuring the new link.
 
-Validation: WR fixtures compare Admin geometry across six widths, exercise old and
-new records, test thumbnail concurrency and Aesthetic Control propagation. Local release checks, app regression and smoke passed; final aesthetic authority passed after functional checks. npm ci and real deployed performance are not verified; the existing thumbnail API still returns original image bytes. Fromsa pushes.
+Validation: local fixtures cover navigation, selection, the non-sending form,
+script failure, saved styles and six widths; the five site-hosted images also
+rendered in an isolated local browser. Cloud Build test commands, integrated
+regression, smoke and the final Aesthetic Control gate passed using installed
+dependencies. npm ci and production deployment remain unverified. Fromsa pushes
+the commit.
