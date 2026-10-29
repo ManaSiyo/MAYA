@@ -72,6 +72,7 @@ steps:
         node tests/admin-wake.mjs
         node tests/proxy-policy.mjs
         node tests/pattern-decisions.mjs
+        node tests/refresh-efficiency.mjs
         node tests/owner-crm.mjs
         node tests/owner-conversation.mjs
         node tests/owner-sms-access.mjs

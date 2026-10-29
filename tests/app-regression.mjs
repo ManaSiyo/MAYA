@@ -1,5 +1,6 @@
 import './design-studio-2-ui.mjs';
 import './pattern-decisions.mjs';
+import './refresh-efficiency.mjs';
 import './avatar-camera-ui.mjs';
 import './wr-store.mjs';
 import './wr-ui.mjs';

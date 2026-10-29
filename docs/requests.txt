@@ -1,3 +1,5 @@
+October 29 — Audit the last push, performance, refresh, desktop CSS, fabric and voice workflows; use current OpenAI guidance and remove confirmed redundant work. The public release remains at 3873ced despite tracked head 8a83820; local refresh/polling repairs and test evidence are in AI-HANDOFF. Authenticated/live provider and microphone performance remain unmeasured.
+
 October 29 — Apply OpenAI Decisions where appropriate to pattern-book passage selection and confirm GPT Image 2.5. A bounded optional category hint now assists retrieval for unrecognized garments while preserving adaptive pattern rules and broad-search fallback. Provider access and real-world accuracy need verification; see AI-HANDOFF.
 
 October 29 — Compact Aesthetic Control previews and shared pills; remove the Studio door and Brief Direction, fix Users popup layering, simplify Fabrics and investigate missing results, and align/pan Operation Room panels. Review image-model and pattern-book decisions. Local checks and exact live acceptance are tracked in AI-HANDOFF.

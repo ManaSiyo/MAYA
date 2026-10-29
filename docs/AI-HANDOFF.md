@@ -1,5 +1,48 @@
 # Current handoff — October 29, 2026
 
+## Current work — live audit and refresh efficiency
+
+Public release verification found Hosting and API both still at 3873ced while
+the tracked maya-v2 head was 8a83820. GitHub's Vercel status was green, but the
+available status did not identify the Firebase/Cloud Run build outcome. Do not
+claim the later two commits are deployed; inspect the Google Cloud Build for the
+head and repair its actual failure before another push. Public health reports
+the API and submission storage configured, not authenticated provider success.
+
+Frontend and Admin now check the 95-byte release marker before falling back to
+the HTML for old/local releases, retain the existing voice and unsaved-work
+deferrals, and skip periodic checks while hidden. Admin submissions use their
+documented 15-second regular cadence; arriving submissions keep five seconds.
+Message polling pauses in hidden tabs and refreshes when visible; a duplicate
+traffic timer and duplicate model-snapshot event were removed. No CSS or visible
+UI changed. `tests/refresh-efficiency.mjs` covers these paths and is a release
+and app-regression gate.
+
+One signed-out public desktop sample returned first byte in 0.15–0.26 seconds
+for the four pages; browser DOM-ready was 0.39–0.58 seconds and the sample ran
+approximately 60 animation callbacks per second. At 1024/1440/1920 desktop
+widths and 390px frontend, no horizontal overflow or page exceptions appeared;
+all Admin stylesheets completed loading. This is neither a field performance
+distribution nor an authenticated Admin, live fabric or real microphone test.
+Synthetic fabric, voice, project/account isolation and release checks remain the
+evidence for those paths. The new update check avoids downloading approximately
+985 KB of uncompressed frontend HTML or 361 KB of Admin HTML on each ordinary
+check, subject to the legacy fallback; compressed transfer differs.
+
+OpenAI's current guidance recommends evidence-backed dead-code removal and
+describes WARP for faster Realtime connection setup. No voice protocol or model
+was changed without a compatible-browser and real latency comparison. See
+https://developers.openai.com/blog/maintaining-software-with-the-gpt-6-family
+and https://developers.openai.com/api/docs/guides/voice-webrtc?voice-api=realtime.
+Credentials and external configuration were not accessed or changed.
+
+All Cloud Build Node gates, integrated regression, smoke, the focused refresh
+checks and the final Aesthetic Control authority gate passed locally using
+isolated Playwright Chromium and fake providers. npm ci, production build,
+authenticated live fabric searches and real voice response remain unverified.
+Next: inspect the Google Cloud Build for 8a83820, then Fromsa can push the
+prepared commit and verify the exact Hosting and API release before live tests.
+
 ## Current work — Decisions for pattern-book search
 
 For an unrecognized garment, Operation Room asks OpenAI Decisions for a bounded

@@ -1,11 +1,13 @@
-Title: [Codex] Assist pattern-book retrieval with OpenAI Decisions
+Title: [Codex] Reduce MAYA background refresh overhead
 
-For unrecognized garments, use a bounded Decisions category as a soft retrieval
-hint while retaining adaptive pattern rules and broad-search fallback. Keep the
-endpoint admin-only and limit request size and input; send no photo or measurements.
-Empty garment labels remain unknown. GPT Image 2.5 Flare was already configured.
+Use the small release marker for routine update checks, retaining the legacy
+page fallback and existing protection for active voice and unsaved frontend work.
+Correct Admin submission polling, pause hidden-tab message polling, and remove a
+duplicate traffic timer and model-snapshot event. Add focused release-gated tests.
+There is no visible UI or CSS change.
 
-Cloud Build Node gates, integrated regression, smoke, focused proxy and Operation
-Room tests, and the final Aesthetic Control authority passed locally.
-Provider entitlement, actual routing quality, latency, cost, npm ci and deployment
-remain unverified. The confidence cutoff needs labeled evaluation. Fromsa pushes.
+Cloud Build Node gates, integrated regression, smoke, focused refresh tests and
+final Aesthetic Control authority passed locally. Public Hosting
+and API currently report 3873ced, older than pushed head 8a83820; the Google Cloud
+Build outcome needs inspection. Live authenticated voice and fabric performance,
+provider quality, npm ci and production build remain unverified. Fromsa pushes.

@@ -1,5 +1,12 @@
 # MAYA assistant instructions
 
+Admin and frontend deployment watchers use the small Hosting release marker,
+with legacy page fallback; never reload while voice is active or unsaved frontend
+work cannot flush. Hidden tabs do not poll message threads. Admin submissions
+refresh at 15 seconds normally and 5 seconds while arriving. Run
+tests/refresh-efficiency.mjs, app-regression and the release/aesthetic gates for
+these paths.
+
 Operation Room unknown-garment retrieval uses a bounded admin-only OpenAI
 Decisions category hint, with adaptive grammar and broad retrieval fallback.
 Run tests/pattern-decisions.mjs and the existing Operations, proxy and release

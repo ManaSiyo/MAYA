@@ -6801,11 +6801,23 @@ const _RUNNING_VERSION = (document.querySelector('meta[name="maya-version"]') ||
 const _RUNNING_BUILD = (document.querySelector('meta[name="maya-build"]') || {}).content || '';
 let _updateReloading = false;
 async function _checkForUpdate() {
-  if (_updateReloading || !_RUNNING_VERSION) return;
+  if (_updateReloading || !_RUNNING_VERSION || document.hidden) return;
   try {
-    const t = await (await fetch('/?uv=' + Date.now(), { cache: 'no-store' })).text();
-    const m = t.match(/maya-version" content="([0-9.]+)"/);
-    const build = t.match(/maya-build" content="([0-9a-f]{40})"/);
+    let m = null, build = null;
+    // The Hosting release marker is tiny and atomically deployed with pages.
+    // Old or local deployments without a valid marker retain the page check.
+    if (/^[0-9a-f]{40}$/.test(_RUNNING_BUILD)) {
+      try {
+        const r = await fetch('/release.json', { cache: 'no-store' });
+        const j = r.ok ? await r.json() : null;
+        if (/^[0-9a-f]{40}$/.test(j?.commit || '')) build = [null, j.commit];
+      } catch (_) {}
+    }
+    if (!build) {
+      const t = await (await fetch('/?uv=' + Date.now(), { cache: 'no-store' })).text();
+      m = t.match(/maya-version" content="([0-9.]+)"/);
+      build = t.match(/maya-build" content="([0-9a-f]{40})"/);
+    }
     // v12.7: only reload for a version that is genuinely NEWER. It used to
     // reload on ANY difference, so while two server versions were briefly live
     // during a deploy a tab could see the older one, sign out, reload, see the

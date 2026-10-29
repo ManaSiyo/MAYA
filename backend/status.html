@@ -1796,12 +1796,14 @@ async function _paintThumbs() {
 // invisible for most of a minute while everyone stares at the map.
 // v13.29: while something is still arriving (a submission whose picture has not
 // landed yet) the strip checks every 5 seconds instead of 15, then settles back.
-let _subsQuick = 0;
+let _subsQuick = 0, _subsRegular = 0;
 setInterval(() => {
   if (!_idTok || document.visibilityState !== 'visible') return;
   const arriving = !!document.querySelector('#subs-strip .badge:not(.stale)');
   if (arriving) { loadSubmissions(); _subsQuick = Date.now(); return; }
   if (Date.now() - _subsQuick < 60000) return;      // just settled, no double poll
+  if (Date.now() - _subsRegular < 15000) return;
+  _subsRegular = Date.now();
   loadSubmissions();
 }, 5000);
 // The meter moves in cents, not seconds: once a minute is plenty.
@@ -1939,7 +1941,6 @@ function _wireUsersPop() {
 
 _gisBoot();
 loadSubmissions();
-setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadTraffic(); }, 120000);
 </script>
 <script>
 // ═══ v13.71: THE VISIBLE ADMIN COMMAND LAYER. Deterministic briefing,
@@ -3265,7 +3266,7 @@ function admTab(t) {
   document.getElementById('adm-tab-systems').setAttribute('aria-selected', t === 'systems'||t==='automations' ? 'true' : 'false');
   document.getElementById('adm-tab-messages').setAttribute('aria-selected', t === 'messages' ? 'true' : 'false');
   document.getElementById('drawer-messages').hidden = t !== 'messages';
-  if (t === 'messages') { loadThreads(); loadBookingPending(); if (!_msgTimer) _msgTimer = setInterval(() => { const hs=document.getElementById('adm-hscroll');const visible=document.visibilityState==='visible'&&hs&&hs.scrollLeft>(hs.scrollWidth-hs.clientWidth)/2;if (_msgOpen&&visible) loadThread(_msgOpen.number, true); else loadThreads();if(visible)loadBookingPending(); }, 8000); }
+  if (t === 'messages') { loadThreads(); loadBookingPending(); if (!_msgTimer) _msgTimer = setInterval(() => { if(document.visibilityState!=='visible')return;const hs=document.getElementById('adm-hscroll');const visible=hs&&hs.scrollLeft>(hs.scrollWidth-hs.clientWidth)/2;if (_msgOpen&&visible) loadThread(_msgOpen.number, true); else loadThreads();if(visible)loadBookingPending(); }, 8000); }
   else if (_msgTimer) { clearInterval(_msgTimer); _msgTimer = null; }
 }
 async function loadModelSnapshot(){
@@ -3278,7 +3279,6 @@ async function loadModelSnapshot(){
    const r=await fetch('/api/admin/models',{headers,cache:'no-store',signal:AbortSignal.timeout(10000)}),j=await r.json();
   if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');
   _modelsAuth=auth;_modelsChecked=Date.now();window.MAYA_MODEL_SNAPSHOT=j;window.dispatchEvent(new CustomEvent('maya-model-snapshot',{detail:j}));
-  window.dispatchEvent(new CustomEvent('maya-model-snapshot',{detail:j}));
  }
 
  catch(e){if(auth===_idTok)window.dispatchEvent(new CustomEvent('maya-model-error',{detail:e.message}));}
@@ -3664,7 +3664,8 @@ function leadMayaCall(i) {
   _mayaCallClient(x.phone, x.name || '', reason || '');
 }
 // the unread badge stays honest even while the Systems tab shows
-setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
+setInterval(() => { if (_idTok && _msgTab !== 'messages' && document.visibilityState === 'visible') loadThreads(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (_idTok && document.visibilityState === 'visible') { loadThreads(); if (_msgTab === 'messages' && _msgOpen) loadThread(_msgOpen.number, true); } });
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
 Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, msgSuggest, msgUseIdea, loadTextAutomations, generateAutomationExample, saveTextAutomations, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, msgLoadOlder, msgNewToggle, msgBegin, msgTypedNumber, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 if (_idTok) loadModelSnapshot();
@@ -4041,11 +4042,21 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
     return false;
   };
   async function checkAdminUpdate(){
-    if (reloading) return;
+    if (reloading || document.hidden) return;
     try {
-      const t = await (await fetch('/status.html?uv=' + Date.now(), { cache: 'no-store' })).text();
-      const m = t.match(/maya-version" content="([0-9.]+)"/);
-      const build = t.match(/maya-build" content="([0-9a-f]{40})"/);
+      let m = null, build = null;
+      if (/^[0-9a-f]{40}$/.test(RUN_BUILD)) {
+        try {
+          const r = await fetch('/release.json', { cache: 'no-store' });
+          const j = r.ok ? await r.json() : null;
+          if (/^[0-9a-f]{40}$/.test(j?.commit || '')) build = [null, j.commit];
+        } catch (_) {}
+      }
+      if (!build) {
+        const t = await (await fetch('/status.html?uv=' + Date.now(), { cache: 'no-store' })).text();
+        m = t.match(/maya-version" content="([0-9.]+)"/);
+        build = t.match(/maya-build" content="([0-9a-f]{40})"/);
+      }
       if ((build && build[1] !== RUN_BUILD) || (m && newer(m[1], RUN))) {
         // never reload while Maya is live on the line
         if (document.body.classList.contains('maya-live')) { setTimeout(checkAdminUpdate, 60000); return; }
