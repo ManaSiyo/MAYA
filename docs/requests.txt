@@ -1,3 +1,5 @@
+October 28 — Investigate and fix the blocked Design Studio 2 deployment. Cloud Build identified a MAYA room menu stacking failure; the local repair and test retain the shared design settings. Fromsa retains the final push and deployment verification follows.
+
 2026-10-27: Fromsa requested removal of Outbound code and page, compact unique Aesthetic Control editors, one fabric usage preview, shared Glass/Regular pill states, visible selected garment and shared traffic pill styling. Local implementation and verification prepared; owner retains push.
 
 October 26 — Simplify Aesthetic Control and put related items side by side where practical; recheck Fabrics. Glass and Regular pill previews/editors now share a desktop row; typography roles pair on wide screens, and page links live in the locations disclosure. Narrow screens stack; labels are shorter. Local Fabric search/UI checks pass; the live release remains older and private live acceptance remains unverified.

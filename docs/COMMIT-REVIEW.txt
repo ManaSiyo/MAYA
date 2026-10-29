@@ -1,14 +1,11 @@
-Title: [Codex] Add Design Studio 2 visual preview
+Title: [Codex] Fix MAYA door stacking during deployment checks
 
-Add an Admin-linked Design Studio 2 page modeled on Mana Siyo's existing studio,
-using MAYA's shared typography, materials, fields and pills. Tier selection updates
-the preview form; it never sends or persists the entered data. The page uses images
-from the existing Wix site. Move the MAYA room menu below its door to avoid
-obscuring the new link.
+Cloud Build for the Design Studio 2 release failed because the sign-in panel
+intercepted the MAYA room link while the door was partially transparent. Raise
+the door's stacking context and test an actual pointer hover at partial opacity.
 
-Validation: local fixtures cover navigation, selection, the non-sending form,
-script failure, saved styles and six widths; the five site-hosted images also
-rendered in an isolated local browser. Cloud Build test commands, integrated
-regression, smoke and the final Aesthetic Control gate passed using installed
-dependencies. npm ci and production deployment remain unverified. Fromsa pushes
-the commit.
+The Cloud Build test commands, integrated regression, smoke and final Aesthetic
+Control gate pass locally using installed dependencies. The fix requires Fromsa's
+push and a successful Cloud Build before Design Studio 2 is live; npm ci and the
+production Linux build have not been rerun. Verify the exact deployed commit and
+page after the build completes.

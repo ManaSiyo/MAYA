@@ -111,6 +111,7 @@ const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name);
 
 // Design Studio 2 stays an internal design preview with a non-sending form.
 {const studio=readFileSync(join(ROOT,'backend/design-studio-2.html'),'utf8');ok('Design Studio 2 presents four experiences and an explicit non-sending form',(studio.match(/class="studio-tier"/g)||[]).length===4&&studio.includes('This form does not send or save information.'));}
+ok('MAYA door keeps its menu above the sign-in panel during its opacity transition', MAP_SOURCE.includes('.card-maya{position:relative;z-index:2}'));
 
 // WR retains Admin-sized submissions and an isolated Applicants form.
 {const wr=readFileSync(join(ROOT,'backend/wr.html'),'utf8');ok('WR exposes Applicants with one Wave and Number and an Email field',wr.includes('>Applicants</h2>')&&(wr.match(/name="wave"/g)||[]).length===1&&(wr.match(/name="phone"/g)||[]).length===1&&wr.includes('name="email"'));}

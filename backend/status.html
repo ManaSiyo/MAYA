@@ -456,7 +456,9 @@ try {
   .grid.doors .card b{font-size:20px;font-weight:400;display:inline;margin:0}
   /* v13.45: hovering MAYA reveals the two back rooms, the Operations Room
      Beta and the Playground, as chips hanging to its right. */
-  .card-maya{position:relative}
+  /* The door's opacity transition creates its own stacking context. Keep that
+     context above the sign-in panel so its room links remain reachable. */
+  .card-maya{position:relative;z-index:2}
   /* v13.47: the gap between MAYA and its chips is INSIDE the chip strip
      (padding, not margin), and the strip lingers a moment after the cursor
      leaves, so the chips can actually be reached and clicked. */

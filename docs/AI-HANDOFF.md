@@ -1,5 +1,20 @@
 # Current handoff — October 27, 2026
 
+## Current work — blocked Design Studio release
+
+Cloud Build for `6cc66d0` failed in `tests/design-studio-2-ui.mjs` before
+deployment: the sign-in panel intercepted the MAYA Operation Room link during
+the door's opacity transition. The previous live release is `d255de7`.
+`backend/status.html` now puts the door's own stacking context above the panel;
+the Studio UI test holds the door at partial opacity while exercising a real
+pointer hover, reproducing the relevant stacking condition. No design settings,
+backend, or external services changed. All Cloud Build test commands, integrated
+regression and smoke passed locally using installed dependencies; npm ci and the
+production Linux build have not been rerun. The final Aesthetic Control gate
+passed after functional checks.
+Next: Fromsa pushes the prepared fix, then verify Cloud Build and the exact
+deployed commit, Studio link and page. Local checks cannot confirm deployment.
+
 ## Current work — Design Studio 2 preview
 
 `/design-studio-2.html` serves `backend/design-studio-2.html`, linked from the
