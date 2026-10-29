@@ -1,3 +1,7 @@
+October 29 — Fabric deadline lost under Node 20 garbage collection blocks deployment
+[confirmed] Cloud Build e3f0c5f3 (4a29684) timed out at fabric-search after 30m21s; two previous builds also timed out. The original suite hangs on Node 20.20.2, although Node 24 passes. Native combined signals retain only weak timeout sources; forced collection leaves the deadline unaborted.
+[repaired locally] WeakMap retention ties source lifetime to each combined fabric signal, covering route/web/feed/listing/redirect budgets without global permanent retention or extra provider calls. A forced-GC child suite fails the original via watchdog and passes all 49 cases on repaired Node 20/24. Added as a mandatory release and app-regression gate. No visible UI change; final validation/deployment/approval state is in AI-HANDOFF.
+
 October 29 — During a pending microphone attachment, a second voice start could return success before attachment finished. Check the in-flight start before returning an active session; fixtures exercise shared completion and cancellation. Live voice performance remains unmeasured.
 
 October 29 — Voice setup could leave callers pending after cancellation when token, SDP, microphone or track attachment ignored abort. Exercise held operations and late microphone cleanup; settle cancellation independently, bound startup and preserve real provider errors. Admin's image-health check downloaded a 2.5 MB original; use the existing 100 KB thumbnail. One throttled A/B and local tests do not establish deployed/live voice performance.

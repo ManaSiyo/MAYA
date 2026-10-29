@@ -1,3 +1,5 @@
+October 29 — Owner requested Astra and authorized live Chrome tests after Push. Chrome confirms older live release and three Cloud Build timeouts; Node 20 fabric deadline GC failure reproduced and repaired locally. Astra could not be selected by available tools; specific external image/audio test approvals remain pending. See AI-HANDOFF for release identity, measurements and exact next step.
+
 October 29 — Repeat performance, fabrics, voice and code audit. Fix a reproduced concurrent voice-start race; repeat slow-network live measurements and fabric/voice tests. The live site remains older than the pushed branch. Targeted coverage and remaining live-test limits are in AI-HANDOFF.
 
 October 29 — Stress CSS, load speed and Maya voice/commands again. Under a slow-network/CPU browser simulation, Admin's image health probe was identified as a cold-load bottleneck; use the existing thumbnail. Bound stalled voice start/cancellation while retaining provider errors and account isolation. Results and live-test limits are in AI-HANDOFF.

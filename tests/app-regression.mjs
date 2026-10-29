@@ -2723,6 +2723,8 @@ ok('Saved dominant fabric color rejects opposite seller colors while explicit la
 ok('Bounded fabric seeds retain reptile/long-pile texture and discard known notions before seller verification',!process.exitCode);
 ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
+await import('./fabric-search-gc.mjs');
+ok('Fabric deadlines survive Node garbage collection and retain parent cancellation',BUILD_SOURCE.includes('node tests/fabric-search-gc.mjs'));
 ok('Shopify collection/direct aliases share one search card and visual slot without changing source URLs or selected variants',true);
 await import('./domain-boundaries.mjs');
 ok('Fabric policy, provider imports, routes, styles and served assets stay separate from communications and CRM',true);

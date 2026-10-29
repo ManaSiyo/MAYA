@@ -1,5 +1,10 @@
 # MAYA assistant instructions
 
+Fabric combined abort signals must retain their timeout/parent sources on Node 20.
+Keep the WeakMap lifetime guard and tests/fabric-search-gc.mjs release gate; the
+forced-GC subprocess exercises real deadline fixtures with a bounded watchdog.
+Run fabric gates under the release Node major as well as the local runtime.
+
 Voice preparation cancellation must settle even if token, SDP, microphone or
 track attachment ignores abort; late microphone tracks are stopped. Startup has
 a 20-second deadline including warm-line microphone/track attachment, and real

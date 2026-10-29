@@ -46,6 +46,11 @@ never calls image generation. No purchase capability is added.
 
 ## Runtime
 
+Node 20 combined abort signals use a WeakMap lifetime guard so garbage collection
+cannot discard their timeout sources. Route, web, feed and seller deadlines keep
+their existing budgets. tests/fabric-search-gc.mjs forces collection through all
+behavioral deadline fixtures in a bounded subprocess and is a release gate.
+
 Saved dominant fabric_hex contributes only a clearly chromatic color-family hint
 when saved words do not already name a color. Ambiguous hues/neutrals stay with
 visual comparison; explicit latest color instructions override the hint. Seller

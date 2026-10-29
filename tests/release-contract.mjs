@@ -37,6 +37,7 @@ const releaseChecks=build.slice(build.indexOf('  - id: Test release contracts'),
 const commands=[...releaseChecks.matchAll(/^\s+node (.+)$/gm)].map(m=>m[1]);
 assert.equal(commands.at(-1),'tests/aesthetic-authority.mjs','Aesthetic Control must be the last release verification');
 assert.equal(commands.filter(c=>c==='tests/aesthetic-authority.mjs').length,1);
+assert.ok(commands.includes('tests/fabric-search-gc.mjs'),'Release must exercise fabric deadlines under garbage collection on its own Node runtime');
 for(const path of ['tests/component-gallery.mjs','tests/app-regression.mjs']){
  const source=read(path),launch=source.match(/chromium\.launch\([^\n]+/u)?.[0];
  assert.ok(launch?.includes('process.env.PW_CHROMIUM')&&launch.includes('process.env.CHROMIUM_PATH'),path+' retains explicit isolated browser overrides');

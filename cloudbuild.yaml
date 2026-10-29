@@ -67,6 +67,7 @@ steps:
         node tests/ai-routing.mjs
         node tests/fabric-sourcing.mjs
         node tests/fabric-search.mjs
+        node tests/fabric-search-gc.mjs
         node tests/admin-command.mjs
         node tests/admin-ui-contract.mjs
         node tests/admin-wake.mjs

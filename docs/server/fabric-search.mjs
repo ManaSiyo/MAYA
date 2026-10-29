@@ -11,6 +11,16 @@ const text = (v, max = 1000) => String(v ?? '').replace(/\s+/g, ' ').trim().slic
 const fail = (message, status = 400) => Object.assign(new Error(message), { status });
 const list = v => Array.isArray(v) ? v : v ? [v] : [];
 const plain = v => typeof v === 'string' ? text(v) : v && typeof v === 'object' ? text(JSON.stringify(v)) : '';
+// Node 20's native composite keeps only weak references to its source signals.
+// Retain timeout/parent sources for the lifetime of the combined signal so GC
+// cannot silently remove a request deadline. Weak keys allow completed requests
+// to be collected; this holds no request, image or lookbook data.
+const abortSources = new WeakMap();
+function combineSignals(sources) {
+  const signal = AbortSignal.any(sources);
+  abortSources.set(signal, sources);
+  return signal;
+}
 function untilAborted(promise,signal) {
   return new Promise((resolve,reject)=>{
     const abort=()=>reject(signal.reason);
@@ -183,7 +193,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     let target = merchantURL(url)?.url;
     for (let hop = 0; target && hop < 3; hop++) {
       signal?.throwIfAborted();
-      const response = await fetchImpl(target, { redirect: 'manual', signal: AbortSignal.any([signal || new AbortController().signal, AbortSignal.timeout(6000)]), headers: { 'User-Agent': 'MAYA fabric sourcing (maya.manasiyo.com)', Accept: 'text/html,application/json' } });
+      const response = await fetchImpl(target, { redirect: 'manual', signal: combineSignals([signal || new AbortController().signal, AbortSignal.timeout(6000)]), headers: { 'User-Agent': 'MAYA fabric sourcing (maya.manasiyo.com)', Accept: 'text/html,application/json' } });
       signal?.throwIfAborted();
       if ([301,302,303,307,308].includes(response.status)) { target = merchantURL(new URL(response.headers.get('location'), target).href)?.url; await response.body?.cancel?.(); continue; }
       if (!response.ok) throw fail('Retailer did not answer.', 502);
@@ -201,7 +211,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     if (hit && now() - hit.at < 5 * 60 * 1000) return { ...hit.product, reason: candidate.reason || '' };
     // Redirects, response bodies and the optional Shopify facts share one budget.
     // A fresh timeout at each hop could consume the browser's entire search window.
-    const listingSignal=signal?AbortSignal.any([signal,AbortSignal.timeout(8000)]):AbortSignal.timeout(8000);
+    const listingSignal=signal?combineSignals([signal,AbortSignal.timeout(8000)]):AbortSignal.timeout(8000);
     try {
       const page = await untilAborted(getPage(target.url, listingSignal),listingSignal);
       let product = parseListing(page.body, page.url, now());
@@ -345,7 +355,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       try {
         const url = 'https://' + shop.host + '/search/suggest.json?q=' + encodeURIComponent(q) + '&resources[type]=product&resources[limit]=3';
         // The feed query is intentional and must not pass through product URL canonicalization.
-        const feedSignal=AbortSignal.any([signal,AbortSignal.timeout(4500)]);
+        const feedSignal=combineSignals([signal,AbortSignal.timeout(4500)]);
         const r = await untilAborted(fetchImpl(url, { redirect: 'error', signal: feedSignal }),feedSignal);
         if (!r.ok) return [];
         const data = JSON.parse(await untilAborted(limitedText(r, 256 * 1024),feedSignal));
@@ -398,7 +408,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     let discovery = null, warning = '';
     try {
       if (!apiKey()) throw fail('Web search is unavailable. Showing retailer results where available.', 503);
-      const webSignal=AbortSignal.any([signal,AbortSignal.timeout(35000)]);
+      const webSignal=combineSignals([signal,AbortSignal.timeout(35000)]);
       const r = await untilAborted(fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { Authorization: 'Bearer ' + apiKey(), 'Content-Type': 'application/json' },
         signal: webSignal, body: JSON.stringify(webSearchBody({...input,selectedReference}, model)),
@@ -450,7 +460,7 @@ export function mountFabricSearch(app, { requireAdmin, requireAuthHeader, json, 
   const service = createFabricSearch(deps);
   app.post('/api/admin/fabrics/search', requireAuthHeader, json({ limit: '5mb' }), async (req, res) => {
     const controller = new AbortController();
-    const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(55000)]);
+    const signal=combineSignals([controller.signal,AbortSignal.timeout(55000)]);
     res.on('close', () => controller.abort());
     try {
       const stats=await untilAborted((async()=>{

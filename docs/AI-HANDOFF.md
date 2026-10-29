@@ -1,6 +1,61 @@
 # Current handoff — October 29, 2026
 
-## Current work — repeat performance and voice/fabric audit
+## Current work — live deployment audit and Node 20 fabric deadlines
+
+Authorized Chrome inspection of MAYA and its linked Cloud Run console identified
+why the latest changes are absent. Public Hosting, App/Admin stamps and API still
+report 3873cede7803d320f3f0b34e13a5aa4d151ab9e2. GitHub ls-remote reports
+4a296845fa3c0b27e966cdb5b794edf5a9cf3080; dc5166e is still local. Cloud Build
+history shows three timed-out builds, for 8a83820, 7695fe5 and 4a29684. The last,
+e3f0c5f3-6149-47e8-8f6c-de9f9c8f1ab3, lasted 30m21s and stopped at
+START node tests/fabric-search.mjs before building/deploying the server/site.
+No Cloud settings, credentials, environment variables or retries were changed.
+
+The same fabric suite hangs on official Node 20.20.2 while passing on local
+Node 24.19.0. A minimal forced-GC reproduction proves Node 20's AbortSignal.any
+can lose its timeout source: its result remains unaborted after the deadline.
+A new subprocess regression forces collection throughout all 49 fabric cases;
+the original fails its 15-second watchdog. fabric-search.mjs now keeps source
+signals in a WeakMap keyed by the combined signal for route, discovery, feed,
+listing and redirect deadlines. Sources remain alive while needed, without a
+permanent request registry or changing budgets, provider attempts or matching.
+The repaired forced-GC suite passes on Node 20 and Node 24. A mandatory new release
+gate and integrated regression assertion preserve this runtime evidence.
+
+Live Chrome baseline on the OLD release: the owner's saved Brief and selected
+tailcoat load, with no observed console messages, unloaded stylesheets or
+horizontal overflow at the inspected desktop/docked viewport. Navigation showed
+174ms first byte, 473ms DOM-ready and 716ms load; authenticated image requests
+continued afterward (one subfile took 1152ms and transferred about 1.98MB).
+These are a single browser-session sample, not cold-cache, full-content readiness,
+field percentiles or a claim about the new release. No saved data was changed.
+The long-open Admin tab contained four expired-session 401 errors. A fresh reload
+recovered without credential changes: 29 observed API requests had no HTTP errors,
+including authenticated submissions, analytics and feedback. Its navigation was
+64ms first byte, 309ms DOM-ready and 326ms load, with all stylesheets loaded and
+no horizontal overflow. Full-desktop visual inspection found no obvious overlap.
+This does not prove long-session renewal is repaired; retain it as a follow-up
+after the pending release. The legacy live thumbnail response also transferred
+about 1.98MB; thumbnail sizing remains a performance investigation opportunity.
+
+Automatic approval review blocked the live Fabrics click because saved images and
+client descriptions would go to configured external AI providers. Specific fabric
+and microphone approvals were requested and remain pending. No live fabric search
+or microphone session was started. The owner asked for Astra; in-place model
+switching is unavailable and native control of the ChatGPT app is blocked. Do not
+claim Astra ran these checks. The owner can select Astra in the chat model picker.
+
+Validation: all 74 functional release commands, integrated app-regression and
+server smoke passed on Node 20 using isolated Chromium and fake providers.
+Standalone Aesthetic Control passed last, including default/saved settings and
+six-width responsive fixtures. This backend/test/tooling change adds no
+visible UI and preserves all shared typography/material controls. Production
+Linux/container execution, the repaired Cloud Build and live provider acceptance
+remain unverified. Next: Fromsa pushes the outstanding local commits. Verify the
+exact new Hosting/API commit before
+claiming the voice/refresh/fabric fixes are live; repeat authorized provider tests.
+
+## Previous work — repeat performance and voice/fabric audit
 
 Public Hosting and API still reported 3873ced when tracked HEAD was 4a29684;
 the lightweight Admin probe in that pushed commit has not reached the site.
