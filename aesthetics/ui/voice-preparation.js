@@ -107,8 +107,8 @@
     }
     async function start() {
       const s = begin(false);
-      if (s.active) return s;
       if (s.starting) return s.starting;
+      if (s.active) return s;
       s.wokeAt = clock(); record(s, 'wake');
       // A microphone permission prompt may never resolve, even on a warm line.
       s.captureDeadline = setTimeout(() => { if (valid(s) && s.starting) stop('setup-timeout'); }, 20000);

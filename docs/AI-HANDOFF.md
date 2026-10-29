@@ -1,5 +1,37 @@
 # Current handoff — October 29, 2026
 
+## Current work — repeat performance and voice/fabric audit
+
+Public Hosting and API still reported 3873ced when tracked HEAD was 4a29684;
+the lightweight Admin probe in that pushed commit has not reached the site.
+A fresh signed-out isolated browser run at 1.5 Mbps, 100ms latency and 4x CPU
+slowdown measured frontend load at about 16.7s, Admin at about 37.7s, Brief at
+15.5s and Operation Room at 16.2s. Sampled phone/desktop widths had no page
+exceptions, missing loaded CSS or horizontal overflow. These are single synthetic
+samples of an older release, not authenticated field measurements.
+
+Review of the shared voice helper found a concurrent-start race: while microphone
+attachment was pending the session was marked active, so another start returned
+before the microphone was attached. The helper now waits on the existing start
+first; the behavioral fixture proves both successful completion and cancellation
+are shared. Frontend and Admin reference v3 of the no-cache shared helper. No
+visible UI changed. The previous cancellation deadline, provider-error, track
+cleanup and account/project scope safeguards remain intact.
+
+Fabric search, sourcing, routing and Realtime focused tests passed with fake
+providers, including seller evidence, visual review, deadlines, project/account
+isolation and saved lookbooks. Forty-three standalone JavaScript modules passed
+syntax checks. This is targeted review plus automated coverage, not proof of an
+exhaustive audit, actual live fabric relevance or real speech response latency.
+Real owner microphone and provider tests still require a deployed release and
+authorized access; no Chrome profile was accessed.
+
+All Cloud Build Node gates, integrated regression, smoke, and final Aesthetic
+Control authority passed with isolated Chromium and fake providers. npm ci,
+production build and real live voice/fabric performance remain unverified. Next:
+inspect the Google Cloud Build for 4a29684; Fromsa retains the push of the new
+local commit, followed by exact Hosting/API verification and authorized live tests.
+
 ## Current work — CSS, loading and voice stress
 
 Under simulated 1.5 Mbps down, 100ms latency and 4x CPU slowdown, the public

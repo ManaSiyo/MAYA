@@ -2779,6 +2779,7 @@ const authoredStatuses=[...presentationRuntimeSource.matchAll(/\{key:'([^']+)',l
 ok('Nine governed semantic statuses retain source usage and truthful ad delivery labels',JSON.stringify(authoredStatuses)===JSON.stringify(['new','contacted','in_progress','booked','completed','canceled','delivering','pending','rejected'])&&presentationRuntimeSource.includes('Impressions recorded in the selected D/W/M window. This does not confirm that the campaign is enabled now.')&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes("locations.className='status-usage'"));
 await import('./voice-preparation.mjs');
 ok('Prepared voice never transmits ambient audio, waits for server readiness and releases cancelled microphones',true);
+ok('Concurrent voice starts wait for microphone attachment and share cancellation',true);
 await import('./client-account-races.mjs');
 ok('Community unpublish pins identity across awaits',true);
 await import('./retired-workspaces-ui.mjs');

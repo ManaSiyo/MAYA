@@ -1,3 +1,5 @@
+October 29 — During a pending microphone attachment, a second voice start could return success before attachment finished. Check the in-flight start before returning an active session; fixtures exercise shared completion and cancellation. Live voice performance remains unmeasured.
+
 October 29 — Voice setup could leave callers pending after cancellation when token, SDP, microphone or track attachment ignored abort. Exercise held operations and late microphone cleanup; settle cancellation independently, bound startup and preserve real provider errors. Admin's image-health check downloaded a 2.5 MB original; use the existing 100 KB thumbnail. One throttled A/B and local tests do not establish deployed/live voice performance.
 
 October 29 — Live website and API report 3873ced while the tracked branch head is 8a83820. Vercel success does not establish Cloud Build success; the actual deployment failure remains unknown. Inspect the matching Google Cloud Build before retrying deployment.

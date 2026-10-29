@@ -63,6 +63,19 @@ for(const boundary of ['token','answer','microphone','attach']){
  const h=harness();h.setTokenError(Error('voice_credit'));const error=await h.manager.start().catch(e=>e);
  assert.equal(error.message,'voice_credit','provider failures are not masked by cancellation');assert.equal(h.manager.current,null);
 }
+{
+ const h=harness(),gate=deferred();await h.manager.prepare();h.setAttachGate(gate);const first=h.manager.start();await flush();assert.equal(h.manager.current.active,true,'fixture reaches attachment');
+ let secondSettled=false;const second=h.manager.start().then(value=>{secondSettled=true;return value;});await flush();
+ assert.equal(secondSettled,false,'a second start waits until the first microphone attachment finishes');
+ gate.resolve();assert.equal(await first,await second);h.manager.stop();
+}
+{
+ const h=harness(),gate=deferred();await h.manager.prepare();h.setAttachGate(gate);
+ const first=h.manager.start().catch(e=>e);await flush();assert.equal(h.manager.current.active,true);
+ const second=h.manager.start().catch(e=>e);h.manager.stop('off');
+ assert.equal((await first).name,'AbortError');assert.equal((await second).name,'AbortError');
+ gate.resolve();await flush();assert.ok(h.microphones.every(m=>m.getTracks()[0].stopped));
+}
 for(const boundary of ['token','answer','microphone','attach']){
  const h=harness(),gate=deferred();if(boundary==='token')h.setTokenGate(gate);if(boundary==='answer')h.setAnswerGate(gate);if(boundary==='microphone')h.setMicGate(gate);if(boundary==='attach')h.setAttachGate(gate);
  let settled=false,result;const pending=h.manager.start().catch(e=>e).then(e=>{settled=true;result=e;});

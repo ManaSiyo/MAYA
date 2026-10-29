@@ -3,8 +3,9 @@
 Voice preparation cancellation must settle even if token, SDP, microphone or
 track attachment ignores abort; late microphone tracks are stopped. Startup has
 a 20-second deadline including warm-line microphone/track attachment, and real
-provider errors must not be replaced by cancellation errors. Shared runtime
-references are v2. Run voice-preparation, realtime-voice, client/admin voice,
+provider errors must not be replaced by cancellation errors. Concurrent start
+calls wait for the same microphone attachment or cancellation. Shared runtime
+references are v3. Run voice-preparation, realtime-voice, client/admin voice,
 communications and hands suites. Admin's image health check uses the Red Royal
 thumbnail; it is a sample, not proof every image is healthy.
 

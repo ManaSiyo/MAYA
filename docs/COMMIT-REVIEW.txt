@@ -1,12 +1,11 @@
-Title: [Codex] Bound voice startup and reduce Admin image load
+Title: [Codex] Wait for concurrent Maya voice startup
 
-Settle stalled voice preparation on cancellation or the startup deadline, including
-microphone capture and track attachment, while cleaning up late audio and preserving
-provider errors. Use the existing small Red Royal thumbnail for Admin image health
-instead of the full fabric photograph. No CSS or visible controls change.
+Keep overlapping voice starts waiting for the same microphone attachment rather
+than reporting an active line early. Cover successful completion and cancellation;
+bump both shared voice runtime references to v3. No visible UI change.
 
-The Cloud Build Node gates, integrated regression, smoke and final Aesthetic Control
-check passed locally. A single simulated slow-network browser comparison
-shows lower transfer and load time; actual deployed performance and live voice
-latency are unverified. Hosting and API still reported 3873ced while tracked HEAD
-was 7695fe5. Inspect the Google Cloud Build before Fromsa pushes this new commit.
+Release gates, integrated regression, smoke and the final Aesthetic Control check
+passed locally. Fabric and voice provider fixtures passed locally; real
+speech latency, authenticated fabric search and deployment remain unverified.
+The live site and API still reported 3873ced, behind tracked commit 4a29684;
+inspect the Google Cloud Build. Fromsa retains the push.
