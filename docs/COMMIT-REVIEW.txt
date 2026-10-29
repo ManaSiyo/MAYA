@@ -1,13 +1,12 @@
-Title: [Codex] Reduce MAYA background refresh overhead
+Title: [Codex] Bound voice startup and reduce Admin image load
 
-Use the small release marker for routine update checks, retaining the legacy
-page fallback and existing protection for active voice and unsaved frontend work.
-Correct Admin submission polling, pause hidden-tab message polling, and remove a
-duplicate traffic timer and model-snapshot event. Add focused release-gated tests.
-There is no visible UI or CSS change.
+Settle stalled voice preparation on cancellation or the startup deadline, including
+microphone capture and track attachment, while cleaning up late audio and preserving
+provider errors. Use the existing small Red Royal thumbnail for Admin image health
+instead of the full fabric photograph. No CSS or visible controls change.
 
-Cloud Build Node gates, integrated regression, smoke, focused refresh tests and
-final Aesthetic Control authority passed locally. Public Hosting
-and API currently report 3873ced, older than pushed head 8a83820; the Google Cloud
-Build outcome needs inspection. Live authenticated voice and fabric performance,
-provider quality, npm ci and production build remain unverified. Fromsa pushes.
+The Cloud Build Node gates, integrated regression, smoke and final Aesthetic Control
+check passed locally. A single simulated slow-network browser comparison
+shows lower transfer and load time; actual deployed performance and live voice
+latency are unverified. Hosting and API still reported 3873ced while tracked HEAD
+was 7695fe5. Inspect the Google Cloud Build before Fromsa pushes this new commit.

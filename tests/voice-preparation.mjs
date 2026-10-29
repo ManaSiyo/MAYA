@@ -5,12 +5,12 @@ const code=readFileSync('aesthetics/ui/voice-preparation.js','utf8');
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
 const flush=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};
 function harness(){
- let scope='owner-A/project-A',clock=0,sequence=0,micGate=null,tokenGate=null,answerGate=null,blocked=false,ack=true;
+ let scope='owner-A/project-A',clock=0,sequence=0,micGate=null,tokenGate=null,answerGate=null,attachGate=null,tokenError=null,blocked=false,ack=true;
  const timers=new Map(),connections=[],microphones=[],events=[],requests=[],stops=[];
  const timer=(fn,ms,repeat=false)=>{const id=++sequence;timers.set(id,{fn,at:clock+ms,ms,repeat});return id;};
  class Audio{setAttribute(){}play(){events.push('play');return blocked?Promise.reject(Error('NotAllowedError')):Promise.resolve();}pause(){events.push('pause');}}
  class PC{
-  constructor(){connections.push(this);this.connectionState='new';this.sender={track:null,replaceTrack:async track=>{this.sender.track=track;events.push('attach');}};}
+  constructor(){connections.push(this);this.connectionState='new';this.sender={track:null,replaceTrack:async track=>{if(attachGate)await attachGate.promise;this.sender.track=track;events.push('attach');}};}
   addTransceiver(kind,config){assert.equal(kind,'audio');assert.equal(config.direction,'sendrecv');return {sender:this.sender};}
   createDataChannel(){this.dc={sent:[],send:v=>this.dc.sent.push(JSON.parse(v)),close:()=>{this.dc.closed=true;}};return this.dc;}
   async createOffer(){events.push('offer');return {type:'offer',sdp:'no microphone'};}
@@ -23,9 +23,9 @@ function harness(){
   navigator:{mediaDevices:{getUserMedia:()=>{events.push('microphone');const track={stopped:false,stop(){this.stopped=true;}};const mic={getTracks:()=>[track],getAudioTracks:()=>[track]};microphones.push(mic);return micGate?micGate.promise.then(()=>mic):Promise.resolve(mic);}}},
   fetch:async(url,options)=>{requests.push({url,options});if(answerGate)await answerGate.promise;return {ok:true,text:async()=> 'answer'};}};
  runInNewContext(code,ctx);
- const manager=ctx.window.MayaVoicePreparation.create({scope:()=>scope,token:async signal=>{events.push('token');if(tokenGate)await tokenGate.promise;return {value:'ephemeral-fixture',model:'fixture-model'};},
+ const manager=ctx.window.MayaVoicePreparation.create({scope:()=>scope,token:async signal=>{events.push('token');if(tokenGate)await tokenGate.promise;if(tokenError)throw tokenError;return {value:'ephemeral-fixture',model:'fixture-model'};},
   onActive:s=>{s.dc.send(JSON.stringify({type:'conversation.item.create',scope}));s.dc.send(JSON.stringify({type:'response.create'}));},onMessage:(event,s)=>events.push('message'),onStop:reason=>stops.push(reason),onPlaybackBlocked:()=>events.push('playback-blocked')});
- return {manager,events,requests,microphones,connections,stops,setScope:value=>scope=value,setMicGate:g=>micGate=g,setTokenGate:g=>tokenGate=g,setAnswerGate:g=>answerGate=g,setBlocked:v=>blocked=v,setAck:v=>ack=v,
+ return {manager,events,requests,microphones,connections,stops,setScope:value=>scope=value,setMicGate:g=>micGate=g,setTokenGate:g=>tokenGate=g,setAnswerGate:g=>answerGate=g,setAttachGate:g=>attachGate=g,setTokenError:e=>tokenError=e,setBlocked:v=>blocked=v,setAck:v=>ack=v,
   async advance(ms){const target=clock+ms;while(true){const next=[...timers].filter(([,v])=>v.at<=target).sort((a,b)=>a[1].at-b[1].at)[0];if(!next)break;const[id,t]=next;clock=t.at;if(t.repeat)t.at+=t.ms;else timers.delete(id);t.fn();await flush();}clock=target;await flush();}};
 }
 {
@@ -44,10 +44,10 @@ function harness(){
  const starting=h.manager.start();await flush();assert.equal(h.connections[0].sender.track,null);assert.equal(h.connections[0].dc.sent.length,0);
  h.connections[0].dc.onmessage({data:JSON.stringify({type:'session.created'})});await prepared;await starting;assert.ok(h.manager.current.active);h.manager.stop();
 }
-for(const boundary of ['token','answer','microphone']){
- const h=harness(),gate=deferred();if(boundary==='token')h.setTokenGate(gate);if(boundary==='answer')h.setAnswerGate(gate);if(boundary==='microphone')h.setMicGate(gate);
+for(const boundary of ['token','answer','microphone','attach']){
+ const h=harness(),gate=deferred();if(boundary==='token')h.setTokenGate(gate);if(boundary==='answer')h.setAnswerGate(gate);if(boundary==='microphone')h.setMicGate(gate);if(boundary==='attach')h.setAttachGate(gate);
  const pending=h.manager.start().catch(e=>e);await flush();assert.ok(h.events.indexOf('microphone')<h.events.indexOf('token'),'cold start requests capture without a network wait');
- h.manager.stop('off');gate.resolve();const value=await pending;assert.equal(value.name,'AbortError');assert.equal(h.manager.current,null);assert.ok(h.microphones.every(m=>m.getTracks()[0].stopped));assert.ok(h.connections.every(p=>p.connectionState==='closed'));assert.ok(h.connections.every(p=>p.dc.sent.length===0));
+ h.manager.stop('off');gate.resolve();const value=await pending;assert.equal(value.name,'AbortError');assert.equal(h.manager.current,null);assert.ok(h.microphones.every(m=>m.getTracks()[0].stopped));assert.ok(h.connections.every(p=>p.connectionState==='closed'));if(boundary!=='attach')assert.ok(h.connections.every(p=>p.dc.sent.length===0));
 }
 {
  const h=harness();h.setBlocked(true);const s=await h.manager.start();await flush();assert.equal(s.playbackBlocked,true);assert.ok(h.events.includes('playback-blocked'));h.setBlocked(false);assert.equal(await h.manager.resumePlayback(),true);assert.equal(s.playbackBlocked,false);
@@ -58,5 +58,17 @@ for(const boundary of ['token','answer','microphone']){
 }
 {
  const h=harness(),gate=deferred();h.setAnswerGate(gate);const pending=h.manager.prepare().catch(e=>e);await flush();await h.advance(20000);assert.equal(h.manager.current,null);assert.ok(h.stops.includes('setup-timeout'));gate.resolve();assert.equal((await pending).name,'AbortError');
+}
+{
+ const h=harness();h.setTokenError(Error('voice_credit'));const error=await h.manager.start().catch(e=>e);
+ assert.equal(error.message,'voice_credit','provider failures are not masked by cancellation');assert.equal(h.manager.current,null);
+}
+for(const boundary of ['token','answer','microphone','attach']){
+ const h=harness(),gate=deferred();if(boundary==='token')h.setTokenGate(gate);if(boundary==='answer')h.setAnswerGate(gate);if(boundary==='microphone')h.setMicGate(gate);if(boundary==='attach')h.setAttachGate(gate);
+ let settled=false,result;const pending=h.manager.start().catch(e=>e).then(e=>{settled=true;result=e;});
+ await flush();await h.advance(20000);
+ assert.equal(settled,true,`${boundary} startup must settle at the deadline even if its operation ignores abort`);
+ assert.equal(result.name,'AbortError');assert.equal(h.manager.current,null);
+ gate.resolve();await pending;await flush();assert.ok(h.microphones.every(m=>m.getTracks()[0].stopped),'late microphone is released');
 }
 console.log('Voice preparation: no microphone/output before wake, warm reuse, immediate cold capture, bounded idle/setup, scoped cancellation, late mic cleanup, playback recovery and honest timing events passed.');

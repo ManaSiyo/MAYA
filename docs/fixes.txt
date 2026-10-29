@@ -1,3 +1,5 @@
+October 29 — Voice setup could leave callers pending after cancellation when token, SDP, microphone or track attachment ignored abort. Exercise held operations and late microphone cleanup; settle cancellation independently, bound startup and preserve real provider errors. Admin's image-health check downloaded a 2.5 MB original; use the existing 100 KB thumbnail. One throttled A/B and local tests do not establish deployed/live voice performance.
+
 October 29 — Live website and API report 3873ced while the tracked branch head is 8a83820. Vercel success does not establish Cloud Build success; the actual deployment failure remains unknown. Inspect the matching Google Cloud Build before retrying deployment.
 
 October 29 — Full-look fabric matching discarded equal-strength matches for distinct garments even when they shared identical saved cloth. Keep the verified shared match without assigning a garment ID; preserve ambiguity, seller verification and the photo gate. Fixture coverage only; the tracksuit's live result and speed remain unverified.

@@ -123,5 +123,11 @@ await test('v14.01 the admin auto-refreshes on a new deploy (no more stale tab)'
   assert.ok(admin.includes('The lag is dead'), 'recent changes list is current');
 });
 
+await test('image health probe uses the actual lightweight fabric thumbnail', () => {
+  assert.ok(admin.includes('/aesthetics/fabrics/thumbs/Red%20Royal.jpg'));
+  assert.ok(!admin.includes("probeImage('https://maya.manasiyo.com/aesthetics/fabrics/Red%20Royal.JPG')"));
+  assert.ok(readFileSync(join(root, 'aesthetics/fabrics/thumbs/Red Royal.jpg')).length < 150000);
+});
+
 console.log('\n' + (failed ? failed + ' FAILED' : passed + ' passed') + '\n');
 process.exit(failed ? 1 : 0);

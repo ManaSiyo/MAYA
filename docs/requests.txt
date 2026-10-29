@@ -1,3 +1,5 @@
+October 29 — Stress CSS, load speed and Maya voice/commands again. Under a slow-network/CPU browser simulation, Admin's image health probe was identified as a cold-load bottleneck; use the existing thumbnail. Bound stalled voice start/cancellation while retaining provider errors and account isolation. Results and live-test limits are in AI-HANDOFF.
+
 October 29 — Audit the last push, performance, refresh, desktop CSS, fabric and voice workflows; use current OpenAI guidance and remove confirmed redundant work. The public release remains at 3873ced despite tracked head 8a83820; local refresh/polling repairs and test evidence are in AI-HANDOFF. Authenticated/live provider and microphone performance remain unmeasured.
 
 October 29 — Apply OpenAI Decisions where appropriate to pattern-book passage selection and confirm GPT Image 2.5. A bounded optional category hint now assists retrieval for unrecognized garments while preserving adaptive pattern rules and broad-search fallback. Provider access and real-world accuracy need verification; see AI-HANDOFF.

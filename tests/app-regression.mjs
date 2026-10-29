@@ -531,6 +531,7 @@ ok('submission cards cannot clip on hover',
   MAP_SOURCE.includes('#subs-strip{display:flex;gap:12px;overflow-x:auto;padding:10px 28px 12px;') &&
   MAP_SOURCE.includes('.sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:scale(1.012)'));
 ok('lights paint as each answer lands', MAP_SOURCE.includes("setDot('d-assets', a[0] && a[1] ? 'ok' : 'bad')"));
+ok('Admin image health check uses the lightweight fabric thumbnail', MAP_SOURCE.includes('/aesthetics/fabrics/thumbs/Red%20Royal.jpg'));
 
 ok('the meter is admin only and counts every successful call',
   SERVER_SOURCE.includes("app.get('/api/admin/spend'") &&

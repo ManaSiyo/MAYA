@@ -1,5 +1,42 @@
 # Current handoff — October 29, 2026
 
+## Current work — CSS, loading and voice stress
+
+Under simulated 1.5 Mbps down, 100ms latency and 4x CPU slowdown, the public
+frontend, Admin, Brief and Operation Room were inspected signed out. At sampled
+390/1280/1440/1920 widths, there was no horizontal overflow, unloaded stylesheet
+or uncaught page error. A single run is not a field or authenticated CSS audit.
+Public live Hosting and API still reported 3873ced when tracked HEAD was 7695fe5.
+
+Admin's image health probe previously loaded the 2,537,118-byte Red Royal
+original even while signed out. It now probes the existing 100,162-byte thumbnail
+of the same fabric; the full-size original and all CSS remain intact. In one
+controlled live-page A/B with that network/CPU simulation, substituting the
+thumbnail reduced total browser transfer from 5,774,535 to 3,341,863 bytes and
+the load event from 37.7 to 24.8 seconds. The measurement uses an intercepted
+redirect to the actual served thumbnail; it is not a deployed result or an
+estimate for every user. The shared 2 MB background remains a further candidate
+for a separately validated visual/format optimization.
+
+The voice preparation helper previously left callers waiting if token, SDP,
+microphone or replaceTrack ignored cancellation. Cancellation now settles those
+callers, the 20-second startup deadline includes capture and attachment on cold
+and warm sessions, and late microphones are stopped. Provider errors such as
+voice_credit remain visible instead of being masked by cancellation. Scope,
+no-microphone standby, reviewed actions and existing settings remain intact.
+References use v2 and the existing no-cache Hosting rule. These are recovery and
+payload improvements, not a measured reduction in live speech response latency.
+Real microphone, model recognition quality, first-audio p50/p95, authenticated
+fabric search, and Google Cloud Build outcome still need owner-authorized live
+verification. Do not access the owner's Chrome without new session permission.
+
+All Cloud Build Node gates, integrated regression, smoke, voice preparation,
+the hands suite and final Aesthetic Control authority passed locally with
+isolated Chromium and fake providers. npm ci, production build and actual live
+voice/fabric performance remain unverified. Next: inspect the Google Cloud Build
+for 7695fe5, then Fromsa can push the prepared commit and verify exact Hosting
+and API release identity before conducting owner-authorized live voice tests.
+
 ## Current work — live audit and refresh efficiency
 
 Public release verification found Hosting and API both still at 3873ced while

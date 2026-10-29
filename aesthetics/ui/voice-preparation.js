@@ -16,7 +16,7 @@
       const s = current; current = null;
       if (!s) return;
       s.closed = true; s.controller.abort();
-      clearTimeout(s.deadline); clearTimeout(s.idle); clearTimeout(s.maximum); clearInterval(s.scopeTimer);
+      clearTimeout(s.deadline); clearTimeout(s.captureDeadline); clearTimeout(s.idle); clearTimeout(s.maximum); clearInterval(s.scopeTimer);
       try { s.dc?.close(); } catch (_) {}
       try { s.pc?.close(); } catch (_) {}
       try { s.mic?.getTracks().forEach(track => track.stop()); } catch (_) {}
@@ -41,6 +41,10 @@
       const scope = options.scope(); if (!scope) throw new Error('not-signed-in');
       const s = { scope, created: clock(), wasPrepared: prepared, active: false, closed: false, controller: new AbortController(), mic: null };
       current = s;
+      // Cancellation settles callers even when a browser/provider ignores abort.
+      s.cancelled = new Promise((_, reject) => s.controller.signal.addEventListener('abort',
+        () => reject(s.failure || new DOMException('Voice preparation cancelled', 'AbortError')), { once: true }));
+      s.cancelled.catch(() => {});
       try {
       s.audio = new Audio(); s.audio.autoplay = false; s.audio.playsInline = true; s.audio.setAttribute('playsinline', '');
       s.pc = new RTCPeerConnection();
@@ -74,7 +78,7 @@
       });
       // Attach rejection observers immediately: cancellation can precede SDP.
       channel.catch(() => {}); sessionCreated.catch(() => {});
-      s.ready = (async () => {
+      s.ready = Promise.race([s.cancelled, (async () => {
         await Promise.resolve(); // start() requests microphone permission in the gesture first.
         if (!valid(s)) throw new DOMException('Cancelled', 'AbortError');
         const tokenPromise = options.token(s.controller.signal);
@@ -94,7 +98,7 @@
         // One bounded standby, never a timer-driven paid reconnection loop.
         s.deadline = setTimeout(() => { if (valid(s) && !s.active) stop('standby-expired'); }, 120000);
         return s;
-      })().catch(error => { if (current === s) stop(error.name === 'AbortError' ? 'cancelled' : 'failed'); throw error; });
+      })()]).catch(error => { if (current === s) { if (error.name !== 'AbortError') s.failure = error; stop(error.name === 'AbortError' ? 'cancelled' : 'failed'); } throw error; });
       s.ready.catch(() => {});
       return s;
     }
@@ -106,6 +110,8 @@
       if (s.active) return s;
       if (s.starting) return s.starting;
       s.wokeAt = clock(); record(s, 'wake');
+      // A microphone permission prompt may never resolve, even on a warm line.
+      s.captureDeadline = setTimeout(() => { if (valid(s) && s.starting) stop('setup-timeout'); }, 20000);
       // Ask immediately during the wake/tap, not after any network wait.
       let microphone;
       try { microphone = navigator.mediaDevices.getUserMedia({ audio: true }); }
@@ -115,14 +121,15 @@
           if (!valid(s)) { mic.getTracks().forEach(track => track.stop()); throw new DOMException('Cancelled', 'AbortError'); }
           s.mic = mic; record(s, 'microphone-ready'); return mic;
         });
-        const [mic] = await Promise.all([micPromise, s.ready]);
+        const [mic] = await Promise.race([Promise.all([micPromise, s.ready]), s.cancelled]);
         if (!valid(s)) throw new DOMException('Cancelled', 'AbortError');
         clearTimeout(s.deadline);
         // Fresh page context is sent before audio can reach the prepared line.
         s.active = true; options.onActive?.(s);
         if (!valid(s)) throw new DOMException('Cancelled', 'AbortError');
-        await s.sender.replaceTrack(mic.getAudioTracks()[0]);
+        await Promise.race([s.sender.replaceTrack(mic.getAudioTracks()[0]), s.cancelled]);
         if (!valid(s)) throw new DOMException('Cancelled', 'AbortError');
+        clearTimeout(s.captureDeadline);
         record(s, 'microphone-attached'); idle(s);
         s.maximum = setTimeout(() => { if (valid(s)) stop('session-limit'); }, 15 * 60 * 1000);
         void resumePlayback();
