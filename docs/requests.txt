@@ -1,3 +1,5 @@
+October 29 — Apply OpenAI Decisions where appropriate to pattern-book passage selection and confirm GPT Image 2.5. A bounded optional category hint now assists retrieval for unrecognized garments while preserving adaptive pattern rules and broad-search fallback. Provider access and real-world accuracy need verification; see AI-HANDOFF.
+
 October 29 — Compact Aesthetic Control previews and shared pills; remove the Studio door and Brief Direction, fix Users popup layering, simplify Fabrics and investigate missing results, and align/pan Operation Room panels. Review image-model and pattern-book decisions. Local checks and exact live acceptance are tracked in AI-HANDOFF.
 
 October 28 — Investigate and fix the blocked Design Studio 2 deployment. Cloud Build identified a MAYA room menu stacking failure; the local repair and test retain the shared design settings. Fromsa retains the final push and deployment verification follows.

@@ -1,5 +1,10 @@
 # MAYA assistant instructions
 
+Operation Room unknown-garment retrieval uses a bounded admin-only OpenAI
+Decisions category hint, with adaptive grammar and broad retrieval fallback.
+Run tests/pattern-decisions.mjs and the existing Operations, proxy and release
+gates. Its confidence cutoff is not calibrated; validate against labeled examples.
+
 October 29 owner review: Design Studio 2 is only in the Systems drawer. Shared
 selected Glass/Regular pills use the hover-style white rim without a blue fill.
 Sourceable Search details is explicit and concise; never open it from empty

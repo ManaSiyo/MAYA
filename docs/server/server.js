@@ -259,6 +259,7 @@ const OPENAI_ALLOWED = new Set([
   'v1/images/edits',
   'v1/audio/transcriptions',
   'v1/embeddings',            // v12.5: the Operations Room knowledge base
+  'v1/decisions',             // bounded, admin-only pattern-book routing
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════

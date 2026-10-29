@@ -1,4 +1,29 @@
-# Current handoff — October 27, 2026
+# Current handoff — October 29, 2026
+
+## Current work — Decisions for pattern-book search
+
+For an unrecognized garment, Operation Room asks OpenAI Decisions for a bounded
+category using only short classifier labels. A sufficiently confident valid answer
+adds the existing soft chapter boost to passage retrieval; the adaptive grammar and
+cut list remain unchanged. Failure, refusal, unknown or uncertain results preserve
+the original broad search. The admin-only proxy limits model, request size and
+shape, and explicit cache mode avoids implicit shared-prefix caching. The async
+result is checked against the current account, submission, garment and run.
+Empty garment labels now remain unknown. No new UI or visible styling is added.
+
+`tests/pattern-decisions.mjs` checks the request, fallback and proxy constraints;
+it is a release and app-regression gate. The 0.9 confidence cutoff is a cautious
+initial guard, not a calibrated accuracy claim: collect labeled garment examples
+and evaluate false routing before trusting it as a quality improvement. Provider
+entitlement, real decisions, cost, latency and deployed behavior remain unverified.
+The existing renderer already uses GPT Image 2.5 Flare. The owner retains Push.
+
+All Cloud Build Node gates, the integrated app regression, smoke, focused
+proxy/Operations tests, and the final Aesthetic Control authority gate passed
+with isolated Playwright Chromium and fake providers. npm ci, a production
+container build and live Decisions were not run. Next: Fromsa pushes the local
+commit, then checks the exact deployed commit and provider behavior with labeled
+garment examples.
 
 ## Current work — compact controls and shared fabric matches
 
@@ -24,11 +49,8 @@ not prove that this was the live request's only failure, and no production laten
 or improved real-world relevance has been measured. Do not infer live success.
 
 Operation Room already uses `gpt-image-2.5-flare`, classifies garments and
-retrieves locally indexed book passages. Official OpenAI documentation describes
-`gpt-image-2.5-sunburst` for precise edits and hosted file search, but no model
-switch, external book upload or unverified new decisions service is enabled.
-The owner was asked which specific OpenAI decisions feature they meant. Further
-model/retrieval changes need a concrete target and comparative evaluation.
+retrieves locally indexed book passages. The later Decisions work is described
+at the top of this handoff; no image model switch or book upload was made.
 
 The Cloud Build test commands and smoke passed locally with installed
 dependencies; the final responsive popup and shortened Operation Room copy were

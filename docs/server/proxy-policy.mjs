@@ -26,6 +26,7 @@ const MODEL_BEARING = new Set([
   'v1/images/edits',
   'v1/audio/transcriptions',
   'v1/embeddings',
+  'v1/decisions',
 ]);
 
 // Legacy names the browser still sends, upgraded to the current tier. Only on
@@ -45,6 +46,7 @@ function endpointModels(cfg) {
     'v1/images/edits': new Set(['gpt-image-2', 'gpt-image-2.5-flare']),
     'v1/audio/transcriptions': new Set(['whisper-1']),
     'v1/embeddings': new Set(['text-embedding-3-small']),
+    'v1/decisions': new Set(['gpt-6-luna']),
   };
 }
 
@@ -115,6 +117,9 @@ function evaluateProxyPolicy(opts) {
   const cfg = opts.models || {};
   const upgrades = cfg.upgrades || {};
 
+  if (upstreamPath === 'v1/decisions' && (!isAdmin || method !== 'POST'))
+    return reject(403, 'decision_not_allowed', 'pattern routing is admin only');
+
   // Endpoints that do not carry a model are not part of MAYA's set; the caller
   // has already allow-listed the path, so anything not model-bearing passes.
   if (!MODEL_BEARING.has(upstreamPath)) return { ok: true, model: '', body, fallback: null, streamRequested: false };
@@ -137,6 +142,17 @@ function evaluateProxyPolicy(opts) {
     catch (_) { return reject(400, 'malformed_body', 'body is not valid JSON'); }
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       return reject(400, 'malformed_body', 'body must be a JSON object');
+    }
+    if (upstreamPath === 'v1/decisions') {
+      const q = parsed.questions;
+      if (body.length > 8192 || typeof parsed.input !== 'string' || parsed.input.length > 1000 ||
+          !Array.isArray(q) || q.length !== 1 || q[0]?.type !== 'choice' || q[0]?.name !== 'pattern_category' ||
+          typeof q[0].instructions !== 'string' || q[0].instructions.length > 400 ||
+          !Array.isArray(q[0].choices) || q[0].choices.length < 2 || q[0].choices.length > 12 ||
+          q[0].choices.some(c => !c || typeof c.value !== 'string' || typeof c.description !== 'string' || c.value.length > 40 || c.description.length > 300) ||
+          Object.keys(parsed).some(k => !['model','input','questions','prompt_cache_options'].includes(k)) ||
+          parsed.prompt_cache_options?.mode !== 'explicit')
+        return reject(400, 'invalid_decision', 'expected a bounded pattern category request');
     }
     asked = String(parsed.model || '');
     streamRequested = parsed.stream === true;

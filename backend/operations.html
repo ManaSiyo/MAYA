@@ -1218,7 +1218,7 @@ async function runGrounded(){
   if(!HERO){ toast('Load an image first.'); return; }
   try{requireOperationSettings();}catch(error){toast(error.message);return;}
   if(!EMB){ toast('Build embeddings first (Settings ≡).'); toggleDrawer(true); return; }
-  const myRun=RUN,inputHero=HERO,inputAccount=operationAccount();
+  const myRun=RUN,inputHero=HERO,inputAccount=operationAccount(),context=operationContext();
   PASSES=[]; BEST_IDX=0; viewGrounded(0); liveOpen('grounding…');
   try{
     // 1 · VISION, classify + read construction
@@ -1227,6 +1227,10 @@ async function runGrounded(){
     if(myRun!==RUN||inputAccount!==operationAccount()) return;
     LAST.garment=g;
     const typeKey = resolveType(g.type);
+    // An unknown garment keeps adaptive grammar. Decisions can only supply a
+    // soft retrieval hint; it never authorizes a guessed cut list.
+    const retrievalType = KB.grammar.types[typeKey] ? typeKey : await decidePatternCategory(g, typeKey, context.token);
+    if(!operationCurrent(context)) return;
     LAST.type=typeKey; LOGIC_TYPE=typeKey; renderLogic();
     $('t-type').innerHTML = `<b style="color:var(--accent)">${g.type}</b>${g.subtype?' · '+g.subtype:''}<br>`+
       `<span style="color:var(--dim)">${(g.attributes||[]).slice(0,6).join(' · ')||''}</span>`;
@@ -1249,7 +1253,7 @@ async function runGrounded(){
     const query = buildQuery(g, typeKey, gram);
     const qvec = await embedTexts([query]).then(v=>v[0]);
     if(myRun!==RUN||inputAccount!==operationAccount())return;
-    const hits = retrieve(qvec, typeKey, 5);
+    const hits = retrieve(qvec, retrievalType, 5);
     renderChunks(hits);
 
     // 5 · COMPOSE base grounded prompt
@@ -1724,6 +1728,7 @@ async function classifyGarment(img){
 // map the free-text type onto a grammar key via the match-word tables
 function resolveType(t){
   const s=(t||'').toLowerCase();
+  if(!s.trim()) return 'unknown';
   for(const [key,def] of Object.entries(KB.grammar.types)){
     if(key===s) return key;
     if((def.match||[]).some(m=>s.includes(m)||m.includes(s))) return key;
@@ -1732,6 +1737,30 @@ function resolveType(t){
   if(/dress|gown/.test(s)) return 'bodice';
   if(/top|blouse|tee|tshirt|t-shirt/.test(s)) return 'shirt';
   return s || 'unknown';
+}
+
+// Send only bounded classifier labels, never the original photo, measurements,
+// submission or book passages. The old broad search remains the fallback.
+async function decidePatternCategory(g, fallback, token=getKey()){
+  const types=Object.entries(KB.grammar.types||{});
+  if(!types.length || types.length>10) return fallback;
+  const clean=v=>typeof v==='string'?v.slice(0,120):'';
+  const input=JSON.stringify({type:clean(g.type),subtype:clean(g.subtype),
+    attributes:(Array.isArray(g.attributes)?g.attributes:[]).slice(0,4).map(clean)});
+  const choices=types.map(([value,def])=>({value,description:clean(def.summary)||value}));
+  choices.push({value:'unknown',description:'No sufficiently clear match to the available categories.'});
+  const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),4000);
+  try{
+    const res=await fetch('/api/openai/v1/decisions',{method:'POST',signal:controller.signal,
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({model:'gpt-6-luna',input,prompt_cache_options:{mode:'explicit'},
+        questions:[{type:'choice',name:'pattern_category',instructions:'Choose the closest pattern-book garment category only when clearly supported. Otherwise choose unknown.',choices}]})});
+    if(!res.ok) return fallback;
+    const answer=(await res.json()).answers?.[0];
+    return answer?.type==='choice' && answer.name==='pattern_category' &&
+      Number.isFinite(answer.confidence) && answer.confidence>=0.9 &&
+      Object.hasOwn(KB.grammar.types,answer.choice) ? answer.choice : fallback;
+  }catch{return fallback;}finally{clearTimeout(timer);}
 }
 
 function buildQuery(g, typeKey, gram){

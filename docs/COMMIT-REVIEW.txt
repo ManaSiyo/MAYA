@@ -1,13 +1,11 @@
-Title: [Codex] Simplify MAYA controls and preserve shared fabric matches
+Title: [Codex] Assist pattern-book retrieval with OpenAI Decisions
 
-Compact the requested Aesthetic Control and Fabrics views, use white-rimmed
-selected pills, keep Design Studio 2 in Systems, align and pan the Operation Room
-viewer, and fix Users popup layering. Full-look sourcing can return a seller- and
-photo-checked shared material for two equivalently described garments without
-assigning a garment ID. Existing privacy and review safeguards remain intact.
+For unrecognized garments, use a bounded Decisions category as a soft retrieval
+hint while retaining adaptive pattern rules and broad-search fallback. Keep the
+endpoint admin-only and limit request size and input; send no photo or measurements.
+Empty garment labels remain unknown. GPT Image 2.5 Flare was already configured.
 
-Cloud Build test commands, smoke and the integrated regression passed locally
-with installed dependencies; the final Aesthetic Control gate passed last.
-Fromsa pushes; npm ci, the production build, real search quality, speed and the
-deployed release remain to be verified. Operation Room already uses GPT Image
-2.5 Flare; no model migration or book upload is included.
+Cloud Build Node gates, integrated regression, smoke, focused proxy and Operation
+Room tests, and the final Aesthetic Control authority passed locally.
+Provider entitlement, actual routing quality, latency, cost, npm ci and deployment
+remain unverified. The confidence cutoff needs labeled evaluation. Fromsa pushes.
