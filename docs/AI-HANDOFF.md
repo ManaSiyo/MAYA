@@ -1,5 +1,44 @@
 # Current handoff — October 27, 2026
 
+## Current work — compact controls and shared fabric matches
+
+The Admin Systems drawer retains Design Studio 2 while its main door is removed;
+Users popup layering is above the Leads table. The Brief omits Direction, marks
+Fabrics as the selected view and uses the same shared Glass pill as garments.
+Selected pills retain their material and show the hover-style white rim. The
+Fabrics toolbar is one responsive row, Search details opens explicitly with
+short copy, and a lone product card no longer fills the entire viewer.
+Aesthetic Control makes dropdown, checkbox, scrollbar, spacing, shoe and fabric
+previews collapsible. The Operation Room's inner windows align, the garment
+selector is a Glass pill, and wide source images pan without changing the
+pattern input. `tests/operation-controls.mjs` uses synthetic images to check the
+pan, keyboard access and alignment.
+
+Fabric matching now retains an otherwise qualified full-look listing for two
+distinct garments with identical saved fabric and scoped constraints, without
+assigning it to either garment ID. Seller evidence and the single visual pass
+remain required; ambiguous duplicate names and differing material requirements
+remain separate. The previous version rejected this equal-strength case outright;
+fixtures cover the full seller/search/rank path. The owner screenshot alone does
+not prove that this was the live request's only failure, and no production latency
+or improved real-world relevance has been measured. Do not infer live success.
+
+Operation Room already uses `gpt-image-2.5-flare`, classifies garments and
+retrieves locally indexed book passages. Official OpenAI documentation describes
+`gpt-image-2.5-sunburst` for precise edits and hosted file search, but no model
+switch, external book upload or unverified new decisions service is enabled.
+The owner was asked which specific OpenAI decisions feature they meant. Further
+model/retrieval changes need a concrete target and comparative evaluation.
+
+The Cloud Build test commands and smoke passed locally with installed
+dependencies; the final responsive popup and shortened Operation Room copy were
+then checked by the integrated regression and focused browser tests. The final
+Operation Room selected-tab change passed its focused and Aesthetic Control tests. npm ci,
+the production Linux build and live search remain unverified. The final
+Aesthetic Control gate passed after functional verification. Next: Fromsa pushes the prepared local commit,
+then verify the deployed release and an authorized live fabric search. Do not
+access Chrome without fresh per-session permission.
+
 ## Current work — blocked Design Studio release
 
 Cloud Build for `6cc66d0` failed in `tests/design-studio-2-ui.mjs` before

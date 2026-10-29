@@ -21,6 +21,12 @@ function store(){
   const records=new Map([['submissions/project-A/submission.json',{buf:Buffer.from('{}'),generation:'1'}],['submissions/project-B/submission.json',{buf:Buffer.from('{}'),generation:'1'}],['submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({client:{name:'PRIVATE NAME'},fabric_preferences:'100% wool, no polyester'})),generation:'1'}]]);
   return {records,read:async key=>records.has(key)?{ok:true,...records.get(key)}:{ok:false,status:404},write:async(key,buf,type,generation)=>{assert.equal(type,'application/json');if(String(records.get(key)?.generation||'0')!==generation)throw Object.assign(Error('conflict'),{status:412});records.set(key,{buf,generation:String(Number(generation)+1)});}};
 }
+await test('full-look matching keeps a verified shared fabric without inventing a garment ID',async()=>{
+  const s=store(),events=[];s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'jacket',name:'Jacket',fabric:'Crimson wool twill'},{id:'pants',name:'Pants',fabric:'Crimson wool twill'}]})),generation:'1'});
+  let rankCalls=0;const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async target=>target.includes('openai.com')?Response.json(response()):target.includes('/search/suggest.json')?Response.json({resources:{results:{products:[]}}}):new Response(seller()),rank:async ({products})=>{rankCalls++;return products;}});
+  await service.search(user,{submissionId:'project-A',automatic:true,image},e=>events.push(e));
+  assert.equal(rankCalls,1);assert.equal(events.at(-1).products.length,1);assert.equal(events.at(-1).products[0].garment,'Jacket & Pants');assert.equal(events.at(-1).products[0].garmentId,undefined);
+});
 await test('only approved seller product URLs can become candidates',()=>{
   for(const bad of ['http://britexfabrics.com/products/a','https://britexfabrics.com.evil.test/products/a','https://127.0.0.1/a','https://user@britexfabrics.com/products/a','https://britexfabrics.com:8443/products/a','https://britexfabrics.com/search?q=wool'])assert.equal(merchantURL(bad,true),null);
   assert.equal(merchantURL(url+'?utm_source=test',true).url,url);

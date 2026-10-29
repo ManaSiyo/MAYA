@@ -112,6 +112,8 @@ const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name);
 // Design Studio 2 stays an internal design preview with a non-sending form.
 {const studio=readFileSync(join(ROOT,'backend/design-studio-2.html'),'utf8');ok('Design Studio 2 presents four experiences and an explicit non-sending form',(studio.match(/class="studio-tier"/g)||[]).length===4&&studio.includes('This form does not send or save information.'));}
 ok('MAYA door keeps its menu above the sign-in panel during its opacity transition', MAP_SOURCE.includes('.card-maya{position:relative;z-index:2}'));
+ok('Design Studio 2 stays in Systems without a main-screen door', !MAP_SOURCE.includes('class="card card-studio"') && MAP_SOURCE.includes('href="/design-studio-2.html">Design Studio 2'));
+ok('Brief keeps Biography and Vision without the Direction chip row', !BACKEND_SOURCE.includes('id="op-chips-section"') && BACKEND_SOURCE.includes('id="op-biography"') && BACKEND_SOURCE.includes('id="op-vision"'));
 
 // WR retains Admin-sized submissions and an isolated Applicants form.
 {const wr=readFileSync(join(ROOT,'backend/wr.html'),'utf8');ok('WR exposes Applicants with one Wave and Number and an Email field',wr.includes('>Applicants</h2>')&&(wr.match(/name="wave"/g)||[]).length===1&&(wr.match(/name="phone"/g)||[]).length===1&&wr.includes('name="email"'));}
@@ -1160,7 +1162,7 @@ ok('the inline fabric results fit a usable shared viewport without stretching th
   BACKEND_SOURCE.includes('width:100%; height:70dvh; max-height:70dvh; min-width:0; min-height:0;') &&
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('.fa-body{flex:1;min-height:0;overflow-y:auto;') &&
-  readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))'));
+  readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr))'));
 ok('Sourceable carries the original reference and client words without tinting seller photos',
   BACKEND_SOURCE.includes('referenceImage:saved.referenceImage') &&
   BACKEND_SOURCE.includes("preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences)") &&

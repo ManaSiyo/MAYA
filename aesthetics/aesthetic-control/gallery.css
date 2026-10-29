@@ -246,7 +246,7 @@ html body #cell-format-toolbar{width:100%;backdrop-filter:var(--maya-frost);bord
 #input-controls-preview{display:grid;gap:var(--maya-form-field-gap,10px);min-width:0;margin-top:20px}
 #input-controls-preview>h3{margin:0}
 .checkbox-preview-states{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center}
-#scrollbar-preview{max-height:150px;overflow:auto;overscroll-behavior:contain;min-width:0;max-width:100%}
+.scrollbar-preview-details{min-width:0;max-width:100%}#scrollbar-preview{box-sizing:border-box;width:100%;max-height:150px;overflow:auto;overscroll-behavior:contain;min-width:0;max-width:100%}
 .scrollbar-preview-content{min-width:560px}
 .scrollbar-preview-content p{margin:12px 0}
 .input-control-usage p{margin:6px 0}

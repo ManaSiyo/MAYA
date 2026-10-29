@@ -90,7 +90,7 @@
     const toolbar=node('div','fa-toolbar');
     const refresh=icon('Refresh fabrics','M20 7v5h-5M20 12a8 8 0 1 0-2 5',()=>refreshView());
     const expandButton=action('Expand',()=>host?expand():close());expandButton.setAttribute('aria-expanded','false');
-    toolbar.append(refresh,expandButton);header.append(title,toolbar);
+    toolbar.append(refresh,expandButton);
     const sub=node('p','fa-context');
     const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');tabs.dataset.mayaControl='segmented';
     const inhouse=action('In House',()=>{view='inhouse';paint();});
@@ -127,8 +127,8 @@
     form.addEventListener('submit',e=>{e.preventDefault();run();});
     input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!busy)run();}});
     input.addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/'));if(f){e.preventDefault();attach(f);}});
-    workspace.append(header,sub,tabs,storeWrap,body,form,live);dialog.append(workspace);
-    const details=window.MayaFabricSearchDetails.create({parent:workspace,hoverTargets:[body,search]});tabs.append(details.trigger);details.set(null);
+    header.append(title,tabs,toolbar);workspace.append(header,sub,storeWrap,body,form,live);dialog.append(workspace);
+    const details=window.MayaFabricSearchDetails.create({parent:workspace});tabs.append(details.trigger);details.set(null);
     // Native close events are queued. A prior close must not cancel or move a
     // workspace that has already been reopened for a new search.
     dialog.addEventListener('close',()=>{if(dialog.open)return;if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');}else{controller?.abort();recognition?.stop();}});

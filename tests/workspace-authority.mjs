@@ -30,7 +30,7 @@ const css=(selector,properties)=>page.locator(selector).first().evaluate((e,prop
 const change=async(host,key,value)=>{const input=page.locator(host+' [data-field="'+key+'"]').first();if(await input.evaluate(e=>e.tagName==='SELECT'))await input.selectOption(String(value));else await input.fill(String(value));};
 try{
  await page.setViewportSize({width:1440,height:1000});await page.goto('https://maya-authority.test/aesthetics/aesthetic-control.html');
- await page.locator('#workspace-previews .workspace-preview-card').last().waitFor();
+ await page.locator('#workspace-previews > summary').click();await page.locator('#workspace-previews .workspace-preview-card').last().waitFor();
  assert.equal(await page.locator('#workspace-previews .workspace-preview-card').count(),1,'Only the requested fabric preview remains');
  assert.equal(await page.locator('#workspace-previews a[href$="#pe-fold"],#workspace-previews a[href$="#architecture"]').count(),0,'Retired Admin sections have no misleading live-usage links');
  assert.equal(await page.locator('.spacing-preview [data-preview-heading]').count(),7,'Heading-gap previews match the seven active Admin sections');
@@ -51,7 +51,7 @@ try{
  assert.equal((await css('.workspace-timing-preview label',['rowGap'])).rowGap,'19px');
  assert.equal((await css('.workspace-dock-preview',['paddingBottom'])).paddingBottom,'0px');
  await page.keyboard.press('Escape');
- await page.locator('.semantic-style-controls summary').click();await change('.semantic-style-controls','color','#123abc');await change('.semantic-style-controls','opacity',65);
+ await page.locator('.semantic-style-controls .type-editor > summary').click();await change('.semantic-style-controls','color','#123abc');await change('.semantic-style-controls','opacity',65);
  assert.equal((await css('[data-maya-semantic="non-fabric"]',['color'])).color,'rgba(18, 58, 188, 0.65)');
  await page.keyboard.press('Escape');
  await page.locator('[data-category="P3"] summary').first().click();await change('[data-category="P3"]','color','gray');

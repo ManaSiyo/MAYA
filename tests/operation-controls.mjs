@@ -28,6 +28,16 @@ const upload=page=>page.locator('#file').setInputFiles({name:'reviewed-garment.p
 try{
  // No user action: lazy samples still populate the standalone sandbox.
  const first=await open();await releaseSamples(first);await first.waitForFunction(()=>ACTIVE_TEST==='Fixture trousers');assert.equal(await first.locator('#test-picker option').count(),1);
+ const tabs=first.locator('#pass-pills');assert.equal(await tabs.getByRole('button',{name:'Mark One'}).getAttribute('aria-pressed'),'true');await tabs.getByRole('button',{name:'Redrawn'}).click();assert.equal(await tabs.getByRole('button',{name:'Redrawn'}).getAttribute('aria-pressed'),'true');assert.equal(await tabs.getByRole('button',{name:'Mark One'}).getAttribute('aria-pressed'),'false');await tabs.getByRole('button',{name:'Mark One'}).click();
+ // The center of a wide garment sheet is shown first. Pointer/keyboard panning
+ // must not replace the original image used by the pattern pipeline.
+ assert.equal(await first.locator('#test-view').count(),0,'View selector is replaced by direct panning');
+ await first.evaluate(()=>{const c=document.createElement('canvas');c.width=900;c.height=300;const x=c.getContext('2d');x.fillStyle='#111';x.fillRect(0,0,900,300);document.getElementById('hero-img').src=c.toDataURL();});
+ await first.waitForFunction(()=>document.getElementById('hero-img').classList.contains('is-wide'));
+ const originalHero=await first.evaluate(()=>HERO),frameBox=await first.locator('#hero-frame').boundingBox(),stageBox=await first.locator('#stage').boundingBox();assert.ok(Math.abs(frameBox.y-stageBox.y)<2,'Inner panels start on the same row');
+ if(process.env.MAYA_OPERATION_SCREENSHOT)await first.screenshot({path:process.env.MAYA_OPERATION_SCREENSHOT,fullPage:true});
+ await first.locator('#hero-frame').hover({position:{x:frameBox.width-5,y:frameBox.height/2}});assert.ok(await first.locator('#hero-frame').evaluate(e=>parseFloat(e.style.getPropertyValue('--garment-position'))>90));
+ await first.locator('#hero-frame').focus();await first.keyboard.press('ArrowLeft');assert.ok(await first.locator('#hero-frame').evaluate(e=>parseFloat(e.style.getPropertyValue('--garment-position'))<90));assert.equal(await first.evaluate(()=>HERO),originalHero,'Panning never changes the source image for generation');
  // Actual keyboard entry, forward/backward boundary loops and Escape focus restoration.
  for(const width of [390,1440]){
   await first.setViewportSize({width,height:1000});const header=first.locator('header .hamburger');await header.focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.classList.contains('drawer-burger'));

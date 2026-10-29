@@ -103,16 +103,17 @@ if (self !== top) document.documentElement.classList.add('embedded');
   .pill.active{background:var(--hover);color:#fff;border-color:rgba(255,255,255,0.55)}
 
   /* layout: 34/66 like the op room */
-  .cols{display:grid;grid-template-columns:34% 1fr;gap:20px;align-items:stretch}
+  .cols{display:grid;grid-template-columns:30% 1fr;gap:20px;align-items:stretch}
   .panel{border:var(--maya-hairline) solid var(--hair);border-radius:20px;
 
     padding:16px}
-  .col-head{display:flex;justify-content:center;margin-bottom:12px}
+  .col-head{display:flex;justify-content:center;margin-bottom:12px;min-height:54px}
 
   /* left: dream garment */
   .hero-frame{aspect-ratio:3/4;border-radius:16px;border:var(--maya-hairline) solid var(--hair);
     background:rgba(0,0,0,0.32);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
   .hero-frame img{width:100%;height:100%;object-fit:contain}
+  .hero-frame img.is-wide{object-fit:cover;object-position:var(--garment-position,50%) 50%}
   .hero-empty{color:var(--faint);font-size:var(--maya-text-caption);text-align:center;padding:30px;line-height:1.8}
   .left-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;flex-wrap:wrap}
 
@@ -130,6 +131,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
 
   /* right: dual pattern windows */
   .pattern-head{display:flex;justify-content:flex-start;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .pattern-top{min-height:54px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}.pattern-top .pattern-head{margin:0}.pattern-top .stage-badge{position:static}
   .pill.sm{padding:5px 12px;font-size:var(--maya-text-caption);letter-spacing:.12em}
   .pattern-stage{position:relative;border-radius:16px;overflow:hidden;border:var(--maya-hairline) solid var(--hair);
     background:rgba(0,0,0,0.32); min-height:520px;display:flex;align-items:flex-end;justify-content:flex-start}
@@ -158,6 +160,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
     font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-caption);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
     backdrop-filter:var(--maya-frost)}
   .head-select:hover{border-color:var(--hair-hi);background:rgba(255,255,255,.04)}
+  .picker-wrap{position:relative;display:inline-flex;max-width:100%}.picker-wrap .head-select{padding-right:calc(var(--maya-pill-x,14px) + 20px)!important}.picker-chevron{position:absolute;right:var(--maya-pill-x,14px);top:50%;transform:translateY(-50%);pointer-events:none;display:flex}.picker-chevron svg{width:calc(var(--maya-control-icon-size,28px)*.45);height:calc(var(--maya-control-icon-size,28px)*.45);color:var(--maya-icon-color,currentColor);opacity:var(--maya-icon-opacity,1);stroke:currentColor;fill:none;stroke-width:var(--maya-icon-stroke,1.6)}
   /* primary action = a canon pill (no blue chrome) */
   .pill.primary{border-color:var(--hair-hi)}
   /* view dropdown follows the Pill role: Jost 300 · 10px · 0.15em · UPPER */
@@ -311,9 +314,9 @@ if (self !== top) document.documentElement.classList.add('embedded');
     <!-- LEFT: dream garment -->
     <div class="panel">
       <div class="col-head">
-        <select id="test-picker" class="head-select" data-maya-control="field" data-maya-type="P1" onchange="onPickTest(this.value)" title="choose a test"></select>
+        <span class="picker-wrap"><select id="test-picker" class="head-select" data-maya-control="field" data-maya-pill="glass" data-maya-type="P3" onchange="onPickTest(this.value)" title="choose a test"></select><span class="picker-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 6 5 5 5-5"/></svg></span></span>
       </div>
-      <div class="hero-frame" id="hero-frame">
+      <div class="hero-frame" id="hero-frame" tabindex="0" aria-label="Garment image; move pointer or use arrow keys to pan">
         <div class="hero-empty" id="hero-empty">
           Pick a test and view, then press <b>Start</b>.<br><br>
           <span style="color:var(--faint)">Or Upload an image to run directly.</span>
@@ -323,12 +326,6 @@ if (self !== top) document.documentElement.classList.add('embedded');
       </div>
       <div class="left-actions">
         <button class="pill maya-pill" id="operation-fabrics" data-maya-type="P3" onclick="openOperationFabrics()" disabled>Fabrics</button>
-        <select id="test-view" class="pill-select" onchange="showView(this.value)" title="which view to show / use">
-          <option value="front">Front</option>
-          <option value="side">Side</option>
-          <option value="back">Back</option>
-          <option value="answer">Answer</option>
-        </select>
         <span class="pill primary" id="start-test" onclick="startTest()">Start</span>
         <span class="pill" onclick="document.getElementById('file').click()">Upload</span>
       </div>
@@ -353,15 +350,11 @@ if (self !== top) document.documentElement.classList.add('embedded');
 
     <!-- RIGHT: dual pattern windows -->
     <div class="panel">
-      <div class="pattern-head" id="pass-pills"></div>
+      <div class="pattern-top"><div class="pattern-head" id="pass-pills"></div>
+        <span class="stage-badge raw" id="badge-rd" style="display:none">Redrawn</span>
+        <span class="stage-badge grounded" id="badge-grounded">Grounded · book + measurements</span></div>
       <div class="pattern-stage" id="stage">
-        <span class="stage-badge raw" id="badge-rd" style="display:none">Redrawn · the answer (GPT-redrawn target)</span>
-        <span class="stage-badge grounded" id="badge-grounded">Grounded · book + measurements</span>
-        <div class="stage-empty" id="stage-empty">
-          <b>Redrawn</b> is the GPT-cleaned answer used as the scoring target.<br><br>
-          <b>Grounded</b> uses the Pattern Book + your measurements, refining Mark One → Mark Two. The green % takes the LOWER score against redrawn and raw CLO answers (median of 3 grader samples). Book critique picks the best pass.<br><br>
-          <b>SVG</b> vectorises the grounded pattern. Press <b>Start</b> to run.
-        </div>
+        <div class="stage-empty" id="stage-empty">Choose a garment and press <b>Start</b> to draft a pattern.</div>
         <img id="img-rd" alt="answer pattern">
         <img id="img-grounded" alt="grounded pattern">
         <div class="trace-view off" id="trace-view"></div>
@@ -1023,14 +1016,14 @@ const MARK_WORDS=['One','Two','Three','Four','Five'];
 function markLabel(i){ return 'Mark '+(MARK_WORDS[i]||(i+1)); }
 function renderPassPills(){
   const host=$('pass-pills'); if(!host) return;
-  let h=`<button class="pill sm ${CUR.kind==='rd'?'active':''}" onclick="viewRD()" title="Redrawn, the answer we score against">Redrawn</button>`;
+  let h=`<button class="pill sm ${CUR.kind==='rd'?'active':''}" aria-pressed="${CUR.kind==='rd'}" onclick="viewRD()" title="Redrawn, the answer we score against">Redrawn</button>`;
   if(PASSES.length>1){
     PASSES.forEach((p,i)=>{ const act=(CUR.kind==='grounded'&&CUR.idx===i)?'active':'';
-      h+=`<button class="pill sm ${act}" onclick="viewGrounded(${i})">${markLabel(i)}</button>`; });
+      h+=`<button class="pill sm ${act}" aria-pressed="${!!act}" onclick="viewGrounded(${i})">${markLabel(i)}</button>`; });
   } else {
-    h+=`<button class="pill sm ${CUR.kind==='grounded'?'active':''}" onclick="viewGrounded()">Mark One</button>`;
+    h+=`<button class="pill sm ${CUR.kind==='grounded'?'active':''}" aria-pressed="${CUR.kind==='grounded'}" onclick="viewGrounded()">Mark One</button>`;
   }
-  h+=`<button class="pill sm ${CUR.kind==='svg'?'active':''}" onclick="viewSVG()">SVG</button>`;
+  h+=`<button class="pill sm ${CUR.kind==='svg'?'active':''}" aria-pressed="${CUR.kind==='svg'}" onclick="viewSVG()">SVG</button>`;
   // accuracy readout (green) for the grounded pass on stage, right side of the row
   const a = (CUR.kind==='grounded' && PASSES.length) ? PASSES[Math.min(CUR.idx,PASSES.length-1)].acc : null;
   if(a){ const f=v=>v==null?'…':v+'%';
@@ -1134,6 +1127,16 @@ function showView(which){
   $('hero-img').src=data; $('hero-img').style.display='block'; $('hero-empty').style.display='none';
   if(which!=='answer') HERO=data;
 }
+// Wide saved garment images show the center first; pan the same original image
+// without changing the image used by the pattern pipeline.
+{
+  const frame=$('hero-frame'), img=$('hero-img'); let position=50;
+  const update=()=>frame.style.setProperty('--garment-position',position+'%');
+  img.addEventListener('load',()=>{position=50;update();img.classList.toggle('is-wide',img.naturalWidth>img.naturalHeight*1.1);});
+  frame.addEventListener('pointermove',e=>{if(!img.classList.contains('is-wide')||img.style.display==='none')return;const r=frame.getBoundingClientRect();position=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));update();});
+  frame.addEventListener('pointerleave',()=>{position=50;update();});
+  frame.addEventListener('keydown',e=>{if(!img.classList.contains('is-wide')||!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();position=Math.max(0,Math.min(100,position+(e.key==='ArrowRight'?10:-10)));update();});
+}
 // Start → redraw the answer (RD), then Raw, then Grounded (scored vs RD). Answer/RD shown left for side-by-side.
 async function startTest(){
   if(RUNNING){ toast('A run is already going, let it finish.'); return; }
@@ -1149,7 +1152,7 @@ async function startTest(){
     requireOperationSettings();
     if(!EMB){toast('Building embeddings first…');await buildEmbeddings(context);requireOperation(context);if(!EMB)return;}
     // pipeline input = whatever view is picked on the left (answer isn't an input, falls back to front)
-    const pick=$('test-view').value;
+    const pick='front';
     if(ACTIVE_TEST)HERO=(pick!=='answer'&&FILES[pick])?FILES[pick]:FILES.front;
     ANSWER=ACTIVE_TEST?(FILES.answer||null):null;
     liveOpen('test loaded');

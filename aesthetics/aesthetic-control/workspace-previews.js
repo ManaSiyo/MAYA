@@ -1,8 +1,8 @@
 
 // Active presentation samples contain no account data and make no provider calls.
 export function setupWorkspacePreviews({parent,render}){
- const root=document.createElement('section');root.id='workspace-previews';root.className='workspace-previews';parent.append(root);
- const title=document.createElement('h3');title.dataset.mayaType=title.dataset.previewCategory='H3';title.textContent='Fabric preview';root.append(title);
+ const root=document.createElement('details');root.id='workspace-previews';root.className='workspace-previews input-control-usage';parent.append(root);
+ const title=document.createElement('summary');title.dataset.mayaType=title.dataset.previewCategory='H3';title.textContent='Fabric preview';root.append(title);
  const grid=document.createElement('div');grid.className='workspace-preview-grid';root.append(grid);
  function role(tag,text,type){const e=document.createElement(tag);e.textContent=text;e.dataset.mayaType=e.dataset.previewCategory=type;return e;}
  const fabrics=document.createElement('section');fabrics.className='workspace-preview-card';fabrics.dataset.mayaPanel='inner';grid.append(fabrics);

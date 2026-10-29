@@ -377,14 +377,16 @@ try {
   .tile .v{font-size:var(--maya-text-body)}
   .tile.live .v{color:var(--green)}
   #users-pop{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
-    min-width:250px;max-width:320px;z-index:40;display:none;text-align:left;
+    box-sizing:border-box;width:min(320px,calc(100vw - 24px));max-width:320px;z-index:40;display:none;text-align:left;
     border:var(--maya-hairline) solid var(--line);border-radius:14px;background:rgba(8,13,30,0.96);
     backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
     padding:10px 12px;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+  #head-tiles{position:relative;z-index:10}
   #users-pop .up-row{display:flex;justify-content:space-between;gap:14px;
     font-family:var(--maya-font-ui);font-size:10.5px;letter-spacing:0.04em;color:var(--ink);
     padding:4px 2px;border-bottom:0.25px solid rgba(255,255,255,0.06)}
   #users-pop .up-row:last-child{border-bottom:none}
+  #users-pop .up-row span:first-child{min-width:0;overflow-wrap:anywhere}
   #users-pop .up-when{color:var(--faint);white-space:nowrap}
   #users-pop .dim{color:var(--dim)}
   #traffic-note{font-family:var(--maya-font-ui);font-size:10.5px;color:var(--dim);line-height:1.7;
@@ -1036,7 +1038,6 @@ try {
         <a class="pg-chip" href="/operations.html" target="_blank"
            onclick="event.stopPropagation()" title="The test bench.">operation room</a>
       </span></span>
-    <a class="card card-studio" href="/design-studio-2.html"><b data-maya-type="H2">DESIGN STUDIO 2</b></a>
   </div>
 
 
@@ -1886,6 +1887,12 @@ function _paintHeadTiles(d) {
 // v13.43: hovering USERS answers who. Fetched once a minute at most,
 // admin-eyes only, painted as a quiet list under the tile.
 let _usersPopAt = 0, _usersPopData = null;
+function _placeUsersPop(tile,pop) {
+  const box=tile.getBoundingClientRect(),width=pop.getBoundingClientRect().width;
+  pop.style.left=(Math.max(12,Math.min(box.left+box.width/2-width/2,innerWidth-width-12))-box.left)+'px';
+  pop.style.transform='none';
+}
+window.addEventListener('resize',()=>{const tile=document.getElementById('users-tile'),pop=document.getElementById('users-pop');if(tile&&pop&&pop.style.display==='block')_placeUsersPop(tile,pop);});
 function _wireUsersPop() {
   const tile = document.getElementById('users-tile');
   if (!tile || tile._popWired) return;
@@ -1900,6 +1907,7 @@ function _wireUsersPop() {
       tile.appendChild(pop);
     }
     pop.style.display = 'block';
+    _placeUsersPop(tile,pop);
     if (!_usersPopData || Date.now() - _usersPopAt > 60000) {
       pop.innerHTML = '<div class="up-row dim">looking&#8230;</div>';
       try {

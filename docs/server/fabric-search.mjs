@@ -420,7 +420,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       if(signal.aborted)return;
       const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
       products=[...new Map([...discovered,...products].map(p=>[merchantIdentity(p.url),p])).values()].slice(0,8);
-      products=products.filter(product=>fabricProductMatch(product,{...input,pieces:input.pieces.filter(piece=>piece.id===product.garmentId),allowVisualOnly:!!rank&&!!input.image}));
+      products=products.filter(product=>fabricProductMatch(product,{...input,pieces:product.garmentId?input.pieces.filter(piece=>piece.id===product.garmentId):input.pieces,allowVisualOnly:!!rank&&!!input.image}));
     }
     const eligibleCount=products.length;
     if(products.length&&input.image&&rank){

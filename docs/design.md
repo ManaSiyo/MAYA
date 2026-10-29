@@ -1,4 +1,4 @@
-<!-- October 27: Outbound and the multi-page usage gallery are retired. Earlier references to them describe historical layouts. Only the fabric usage preview remains. Glass/Regular are the two pill materials; Glass also governs Admin traffic metrics, and selected Glass has a clear blue fill and accent border. Pill states are beside their families; dropdown and checkbox examples pair above 700px and stack below. -->
+<!-- October 27: Outbound and the multi-page usage gallery are retired. Earlier references to them describe historical layouts. Only the fabric usage preview remains. Glass/Regular are the two pill materials; Glass also governs Admin traffic metrics, and selected pills use the same white rim as hover without a blue fill. Pill states are beside their families; dropdown and checkbox examples pair above 700px and stack below. -->
 
 # Aesthetic Control — MAYA design standard
 
@@ -570,3 +570,15 @@ its container), H1 brand, H2 sections, H3 tier titles, P1/P2/P3 text, inner-pane
 material, Glass pills, fields, dropdown and checkbox settings. Its compact
 collapsible Aesthetic Control sample reuses those controls. The demo form never
 sends or stores information. Page CSS owns placement and responsive layout.
+
+### October 29 compact controls
+
+Design Studio 2 remains in the Systems drawer, not the Admin door row. Selected
+Glass and Regular pills retain their saved material and use the same white rim
+as hover. Dropdown, checkbox, scrollbar, spacing, shoe and fabric previews open
+on demand. The Brief Fabrics controls and Operation Room garment selector use
+the shared Glass pill; the selector retains its saved icon settings. Fabric
+views share one toolbar with explicit, concise Search details. The Operation
+Room aligns its inner panels and pans wide garment sheets without changing the
+original pattern input. These controls use existing settings; no new visual
+authority or private-data sharing is introduced.

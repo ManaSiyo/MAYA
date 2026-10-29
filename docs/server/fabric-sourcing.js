@@ -170,7 +170,17 @@ export function fabricProductMatch(product,input={}){
     if(!rejected&&(!input.automatic||materialEvidence||input.allowVisualOnly===true))matches.push({piece,strength});
   }
   matches.sort((a,b)=>b.strength-a.strength);
-  if(!matches.length||(matches[1]&&matches[0].strength===matches[1].strength))return null;
+  if(!matches.length)return null;
+  const tied=matches.filter(match=>match.strength===matches[0].strength);
+  if(tied.length>1){
+    // Full looks can use the same base cloth for separate named garments.
+    // Only present a shared match when their saved descriptions and all
+    // scoped material constraints agree. Never assign it to either ID.
+    const material=piece=>String(piece.fabric||'').trim().replace(/\s+/g,' ').toLowerCase();
+    const signature=piece=>JSON.stringify([fibers,constructions,colors,textures].map(definitions=>{const c=constraints(piece,input,definitions);return [[...c.required].sort(),[...c.excluded].sort(),c.inferredRequired];}));
+    if(!material(tied[0].piece)||new Set(tied.map(x=>material(x.piece))).size!==1||new Set(tied.map(x=>signature(x.piece))).size!==1||new Set(tied.map(x=>String(x.piece.name||'').trim().toLowerCase())).size!==tied.length||tied.some(x=>!String(x.piece.name||'').trim()))return null;
+    return {garment:cleanText(tied.map(x=>x.piece.name).join(' & '),80)};
+  }
   const piece=matches[0].piece;return {garment:cleanText(piece.name,80),...(piece.id?{garmentId:cleanText(piece.id,100)}:{})};
 }
 

@@ -101,11 +101,15 @@ unless the owner actually selected that scope.
   reference completion after leaving Fabrics never starts a hidden search; queued
   native dialog-close events cannot abort an already reopened search. No
   automatic paid retry is introduced.
-- Sourceable hover/focus/tap details show saved descriptions, retailer queries,
-  provider-exposed web queries, resolved search, qualified interpretation, stores
-  and stage. Missing provider query metadata remains explicit. Hover is free.
+- Sourceable's explicitly opened Search details shows the search and status
+  concisely. Hovering the result area never opens the panel. Discovery still
+  receives the original words, garment traits and qualified observations.
   The actual presenter is also an active Aesthetic Control preview using H4/P3,
   Inner material and Glass; no separate presentation settings are introduced.
+- When differently named garments share the same saved base-fabric description
+  and identical scoped constraints, a tied full-look match can be shown for both
+  after normal seller and photo checks, without assigning either garment ID.
+  Different descriptions, constraints or ambiguous duplicate names stay separate.
 - fabric-retailers.mjs owns public merchant policy, fabric-discovery.mjs owns
   the fabric-only Responses contract; low reasoning effort is confined to that
   request for supported GPT-5/6 models. Both original photo and selected crop

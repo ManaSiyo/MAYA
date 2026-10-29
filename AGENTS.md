@@ -1,10 +1,19 @@
 # MAYA assistant instructions
 
+October 29 owner review: Design Studio 2 is only in the Systems drawer. Shared
+selected Glass/Regular pills use the hover-style white rim without a blue fill.
+Sourceable Search details is explicit and concise; never open it from empty
+results on hover. Wide Operation Room garment sheets pan visually while the
+original front image remains the pattern input. Matching identically described
+garments can yield a shared fabric candidate without assigning a garment ID;
+different constraints and duplicate names remain ambiguous. All seller,
+visual-review, project and account safeguards remain in force.
+
 ## October 27: Outbound retired
 
 Outbound is removed at Fromsa's request. `/outbound.html` and `/backend/outbound.html` redirect to Admin, and its API returns 410. Never restore its Gmail outreach, Sheets imports, provider events or page without a new request. Previous Outbound-specific notes below are historical and superseded. Keep the independent Leads, owner SMS/phone, Wix callback alerts and text AI services. Legacy private Outbound objects, OAuth grants and Scheduler settings are not deleted or changed; the owner must manage external cleanup. `OUTBOUND_SCHEDULER_*` still authenticates the independent callback worker and must not be removed as dead configuration. Run `tests/leads-ui.mjs`, `tests/retired-workspaces.mjs`, event/communications and smoke checks.
 
-Aesthetic Control: Glass and Regular own pill materials; selected Glass uses the shared visibly blue state. Admin traffic metrics use Glass. Pill states sit beside their families; dropdown and checkbox previews pair on desktop. The sole page-style usage sample is Fabrics; typography is edited in Typography. Preserve semantic status colors and legacy design saves.
+Aesthetic Control: Glass and Regular own pill materials; selected pills use the same white rim as hover, with the saved material unchanged. Admin traffic metrics use Glass. Pill states sit beside their families; dropdown and checkbox previews pair on desktop. The sole page-style usage sample is Fabrics; typography is edited in Typography. Preserve semantic status colors and legacy design saves.
 
 
 Conversational fabric sourcing: docs/server/fabric-search.mjs and the shared

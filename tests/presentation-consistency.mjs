@@ -95,8 +95,9 @@ try{
  assert.equal(await page.locator('#pill-colors .status-style-preview').filter({has:page.locator('.status-usage a')}).count(),8,'Active semantic statuses name their page usage');
  assert.match(await page.locator('.status-style-preview').filter({has:page.locator('[data-status="delivering"]')}).innerText(),/Impressions recorded.*D\/W\/M.*does not confirm/s);
  const spacing=page.locator('.spacing-controls');
- await spacing.locator('summary').click();
+ await spacing.locator('.type-editor > summary').click();
  await spacing.locator('[data-field="headingGap"]').fill('37');
+ await spacing.locator('details.input-control-usage > summary').click();
  assert.equal(await spacing.locator('[data-heading-gap]').count(),7,'Every Admin group has a spacing preview');
  for(const sample of await spacing.locator('[data-heading-gap]').all())assert.ok(Math.abs(await sample.evaluate(e=>e.getBoundingClientRect().top-e.previousElementSibling.getBoundingClientRect().bottom)-37)<1,'Preview visibly applies heading distance');
  for(const [key,color] of [['delivering','#13579b'],['pending','#2468ac'],['rejected','#97531b']]){

@@ -15,8 +15,8 @@
   }
   function show(){clearTimeout(hideTimer);if(!enabled||!data||!trigger.isConnected)return;if(!panel.matches(':popover-open'))panel.showPopover();trigger.setAttribute('aria-expanded','true');place();}
   function later(){clearTimeout(hideTimer);hideTimer=setTimeout(()=>{if(!panel.matches(':hover')&&!trigger.matches(':hover')&&!panel.contains(document.activeElement)&&document.activeElement!==trigger)close();},160);}
-  trigger.addEventListener('click',()=>{show();if(panel.matches(':popover-open'))panel.focus({preventScroll:true});});trigger.addEventListener('focus',show);
-  for(const target of [trigger,panel,...hoverTargets]){target.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch')show();});target.addEventListener('pointerleave',later);target.addEventListener('focusout',later);}
+  trigger.addEventListener('click',()=>{if(panel.matches(':popover-open')){close();return;}show();if(panel.matches(':popover-open'))panel.focus({preventScroll:true});});
+  panel.addEventListener('focusout',later);
   panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();trigger.focus({preventScroll:true});close();}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panel.matches(':popover-open')){e.preventDefault();e.stopPropagation();const restore=panel.contains(document.activeElement);close();if(restore){trigger.focus({preventScroll:true});close();}}},{capture:true});
   document.addEventListener('pointerdown',e=>{if(!panel.contains(e.target)&&!trigger.contains(e.target))close();});
@@ -24,13 +24,8 @@
   return {trigger,panel,close,setEnabled(value){enabled=value;trigger.hidden=!value;if(!value)close();},set(value){
    data=value;content.replaceChildren();trigger.disabled=!value;if(!value){close();return;}
    const heading=document.createElement('h3');heading.dataset.mayaType='H4';if(preview)heading.dataset.previewCategory='H4';heading.textContent='Fabric search';content.append(heading);
-   for(const garment of value.garments||[]){line('Garment',garment.name||'Selected look');line('Saved description',[garment.fabric,...Object.entries(garment.traits||{}).filter(([,v])=>v).map(([k,v])=>k+': '+v)].filter(Boolean).join(' · ')||'No material description saved');}
-   if(value.preferences){let preferences=value.preferences;try{const parsed=JSON.parse(preferences);preferences=Array.isArray(parsed)?parsed.map(v=>typeof v==='string'?v:JSON.stringify(v)).join(' · '):JSON.stringify(parsed);}catch{}line('Client preferences',String(preferences));}
-   line('Resolved search',value.query||'Interpreting the saved look');
-   line('Retailer queries',(value.retailerQueries||[]).join(' / ')||'No direct query; using web discovery');
-   line('Web queries',(value.webQueries||[]).join(' / ')||'Not exposed by the search service');
-   line('Reference interpretation',value.observation||'No photo interpretation returned; saved traits are hints, not confirmed fiber facts');
-   line('Store scope',(value.stores||[]).join(', ')||'Selected stores');line('State',value.stage||'Searching');
+   line('Looking for',value.query||'Fabric for the selected look');
+   if(value.stage)line('Status',value.stage);
    if(panel.matches(':popover-open'))place();
   }};
  }};

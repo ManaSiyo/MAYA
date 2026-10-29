@@ -210,6 +210,11 @@ test('scoped latest refinements and qualified inferred fibers preserve garment i
   const generic={id:'coat',name:'Coat',fabric:'unknown'};
   assert.equal(fabricProductMatch({title:'Green leather fabric',image:fur.image},{automatic:true,pieces:[generic,pants],allowVisualOnly:true})?.garmentId,'pants','Concrete material evidence wins over a generic first garment');
   assert.equal(fabricProductMatch(fur,{automatic:true,pieces:[{id:'one',name:'Coat',fabric:'Brown faux fur'},{id:'two',name:'Coat',fabric:'Brown faux fur'}]}),null,'An ambiguous full-look attribution is not assigned to the first garment');
+  const jersey={title:'Green knit fabric',description:'Green knit sold by the yard.',image:fur.image};
+  const jacket={id:'jacket',name:'Track jacket',fabric:'Green knit'},trousers={id:'pants',name:'Track pants',fabric:'Green knit'};
+  assert.deepEqual(fabricProductMatch(jersey,{automatic:true,pieces:[jacket,trousers]}),{garment:'Track jacket & Track pants'},'Identical cloth can be shown for both garments without assigning a garment ID');
+  assert.equal(fabricProductMatch(jersey,{automatic:true,pieces:[jacket,{...trousers,fabric:'Green knit for activewear'}]}),null,'Different materials stay ambiguous');
+  assert.equal(fabricProductMatch(jersey,{automatic:true,pieces:[jacket,{...trousers,fabric_spec:{weave:'twill'}}]})?.garmentId,'jacket','A conflicting weave must not be treated as shared cloth');
 });
 
 console.log('\n' + (process.exitCode ? 'FAILED' : passed + ' passed') + '\n');

@@ -1,3 +1,5 @@
+October 29 — Full-look fabric matching discarded equal-strength matches for distinct garments even when they shared identical saved cloth. Keep the verified shared match without assigning a garment ID; preserve ambiguity, seller verification and the photo gate. Fixture coverage only; the tracksuit's live result and speed remain unverified.
+
 October 28 — Design Studio 2 deployment blocked: Cloud Build on 6cc66d0 failed because the sign-in panel intercepted the Operation Room menu while the MAYA door's opacity transition created a stacking context. Raise the door's context, and exercise a real pointer hover at partial opacity. Follow the owner's push with exact live release verification.
 
 2026-10-27: Brief garment selection was difficult to distinguish. The shared Glass selected state now has a clear blue fill and accent border, including hover, with pressed state carried by the selected garment and Admin chart controls. Local responsive and saved-style fixtures passed; live deployment remains pending.

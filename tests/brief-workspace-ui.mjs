@@ -55,6 +55,7 @@ try{
  await roomFrame.waitForFunction(()=>document.getElementById('test-picker').value==='White shirt');
  assert.deepEqual(paid,[],'Selecting a saved garment never draws a pattern');
  await page.locator('#brief-fabrics-button').click();
+ assert.equal(await page.locator('#brief-fabrics-button').getAttribute('aria-pressed'),'true','Fabrics visibly becomes the selected view');assert.equal(await page.locator('#piece-pills [aria-pressed=true]').count(),0,'The garment view is no longer selected while Fabrics is open');
  await page.waitForFunction(()=>!!document.querySelector('#brief-fabrics .fa-results'));
  await page.waitForFunction(()=>!document.querySelector('#brief-fabrics .fa-status')?.textContent.includes('Searching'));
  await page.waitForTimeout(100);
@@ -127,14 +128,14 @@ try{
   const shirt=page.locator('#piece-pills').getByRole('button',{name:'White shirt',exact:true});
   assert.equal(await fullView.getAttribute('aria-pressed'),'true','Full view starts selected');
   assert.equal(await shirt.getAttribute('aria-pressed'),'false');
-  assert.equal((await style(fullView,['borderTopColor'])).borderTopColor,'rgb(173, 205, 248)','Selected garment has the visible shared accent border');
-  assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,'Full view has the shared selected pill material');
-  await shirt.click();assert.equal(await fullView.getAttribute('aria-pressed'),'false');assert.equal(await shirt.getAttribute('aria-pressed'),'true');await page.waitForFunction(()=>getComputedStyle(document.querySelector('#piece-pills [aria-pressed=true]')).borderTopColor==='rgb(173, 205, 248)');assert.equal((await style(shirt,['borderTopColor'])).borderTopColor,'rgb(173, 205, 248)');
-  assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,'Selected garment has the shared selected pill material');
-  await fullView.click();assert.equal(await fullView.getAttribute('aria-pressed'),'true');assert.equal(await shirt.getAttribute('aria-pressed'),'false');await page.waitForFunction(()=>{const a=document.querySelector('#piece-pills [aria-pressed=true]'),b=document.querySelector('#piece-pills [aria-pressed=false]');return getComputedStyle(a).backgroundColor!==getComputedStyle(b).backgroundColor&&getComputedStyle(a).borderTopColor==='rgb(173, 205, 248)';});
+  assert.equal((await style(fullView,['borderTopColor'])).borderTopColor,'rgba(255, 255, 255, 0.6)','Selected garment has the visible shared accent border');
+  assert.notEqual((await style(fullView,['borderTopColor'])).borderTopColor,(await style(shirt,['borderTopColor'])).borderTopColor,'Full view has the shared selected pill material');
+  await shirt.click();assert.equal(await fullView.getAttribute('aria-pressed'),'false');assert.equal(await shirt.getAttribute('aria-pressed'),'true');await page.waitForFunction(()=>getComputedStyle(document.querySelector('#piece-pills [aria-pressed=true]')).borderTopColor==='rgba(255, 255, 255, 0.6)');assert.equal((await style(shirt,['borderTopColor'])).borderTopColor,'rgba(255, 255, 255, 0.6)');
+  assert.notEqual((await style(fullView,['borderTopColor'])).borderTopColor,(await style(shirt,['borderTopColor'])).borderTopColor,'Selected garment has the shared selected pill material');
+  await fullView.click();assert.equal(await fullView.getAttribute('aria-pressed'),'true');assert.equal(await shirt.getAttribute('aria-pressed'),'false');await page.waitForFunction(()=>{const a=document.querySelector('#piece-pills [aria-pressed=true]'),b=document.querySelector('#piece-pills [aria-pressed=false]');return getComputedStyle(a).borderTopColor!==getComputedStyle(b).borderTopColor&&getComputedStyle(a).borderTopColor==='rgba(255, 255, 255, 0.6)';});
   for(const width of [1024,1280,1366,1440,1600,1920,2560,3440]){
    await page.setViewportSize({width,height:900});
-   assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,mode+' selected Full view remains visible at '+width);
+   assert.notEqual((await style(fullView,['borderTopColor'])).borderTopColor,(await style(shirt,['borderTopColor'])).borderTopColor,mode+' selected Full view remains visible at '+width);
    if(width===1440||width===3440)await page.screenshot({path:'/private/tmp/maya-brief-selection-'+mode+'-'+width+'.png'});
   }
   const embedded=page.frameLocator('#operations-embed');
@@ -147,10 +148,9 @@ try{
   assert.equal((await style(embedded.locator('#test-picker'),['color'])).color,color,'Operations selected shoe has the governed semantic color');
   const material=mode==='saved'?{paddingLeft:'23px',paddingTop:'17px',backgroundColor:'rgba(23, 91, 59, 0.65)',backdropFilter:'blur(13px) saturate(1.4)'}:{paddingLeft:'16px',paddingTop:'12px',backgroundColor:'rgba(0, 0, 0, 0.18)',backdropFilter:'blur(22px) saturate(1.8)'};
   assert.deepEqual(await style(embedded.locator('#plan-a-view .panel').first(),Object.keys(material)),material,'Actual Operations panels use '+mode+' shared material');
-  const field=mode==='saved'?{paddingLeft:'17px',paddingTop:'11px',backgroundColor:'rgba(35, 76, 125, 0.8)',borderRadius:'18px'}:{paddingLeft:'8px',paddingTop:'8px',backgroundColor:'rgb(0, 0, 0)',borderRadius:'12px'};
-  assert.deepEqual(await style(embedded.locator('#test-picker'),Object.keys(field)),field,'Actual garment field uses '+mode+' saved editor style');
+  assert.equal(await embedded.locator('#test-picker').getAttribute('data-maya-pill'),'glass','Garment selector uses the shared Glass pill');
   const capsule={paddingLeft:mode==='saved'?'22px':'14px',paddingTop:mode==='saved'?'10px':'6px',backgroundColor:mode==='saved'?'rgba(3, 15, 29, 0.55)':'rgba(3, 15, 29, 0.18)'};
-  for(const control of [page.locator('#brief-fabrics-button'),embedded.locator('#operation-fabrics')])assert.deepEqual(await style(control,Object.keys(capsule)),capsule,'Fabrics actions share '+mode+' pill geometry/material');
+  for(const control of [page.locator('#brief-fabrics-button'),embedded.locator('#operation-fabrics'),embedded.locator('#test-picker')])assert.deepEqual(await style(control,Object.keys(capsule)),capsule,'Fabrics actions share '+mode+' pill geometry/material');
   assert.equal((await style(page.locator('#workspace-title'),['fontSize'])).fontSize,mode==='saved'?'28px':'24px');
   const identityStyles=['fontFamily','fontWeight','fontStyle','fontSize','letterSpacing','color','textTransform'];
   assert.deepEqual(await style(page.locator('#op-hero-name'),identityStyles),await style(page.locator('#op-date'),identityStyles),'Inline client name and date share exactly one typography role');
@@ -239,7 +239,7 @@ try{
  await page.evaluate(()=>{localStorage.removeItem('maya_admin_tok');window.dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));});
  await page.waitForFunction(()=>window._currentSnap===null&&window.lastSummary===null);
  assert.equal((await page.locator('.op-identity').textContent()).trim(),'','Sign-out clears every identity child, including the dated URL first paint');
- for(const id of ['op-hero-name','op-biography','op-vision','op-measurements','op-chips'])assert.equal(await page.locator('#'+id).textContent(),'','Sign-out clears '+id);
+ for(const id of ['op-hero-name','op-biography','op-vision','op-measurements'])assert.equal(await page.locator('#'+id).textContent(),'','Sign-out clears '+id);
  await duplicateRoom.waitForFunction(()=>document.getElementById('t-prompt').textContent==='');
  assert.equal(await duplicateRoom.evaluate(()=>PASSES.length),0);
  // Standalone heading grows with saved H1 typography instead of clipping above the viewport.

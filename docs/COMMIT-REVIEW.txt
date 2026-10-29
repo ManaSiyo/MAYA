@@ -1,11 +1,13 @@
-Title: [Codex] Fix MAYA door stacking during deployment checks
+Title: [Codex] Simplify MAYA controls and preserve shared fabric matches
 
-Cloud Build for the Design Studio 2 release failed because the sign-in panel
-intercepted the MAYA room link while the door was partially transparent. Raise
-the door's stacking context and test an actual pointer hover at partial opacity.
+Compact the requested Aesthetic Control and Fabrics views, use white-rimmed
+selected pills, keep Design Studio 2 in Systems, align and pan the Operation Room
+viewer, and fix Users popup layering. Full-look sourcing can return a seller- and
+photo-checked shared material for two equivalently described garments without
+assigning a garment ID. Existing privacy and review safeguards remain intact.
 
-The Cloud Build test commands, integrated regression, smoke and final Aesthetic
-Control gate pass locally using installed dependencies. The fix requires Fromsa's
-push and a successful Cloud Build before Design Studio 2 is live; npm ci and the
-production Linux build have not been rerun. Verify the exact deployed commit and
-page after the build completes.
+Cloud Build test commands, smoke and the integrated regression passed locally
+with installed dependencies; the final Aesthetic Control gate passed last.
+Fromsa pushes; npm ci, the production build, real search quality, speed and the
+deployed release remain to be verified. Operation Room already uses GPT Image
+2.5 Flare; no model migration or book upload is included.

@@ -1438,7 +1438,7 @@
              deliberately; once a client is dissected it never runs again. -->
         <div class="piece-swiper" id="piece-swiper" style="display:none">
           <div class="piece-pills" id="piece-pills" data-maya-control="segmented"></div>
-          <button class="pill maya-pill" id="brief-fabrics-button" data-maya-type="P3" onclick="showBriefFabrics()" disabled>Fabrics</button>
+          <button class="piece-pill" id="brief-fabrics-button" data-maya-type="P3" aria-pressed="false" onclick="showBriefFabrics()" disabled>Fabrics</button>
         </div>
       </div>
       <div class="op-info-col" data-maya-scrollbar="visible" tabindex="0" aria-label="Client details">
@@ -1451,10 +1451,6 @@
         <div class="op-section">
           <div class="op-eyebrow" data-maya-type="P2">Vision</div>
           <p class="op-text" id="op-vision">…</p>
-        </div>
-        <div class="op-section" id="op-chips-section" style="display:none">
-          <div class="op-eyebrow">Direction</div>
-          <div class="op-chips" id="op-chips"></div>
         </div>
         <!-- v10.12: measurements section, populated when summary._measurements exists. -->
         <div class="op-section" id="op-measurements-section" style="display:none">
@@ -2315,21 +2311,6 @@ function render(snap) {
   // v10.12: right-column hero now shows the client name (was "MAYA").
   const heroEl = document.getElementById('op-hero-name');
   if (heroEl) heroEl.textContent = name;
-
-  // Chips, collapse silhouette/details/color into a single direction row.
-  const chips = []
-    .concat(summary.silhouette_preferences || [])
-    .concat(summary.details || [])
-    .concat(summary.color_palette || []);
-  document.getElementById('op-chips-section').style.display = 'none';
-  document.getElementById('op-chips').innerHTML = '';
-  if (chips.length) {
-    document.getElementById('op-chips-section').style.display = '';
-    document.getElementById('op-chips').innerHTML = chips
-      .slice(0, 12)
-      .map(c => '<span class="op-chip">' + escapeHtml(c) + '</span>')
-      .join('');
-  }
 
   // v0.9.2: full measurements section, mirror frontend's MEASUREMENT_SCHEMA
   // grouped by Body / Arms / X-axis / Y-axis / Garment Dependant. Every
@@ -3850,6 +3831,7 @@ async function _loadInhouseFabrics(){
 // v0.31: toggle the Brief left frame between the item image and fabrics.
 function showBriefItem() {
   _briefView = 'item';
+  document.getElementById('brief-fabrics-button')?.setAttribute('aria-pressed','false');
   const frame = document.getElementById('op-image-frame');
   const fab   = document.getElementById('brief-fabrics');
   if (frame) frame.style.display = '';
@@ -3867,6 +3849,8 @@ async function showBriefFabrics() {
   if(!window.MayaFabricAssistant)return showBackendToast('Fabric search is still loading. Try again.');
   const active=_pieceState.pieces[_pieceState.idx],piece=active&&!active._virtual?saved.pieces.find(p=>p.id===active.id):null;
   _briefView='fabrics';
+  document.getElementById('brief-fabrics-button')?.setAttribute('aria-pressed','true');
+  document.querySelectorAll('#piece-pills [data-maya-segment]').forEach(node=>node.setAttribute('aria-pressed','false'));
   document.getElementById('op-image-frame').style.display='none';
   const host=document.getElementById('brief-fabrics');host.style.display='flex';
   return window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces});

@@ -80,6 +80,7 @@ try{
   assert.equal(await page.locator('.fa-composer').isVisible(),false,'Saved look recommendations do not ask for Dictate or Find fabric');
   const automatic=requests.find(r=>r.automatic);assert.ok(automatic);assert.equal(automatic.submissionId,'project-A');assert.equal(automatic.piece.name,undefined);assert.equal(automatic.pieces.length,3);assert.match(automatic.image,/^data:image\/jpeg/);assert.equal(automatic.preferences,'100% wool, no polyester');
   assert.equal(await page.locator('.fa-card-title').count(),1);assert.match(await page.locator('.fa-card-caption').textContent(),/For Crimson coat/);
+  assert.ok(await page.locator('.fa-product').evaluate(e=>e.getBoundingClientRect().width<e.parentElement.getBoundingClientRect().width*.75),'A single result does not stretch across the whole desktop panel');
   assert.equal(await page.locator('.fa-product-link').getAttribute('href'),product.url);assert.equal(await page.locator('.fa-product-link').getAttribute('target'),'_blank');
   assert.doesNotMatch(await page.locator('.fa-results').textContent(),/arrives|in.stock|35%|selling unit|San Francisco/i,'Only two concise caption rows, without guessed facts or match percent');
   assert.equal(await page.locator('.fa-card-actions').count(),0,'Sourceable cards have no Save or Use controls');
@@ -88,9 +89,8 @@ try{
   const details=page.locator('#fabric-assistant .fa-search-details'),detailsTrigger=page.getByRole('button',{name:'Search details',exact:true});
   const checkDetails=async(saved=false)=>{
     const before=requests.length,wasExpanded=await page.locator('#fabric-assistant-dialog').getAttribute('open');
-    await page.locator('.fa-body').focus();await detailsTrigger.focus();await details.waitFor({state:'visible'});
-    assert.match(await details.textContent(),/burgundy matte wool fabric/,'Shows actual web query metadata');
-    assert.match(await details.textContent(),/fiber cannot be confirmed visually/);assert.match(await details.textContent(),/Client preferences: Wool · No polyester/);
+    await page.locator('.fa-body').hover();assert.equal(await details.isVisible(),false,'Empty results area does not open details');await detailsTrigger.click();await details.waitFor({state:'visible'});
+    assert.match(await details.textContent(),/Looking for:/);assert.doesNotMatch(await details.textContent(),/Retailer queries|Web queries|Saved description/,'Search details are concise');
     const style=await details.evaluate(e=>{const s=getComputedStyle(e.querySelector('[data-maya-panel=inner]')),r=e.getBoundingClientRect(),p=getComputedStyle(e.querySelector('p'));return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:innerWidth,height:innerHeight,paddingX:s.paddingLeft,paddingY:s.paddingTop,bg:s.backgroundColor,size:p.fontSize,font:p.fontFamily,overflow:e.scrollWidth<=e.clientWidth+1};});
     assert.ok(style.x>=0&&style.y>=0&&style.right<=style.width+1&&style.bottom<=style.height+1,'Details stay in the viewport');assert.ok(style.overflow);assert.equal(await detailsTrigger.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Hover details never cover their own activation target');
     if(saved)assert.deepEqual([style.paddingX,style.paddingY,style.bg,style.size],['12px','10px','rgba(35, 76, 125, 0.7)','14px']);
@@ -100,7 +100,7 @@ try{
     assert.equal(requests.length,before,'Hover/focus details are free');
   };
   await checkDetails();
-  await page.locator('.fa-body').hover();await details.waitFor({state:'visible'});await page.keyboard.press('Escape');
+  await page.locator('.fa-body').hover();assert.equal(await details.isVisible(),false,'Hovering the results does not open details');
   await openFavorites();assert.equal(await page.locator('.fa-product').count(),2);assert.equal(await detailsTrigger.isVisible(),false);
   assert.deepEqual(await page.locator('.fa-card-actions button').allTextContents(),['Remove','Remove']);
   await page.evaluate(t=>{localStorage.setItem('maya_admin_tok',t);dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));},jwt('owner-A',10800));
@@ -135,7 +135,7 @@ try{
   }
   const beforeEmpty=requests.length;await chooseGroups([]);assert.equal(await page.locator('.fa-product').count(),0);await page.getByText('Choose at least one store group.',{exact:true}).waitFor();await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();assert.equal(requests.length,beforeEmpty,'Empty selection never becomes an unrestricted provider call');
   await chooseGroups(['local']);await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
-  assert.notEqual(await page.locator('[data-store-group=local]').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('[data-store-group=mood]').evaluate(e=>getComputedStyle(e).backgroundColor),'Selected stores use the shared selected pill material');
+  assert.notEqual(await page.locator('[data-store-group=local]').evaluate(e=>getComputedStyle(e).borderTopColor),await page.locator('[data-store-group=mood]').evaluate(e=>getComputedStyle(e).borderTopColor),'Selected stores use a shared white rim');
   for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});await checkDetails();assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'default inline view fits '+width);assert.ok((await page.locator('.fa-body').boundingBox()).height>=100,'Default inline results usable '+width);const field=await page.locator('.fa-store-filter').first().boundingBox();assert.ok(field.width>80,'default inline filter remains usable '+width+' '+JSON.stringify(field));}
   await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-fabrics-inline-default.png'});
   await page.locator('.fa-toolbar').getByRole('button',{name:'Expand',exact:true}).click();await page.locator('#fabric-assistant-dialog[open]').waitFor();
@@ -176,7 +176,7 @@ try{
       const outer=await readStyle('#fabric-assistant'),inner=await readStyle('.fa-product'),field=await readStyle('.fa-store-filter'),pill=await readStyle('.fa-toolbar button'),glyph=await readStyle('.fa-toolbar button svg');
       assert.deepEqual([outer.paddingX,outer.paddingY,outer.radius,outer.background],[24,18,20,'rgba(115, 46, 70, 0.65)'],mode+' outer material '+width);
       assert.deepEqual([inner.paddingX,inner.paddingY,inner.radius,inner.background],[12,10,16,'rgba(35, 76, 125, 0.7)'],mode+' inner material '+width);
-      assert.deepEqual([field.paddingX,field.paddingY,field.radius,field.background],[18,9,100,'rgb(35, 76, 125)'],mode+' selected filter Glass material '+width);
+      assert.deepEqual([field.paddingX,field.paddingY,field.radius,field.background],[18,9,100,'rgba(3, 15, 29, 0.65)'],mode+' selected filter Glass material '+width);
       assert.equal((await readStyle('[data-store-group=mood]')).background,'rgba(3, 15, 29, 0.65)',mode+' unselected filter keeps Glass material '+width);
       assert.deepEqual([pill.paddingX,pill.paddingY,pill.blur],[18,9,'blur(7px) saturate(1.2)'],mode+' glass material '+width);
       assert.equal(outer.blur,'blur(9px) saturate(1.3)');assert.equal(inner.blur,'blur(12px) saturate(1.1)');assert.equal(pill.background,'rgba(3, 15, 29, 0.65)');assert.match((await readStyle('.fa-card-title')).font,/Cormorant/);assert.equal((await readStyle('.fa-card-title')).weight,'450');assert.equal(await page.locator('.fa-store-wrap').evaluate(el=>getComputedStyle(el).gap),'12px');assert.equal(await page.locator('#fabric-assistant').evaluate(el=>getComputedStyle(el).gap),'18px');
@@ -233,12 +233,13 @@ try{
   longPreferences=true;await page.setViewportSize({width:390,height:844});
   await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
   const beforeDetails=requests.length;await detailsTrigger.click();await details.waitFor({state:'visible'});
-  assert.ok(await details.evaluate(e=>e.scrollHeight>e.clientHeight),'Long original preferences remain fully available in a bounded scroller');
-  assert.equal(await details.evaluate(e=>document.activeElement===e),true);await details.press('PageDown');await page.waitForFunction(()=>document.querySelector('.fa-search-details').scrollTop>0);
+  assert.doesNotMatch(await details.textContent(),/Retailer queries|Web queries/,'Long internal history is not displayed');
+  assert.equal(await details.evaluate(e=>document.activeElement===e),true);
   assert.equal(await details.evaluate(e=>getComputedStyle(e,'::-webkit-scrollbar').width),'4px','Details use the saved shared thin scrollbar');assert.equal(requests.length,beforeDetails,'Keyboard reading makes no provider calls');await page.keyboard.press('Escape');
   await page.goto('https://maya-fabric.test/aesthetics/aesthetic-control.html');
+  await page.locator('#workspace-previews > summary').click();
   const previewTrigger=page.locator('#workspace-previews').getByRole('button',{name:'Search details',exact:true});
-  await previewTrigger.focus();const previewDetails=page.locator('#workspace-previews .fa-search-details');await previewDetails.waitFor({state:'visible'});
+  await previewTrigger.click();const previewDetails=page.locator('#workspace-previews .fa-search-details');await previewDetails.waitFor({state:'visible'});
   assert.match(await previewDetails.textContent(),/Presentation sample; no search is sent/);
   assert.deepEqual(await previewDetails.locator('[data-maya-panel=inner]').evaluate(e=>{const s=getComputedStyle(e);return [s.paddingLeft,s.paddingTop,s.backgroundColor];}),['12px','10px','rgba(35, 76, 125, 0.7)'],'Active preview follows the same saved Inner material');
   assert.equal(await previewDetails.locator('p').first().evaluate(e=>getComputedStyle(e).fontSize),'14px');
