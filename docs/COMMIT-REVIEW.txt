@@ -1,20 +1,15 @@
-Title: [Codex] Preserve fabric deadlines under Node 20 collection
+Title: [Codex] Record approved live fabric and voice checks
 
-Cloud Build stopped at fabric-search until its 30-minute build timeout. Reproduce
-that hang on Node 20: AbortSignal.any can lose its weakly referenced timeout source
-under garbage collection, unlike the local Node 24 runtime. Retain source signals
-for each composite's lifetime via WeakMap, preserving request/account boundaries,
-all timeout budgets and provider/visual-review limits. No visible UI change.
+Record two authorized saved-look fabric requests: HTTP 200 in 12.846s and
+9.427s, both without confirmed seller listings. Record Admin voice reaching
+Listening and producing an assistant transcript after refresh, plus cleanup
+observations and unreliable native-control limits. No runtime or visible UI change.
 
-Add a forced-GC subprocess running all fabric behavioral cases with a 15-second
-watchdog; the original fails and repaired Node 20/24 pass. Make it a release gate
-and integrated regression assertion. Update the live audit and incident records.
+Public release verification still finds 3873ced instead of local 6ea4d40;
+the three identity checks fail while remaining checks pass. These are older-release
+baselines, not acceptance of pending fixes. Exact speech latency, audio quality,
+fabric relevance and final independent microphone confirmation remain open.
+The owner requested stopping live testing; no further Chrome actions were taken.
 
-All 74 functional release checks, integrated regression and smoke passed on
-Node 20. Standalone Aesthetic Control passed last, including six-width fixtures.
-Live Admin recovered from old session 401s after reload: 29 API requests had no
-HTTP errors; single navigation samples were Admin 326ms and Brief 716ms, excluding
-later data/images. Live Hosting/API remain 3873ced,
-GitHub branch 4a29684, and dc5166e remains local. Owner retains Push. Specific
-live fabric image transmission and microphone approvals are pending; production
-Linux/container, repaired Cloud Build and live provider behavior are unverified.
+Standalone shared Aesthetic Control passed last on Node 20 with isolated Chromium.
+Owner retains Push.

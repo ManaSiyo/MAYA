@@ -1,6 +1,43 @@
 # Current handoff — October 29, 2026
 
-## Current work — live deployment audit and Node 20 fabric deadlines
+## Current work — approved live fabric and voice acceptance
+
+Fromsa explicitly approved sending saved tailcoat/tracksuit images and client
+descriptions to configured OpenAI services, merchant search terms to approved
+retailers, paid API use, and Admin microphone audio/context to OpenAI voice.
+Chrome access resumed after explicit idle confirmations. No purchases, client
+communications, new dissections or project assignments were made.
+
+Two fresh Brief full-look Sourceable searches completed with HTTP 200. The
+tailcoat/trouser look took 12,846ms; the track jacket/pants look took 9,427ms.
+Both ended with no eligible seller listings confirmed. Lookbook/inventory loaded
+successfully. Search Details retained the correct garment descriptions and
+qualified visual observations, but empty outcomes do not validate relevance.
+The long-open Brief initially said to dissect/save; refreshing restored saved
+project sourcing without generation. Its console also showed a 401 thumbnail
+request; the garment image and authenticated search still loaded.
+
+The long-open Admin had historical offline/401 errors and the first voice attempt
+failed. After refresh, explicit start showed Chrome microphone recording, then
+Listening and an assistant transcript. Listening was observed within about 22s
+of click, including tool/observation delay: not an exact startup latency.
+Hang-up removed the recording indicator and accessible command state returned
+to Ready. Later native control became unreliable: an attempted diagnostics
+action coincided with another Connecting state, which then failed. Final refresh
+was interrupted by Chrome's concurrent-user guard. The owner then requested
+stopping live testing; no further Chrome/microphone actions were taken. Final
+microphone state was not independently reconfirmed after that interruption.
+Spoken-command accuracy, audible quality and end-of-speech
+response latency remain unmeasured.
+
+Public verify-live repeated against local 6ea4d40 fails exactly the three release
+identity assertions: live Hosting/App/Admin/API still identify 3873ced. Remaining
+public checks passed. These observations cover the older release, not pending
+fixes. No runtime/UI change in this follow-up; standalone shared Aesthetic Control
+passed last on Node 20 with isolated Chromium. Next: owner Push and exact deployed
+commit verification; live testing stays stopped until the owner requests resumption.
+
+## Previous work — live deployment audit and Node 20 fabric deadlines
 
 Authorized Chrome inspection of MAYA and its linked Cloud Run console identified
 why the latest changes are absent. Public Hosting, App/Admin stamps and API still
@@ -38,10 +75,9 @@ This does not prove long-session renewal is repaired; retain it as a follow-up
 after the pending release. The legacy live thumbnail response also transferred
 about 1.98MB; thumbnail sizing remains a performance investigation opportunity.
 
-Automatic approval review blocked the live Fabrics click because saved images and
-client descriptions would go to configured external AI providers. Specific fabric
-and microphone approvals were requested and remain pending. No live fabric search
-or microphone session was started. The owner asked for Astra; in-place model
+Automatic approval review initially blocked the live Fabrics click because saved
+images and client descriptions would go to external AI providers. The owner has
+since approved and tests are recorded above. The owner asked for Astra; in-place model
 switching is unavailable and native control of the ChatGPT app is blocked. Do not
 claim Astra ran these checks. The owner can select Astra in the chat model picker.
 
