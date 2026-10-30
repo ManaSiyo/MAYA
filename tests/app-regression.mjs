@@ -3,6 +3,7 @@ import './pattern-decisions.mjs';
 import './refresh-efficiency.mjs';
 import './avatar-camera-ui.mjs';
 import './wr-store.mjs';
+// Includes a held post-save read: acknowledgement must precede the eventual row assertion.
 import './wr-ui.mjs';
 import './admin-models.mjs';
 import './admin-systems-ui.mjs';

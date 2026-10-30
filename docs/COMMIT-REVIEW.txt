@@ -1,21 +1,19 @@
-Title: [Codex] Fix fabric knit classification and weave qualification
+Title: [Codex] Await WR applicant refresh in the release gate
 
-Fix generic knit being treated as mandatory jersey and satin sheen overwriting
-saved weave constraints. Keep knit family and specific subtypes distinct, read
-saved spec fields in their own dimensions, and allow qualified weave alternatives
-only into the existing visual-review path. Preserve original saved/client words,
-explicit requirements/exclusions, seller URLs/photos/prices, private scope and
-provider budgets. No additional paid attempts or visible UI changes.
+Unblock the pending aesthetic release after Cloud Build 9811d061 failed at an
+immediate applicant row count. Deliberately hold the fake post-save list read,
+assert the save acknowledgement and busy state independently, then wait for the
+row and settled form before checking the exact saved values. Retain all existing
+checks, account cleanup, six-width layout and shared Aesthetic Control coverage.
+No application runtime, CSS, credentials or production configuration changes.
 
-Regression evidence: the original matcher fails both new representative sourcing
-cases. Repaired sourcing passes 17 checks; the full fabric service passes 50,
-including tracksuit/tailcoat full looks, successful/empty/failed photo comparison,
-missing comparison and explicit exclusions. Forced-GC fabric deadlines pass on
-Node 20. All 74 functional/syntax release commands, integrated app-regression and
-server smoke pass. Final standalone Aesthetic Control passed last, including saved-style/responsive
-checks and captured-surface visual inspection. No visible UI was added.
+Validation: held-read original assertion reproduces the exact Node 20 failure;
+repaired standalone WR passes. All 74 functional/syntax release checks, integrated
+app-regression and server smoke pass on Node 20 with fake providers and isolated
+Chromium. Final standalone Aesthetic Control passed last, including saved-style
+propagation and six-width WR coverage. Captured Messages and changed-style WR
+were visually inspected.
 
-Local fix only. Last observed production is 3873ced; actual seller inventory and
-owner-image relevance remain unverified. Owner asked to stop live testing and
-will report results himself. No Chrome, microphone, live provider testing or push
-was performed for this repair. Owner retains Push.
+The requested aesthetic changes already exist in pushed f346c66 and descendants.
+Production remains 3873ced; this commit must be pushed by the owner before exact
+website/API/asset verification. No microphone or paid-provider tests resumed.

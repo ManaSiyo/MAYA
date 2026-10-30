@@ -1,6 +1,44 @@
-# Current handoff — October 29, 2026
+# Current handoff — October 30, 2026
 
-## Current work — fabric qualification repair (local, not deployed)
+## Current work — unblock the requested aesthetic release
+
+Fromsa asked to recover the aesthetic changes requested before performance work,
+compare them with production, and apply them. Commit f346c66 already implements
+those changes and is included in pushed cce37a2: compact/collapsible Aesthetic
+Control, white-rim selected pills, drawer-only Design Studio 2, Users popup
+layering, simpler Brief/Fabrics controls and aligned/pannable Operations panels.
+Public pages and seven affected assets still match old 3873ced. Do not duplicate
+those changes or describe the pushed branch as deployed.
+
+With fresh explicit MAYA Chrome permission, inspected Cloud Build
+9811d061-2b42-47a3-877f-629d2e29cf9f for cce37a2. It failed after 12m01s,
+before server/site deployment, in tests/wr-ui.mjs:13:482 (0 rows versus 1).
+The earlier fabric deadline repair worked: fabric/voice gates passed. GitHub's
+check response lagged behind the Cloud console. Closed the inspection tab;
+no microphone, paid fabric searches, settings or production data were changed.
+
+The WR runtime acknowledges a successful save before awaiting its separate list
+refresh. The test incorrectly used that acknowledgement as table readiness.
+Deliberately holding the fake post-save GET reproduces the exact 0-versus-1
+failure. tests/wr-ui.mjs now asserts one POST and the pending empty/busy state,
+releases the read, then awaits the actual row and enabled form before checking
+all six field values. The gate releases in cleanup. The same fixture runs through
+tests/app-regression.mjs and the final aesthetic-authority import. No runtime or
+visible UI changed; existing shared typography, fields, panels and independent
+tables retain Aesthetic Control authority.
+
+Validation: the held-read original assertion fails on Node 20.20.2; repaired
+standalone WR passes, including saved styles, Save propagation and six widths.
+All 74 functional/syntax release checks, integrated app-regression and server
+smoke passed on Node 20 with fake providers and isolated Chromium. Final standalone
+Aesthetic Control passed last, including saved-style propagation and six-width
+WR coverage; captured Messages and changed-style WR were visually inspected.
+Next: owner Push after the verified local commit. Do not push without
+explicit authorization. After Push verify release.json, page build stamps, API
+commit and exact affected asset bytes. Production is still last verified 3873ced;
+private fabric relevance and voice quality remain owner acceptance, not resumed.
+
+## Previous work — fabric qualification repair (local, not deployed)
 
 Fromsa narrowed the request to fixing Fabrics and will report live results himself.
 All live Chrome, microphone and paid-provider testing remains stopped.
