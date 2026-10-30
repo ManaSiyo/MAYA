@@ -80,7 +80,10 @@ try{
   assert.equal(await page.locator('.fa-composer').isVisible(),false,'Saved look recommendations do not ask for Dictate or Find fabric');
   const automatic=requests.find(r=>r.automatic);assert.ok(automatic);assert.equal(automatic.submissionId,'project-A');assert.equal(automatic.piece.name,undefined);assert.equal(automatic.pieces.length,3);assert.match(automatic.image,/^data:image\/jpeg/);assert.equal(automatic.preferences,'100% wool, no polyester');
   assert.equal(await page.locator('.fa-card-title').count(),1);assert.match(await page.locator('.fa-card-caption').textContent(),/For Crimson coat/);
-  assert.ok(await page.locator('.fa-product').evaluate(e=>e.getBoundingClientRect().width<e.parentElement.getBoundingClientRect().width*.75),'A single result does not stretch across the whole desktop panel');
+  // Independent lookbook hydration may replace a card after a locator resolves.
+  // Query the connected card and read both bounds in the same browser task.
+  const cardBounds=await page.evaluate(()=>{const card=document.querySelector('.fa-product');if(!card?.isConnected||!card.parentElement)throw Error('Missing connected fabric card');return {card:card.getBoundingClientRect().width,container:card.parentElement.getBoundingClientRect().width};});
+  assert.ok(cardBounds.card>0&&cardBounds.card<cardBounds.container*.75,'A single result does not stretch across the whole desktop panel');
   assert.equal(await page.locator('.fa-product-link').getAttribute('href'),product.url);assert.equal(await page.locator('.fa-product-link').getAttribute('target'),'_blank');
   assert.doesNotMatch(await page.locator('.fa-results').textContent(),/arrives|in.stock|35%|selling unit|San Francisco/i,'Only two concise caption rows, without guessed facts or match percent');
   assert.equal(await page.locator('.fa-card-actions').count(),0,'Sourceable cards have no Save or Use controls');

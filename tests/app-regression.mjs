@@ -2730,6 +2730,7 @@ ok('Fabric deadlines survive Node garbage collection and retain parent cancellat
 ok('Shopify collection/direct aliases share one search card and visual slot without changing source URLs or selected variants',true);
 await import('./domain-boundaries.mjs');
 ok('Fabric policy, provider imports, routes, styles and served assets stay separate from communications and CRM',true);
+// Fabric geometry resolves the current card atomically across independent lookbook repaints.
 await import('./fabric-search-ui.mjs');
 await import('./fabric-workflow-ui.mjs');
 ok('Fabrics distinguishes preparation, interrupted searches and true empty results; terminal streams finish without EOF',true);

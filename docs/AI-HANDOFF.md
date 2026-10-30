@@ -1,6 +1,40 @@
 # Current handoff — October 30, 2026
 
-## Current work — unblock the requested aesthetic release
+## Current work — second deployment blocker in fabric geometry test
+
+Fromsa reported that the aesthetic changes still did not appear after Push.
+964bdde is pushed; Cloud Build 2dabafd5-2dc1-4891-95f3-4d09579739be failed
+October 30 at 12:09 PM Pacific after 6m03s, before any server/site deployment.
+GitHub's check log identifies tests/fabric-search-ui.mjs:83:47: the card's
+parentElement is null during getBoundingClientRect. Public release.json and
+API still report 3873ced. Refreshing the owner's browser cannot publish this.
+No Chrome access, microphone or paid-provider tests were resumed.
+
+The Sourceable card may be replaced by an independent delayed lookbook read
+between Playwright resolving a locator and evaluating its dimensions. A temporary
+fixture holds that read, resolves the old card, releases the read and reproduces
+the exact null-parent error. The repaired test queries the currently connected
+card and reads both card/container bounds synchronously in one browser task.
+It retains the <75% width requirement and explicitly requires positive card width.
+No runtime, CSS, provider, configuration or data changes are introduced. Shared
+H4/P3/card Inner material and existing Aesthetic Control previews remain intact.
+
+The corrected held-response fixture passes its complete fabric UI suite with
+4x CPU throttling on Node 20.20.2. All 74 functional/syntax release checks,
+integrated app-regression and server smoke passed. Final standalone Aesthetic
+Control passed last, including default/changed saved styles, actual Save
+propagation and responsive fixtures. The captured default fabric workspace
+was visually inspected. The integrated regression already imports the
+modified fixture, with an explanatory note at that import. No new visible UI.
+
+Next: finish required validation and prepare a local commit. Fromsa retains Push.
+After Push, inspect the matching Cloud Build and verify exact Hosting/page/API
+commits plus affected aesthetic asset bytes before declaring the changes live.
+The earlier requested aesthetics remain in f346c66 and descendants; do not
+reimplement or revert them. Private fabric relevance/voice quality still require
+owner acceptance; live testing stays stopped.
+
+## Previous work — unblock the requested aesthetic release
 
 Fromsa asked to recover the aesthetic changes requested before performance work,
 compare them with production, and apply them. Commit f346c66 already implements

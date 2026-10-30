@@ -1,19 +1,19 @@
-Title: [Codex] Await WR applicant refresh in the release gate
+Title: [Codex] Measure current fabric card during release checks
 
-Unblock the pending aesthetic release after Cloud Build 9811d061 failed at an
-immediate applicant row count. Deliberately hold the fake post-save list read,
-assert the save acknowledgement and busy state independently, then wait for the
-row and settled form before checking the exact saved values. Retain all existing
-checks, account cleanup, six-width layout and shared Aesthetic Control coverage.
-No application runtime, CSS, credentials or production configuration changes.
+Fix the null-parent geometry assertion that stopped Cloud Build 2dabafd5 before
+the requested aesthetic release could deploy. Independent lookbook hydration may
+replace a card after locator resolution. Query the current connected card and
+measure it and its parent in one synchronous browser task. Keep the <75% width
+assertion and require positive width. No runtime, CSS, provider, credentials,
+configuration or production data changes.
 
-Validation: held-read original assertion reproduces the exact Node 20 failure;
-repaired standalone WR passes. All 74 functional/syntax release checks, integrated
-app-regression and server smoke pass on Node 20 with fake providers and isolated
-Chromium. Final standalone Aesthetic Control passed last, including saved-style
-propagation and six-width WR coverage. Captured Messages and changed-style WR
-were visually inspected.
+Validation: held lookbook response reproduces the original null-parent failure;
+corrected full fabric UI fixture passes with 4x CPU throttling on Node 20.20.2.
+All 74 functional/syntax release checks, integrated app-regression and server
+smoke passed. Final standalone Aesthetic Control passed last, including saved-style
+propagation and responsive fixtures. The default fabric workspace was visually
+inspected.
 
-The requested aesthetic changes already exist in pushed f346c66 and descendants.
-Production remains 3873ced; this commit must be pushed by the owner before exact
-website/API/asset verification. No microphone or paid-provider tests resumed.
+Production remains 3873ced. The requested aesthetic changes already exist in
+f346c66 and its pushed descendants; owner Push and exact deployed verification
+remain necessary. No personal Chrome, microphone or paid-provider tests resumed.
