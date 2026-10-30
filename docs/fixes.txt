@@ -1,0 +1,766 @@
+October 30 — Build 2dabafd5 (964bdde) failed at fabric-search-ui.mjs:83:47: null parentElement during card bounds evaluation. Independent lookbook hydration replaced the Playwright-resolved card. A held fake response reproduces it; query the current connected card and read both dimensions in one browser task. Require positive width and retain the <75% layout assertion. Corrected delayed fixture passes at 4x CPU; all release gates remain. No runtime/UI change or deployment yet.
+
+October 30 — Cloud Build 9811d061 (cce37a2) failed after 12m01s at wr-ui.mjs:13:482, before any deployment. The saved acknowledgement preceded the separate applicant-list refresh, so immediate count was 0 instead of 1. A held fake GET reproduces it; assert the acknowledged pending state, release the read, then await rendered row and settled form before exact data assertions. Test-only; every production gate remains. Earlier fabric and voice checks passed in this build. Public release remains 3873ced pending a new owner Push.
+
+October 29 — Fabrics rejected tricot under a generic knit requirement and let satin sheen overwrite saved weave. New representative sourcing tests fail on the prior matcher. Separate knit family/subtypes and spec dimensions; qualified inferred weave alternatives require available visual review, while explicit constraints and known knit-family contradictions remain strict. Source-backed listings, prices, image gate, original words and account/project isolation remain intact. Service fixtures exercise both reported looks and reject/error/missing-ranker paths without extra provider attempts. Local only; actual merchant outcomes remain owner verification after Push.
+
+October 29 — Approved live acceptance on older 3873ced: tailcoat/tracksuit Sourceable returned 200 in 12.846s/9.427s, with no eligible listings. Long-open Brief save guard and Admin voice failure recovered after page refresh. Historical auth/offline errors and one fresh Brief thumbnail 401 remain follow-up evidence, not newly repaired code. Admin reached Listening/transcript and returned Ready after hang-up; final native-control interruption requires owner microphone confirmation. See AI-HANDOFF. No UI change.
+
+October 29 — Fabric deadline lost under Node 20 garbage collection blocks deployment
+[confirmed] Cloud Build e3f0c5f3 (4a29684) timed out at fabric-search after 30m21s; two previous builds also timed out. The original suite hangs on Node 20.20.2, although Node 24 passes. Native combined signals retain only weak timeout sources; forced collection leaves the deadline unaborted.
+[repaired locally] WeakMap retention ties source lifetime to each combined fabric signal, covering route/web/feed/listing/redirect budgets without global permanent retention or extra provider calls. A forced-GC child suite fails the original via watchdog and passes all 49 cases on repaired Node 20/24. Added as a mandatory release and app-regression gate. No visible UI change; final validation/deployment/approval state is in AI-HANDOFF.
+
+October 29 — During a pending microphone attachment, a second voice start could return success before attachment finished. Check the in-flight start before returning an active session; fixtures exercise shared completion and cancellation. Live voice performance remains unmeasured.
+
+October 29 — Voice setup could leave callers pending after cancellation when token, SDP, microphone or track attachment ignored abort. Exercise held operations and late microphone cleanup; settle cancellation independently, bound startup and preserve real provider errors. Admin's image-health check downloaded a 2.5 MB original; use the existing 100 KB thumbnail. One throttled A/B and local tests do not establish deployed/live voice performance.
+
+October 29 — Live website and API report 3873ced while the tracked branch head is 8a83820. Vercel success does not establish Cloud Build success; the actual deployment failure remains unknown. Inspect the matching Google Cloud Build before retrying deployment.
+
+October 29 — Full-look fabric matching discarded equal-strength matches for distinct garments even when they shared identical saved cloth. Keep the verified shared match without assigning a garment ID; preserve ambiguity, seller verification and the photo gate. Fixture coverage only; the tracksuit's live result and speed remain unverified.
+
+October 28 — Design Studio 2 deployment blocked: Cloud Build on 6cc66d0 failed because the sign-in panel intercepted the Operation Room menu while the MAYA door's opacity transition created a stacking context. Raise the door's context, and exercise a real pointer hover at partial opacity. Follow the owner's push with exact live release verification.
+
+2026-10-27: Brief garment selection was difficult to distinguish. The shared Glass selected state now has a clear blue fill and accent border, including hover, with pressed state carried by the selected garment and Admin chart controls. Local responsive and saved-style fixtures passed; live deployment remains pending.
+
+October 26 — Fabric search discarded a third textile in a seller feed before qualification, and optional web/feed/listing waits relied on transports honoring abort. Reproduced with fake sellers and non-cooperative transports: consider three feed items and up to eight balanced seller checks, overlap safe saved-context reads, and enforce the existing deadlines independently. Preserve one visual pass and seller facts. Live stalled-request cause remains unverified.
+
+October 26 — Brief selected garment pills only toggled an old class overridden by the shared pill runtime. Use shared segmented aria-pressed state for garment and store choices. Sourceable also removed an otherwise reviewed product when its browser image failed; retain the original seller link with the existing unavailable-photo message. Local fixtures reproduce both; one authorized live refresh remained searching beyond 130 seconds. Local fixtures now exercise fetch and stream reads that ignore abort; the UI independently observes its existing deadline. The actual live cause remains unconfirmed.
+
+October 26 — Unreviewed Fabrics candidates were clickable while photo comparison was pending. The viewer now publishes cards only from terminal done, including empty results; delayed visual-review coverage proves rejected candidates never become links. Existing shared P1/material controls govern the pending state. Local fixtures do not establish live provider quality.
+
+October 21 — Owner reports August 26 saved look stuck Searching with empty-result copy. Local fixtures reproduce premature no-match text, waiting for EOF after done and provisional cards surviving interruption. Repair those paths with shared presentation authority; route total deadline 55s and listing total 8s precede the browser deadline. The queued native close handler can also abort a reopened search (new fixture fails with only the guard removed). Search 43 cases and normal/8x CPU workflow pass; all 72 exact local release gates and integrated regression pass. Final standalone authority precedes commit/Push. Actual owner request/provider cause remains unverified without fresh idle Chrome access. No automatic retry or weakened relevance gate.
+
+October 21 — 87f2712 is deployed and exact assets/API plus served UI checks pass. Ivory fur no longer appears for the burgundy jacket (no confirmed match on that run); trousers return a crocodile listing twice under collection/direct aliases. Normalize Shopify identity for search deduplication only; keep variants and actual source/fetch destinations. Original service fails new fixture, fixed search passes 40 cases. No weak visual fallback or saved data migration. All 72 exact local release commands, integrated regression and smoke pass; final standalone authority precedes commit/Push.
+
+October 21 — 24d84f4 deployed and exact/live-served checks pass; real coat returns three wool results. Real shag-jacket review found ivory fur accepted for a burgundy target. Matching/seeds ignored saved dominant color; generic leather feeds also spent their first two slots on notions. Reproduce opposite-color failure, use conservative saved color hints with explicit overrides, retain base texture seeds, filter known notions before limiting and carry discovery context into ranking. Backend-only; no new UI/SMS/voice/global model changes. All 72 exact release commands, integrated regression and smoke pass locally; final standalone authority precedes commit/Push and deployed owner acceptance.
+
+October 21 — Live coat still empty: base cloth required to contain its appliqué and global fabric directions
+[reproduced] The deployed details showed a black brushed wool body with leather appliqué, while its retailer seed required denim/leather. Single-garment qualification promoted unscoped whole-look preferences and secondary material into compound mandatory requirements. New matching/service tests reproduce the failure.
+[repair] Separate base qualification without mutating saved/client data; explicit/named/percentage/blend and negative constraints remain. Unknown inferred traits require the one successful visual check. Bound broad seeds, balance stores and retain web relevance priority. Show original preferences and focus the existing scrollable details panel. Real Britex black wool twill now qualifies; visual owner acceptance follows deployment.
+[release] Build dbe8380d succeeded at 19m25s; b468fd55 timed out during tests at the old 20m cap before deployment. Preserve all checks and extend the bounded deadline to 30m with start/elapsed diagnostics. No runtime communications, provider, credential, billing or dependency changes. All 72 exact local release commands, integrated regression, smoke and updated release probes pass; long-context tests also verify the hover panel never covers its trigger and uses shared keyboard scrolling. Final standalone authority precedes commit.
+
+October 21 — Release blocked by an overlapping SMS fixture phase
+[reproduced] Cloud Build 7dbc2c19 failed before deployment at message-compose-ui STOP: 3 writes versus 2. A deliberately held prior send refresh reproduces the identical failure without any SMS runtime change. The old fixture used draft clearing as completion, then directly painted STOP before its fake consent-none refresh settled.
+[test-only repair] Deliberately hold that refresh, verify Send remains busy, release it and await actual completion feedback/enabled state before the independent STOP case. Retain exact no-extra-write and disabled-field/button assertions. No runtime, provider, credentials or visible UI change. Normal/8x CPU plus communications and final shared authority validate the repair; production acceptance follows the latest build.
+
+October 21 — Real Mood brocade rejected before visual review
+[reproduced] Public retailer HTML parsed to a real product/photo, but isFabricProduct returned false because brocade was absent from the material vocabulary. The new sourcing fixture fails on f177f7a.
+[fixed] Recognize brocade/jacquard as textile constructions and enforce requested weave matches; reject unrelated twill and scissors. No UI, communications or shared dependency changes. Sourcing/search/routing/container/domain, full integrated regression and smoke pass; the real page now passes eligibility. Final authority precedes a separate follow-up commit.
+
+October 21 — Fabric search candidates erased / opaque empty searches
+[reproduced] Automatic saved looks skipped direct retailer queries; successful but empty web discovery overwrote valid supplementary results. Reference-photo conversion also preceded public inventory loading. Automatic mode hid reference interpretation and had no visible query evidence or overall stalled-read deadline. A live crocodile-trouser search returned a relevant listing; a newer coat returned empty, so this was not a universal outage.
+[repair] Bounded material-only seeds, merged eligible candidates before one visual review, original + canonical crop, fabric-only provider contract, www evidence identity, malformed-answer validation, independent inventory and 60-second read timeout. Sourceable hover/focus/tap context and actual shared active preview; account/garment resets clear hidden data. No paid retry, weak visual fallback or new card Save/Use.
+[evidence] Original code fails retained-candidate test; repaired focused server/UI checks pass, including held/failed photos, stalled reads, real Save propagation and six widths. All 72 exact local release commands, integrated regression and smoke pass. Final standalone authority and deployed acceptance are tracked in AI-HANDOFF.
+
+October 20 screenshot incidents — Operations used the popup Editor as a drawer and the iframe clipped its overlay. Shared drawer authority/viewport bridge replace this. Segment previews lost selected material to stronger preset rules; editor opening also immediately dismissed itself and one Restore was detached. Corrected event ordering/specificity and active preview checks. Admin hidden shortcut menus could pan the whole phone page on keyboard focus; bounded their placement and submission tiles. Existing private data and provider setup remain unchanged. All 71 local release gates, full integrated regression and smoke pass; final standalone authority and exact deployed verification remain completion gates.
+
+OCTOBER 18 final live visual incident — Settings header overlap
+[confirmed live] Standalone Operations header z50 painted above drawer z40 on phones; its own close icon was intentionally hidden. Bounds/type/material assertions passed while the screenshot remained wrong.
+[fixed locally] Settings paints above the header and keeps its close control; the background hamburger hides. Retire obsolete slide offsets; initial focus goes to Measurements, repeated opens preserve active inputs, close restores the now-visible opener. Add hit-test and real close-click regression; preserve account/upload/save tests. Main a624311 deployment remains healthy while this follow-up is prepared.
+
+OCTOBER 17 screenshot regressions — filter resets, native controls and workspace layers
+[causes] Lead filters lived only in memory; checkboxes and unstyled feature-list scroll tracks used native chrome. Brief and embedded Operations both owned headings/padding; translucent Settings over white patterns was not covered by empty fixtures. Old Brief warmup fetched ~23.77MB of fabric originals before use.
+[repairs] Account-keyed validated preferences, shared optional Checkbox/Scrollbar settings and real previews, retired redundant dashboard sections with active config retained/backup, one screen-aware fixed title/full-width room, garment-local Fabrics actions, shared dropdown Settings backing and explicit P1/P3/Editor fields/notices. Closed settings are inert. Remove original-image warmup and saved-work sample downloads; preserve actual sourcing/local loaders.
+[coverage] Add real reload/account/filter, populated Feature Requests scroll, actual Admin/Outbound checkbox, bright-pattern Settings and held navigation/material tests. Platform scrollbar fallback retains native hidden navigation. Local performance evidence in AI-HANDOFF; no paid/live/private acceptance implied. All 68 exact gates, integrated regression (639 named checks), smoke and default/saved responsive checks pass locally. Final standalone authority precedes commit; public deployment verification is separate.
+
+OCTOBER 17 CI follow-up: fabric test deadline leaks between scenarios
+[reproduced] Build 6c4d5797 stopped before deployment: held-ack/submission-switch fixture counted 10 requests instead of 9. The preceding timeout probe left all later 15-second write deadlines shortened to 150ms. A 250ms slow interaction reproduces the failure while the project is still A; no post-switch cancellation bypass was found.
+[fixed test only] Restore native timeout after the one intended fault. Preserve exact cancellation/storage assertions, delay the independent interaction and await the released acknowledgement/network settling. Normal, 4x and 8x CPU runs pass. Runtime/UI unchanged. Final standalone authority and follow-up Push/deploy verification required; production still last verified 7015b99.
+
+OCTOBER 17 current verification
+[passed locally] All 65 Cloud Build test commands, full integrated app-regression (636 named checks plus other imported suite assertions), server smoke, syntax and diff checks. Current transport stress 44/44. Final standalone authority repeats last before commit. Synthetic providers/isolated browser only; exact deployed verification and private owner acceptance remain separate. No CSS/default appearance change; legacy Operations field authority gap preserved and reported.
+
+OCTOBER 17 Operations storage fault repairs
+[fixed locally] Pattern Logic Save/Reset/Test lock now report storage failures and preserve reviewed state. Account-scoped keys stop another login inheriting private shapes; legacy global keys remain intact. Unsaved logic blocks paid generation until Save/Reset. Failed measurement writes retain the visible values in scoped page memory; unreadable initial data blocks generation. Same photo with different saved garment IDs has independent dimensions.
+[limits] Logic drafts survive incidental render/renewal, but explicit garment/account navigation discards them. Unsaved dimensions are page-local. Prior image-only session measurement keys remain intact; saved garments with IDs require re-entry rather than adopting ambiguous old values. No server data migration.
+[presentation constraint] Preserved existing default appearance per owner. Legacy Operations fields/warnings still lack complete Editor/P1/P3 authority; six-width tests record the gap. Fixing it would change defaults, so no annotation/CSS override was introduced.
+
+OCTOBER 17 continued save audit: concurrent Brief tabs and stale reopened work
+[fixed locally] Require reviewed generation for pieces.json saves, validate saved data and CAS; reject missing/stale review without overwriting generated work. Retained failed drafts keep their original lineage. Publish only the exact acknowledged snapshot; reject oversize at 25 MiB without deleting patterns. Mutable submission JSON bypasses the five-minute cache, so equal-size changes reopen correctly. Older open clients must reload before saving.
+[focused verification] Actual route concurrent-write/corrupt-read/unknown-ack contracts, Brief queued/retained lineage and real duplicate-garment UI pass. Full current release checks and deployment remain pending. No styling changes.
+
+OCTOBER 17 deeper audit: save ordering, fabric scope and oversized payloads (implemented, release pending)
+[release boundary] Exact Firebase release/page stamps and Cloud Run API were verified at 7015b99 before this phase. The changes here are uncommitted and not deployed; complete current release/regression and final Aesthetic Control verification remain pending. Earlier deployment-blocked observations below are historical.
+[client persistence] A project target could finish loading after new source edits, queued saves repeated already-covered writes, rename swallowed failures, oversized snapshots dropped transcripts, and a late delete acknowledgement could affect the successor board. Added second flush/selection barriers, account/board-bound acknowledgements, queued-save coalescing, truthful rename/retry, UTF-8 rejection with intact drafts, online pending-save warnings and account-bound cleanup. The seven-call fixture now commits twice. Termination warnings remain browser best-effort.
+[fabric payload and reads] Search serialized embedded piece images/patterns, exceeding the route budget; small-image fixtures missed this. Bounded metadata reduces the integrated request from more than 5.6 MB to 6,012 bytes. Inventory no longer waits on photo/book/search. A real-page delayed-read probe also found that switching garments could discard the only lookbook hydration, and initial prepare omitted the active garment; both paths now preserve/restore the correct saved selection.
+[fabric writes and identity] Save A was tied to search/garment lifetime rather than the project queue, while global selectedUrl could supply another garment's material. Serialize generation-checked writes per account/submission, pin explicit garment intent, retain same-account renewal and cancel unsent work on actual project/account change. A 15-second deadline reports unconfirmed saves and reloads for reconciliation without automatic resend. selectedByGarment plus stored-only selectedGarmentFingerprints rejects changed/reused garment identity; UUIDs identify fresh dissections and legacy ambiguous selections fail closed. First saves reverify new seller listings; saved URL reuse preserves seller facts.
+[Brief completeness] Above 27 MiB, the writer silently omitted generated patterns before reporting Save. It now counts UTF-8 bytes, rejects oversize and keeps the full generated draft for retry. Removed 589 unreachable sourcing JavaScript lines only; shared viewer, active CSS, local folders and legacy migration paths remain.
+[Admin / Outbound] Prompt reads could replace typing or race later saves; fallback writes and auth-bridge completion needed pinned account/session identity. Sixteen deferred scenarios cover initial loading/review, parallel live/private reads, newest-document precedence, immutable Save acknowledgement, failures/retry and account changes. Outbound refresh uses workspace revisions so an older response cannot undo an acknowledged save; overlapping requests become one catch-up read.
+[why previous checks missed it] Immediate responses and one-action tests did not interleave target loads, edits, saves, renewal and garment switches. Old fabric fixtures modeled one global selection and tiny images. New tests exercise actual served functions/pages, deferred responses, realistic payload size and persisted outcomes; existing assertions and source-backed seller rules remain.
+[copy and scope] Thirty selected backend help passages shrink from 597 to 486 words (18.6%); the stale four-minute deploy promise is removed. No CSS, visual roles, material settings or layout authority changed. npm ci passed. New workflow/Prompt suites are wired into Cloud Build and app-regression; this record does not claim the full pending gates passed.
+[limits] No private fur/green-pants demonstration, personal Chrome, paid model call, live send or production configuration change. Fresh Chrome permission and owner quality acceptance remain necessary. AbortController cancels client waits, not a guarantee of server rollback; Storage generation preconditions and reconciliation protect retries. Research links and current next step are in AI-HANDOFF.md and FABRIC-SEARCH.md.
+
+OCTOBER 17 deployment: returning users can retain the obsolete fabric interface
+[confirmed publicly] fabric-assistant.js/css?v=3 both return Cache-Control: public, max-age=604800. Updated files retained their old URLs, so a normal reload could keep the previous matching/viewer behavior.
+[fixed locally] Brief and Operations request v4 JS/CSS. Exact no-cache rules cover both and voice-preparation.js; image caching/security headers stay intact. No visible UI or settings added. Verify actual new references through fabric/Brief fixtures, shared authority last, then exact deployed bytes and response headers after the authorized Push.
+
+OCTOBER 17 CI follow-up: actual voice recovery press dismisses its workspace
+[reproduced] Build 55ed5d8a passed earlier functional gates then failed real Admin recovery. A held pointer reproduced the outside-press handler closing the drawer and moving the chip 94px before mouseup, losing its click. Frontend/Playground also dismissed their drawers unnecessarily.
+[fixed locally] Exempt each recovery chip from its existing outside-pointer handler. Preserve drawer state and exact button bounds through actual held presses, then await successful playback without hanging up. All three surfaces use default and changed saved settings at six widths. No new markup, geometry or visual authority. Full app-regression and final standalone aesthetic checks are required before the follow-up commit/Push; production is still the older commit pending a successful Cloud Build.
+
+OCTOBER 17 CI follow-up: Messages geometry baseline and complete failure evidence
+[reproduced] Build 2081fcda exposed an 8px heading comparison failure. A real-page CPU-throttled probe reproduced native drawer scrolling after the fixed 350ms baseline; the heading width never changed. Await the actual destination and retain exact equality, with classic overflow/default-saved checks at six widths. No runtime heading override added.
+[diagnostics] All Node gates retain full temporary logs and original exit codes with compact success output; failure lines from earlier surfaces remain visible alongside the tail. Cloud Build shell dollars remain escaped. Tests cover successful output suppression, exit 7 and an early failure followed by 200 later lines. No gate skipped; no new visible UI.
+
+OCTOBER 17 deployment follow-up: 62ca204 pushed, production deployment blocked
+[observed] Cloud Build 8e22c3a7 failed release testing before any deployment. GitHub truncates its excerpt before the actual error. Compact browser-install and successful hands output; keep full temporary logs, show failing tails and preserve nonzero exits. No application/UI change; investigate the revealed CI failure after the follow-up Push. Public release remains 707592d, not the green Vercel preview.
+
+OCTOBER 17: implemented audit defects (supersedes the open transport status below)
+[Admin] Fixed generic typography beating explicit table cells; phone Feature Request overlap; hidden failed-settings grid; ineffective dock inset; Example/Save race reporting current unsaved changes as Saved. Real saved settings govern active previews and changed surfaces.
+[Fabrics / Brief / Operations] Fixed tiny result viewport, clipped standalone title, duplicate garment-name identity, stale Brief selection reposting, private summary/reference/prompt reset and lost favorite controls after image failure. Hard exclusions/replacements no longer become desired materials. Finished clothing/notions and unrelated fabric are excluded. Canonical selected image and source-backed products feed one bounded visual comparison; weak/error output stays empty. Missing images no longer produce /products/undefined; valid later JSON-LD/metadata photos are retained.
+[Voice] Added bounded no-mic standby to client, Playground and Admin with current context before microphone attachment, server-ready acknowledgment, playback recovery and scope cleanup. Shared server/phone timing is bounded and default VAD is 300ms; response style is clear and concise. Fixed Admin recovery chip scrolling offscreen with the drawer. Tests do not prove live latency or sound quality.
+[Messages] Strict stress now 44/44: STOP/send race, retained/archive replay, archived owner reply carrier aliases and international SMS are repaired. Deleted history preserves content-free inbound IDs; no eviction at 10000. Legacy deleted/blocked events predating these receipts cannot be reconstructed.
+[Accounts / Outbound] Community deletion stops across account generations, including A→B→A. Same-account Outbound token refresh preserves pending edits; actual account changes still clear private state.
+[Release] Every new functional/browser/stress fixture is wired into release and app-regression. Final Aesthetic Control re-executes changed-surface default/saved geometry and responsive checks. Live authenticated providers, owner binding, carrier delivery, subjective relevance/audio and remaining founder capabilities still require separate acceptance.
+
+OCTOBER 8: founder messaging stress findings (OPEN, runtime unchanged)
+[reproduced P1] Admin Send uses stale contact consent before a later durable claim; a concurrently persisted STOP still allowed a fake provider submission.
+[reproduced P2] Archived inbound SID replay increments unread and replaces chronology; archived synthetic owner replies cannot reconcile delivered callbacks by replyTo; valid explicit international SMS accepted by Admin is rejected by the US-only sendSms adapter.
+[conversation gaps] Polite suffixes can become contact names before AI; no persisted cancel action, no conversational report continuation/result synthesis, and plain chat completion claims lack action receipts. Source review also found 60-row lookup/full-report mismatch, omitted lead stages, silent report truncation and unequal tools/history between channels. See FOUNDER-CONVERSATION-AUDIT.md for precise boundaries and proposed fixes.
+[test correction] Existing Outbound circle-only assertion conflicted with approved independent X/Y padding. Test now validates actual capsule geometry, glyph visibility and centering; no visual runtime change.
+[verification] New transport diagnostic intentionally remains red (28 pass / 4 fail). Scripted owner corpus and existing checks do not certify live model understanding or production delivery.
+
+OCTOBER 7 late: ineffective presentation controls and status-filtered owner SMS miss
+[fixed locally] Heading gaps only targeted summary+div, missing Ad campaigns controls and several other sections. Use explicit headings/content markers including empty states. Fixed-width listen pills and icon wrappers defeated padding; central content+padding capsule geometry now covers both saved pill families and bounded Save glyphs. Edit and Save materials no longer conflict with local overrides; names/dates/captions use merged roles. Delivering no longer inherits Booked's color through --green.
+[fixed locally] Owner direct parser missed 'all the contacted leads', and lead adapters dropped status/retained at most 60 records. Natural status/all/count reads use full retained source traversal and durable report pages. Explicit partial flags cover missing pages/status history; opaque model/provider JSON failures become safe typed diagnostics. Full-source reads have a six-second deadline without racing mutations; ordinary note enrichment remains parallel. Slow auth/storage can still delay the overall webhook. The actual live provider failure in the screenshot is unconfirmed.
+[validation] Exact release suites, full regression, server smoke, syntax/diff and the extended final Aesthetic Control gate pass with fake providers and isolated local browser fixtures.
+[production] Latest verified release 707592d remains live. No live sends, credentials, production settings or Push in this task.
+
+OCTOBER 7: new-message guard and responsive editor audit
+[fixed locally] STOP now guards the Messages Send handler as well as UI/server. Cancel/account/recipient changes invalidate pending typed-number starts. Closed floating editor fields cannot create invisible phone overflow; H0 preview respects its responsive size clamp. Verified with fake providers; live delivery remains owner acceptance after deployment.
+
+OCTOBER 7: parallel audit implementation after fabrics task completion
+[fixed locally / Admin] Account changes could accept old feeds/voice/actions while same-user token renewal discarded drafts. Bind async work to account/session, preserve renewal drafts/IDs, remove persisted customer-data cache and clear old private state. Invoice results are tied to stable leads; preserve a created-but-unsaved URL and retry attachment. Text opens an unsent internal draft. Duplicate/uncertain lead approvals retain request IDs.
+[fixed locally / Backend] Shared legacy lead/note writers now use validated generation-checked mutations; failures cannot silently overwrite with empty data. Submission upload ownership fails closed and feed enumeration paginates. Persist blocked STOP and merge terminal delivery state into archived records across CAS retries.
+[fixed locally / Outbound and clients] Review the exact email at the durable send claim; avoid missing-date follow-up recounting. Pin project operations to account generation, preserve edits during initial saves/uploads and publish independent share images. Avatar copy correction stays Playground-only.
+[fixed locally / Brief and Operations] Retain generated results through save failure with save-only retry; no automatic missing-image generation on read. Bind Operations measurements and async work to account/submission/garment; freeze inputs and reject stale startup/model/cache/UI continuations.
+[fixed locally / Design and release] Save uses one immutable acknowledged snapshot; failed saves retain Restore. Correct contradictory active design instructions. Pin test/container packages, require browser/communications gates and verify both site and API commit.
+[verified locally] All 44 release suites, full app-regression, server smoke, required syntax and diff checks pass, including the corrected authenticated status-refresh fixture. Provider/Scheduler settings and credentials untouched. Public October 7 08:49 Pacific reads remained HTTP 200 at older release e82b207; these local fixes are not live.
+
+OCTOBER 7: fabric search loses material context and hides useful sources/results
+[fixed locally] inferPieces retains fabric_hex/fabric_spec and construction metadata; dissection includes submitted material preferences and no longer demands invented fiber/GSM/stretch. Ranking uses the original garment and paints products first. New conversational search uses evidence-backed web discovery plus seller verification; Amazon/Stonemountain are real discovery targets instead of filtered search tiles, and Britex/Harts are added. Short public listing cache; no negative/private query catalog writes. Saved lookbooks and browser responses are account/submission sealed.
+[verification] Behavioral handoff and streaming fixtures, seller variant/out-of-stock/unknown cases, CAS and session races, real-page public parser checks, six responsive sizes and complete release/app/smoke batteries. Production remains unmodified; live AI relevance/latency awaits owner deployment/evaluation.
+
+OCTOBER 3: Systems links leak into Logs; voice takes over Systems; scattered provider tools
+[fixed locally] Isolate Systems content by selected drawer tab. Move voice transcript/briefing into Logs and pending approvals outside the drawer into a native dialog. Replace persistent meter/snapshot with viewport-clamped authenticated hover cards; standardize centered dropdown chevrons, saved popup material and glass tab highlights. Keep account-scoped ledgers and confirmation gates.
+[verification] Seven responsive widths and three short/landscape sizes, outside/Escape/keyboard, dismissed actions make no writes, shared regression and provider/communication fixtures. Live owner OAuth/provider verification pending approval.
+
+OCTOBER 3: table/Inner panel coupling
+[fixed locally] Remove Inner material/width/padding from table housing and toolbar. Add table-only corners and shared Gray borders excluding Table. One table border/fill; contain wide sticky-cell painting in the scroll housing to prevent mobile page overflow. Existing graph styling and functional filter portals stay intact.
+[validation] Gallery isolation/restore/save, Admin geometry, mobile populated Outbound scroll/filter and shared regression checks.
+
+OCTOBER 2, 2026: Admin statistics peek below Aesthetic Control; oversized Save footer
+[fixed locally] Full viewport dialog bounds, no container focus outline; floating icon Save without black footer or success prose. Fixed header at Admin geometry. Same-origin saved design fallback and revision guard remove the refresh requirement; failed reads keep the current applied design. H0 prevents ordinary H1 settings from resizing the main sign-in wordmark.
+[verification] Fixture browser bounds, cross-page Storage updates, delayed-read race, H0 independence, eleven gallery widths and broader shared UI regression. Production verification follows owner Push.
+
+OCTOBER 2 night — hard-coded table housing and inconsistent Edit controls (LOCAL)
+The fixed table toolbar had a separate black backing. It now uses shared inner-panel
+material/geometry. Remove Glass/Outer range inputs and unit-text padding fields;
+all menus use shared numeric/select controls. Popup padding splits into X/Y while
+old single-padding remains readable. Optional outer corners and black/white borders
+propagate to enclosing review sections. Remove unused gallery Filter controls,
+use shared H2/H3 hierarchy and align the logo/title. Save rim/shadow removed.
+
+OCTOBER 2 night — uneditable header, mismatched restore and padding state (LOCAL)
+General text-role CSS beat the header's font rules; explicit header/descendant scope
+now gives saved table-header settings priority. Restore is the shared Refresh SVG,
+not a text glyph. Padding state follows active padding fields only. Popup settings
+now paint the actual backing instead of unused variables. Admin embeds the page
+without opening another tab and validates same-origin iframe close requests.
+Browser gates verify visible header edits, formatting controls, popup border/material,
+padding focus transitions, eleven viewport widths and embedded Save/return.
+
+OCTOBER 2 evening — wrong outer-panel target and cell/column mismatch (LOCAL)
+Owner marked the enclosing review section as outer; the pair wrapper was an extra
+rectangle. Remove it, apply outer material/padding to review sections and highlight
+those actual edges. Body clicks now edit complete columns, not row slots; retain
+independent Top row plus the Full name corner combination. Old row overrides
+normalize into the lowest-row column style, preventing mixed saved cell formats.
+Typography evidence now lists rendered pages and every authored source use.
+
+OCTOBER 2 — table editor duplication and misleading padding preview (LOCAL)
+Replace six table dropdowns with one table editor plus click-selected cell/range
+formatting. Remove repeated per-example outer wrappers; one outer contains two
+inner panels, each heading/Contacts. Highlight actual padding only while its
+editor is open. Saved cell styles validate fixed semantic row slots; attach row
+metadata after dynamic rendering and observe documentElement so head-loaded
+scripts do not fail before body exists. Test individual-cell independence,
+Save/reload and actual Admin propagation. All requested local checks pass.
+Previous 3ecfc8d release is publicly confirmed; this follow-up is not pushed.
+
+OCTOBER 2 afternoon — CSS editor anchoring/padding mismatch; wake silence
+Screenshot showed surface editors anchored to full rows' left edge, detached
+from centered Edit buttons. Earlier bounds-only checks missed this. Trigger-relative
+positioning now accounts for the glass backdrop-filter containing block and
+checks proximity, not merely viewport fit. Raise the active glass section above
+its neighbors and hit-test visible controls; bounds alone missed occlusion. Inner preview formerly padded only
+Contacts because the heading was outside it; move heading into the inner panel.
+Black editor backing/fields and table background choices; single-line toolbars
+and name/date/category. Admin voice startup failure stopped wake recognition
+but left intent on; finally restores recognition and clears Connecting. Start
+and network errors now recover instead of silently leaving a dead recognizer.
+Fake recognition tests cover wake phrase, token failure and permission refusal.
+
+OCTOBER 2 — deployment blocker identified; responsive shared-style follow-up
+Cloud Build c461f1e2-3143-4608-ab0c-72e9d7a29645 for 594cf57 failed at
+admin-ui-contract: it required the phone icon that the owner explicitly retired.
+No server or Hosting step ran. Updated gate checks compact category badges and
+whole name-cell Messages access, retaining invoice behavior. Owner push f436f37
+started build 9bd43347-4fbe-43ef-9c86-0a58a7df0230 (completed successfully).
+An additional populated responsive test found the filter could scroll behind
+the fixed top bar after resizing: reserve 76px with scroll-padding/scroll-margin.
+All narrow UI checks and 18-width/landscape margin checks pass. Corporate source
+tab rename keeps campaign IDs and drafts. Earlier design saves were unaudited;
+new successful live saves atomically include Admin-only audit entries. Production
+now confirms f436f37 with v19/v5 editor assets; Google build passed. Owner
+Push the final follow-up, verify Google build/public stamp, then Admin Save/log.
+
+OCTOBER 2: Latest pushed changes absent from live Hosting (RESOLVED)
+Resolution: owner-pushed f436f37 passed Google build; public release.json confirms
+it at 2026-10-02T17:18:57.758Z and public editor loads v19/v5. Original evidence:
+Remote maya-v2 is 601784c; repeated cache-bypassed release.json reads are 4970660,
+published October 1 at 9:45 PM Pacific. Public editor HTML is still v16/v3 with
+Reset. Live isolated Chromium reproduces negative H1 popup left bound -69px at
+1100px. Public healthz is alive but does not prove release freshness. Current
+local code passes full regression, canon/gallery/populated-table checks and an
+18-width/5-landscape shell margin audit with saved design and real fonts.
+Cloud Build/deploy cause is not established; no deploy, Save or credentials
+changes were attempted. Next: owner inspect build/deploy latest, then verify
+release marker and editor assets before treating the shipment as complete.
+
+OCTOBER 1: Editor lacked dismissal and preview differed from Lead Station (LOCAL FIX)
+Native details Edit controls stayed open outside their bounds. Preview had four
+columns unrelated to the real table, no independent inner/filter/table controls,
+and Lead Station repeated long tiers/call icons under client names. Add temporary
+editor dismissal, a three-column preview and validated saved presentation applied
+to both tables; full-cell thread activation and four category badges. Preserve
+account boundaries, consent, server communication tools and carrier records.
+No live Save, call/text or deployment occurred.
+
+OCTOBER 1: Typography dropdown clipped beyond the page (LOCAL FIX)
+Desktop CSS centered a 320px popup on the small Edit button, sending its left
+edge outside the browser content. Conflicting mobile overrides hid the defect
+at narrow widths; scrollWidth checks missed negative left overflow. Anchor to
+the full row with left:0 and constrained widths. Use two columns on small phones.
+Verify actual popup/control bounds for all eight roles at eleven widths,
+including 700/701px, screenshot width, maximum padding and left alignment.
+
+OCTOBER 1: Aesthetic Control redundant sections and inconsistent heading caps (LOCAL FIX)
+Review jumped between glass, buttons and panels and repeated status meanings,
+page/source descriptors and multiple samples within one typography role. Font
+family and CSS capitalization were fixed outside the editor. Consolidate Visuals
+into Glass Section then divider/Panels/table; reduce to five distinct pill colors
+and one sample per role; remove the glossary and inactive reference rows.
+Persist validated font/case options and apply them to shared selectors. Neutral
+paragraph/caption colors and component/icon glass now respond to saved values;
+semantic status colors and technical monospace remain. No live design write.
+
+OCTOBER 1: Client history inaccessible to owner over SMS, oldest Messages trimmed (LOCAL FIX)
+Owner chat had memory and lead lookup but no client Messages retrieval, action
+read tools or SMS-only client reply flow. The live thread discarded entries
+beyond 400. Added source-backed paged SMS history/actions/inbox/help/status,
+AI-free exact commands, shared owner voice reads and confirmed client replies.
+Private overflow archives write before trimming; archived delivery callbacks
+retain carrier outcomes. Failures preserve history and never automatically
+repeat a send. SMS reports state missing/uncertain records. Tests pass locally;
+previously discarded records and live delivery remain outside fixture proof.
+
+OCTOBER 1: Owner signup-format request rejected as a lead edit (LOCAL FIX)
+The signed owner SMS route sent every message to a lead-only extraction prompt;
+non-lead requests became an empty object and cleanCommand's add/update question.
+Owner authorization was already established, but no conversational/memory or
+runtime-preference route existed. Added ordinary replies with recent history,
+durable account-bound memory/style/alert formatting, shared owner phone tools,
+and accurate unsupported-feature logging. Fixed recipient, generation checks,
+idempotency, account isolation and existing client confirmations remain.
+Fake-provider tests, full app regression and server smoke pass. Live inference,
+call audio and carrier delivery await owner verification after deployment.
+
+OCTOBER 1: Aesthetic Control repeated settings and excess spacing (LOCAL FIX)
+Each sample repeated category settings and Edit occupied its own glass row.
+Use one compact category header/dropdown/summary, reduce row padding to 6px,
+and expose the dropdown housing material separately. Remove the standalone
+technical paragraph role while preserving old saved settings. Add accessible
+alignment toggles and a responsive populated table preview. Full app and
+focused design/provider-fixture checks pass. Not pushed; live provider checks
+await a fresh explicit MAYA Chrome approval. No credentials/settings changed.
+
+SEPTEMBER 30, 2026: Newer GitHub commits not live (LOCAL FIX, LIVE OPEN)
+Live Hosting files are byte-for-byte from 3168ded even though release branch points to c388619. Live API lacks booking and signup-alert routes (404), while existing protected routes answer 401. Reproduced c388619's release-gate failure: server.js imports lead-alerts.mjs and booking-link.mjs but its Dockerfile omits them. The local Dockerfile fixes this; 16 non-browser release contracts pass. Aesthetic Control live URL falls back to the client homepage. Cloud Build/Run logs and Admin MAYA feedback entries remain unread because they require owner authentication; no Chrome, credentials, push or deployment were used.
+
+SEPTEMBER 30, 2026: Wix signup reached Lead Station but did not trigger owner notification (LOCAL FIX, LIVE OPEN)
+The newest Call back form submission used the same Wix form as earlier leads; the server fetched leads only when an Admin/API read occurred and had no signup alert path. Added a fresh submission checker with durable text/call claims and integrated it with the scheduled Outbound task plus foreground Admin fallback. Phone/SMS provider status and production scheduler could not be inspected because Cloud Console required owner sign-in. No live message or call sent; local fake-provider tests pass. Verify scheduler configuration, carrier acceptance and actual receipt after deployment.
+
+SEPTEMBER 29: Misleading typography usage zeros
+Root cause: exact matches to proposed font settings were labeled role usage;
+static DOM scan also omitted JS number templates. Replaced with mapped source
+locations and expandable file/line evidence. Unknown P2 mapping shown as unmapped.
+Counts describe code locations, not live records or exhaustive runtime totals.
+Verified source evidence and known H1/P1 regressions.
+
+SEPTEMBER 29: Preview icon height and inert material selection
+Fixed 32px preview icon size could exceed the adjacent pill. Preview now measures
+the pill and sizes circles to match. Material choices now control all examples;
+detached dialogs receive selection before opening. Covered by browser checks.
+
+SEPTEMBER 29: Preview typography and icon alignment
+Metric token wrongly retained 28px despite compact UI direction. Corrected to
+12px. Font-glyph plus icons replaced with centered SVG geometry; explicit browser
+checks now cover both. Simplified gallery exposes locations and font comparisons.
+
+SEPTEMBER 29: Competing specifications and page-level glass recipes
+Archived older aesthetic authorities. Computed master-pill extraction resolves the
+parent-versus-label typography mismatch; explicit material intensity prevents
+transparent filters over data. New component library replaces recipes in preview.
+Legacy runtime overrides are inventoried and retained until owner reviews tokens.
+
+SEPTEMBER 29: Action material had separate frontend/backend definitions
+Shared maya-buttons.css now supplies the action finish on all canon pages, loaded
+after local styles. No table/link/logo blanket treatment; design.md records scope.
+Existing drawer structure differs and remains an explicit follow-up, not claimed fixed.
+
+SEPTEMBER 29: Outbound visual drift and missing Category
+Old To Do CSS hid source columns, including Category. Retired that view and its
+rules. Competing campaign selectors overrode centered capsule styling; removed
+them and added computed geometry checks. Column filters now replace global ones.
+
+SEPTEMBER 28 late: Owner tools leaked into Messages; Gmail link was indirect
+Prepared scoped tab visibility and consistent compact controls. Admin link now
+opens Outbound Gmail directly; missing OAuth configuration opens setup steps.
+Server credentials still need owner configuration. Fixture checks pass; not live.
+
+SEPTEMBER 28: Cloud Run image omitted owner CRM module
+[prepared] Build 650f4d64 failed server startup after release tests passed.
+Dockerfile now copies owner-crm.mjs. Prior COPY set reproduced module-not-found;
+corrected set starts and serves /healthz 200 offline. New import-packaging gate
+runs before image build; production deployment and Gemini test remain pending.
+
+SEPTEMBER 28: Deployment gate and owner-call overwrite
+Cloud Build 438db907 for 1d01d9a stopped at CRM authorization-expiry browser check.
+Initial Outbound render now waits for workspace plus intelligence authorization;
+local fault injection passes. No failed-build code reached production.
+Owner save_lead used call.saved for every person: a second contact could overwrite
+its predecessor. Owner saves now return IDs and only explicit corrections reuse
+one; read-back confirmation required. Customer caller updates remain unchanged.
+
+SEPTEMBER 28: Gemini reported disconnected despite existing Google Cloud setup
+The CRM only recognized GEMINI_API_KEY, ignoring Cloud Run service identity.
+Prepared Vertex transport with existing identity and isolated $1 daily accounting.
+Refresh gave no completion signal when usage stayed $0; now shows progress and
+checked time. Meter covers Outbound text only, not all provider spending.
+
+SEPTEMBER 28: Compact CRM and audit coverage gaps
+Prepared: Admin Contacted no longer becomes In progress; shared status pills and
+44px rows. Outbound uses 250-record appends and full-dataset filtering. Search
+blur could replace a clicked result before its click handler ran; deduped,
+debounced search now preserves the action. Declined filter changes restore UI.
+The full regression's local server omitted the CSS MIME type, so Chromium did
+not apply the shared stylesheet. Fixed MIME and stale alignment/logo assertions.
+The profile VM omitted window.addEventListener after the filter portal addition;
+fixed the fixture and verified Contacted persistence for both manual/Wix records.
+Missing IntersectionObserver no longer throws in scrolling or the AI meter;
+scroll events append records and manual meter refresh remains available.
+Local unit/browser/communication checks pass. CSS v11, Outbound JS v3. No push.
+
+SEPTEMBER 28: Outbound source data and priority presentation
+The importer only read three campaign tabs, omitted Funnel-only contacts, and
+folded category, relevance, last-email date and status into notes. Reply/decline
+variants could appear as new prospects. Names inherited the generic capsule
+radius; campaign + dimensions were unequal and the workspace had excessive gaps.
+Prepared locally: authoritative Funnel values plus campaign memberships, structured
+columns, conservative exclusions, deterministic To Do and confirmed F1/F2 evidence.
+Same-day follow-up counts survive unchanged source refresh; unknown history stays
+unknown. Compact chart/table/controls and explicit plain-link styles verified over
+populated desktop/mobile fixtures. Shared CSS v10; no push or production writes.
+
+SEPTEMBER 28: Open status-filter text bleed and clipping
+Drawer-only transparent fill was reused inside a sticky, scrolling table with
+nested backdrop contexts. Row text remained readable through the options; broad
+fold selectors added a caret and square focus outline. Prior audits tested
+filter logic and empty-page dimensions, missing the populated open-menu state.
+Fixed locally: body/top-layer popover, dark frost, scoped fold styles, rounded
+focus, viewport placement and keyboard/focus preservation. Expanded fixture gate
+covers populated/empty/short tables, seven widths and old-browser fallback.
+Cache URL v9. No push/deployment; production still needs owner verification.
+
+SEPTEMBER 27: Follow-up audit fixes (local, awaiting owner push)
+Mobile Operation Room overflow and overlaid stage labels; Brief settings offscreen overflow/focus;
+Outbound oversized headings/names, inherited link-button shadows and modal/drawer dismissal;
+missing-sheet Refresh no-op; background draft overwrite; wrong paginated record when email absent;
+busy edits and late responses across accounts; stale/reconnected AI meter; Gmail listing failure
+aborting other integrations. All repaired with focused browser/source assertions.
+Historical app-regression expected removed CSS/Sheet/labels and lacked its offline Firebase stub;
+updated to approved behavior and now green. Live checker now rejects HTML posing as stylesheet.
+Shared backend CSS v8; frontend/Playground unchanged. No live provider round trip is implied.
+
+SEPTEMBER 27: Outbound integration and visual review
+Fixed master Companies filtering, unbounded prospect rendering, segment-specific drafting,
+Gmail callback cookie forwarding through Firebase Hosting, uncertain-send duplicate protection,
+queued/failed SMS advancement, delivery status refresh, meter/value overlap and drawer tab bleed.
+Historical assertions were repaired in the follow-up audit above; the broad suite now passes.
+No production changes. Owner activation: docs/OUTBOUND-SETUP.md (linked console steps).
+
+SEPTEMBER 27: responsive and drawer regressions
+Fixed narrow Outbound header overlap, menu controls disabled during sync,
+model snapshot requiring a second Systems click, oversized model titles and
+footer spacing. Shared CSS v6 avoids stale style URLs. Local validation only.
+
+SEPTEMBER 27: cached visual fixes
+UI stylesheet inherited seven-day asset caching under unchanged v=4 URL. Backend
+now requests v=5; stylesheet has explicit no-cache. Logo uses circular source asset.
+No production deployment performed here.
+
+SEPTEMBER 26: Consumer style rollback and backend cleanup
+Restored consumer and Playground source from 3af43c3 except version metadata;
+all scripts unchanged. Detached consumer from backend CSS. Round logo clipping
+removes square corners, border/shadow reset removes bezels; Sheet hover removed.
+CRM now matches 11px campaign data, log headings white/details gray.
+
+SEPTEMBER 26: Backend chrome drift
+Dense overrides had flattened capsule depth and replaced frontend glass. Shared
+backend treatment now matches the frontend drawer and tab finish; compact tables
+retained. Local changes only; signed-in production remains to be checked.
+
+SEPTEMBER 26: V4 typography/density regression
+Shared header fill introduced a dark campaign strip; fixed by leaving nonsticky
+headers transparent. Size normalization inflated labels and CRM padding; compact
+sizes restored locally. Provider/data behavior unchanged; production unverified.
+
+SEPTEMBER 26: A2P privacy rejection follow-up (OPEN)
+Owner published optional SMS checkbox at manasiyo.com/design. Policy copy refined
+locally for inquiry/appointment messages. No Twilio submission or live settings
+changed; provider approval and consent enforcement remain unverified.
+
+SEPTEMBER 26: visual rules drifting from original V3 canon
+[prepared, 14.40] Repeated serif data/metrics, local frost and late Systems Map
+    overrides consolidated into maya-canon.css. Original V3 remains primary.
+    See design/MAYA-V4-AUDIT.md for verification and remaining limits. Not deployed.
+
+SEPTEMBER 24: 14.39 CRM styling and empty Outbound
+Legacy CSS below the prior patch overrode status size/color. Strong scoped rules
+now match campaign typography. Native details needed explicit outside/Escape close.
+Outbound required a campaign and exact single-tab setup; sync now discovers the
+three owner campaign tabs and imports atomically, with actionable access errors.
+Two existing inline controls (status filter and message invoice) were missing
+window bindings. Both are now exported and exercised through actual button clicks.
+Focused tests pass; Cloud Run workbook access is not proven by connector access.
+
+SEPTEMBER 24: release recovery verified
+9395417 pushed; public frontend/Admin report 14.38, Outbound page/module are real,
+API healthy. Legacy live hover assertion repaired without changing UI behavior.
+Final Cloud Build/rules status and signed-in provider flows still unverified.
+
+SEPTEMBER 24: deployment root cause identified
+Cloud Build bc53725d-a5fb-4dfa-abe4-ed34be0d190f for 2e1b47c failed at
+tests/maya-hands-smoke.mjs:716: old avatar fixtures/DOM expectations. Build and
+deploy never ran. Updated fixtures with account identity, stable IDs and explicit
+unsaved preview; no release gate removed.
+
+SEPTEMBER 24: live Outbound missing despite origin containing changes
+Public HTTP: /outbound.html and /backend/outbound.js returned frontend HTML v14.36.
+Local routing is correct; Cloud Build failure/trigger cause not established.
+Fixed deployment verifier old file paths and added explicit Outbound/MIME checks.
+Also fixed local unsaved draft loss and suppression on duplicate imports.
+
+SEPTEMBER 23: Outbound sheet mapping
+Owner workbook uses row-3 headers for Corporates and nonstandard Contact/Role
+columns. Importer now detects those headers and retains outreach subjects and
+research/status fields. Historical truncated emails are retained only as notes.
+22 offline checks pass; production import remains unverified.
+
+SEPTEMBER 23: Mana hover still below on live site
+Read-only HTTP fetch confirmed deployed Admin had left:50%/top:100% CSS. Local
+branch already contained right:100%/top:50%. Prepared v14.37 adds explicit left
+reset and version bump; owner must confirm a successful hosting deployment.
+No claim that the production bug is fixed before that deployment.
+Model update also preserves legacy image records and extends Firestore's strict
+model allowlist so new Flare images are not rejected when posting to community.
+
+SEPTEMBER 22 22:59: local fixes, not deployed
+Mana flyout had moved below the heading: restored left placement and delayed
+hide. Reload/plus glyph size raised 39%; gear forced square/nonshrinking.
+Affiliates extra Admin link and brand hover navigation removed; logo still
+returns Admin. Its visible drawer is Messages, not Systems/Logs.
+Live avatar controls lagged Playground. Both now expose explicit transactional
+Save-as-new; a changed same-name photo no longer replaces its saved predecessor.
+Current unsaved photo stays visible in the dropdown; name is editable.
+Validation: profile-crm 22, admin UI 11, admin-command 6, syntax/whitespace pass.
+No browser/computer use or external paid tests. Visual review remains pending.
+
+SEPTEMBER 22 LATE: lead layout and Affiliates navigation, local
+Constrain the table with fixed layout, keeping long notes inside their viewport;
+notes start left and sit vertically centered; headers retain top sticky position.
+Affiliates opens new tab; route brand now identifies Affiliates and logo links
+back to Admin, replacing its inherited voice trigger. Remove unnecessary copy.
+Admin contract and inline syntax validated; browser checks not run per owner.
+
+SEPTEMBER 22 EVENING: SMS carrier blocker CONFIRMED by owner screenshots
+Account is Active, brand complete, campaign rejected: compliant privacy policy
+cannot be verified. Twilio overview reports 30034. Outbound 'hello' 17:00 is
+Undelivered; inbound 'Hi.' 09:46 is Received at Twilio. Missing inbound in Maya
+remains a separate webhook/storage investigation, not proved by A2P rejection.
+Public policy/terms are accessible (200); exact submitted URLs/opt-in flow unknown.
+Policy wording edits and registration guide are local drafts, not resubmitted.
+Mana menu also lost pointer events immediately on pointer departure despite a
+visible delayed fade; changed to delayed visibility, focus support and below-Mana
+placement. Affiliates public route is deployed. No authenticated/visual checks
+under owner's no-computer-use restriction. 50 SMS and 11 admin checks pass;
+phone/transfer/feedback pass and inline scripts parse. Nothing pushed here.
+
+SEPTEMBER 22, 2026: code-first SMS audit (FIXED LOCALLY, not deployed)
+Reproduced and corrected ordinary 'No problem' being treated as STOP, START not
+restoring opt-in, and late carrier error codes being lost on terminal statuses.
+Signed OptOutType START/STOP/HELP is passed into consent handling. Owner blocks
+remain independent. Both known Maya and Cloud Run webhook URLs are explicitly
+allowed in server wiring; arbitrary/forwarded host signatures remain rejected.
+50 SMS tests now cover these defects with fake providers. 443 browser checks and
+related phone/transfer/feedback/admin/API suites passed. Live inbound/outbound
+failure is still OPEN: native Chrome reached Twilio login, signed out; carrier
+logs remain unread. The owner sign-in tab is open.
+No credentials, provider configuration, real message, commit or push changed.
+Next: owner review and deploy; inspect Twilio inbound result and outgoing SID
+status/error, then confirm receipt in both directions before declaring resolution.
+
+SEPTEMBER 22, 2026: SMS delivery failure after reported unsuspension (OPEN)
+Owner reports neither phone-to-Maya nor Admin-to-phone texts arrive. Live Admin
+still shows old text-pill tabs because the previous build stopped before deploy.
+Twilio Console was signed out, then Chrome access disconnected; actual account
+state, carrier errors and inbound webhook result could not be inspected. Do not
+attribute this incident to A2P, suspension or a webhook mismatch without logs.
+Local UI now preserves visible send/delivery errors during polling and has clearer
+contact editing. SMS introductions can label unnamed contacts without AI spend.
+38 message checks, phone/transfer/feedback, 11 UI contracts, 438 browser checks
+passed. No live message sent, credentials/configuration changed or push performed.
+Next: owner sign-in, inspect both directions in Twilio, deploy reviewed code,
+verify receipt and history. The account being active alone is not delivery proof.
+
+SEPTEMBER 22, 2026: Cloud Build failed before deployment
+Commit ae8704f, build 1b827272-c2f5-4b64-809d-285caafd9ce0, PR #1.
+GitHub check logs identify one failed maya-hands-smoke assertion: the avatar
+dropdown test expected Randomize/Replace only, while Playground now also has
+the requested Save control. Corrected the exact expected list per surface;
+frontend still requires two buttons. Verified locally: 172 Playground and 171
+frontend hands assertions, seven other release suites and phone/Messages/transfer
+all passed. No deployment rerun, push or credentials
+changed. Production build/deploy steps never started for this commit.
+
+SEPTEMBER 21, 2026, LOCAL REMEDIATION (not deployed)
+Fixed locally: feedback source race and unsafe empty-store fallback; outbound
+call briefing lost between Cloud Run instances; mutable stream caller identity;
+early voice audio dropped during startup; SMS callback before history saved;
+contact-name inline JavaScript; tier edited into the wrong field; hidden blocked
+contacts with no unblock path; missing Pinterest saved-pin pagination (Playground).
+Added signed owner transfer acceptance and explicit carrier-status reconciliation.
+Actual SMS non-delivery cause is NOT established; ask for provider status/error.
+Real GCS/Firestore persistence, transfer/no-answer behavior and telephone audio
+need owner live verification after a separately reviewed deploy. No credentials
+or production settings were changed. See REVIEW-2026-09-21.md.
+
+MAYA FIXES AND SETUP STEPS
+Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
+Google and Firebase consoles, credentials, external accounts. Symptom, cause,
+action, status. Newest on top. Fromsa does every credential step himself.
+
+SEPTEMBER 21, 2026: Admin/phone audit, not a release
+Open: in-memory outbound call state; feature-inbox read failures/concurrent writes
+can lose requests; owner calls excluded from Messages; incomplete blocking and
+delivery handling; inline contact-name handler escaping; ticker CPC called CPL;
+inaccurate consent/warning UI. See AUDIT-2026-09-21.md for evidence and test results.
+Messages draft passes 29 checks; phone and browser regressions are not all green.
+Live feature inbox read successfully. Latest owner requests remain open.
+
+AUGUST 27, 2026, OPEN MAYA'S DOOR (v14.02, after the push)
+
+Maya's MCP server is live at POST https://maya.manasiyo.com/mcp once v14.02 is
+deployed, but it stays CLOSED (503) until a token exists. Two green steps.
+
+🟢 1. Make a token and set it on Cloud Run.
+   Any long random string works (32+ characters, letters and digits). Open
+   https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya
+   then "Edit & deploy new revision" > Variables & Secrets > Add variable:
+   name MAYA_MCP_TOKEN, value = the token. Deploy. Keep the token somewhere
+   private; it is the only key to the door.
+🟢 2. Add Maya to Claude as a custom connector.
+   claude.ai > Settings > Connectors > Add custom connector. Name: Maya. URL:
+   https://maya.manasiyo.com/api/mcp?token=YOUR_TOKEN (the query form exists for
+   connectors that cannot send a header; /api/mcp is the address, the bare /mcp
+   only works from v14.05 on). Save. In any chat or Cowork
+   session, Maya's eight tools appear (maya_soul, maya_inbox, ...).
+   Claude Code / Codex: same URL as an MCP server of type http.
+
+Check it worked: ask Claude "read maya_status". It answers with the version
+and the number of open feature requests. If you see maya_door_closed, the env
+var did not land; if unauthorized, the token in the URL does not match.
+
+AUGUST 24, 2026, FINAL ADMIN RELEASE REMEDIATION (v13.71)
+
+- A1 proxy security hardening: DONE in v13.70 and retained.
+- Release contracts: command, proxy, AI router and fabric suites now gate the
+  Cloud Build source step; server and helper syntax remain gated. A hermetic
+  Express/Chromium build-test image is still deferred.
+- Voice action safety: exact or explicitly ambiguous lead resolution, visible
+  confirmation queue, no automatic send, truthful Gmail popup/failure state,
+  single-flight Realtime setup and failed microphone cleanup are DONE.
+- Admin data consistency: command snapshot now uses direct Meta/Google feeds
+  when Windsor is absent, and strips lead contact details from the Realtime
+  prompt. DONE.
+- Marketing parity regression: the modules were functionally present but the
+  Admin copy lacked the approved page spacing, ticker, Wix visitor row, chart
+  hover/state restoration and visible refresh errors. Fixed in v13.71. The
+  standalone page remains the live fallback.
+- A3 Vertex image/Realtime compatibility, A5 legacy deletion/authorization,
+  distributed rate limiting, client error reporting and provider evals remain
+  deferred. They require separate risk domains or owner configuration.
+
+AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
+
+These are the console and environment steps only Fromsa can do. Each is a
+green step; none is code. Do them in this order.
+
+[ ] 1. PIN THE ANALYTICS PROPERTY (fixes the "3" and the "..." that look low).
+    The MAYA app's Google Analytics is G-ETTJ6PXEMM. The server was guessing
+    which GA4 property to read and likely reading manasiyo.com's, not MAYA's.
+    - Google Analytics -> Admin -> Property settings on the MAYA property
+      (the one whose data stream is G-ETTJ6PXEMM). Copy the numeric PROPERTY ID.
+    - Cloud Run -> maya-api -> Edit & deploy new revision -> Variables:
+      set MARKETING_GA_PROPERTY_ID and GA_PROPERTY_ID both to that number.
+    - Also confirm the Cloud Run service account is added as a Viewer on that
+      property (Analytics -> Admin -> Property Access Management).
+
+[ ] 2. BILLING CAPS (so a bill can never surprise you).
+    - OpenAI: you are already prepaid at ~$10 with no auto-refill, which is
+      itself a spend cap; keep auto-refill OFF. Set a usage alert at $8.
+    - Google Cloud: Billing -> Budgets & alerts -> create a budget with email
+      + phone alerts at $8 and $15. Vertex image work is admin-only, so this
+      is a safety net, not a live risk.
+
+[ ] 3. INSTANT DOWN / FAILURE ALERT (the ping OpenAI will not send you).
+    - Google Cloud -> Monitoring -> Alerting -> create a policy on the Cloud
+      Run maya-api ERROR RATE, notify your email + phone.
+    - Add a second policy on the billing budget from step 2.
+    (If you would rather MAYA email you directly when a user's image fails,
+    give Claude a Slack or Discord webhook and it will push it server-side.)
+
+[ ] 4. APP CHECK (only your real site can reach the database).
+    The client code is already wired and dormant. To turn it on:
+    - Google Cloud -> reCAPTCHA -> create a reCAPTCHA Enterprise site key for
+      maya.manasiyo.com. Copy the SITE KEY.
+    - In frontend/index.html and playground/index.html, set
+      MAYA_APPCHECK_SITE_KEY = 'your-site-key' (one line, near FIREBASE_CONFIG).
+      Ask Claude to make this edit and push; confirm the app still signs in.
+    - Firebase console -> App Check -> register the web app with that key.
+    - ONLY after the app works with App Check active: App Check -> APIs ->
+      set Firestore and Storage to ENFORCE.
+
+[ ] 5. THE VOICE MODEL (so Maya actually speaks).
+    - OpenAI: confirm the Realtime model 'gpt-realtime' is available on the
+      account (or set OPENAI_REALTIME_MODEL on Cloud Run to the one you have).
+
+[ ] 6. OPTIONAL, THE CLO LIBRARY (Plan B real search).
+    - CLO-SET dashboard -> issue an API token -> set CLOSET_API_TOKEN and
+      CLOSET_SEARCH_URL on Cloud Run, then tell Claude to wire the exact
+      search endpoint from their docs.
+\n[v14.14] MCP door scopes: /api/mcp?token=... is now READ ONLY (status,\ninbox, soul, people). maya_leads, maya_memory, maya_journal and\nmaya_feature_done need the token as an Authorization: Bearer header.\nA connector that cannot send headers keeps read access unchanged.\n
+SEPTEMBER 19, 2026: live marketing reporting incident (OPEN)
+Windsor returns an account-limit notice: five connected accounts, free plan allows
+one. Admin renders the notice as a campaign with zero delivery; generated ticker
+incorrectly infers ads are paused. Reject diagnostic rows and mark reporting
+unavailable. Actual ad delivery has not been verified. No credentials or plan
+changed. See AUDIT-2026-09-19.md for evidence and direct-integration replacement.
+
+SEPTEMBER 29, 2026: design preview persistence gap (LOCAL FIX)
+The style preview previously saved only browser preview tokens; live pages
+loaded independent legacy CSS. Added an Admin-authenticated fixed-key design
+save/read API and a shared style runtime on every served page. Role audit counts
+now show per-role subtotals instead of ambiguous zero categories. Local browser
+and mocked production Save tests pass. Live deployment remains unverified; no
+push or production settings changed.
+SEPTEMBER 30, 2026: Latest pushed MAYA release not on Firebase (OPEN)
+Remote maya-v2 is f38b2fe and GitHub shows Vercel success, but a cache-bypassed Firebase Hosting request still serves the older Admin/Frontend and gallery v4. Aesthetic Control falls back to the homepage; booking-pending is absent. The public GitHub Cloud Build check reports that build 8bc3a65d-7572-4d38-9e69-f08194f6a935 failed in step 1, before server/Hosting: the sole smoke failure expected card-editor heading weight >=600 after Aesthetic Control capped it at 400. Corrected that outdated test locally. The previous c388619 container omission is already fixed in f38b2fe. Independently, the Admin changelog was hard-coded to Sep 16 in current source, and open tabs watched only the unchanged 14.40 version. Prepared concise new entries, a generated public release.json stamp, and commit-aware update checks; not pushed.
+
+SEPTEMBER 30, 2026: pushed release 0d0ec66 blocked in Cloud Build (LOCAL FIX)
+Cloud Build fbbce9f4-deb5-4a24-b82b-ee1c2e76bdc6 stopped in Test release
+contracts before deployment. The Outbound UI assertion still expected an 11px
+person link, while the approved style is 12px. Related 11px lead-stage and
+500-weight assertions, and a stale exact wixLeads signature check, are fixed
+locally. Seventeen non-browser contracts and the available full browser suites
+pass in isolated headless Chromium. Live Admin still starts its notes at Sep 16;
+Aesthetic Control is not served yet. The live verify page has a separate wall
+hover attention. No push or live call/text was made. Recheck after deployment.
+
+SEPTEMBER 30, 2026: live release recovered; deploy checker false positive (LOCAL FIX)
+Hosting now identifies f1a36b5, and the read-only live verification suite passes.
+The live /verify.html wall-hover warning was caused by its test matching the
+obsolete `.cc-meta {` selector while the frontend uses `.community-card .cc-meta`.
+The frontend rule is present and hides details until hover. Corrected the
+selector and added a regression assertion locally; the corrected checker needs
+the next authorized push before it appears live. No actual wall behavior was
+changed.
+
+October 5, 2026 — Local fixes for split Table controls, ineffective Outbound column backgrounds, native Leads picker positioning, inconsistent drawer pill classes and Gmail setup warning precedence. Shared runtime v14/gallery v27; account/auth protections retained. Live provider/mailbox verification blocked by Chrome tool availability; no credentials or production variables changed.
+
+October 5, 2026 — Simplified the table formatting toolbar: removed duplicate table-wide material inputs and separated outline/grid controls into two responsive rows. Legacy saved materials stay compatible. Gallery Save/reload/eleven widths and full app-regression passed. Not pushed.
+
+October 5, 2026 — Message polling replaced known Lead names with empty thread names; preserve known identity and label client transcripts consistently. Model hover duplicated roles and expanded on hover; group models and expand details only on click. Full regression and required communications suites passed; local only, not pushed.
+
+October 5, 2026 — Hover close guard let clicked trigger/detail focus pin the Model Snapshot indefinitely. Pointer exit now ignores retained focus, while keyboard interaction stays accessible. Pointer-coordinate checks avoid stale hover flags. Responsive Admin UI and full regression passed; not pushed.
+
+October 5, 2026 — Screenshot showed generic failed natural lead SMS and repeated spoken-number owner texts. Lead reads depended on model interpretation; phone text accepted voice prose. Added AI-free common reads, live contact report selectors and numeric SMS normalization. Exact live provider failure unverified; full regression and required fake-provider suites passed. Prepared locally; not pushed.
+
+October 5, 2026 — Latest Notes was read-only; Booking was not exported from the sealed Messages module and called a preview route instead of drafting. Added reviewed note editor/dictation, explicit unsent booking composer action, semantic Contact column and H5/H6 date layout. Older note-history enrichment could overwrite reviewed replacements on refresh; timestamp comparison now preserves newer edits and aligns note/wrote. Full regression, responsive gallery/Leads, communications and persistence checks passed; not pushed.
+
+October 5, 2026 — Cloud Build 5912fb44-0764-46af-9328-ef423bd879fe for dd7ba48 failed Test release contracts in admin-ui-contract.mjs: it still required category badges after they were removed. Server/Hosting steps never ran. Public release.json serves 1311620 (2026-10-05T23:20:06.325Z), Admin lacks note editor and v15/v29 assets differ. Corrected the contract and added note/design regression checks to deployment. verify-live now checks exact release/page commit stamps; old same-version releases fail a fixture. All deployment unit/communications and six browser checks passed locally; public exact-commit verification correctly reports the old release. No production changes or push.
+
+October 5: Inline editor uses lead row IDs (table headings also live in tbody). Release frozen Name during editing to prevent clipping; preserve pending drafts on refresh. Update Invoice UI contract for Share menu and typography cache v16/gallery v30. All 32 Cloud Build checks, full regression and smoke passed. Prepared locally; not shipped.
+
+2026-10-05 [verified locally, not shipped] Removed the contact-open rule hiding the original Messages title and removed the duplicate heading under the name. Removed name backing; map name to H3 below fixed H2. Reviewed draft automations persist per owner account; fail closed on ambiguous leads/blocked/STOP, replies and premature timing. Guard late account/recipient results, retain composer text per contact and clear on session change. All 33 release checks, app regression and real local server smoke pass with fake providers.
+
+October 5 — Status header gear baseline offset and unavailable Completed status fixed. Independent icon gaps validate/save/apply through shared runtime; preview editor clicks no longer immediately dismiss themselves. Removed fabricated Drawer AI cost metric. Local verification only; owner Push remains.
+
+October 6, callback incident: latest Julia Lokey at 4:04 PM Pacific reached Wix and live Admin. Live release 9de4fd7 current. Cloud Scheduler API disabled in pro-maya; autonomous scheduling unavailable. Local repair separates callback task from Outbound, persists provider/health evidence, isolates channels, preserves uncertain claims and exposes quiet failures. Exact Julia provider outcome not proven. Scheduler API enabled and zero scheduled jobs confirmed. Job/environment setup reserved for owner; no push or live sends. See CALLBACK-ALERTS.md.
+
+October 6: Removed Latest Notes recognition/button and accidental blur-save. Outside pointer clicks cancel without a write; cleanup on close/session change. Explicit Save failures preserve the draft.
+
+October 6 [local, not shipped]: Callback delay existed before OpenAI: polling plus serial SMS work could defer the ring. Added signed exact-form Wix ingress, durable named tasks and independent durable channel dispatch with timing evidence. Gmail receives authenticated Pub/Sub events mapped through private connected-mailbox bindings. Ordinary contact reads previously waited for up to 20 AI summaries; now raw 10-second cached reads. Optional web/phone voice memory/context waits bounded to 1,200ms, phone VAD 420→300ms. Shared icon flex rule collapsed form controls despite popup bounds passing; runtime v19 excludes form labels, with actual readability assertions and visual review. All 35 release checks, full regression and smoke pass; no production environment or provider changes. Exact earlier carrier delay not measurable from prior evidence. Owner event setup and real phone/email verification remain; see EVENT-TRIGGERS.md.
+
+2026-10-06 — Inspector audit: local messaging/CSS repairs
+Reproduced and repaired raw phone/Caller labels, late inbox session responses,
+new-draft erasure, transcript collapse, archived history inaccessible in drawer,
+concurrent unread loss, hidden drawer marking read, duplicate dashboard sends,
+reviewed SMS truncation, optional chat context blocking, browser/phone memory split,
+legacy memory overwrite on failed read, and missing owner reply delivery binding.
+Shared runtime v20 covers composer/message/timestamp roles, Share dropdown material
+and expanded transcript panel; responsive flex wrapping verified.
+Public release mismatch: live e82b207 vs pushed 71c9ce9; equal version 14.40 hid it.
+No deployment/live provider certification. Synthetic reply binding after archival,
+legacy owner-memory migration and send-ledger archival remain documented risks.
+
+2026-10-07 — Aesthetic authority gap (local)
+Automations fields lacked saved roles; local labels/card rules and fixed legacy
+font/blue headings allowed stylesheet presence checks to pass with wrong pixels.
+Removed competing declarations, added explicit shared contracts and a computed
+font/color/material/X-Y-padding mutation gate at six widths. Retained necessary
+active adapters and independent table/semantic status styling. No files deleted
+or production/push performed. Broader 45 release suites passed.
+An obsolete v13.77 regression also REQUIRED forced blue headings; replaced that
+assertion with the saved-role authority rule instead of retaining the conflict.
+
+2026-10-20 — Release 024d049 stopped safely before deployment: the newly mandatory component-gallery gate used a fixed /opt Chromium path. Gallery and integrated regression now default to the pinned Playwright-installed isolated browser, preserve explicit overrides, and have a release-contract guard. No visible UI or production configuration change. Gallery, release-contract and the full integrated regression passed with both executable overrides unset and the isolated Playwright cache selected. Final shared authority runs last before the follow-up push.
+
+2026-10-20 — Build 9d763d1d passed browser discovery and 43 release gates, then stopped before deployment on a detached fabric-card style observation during Favorites refresh. The UI test now resolves and reads the connected card in one browser task, retaining exact saved-color and all other assertions. No application UI or provider changes. Fabric-search-ui passed ten consecutive runs with isolated installed-browser discovery; final shared authority runs last before the follow-up push.
+
+2026-10-20 — Build 435074eb stopped before deployment on an immediate Favorites count (0 before the async lookbook read, expected 2). The fabric UI fixture now deliberately delays independent lookbook reads 120ms; Favorites assertions await actual two-card content instead of assuming search and lookbook complete together. No application logic, expected result or gate is removed. Recheck the delayed fixture ten times and final shared authority.
+
+2026-10-20 — The delayed Favorites fixture reproduced the underlying intermittent empty-book cause: fake storage used the whole JWT, including exp; seeding and browser initialization across a second boundary became different stores. Fake lookbooks now use verified test sub plus submission, matching the real server. Initial and renewed tokens intentionally have distinct expiries; assert two retained cards and one store. Keep delayed-read/atomic-style checks. Test-only, no production behavior/configuration changes.
+Final frozen delayed fixture plus explicit renewal checks passed ten consecutive isolated browser runs; retain final Aesthetic Control verification before commit.
+
+2026-10-21 — Brief identity regression: a legacy dated-URL first-paint handler injected a 10px inline-styled date after the name even though the current page already had an H3 time element. The duplicate remained after account cleanup. A realistic client-a-08-27-2026 fixture failed with [H3, undefined, H3]; first paint now updates the existing time. The complete row clears on sign-out.
+
+2026-10-21 — Fabric payload issue: shared In House loaded 23,769,818 bytes of original JPGs into small cards instead of existing 835,190-byte thumbnails. Catalog v2 supplies explicit thumbnail paths; cards preserve original links and retain them on preview failure. Versioned/no-cache metadata bypasses old week-cached catalog copies while photographs keep their caching. Tests assert actual paths, file sizes, failed previews and source links; no provider or stock claims are invented.
+
+October 21 verification: all 71 exact release commands, 609 named integrated checks plus imported assertions, smoke, owner UI, Pinterest pagination and role-usage passed. Inspected current public saved-design/real-font dated Brief and default/changed shared surfaces. Final standalone Aesthetic Control authority runs after this record; real owner/private/provider acceptance remains open.
+
+2026-10-21 — SMS composer disappearance: pending booking cards had no height bound, long ideas/diagnostics consumed nonshrinking thread content, and the hidden-overflow drawer clipped the composer below/under its voice dock. A new pointer hit-test failed on the old code at 320x400 even in the normal thread. Reserve composer space; make previews, thread content and feedback scroll independently. Synchronize Begin texting visibility through open/Back/account reset. The expanded fake-provider fixture covers six widths, three heights, larger valid settings, expanded drafts, keyboard access and draft retention. All 71 exact release commands, full integrated regression and smoke passed. Current public saved-design/real-font fixtures were visually inspected. Final standalone Aesthetic Control runs last before commit; deployment/live verification follows Push.
+
+OCTOBER 27, 2026 — AVATAR PHOTO RACES
+[x] Pin avatar file selection and asynchronous image reads to the original account, project and client; discard stale processing after a newer choice. Camera requests are canceled at scope changes and late permission streams are stopped.

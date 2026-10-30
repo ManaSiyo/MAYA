@@ -1,0 +1,44 @@
+/* Sole specification: docs/design.md and owner-saved Aesthetic Control. */
+:root {
+ --ui-font: 'Jost', sans-serif;
+ --ui-pill-font-size:10px;
+ --ui-pill-weight:300;
+ --ui-pill-tracking:1.5px;
+ --ui-pill-transform:uppercase;
+ --ui-pill-line-height:normal;
+ --ui-pill-padding-y:6px;
+ --ui-pill-padding-x:14px;
+ --ui-pill-radius:100px;
+ --ui-pill-gap:8px;
+ --ui-listen-min-width:160px;
+ --ui-border-width:1px;
+ --ui-border-alpha:.22;
+ --ui-fill-alpha:.18;
+ --ui-blur:22px;
+ --ui-saturation:180%;
+ --ui-highlight-alpha:.28;
+ --ui-shade-alpha:.18;
+ --ui-shadow-alpha:.22;
+ --ui-shadow-y:4px;
+ --ui-shadow-blur:16px;
+ --ui-ink:rgb(255,255,255);
+ --ui-muted:rgb(170,181,196);
+ --ui-accent:#adcdf8;
+ --ui-hover-alpha:.06;
+ --ui-selected-alpha:.09;
+ --ui-surface-radius:16px;
+ --ui-icon-size:32px;
+ --ui-drawer-width:360px;
+ --ui-metric-size:12px;
+ --ui-body-size:12px;
+ --ui-space:8px;
+ --ui-duration:180ms;
+ --ui-easing:ease-out;
+ /* Same material, explicit intensity. Dense overlays must conceal row text. */
+ --ui-quiet-fill:.45;
+ --ui-quiet-blur:12px;
+ --ui-quiet-highlight:.12;
+ --ui-overlay-fill:.90;
+ --ui-overlay-blur:22px;
+ --ui-overlay-highlight:.28;
+}

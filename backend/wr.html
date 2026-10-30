@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" data-maya-surface="dense">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WR · MAYA</title>
+<link rel="icon" href="/aesthetics/ui/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14"><link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1"><link rel="stylesheet" href="/aesthetics/ui/wr.css?v=2">
+<script src="/aesthetics/ui/presentation-runtime.js?v=1"></script><script src="/aesthetics/ui/pill-runtime.js?v=1"></script><script src="/aesthetics/ui/typography-controls.js?v=24"></script>
+<script src="/aesthetics/ui/wr.js?v=2" defer></script>
+</head>
+<body>
+<header class="wr-header"><a href="/status.html" aria-label="Admin"><img src="/aesthetics/ui/logo-circle.png" alt=""></a><span class="wr-brand" id="brand">WR</span><nav><a class="maya-glass-button" data-maya-type="P3" href="/status.html">Admin</a></nav></header>
+<main>
+<div id="signin" hidden data-maya-panel="inner"><p data-maya-type="P1">Sign in through Admin to view submissions and work with applicants.</p><a class="maya-glass-button" data-maya-type="P3" href="/status.html">Open Admin</a></div>
+<div id="workspace" hidden>
+<section aria-labelledby="submissions-title"><h2 data-maya-type="H3" id="submissions-title">Submissions</h2><p data-maya-type="P1" id="submissions-message" role="status">Loading submissions…</p><div class="wr-submissions" id="submissions" aria-label="Submissions" tabindex="0"></div></section>
+<section class="applicants-section" aria-labelledby="leads-title"><h2 data-maya-type="H3" id="leads-title">Applicants</h2><div data-maya-panel="inner" class="wr-panel"><form id="lead-form" data-maya-field-stack>
+<div class="wr-fields"><label data-maya-type="P3" data-maya-field-row>Wave<input data-maya-control="field" data-maya-type="P1" name="wave" type="number" step="any"></label><label data-maya-type="P3" data-maya-field-row>Number<input data-maya-control="field" data-maya-type="P1" name="phone" type="tel" maxlength="40" autocomplete="tel"></label><label data-maya-type="P3" data-maya-field-row>Name<input data-maya-control="field" data-maya-type="P1" name="name" maxlength="120" required autocomplete="name"></label><label data-maya-type="P3" data-maya-field-row>Look<input data-maya-control="field" data-maya-type="P1" name="look" maxlength="240"></label><label data-maya-type="P3" data-maya-field-row>Color<input data-maya-control="field" data-maya-type="P1" name="color" maxlength="120"></label><label data-maya-type="P3" data-maya-field-row>Email<input data-maya-control="field" data-maya-type="P1" name="email" type="email" maxlength="254" autocomplete="email"></label></div>
+<div class="wr-actions"><button class="maya-glass-button" data-maya-type="P3" type="submit">Add applicant</button><span data-maya-type="P1" id="lead-message" role="status"></span></div></form></div><div class="panel applicants-table-wrap" tabindex="0" role="region" aria-label="Applicants, scroll horizontally for more columns"><table id="applicants-table"><thead><tr id="applicants-headers"></tr></thead><tbody id="leads"></tbody></table></div><p id="applicants-empty" data-maya-type="P1" hidden>No applicants yet.</p></section>
+</div></main></body></html>

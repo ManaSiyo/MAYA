@@ -1,0 +1,351 @@
+/* MAYA V4: V3 is the foundation. Dense information gets quieter, not heavier.
+   Legacy runtime adapter. Sole active specification: docs/design.md. */
+:root {
+  --maya-accent: #adcdf8;
+  --maya-font-ui: 'Jost', sans-serif;
+  --maya-font-brand: 'Cormorant Garamond', serif;
+  --maya-text-caption: 12px;
+  --maya-text-body: 14px;
+  --maya-text-table: 12px;
+  --maya-text-meta: 11px;
+  --maya-text-section: 18px;
+  --maya-text-metric: 28px;
+  --maya-ink: rgba(245,250,255,.92);
+  --maya-secondary: rgba(245,250,255,.72);
+  --maya-tertiary: rgba(245,250,255,.58);
+  --maya-line: rgba(255,255,255,.22);
+  --maya-line-hover: rgba(255,255,255,.42);
+  --maya-hairline: .5px;
+  --maya-radius-pill: 100px;
+  --maya-radius-panel: 16px;
+  --maya-space: 8px;
+  --maya-surface: rgba(7,10,20,.48);
+  --maya-glass: rgba(7,10,20,.62);
+  --maya-hover: rgba(255,255,255,.04);
+  --maya-selected: rgba(180,210,255,.08);
+  --maya-frost: blur(22px) saturate(180%);
+  --maya-quiet-frost: blur(12px) saturate(110%);
+  --maya-inset: inset 0 1px 1px rgba(255,255,255,.12), inset 0 -1px 1px rgba(255,255,255,.06);
+  --maya-drawer-frost: blur(28px) saturate(180%);
+  --maya-drawer-glass: linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.03) 25%,rgba(255,255,255,.02) 65%,rgba(255,255,255,.07) 100%);
+  --maya-control-shadow: inset 0 1px 1px rgba(255,255,255,.28),inset 0 -1px 1px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.22);
+  --maya-drawer-shadow: inset 0 1px 1px rgba(255,255,255,.30),inset 0 -1px 1px rgba(0,0,0,.18),0 12px 48px rgba(0,0,0,.38);
+  --maya-floating-shadow: var(--maya-inset), 0 4px 16px rgba(0,0,0,.22);
+  --maya-booked: #4ade80;
+  --maya-progress: #fbbf24;
+  --maya-cancelled: #fda4af;
+  --maya-inactive: #b5bdc8;
+  --maya-contacted: #8abcf2;
+  --maya-glass-dark: rgb(3 15 29 / 45%);
+  --maya-glass-edge: rgb(145 190 225 / 24%);
+  --maya-duration: 180ms;
+  --maya-ease: ease-out;
+  --ink: var(--maya-ink); --dim: var(--maya-secondary); --faint: var(--maya-tertiary);
+  --line: var(--maya-line); --panel: var(--maya-surface);
+  --green: var(--maya-booked); --amber: var(--maya-progress); --rose: var(--maya-cancelled);
+  --mint: var(--maya-booked); --blue: var(--maya-ink);
+}
+body { font-family:var(--maya-font-ui);font-weight:400;color:var(--maya-ink); }
+/* Font inheritance must also cover dynamically created forms and data. */
+:where(button,input,select,textarea,table,time,.msg-number,.model-group,.model-note) {
+  font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums;
+}
+:where(button,input,select,textarea) { color:var(--maya-ink); }
+:where(button,[role="button"],input,select,textarea,summary,a):focus-visible {
+  outline:1px solid rgba(245,250,255,.85);outline-offset:3px;
+}
+/* Reusable capsule treatment. Layout and control behavior remain owned by pages. */
+:where(html[data-maya-surface]) :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta,button[type="submit"]) {
+  font-family:var(--maya-font-ui);font-weight:400;
+  color:var(--maya-ink);background:transparent;
+  border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-pill);
+  box-shadow:var(--maya-control-shadow);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+  transition:background var(--maya-duration) var(--maya-ease),border-color var(--maya-duration) var(--maya-ease);
+}
+:where(html[data-maya-surface]) :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta):hover {
+  background:var(--maya-hover);color:var(--maya-ink);border-color:var(--maya-line-hover);
+}
+html[data-maya-surface="dense"] :is(button,input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  font-family:var(--maya-font-ui);font-weight:400;color:var(--maya-ink);
+  border-width:var(--maya-hairline);border-color:var(--maya-line);
+}
+html[data-maya-surface="dense"] :is(button:not(.person-link):not(.link-button),input:not([type="checkbox"]):not([type="radio"]),select) { border-radius:var(--maya-radius-pill); }
+html[data-maya-surface="dense"] textarea { border-radius:var(--maya-radius-panel); }
+html[data-maya-surface="dense"] :is(button,.primary,.tabs .active) { background:transparent;color:var(--maya-ink);box-shadow:var(--maya-control-shadow); }
+html[data-maya-surface="dense"] button:hover { background:var(--maya-hover); }
+html[data-maya-surface="dense"] :is(button.active,[aria-selected="true"],.person.active) { background:var(--maya-selected);border-color:var(--maya-line-hover); }
+/* Strong frost is for navigation and temporary layers, not every card. */
+html[data-maya-surface="dense"] :is(#drawer,#clients-drawer,dialog,#lead-inv-modal .inv-card) {
+  background:var(--maya-drawer-glass);border:var(--maya-hairline) solid var(--maya-line);
+  border-radius:18px;box-shadow:var(--maya-drawer-shadow);backdrop-filter:var(--maya-drawer-frost);-webkit-backdrop-filter:var(--maya-drawer-frost);
+}
+html[data-maya-surface="dense"] :is(.panel,.tile,.stat,.detail,.metric-row,.person,.empty,.layout>aside,main,.people-scroll,.model-group,.chart-wrap) {
+  background:var(--maya-surface);border-width:var(--maya-hairline);border-color:var(--maya-line);
+  box-shadow:none;backdrop-filter:var(--maya-quiet-frost);-webkit-backdrop-filter:var(--maya-quiet-frost);
+}
+html[data-maya-surface="dense"] :is(table,th,td,input,select,textarea) { font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums; }
+html[data-maya-surface="dense"] :is(th,td) { border-color:rgba(255,255,255,.1);border-width:var(--maya-hairline); }
+/* Table headers inherit their panel; sticky Lead Station headers keep their own fill. */
+html[data-maya-surface="dense"] tbody tr:hover { background:var(--maya-hover); }
+/* Metrics use weight and alignment rather than a decorative typeface. */
+html[data-maya-surface] :is(.tile .v,.money,.bl-step .v,.bl-tile .v,.stat strong,.pg-stat-num,.pg-plan-num,.pg-plan-price,.funnel .v) {
+  font-family:var(--maya-font-ui);font-weight:400;font-style:normal;
+  font-variant-numeric:tabular-nums;letter-spacing:0;color:var(--maya-ink);
+  text-shadow:none;animation:none;
+}
+html[data-maya-surface="dense"] :is(.stat strong,.money) {font-size:var(--maya-text-metric);}
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3,.model-group strong,h2,h3,h4) {
+  font-family:var(--maya-font-ui);font-weight:400;font-style:normal;color:var(--maya-ink);
+}
+html[data-maya-surface="dense"] .model-group strong {font-size:12px;font-weight:400;}
+/* Lead Station is the dense canon example; all actions and persistence are unchanged. */
+html[data-maya-surface] #adm-mkt #leads-table :is(td,.lead-note-vp,.lead-stage,.lead-open) {
+  font:400 var(--maya-text-table)/1.5 var(--maya-font-ui);font-variant-numeric:tabular-nums;
+}
+html[data-maya-surface] #adm-mkt #leads-table .lead-open {font-weight:400;color:var(--maya-ink);}
+html[data-maya-surface] #adm-mkt #leads-table :is(.lead-note,.lead-note-vp,.lead-note-edit) {color:var(--maya-secondary);font-style:normal;}
+html[data-maya-surface] #adm-mkt #leads-table :is(.lead-src,.lead-sig-edit,.lead-when,.lead-subline) {
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);color:var(--maya-tertiary);letter-spacing:0;
+}
+html[data-maya-surface] #adm-mkt #leads-table th {
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:.06em;color:var(--maya-ink);
+}
+html[data-maya-surface] #adm-mkt #leads-table td {padding-top:var(--maya-space);padding-bottom:var(--maya-space);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage {color:var(--maya-inactive);background:transparent;box-shadow:none;}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="in_progress"]:checked) {color:var(--maya-progress);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="booked"]:checked) {color:var(--maya-booked);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="canceled"]:checked) {color:var(--maya-cancelled);}
+/* Dense popovers need a dark backing as well as frost; drawer glass alone
+   allows table text to compete with the menu, even when blur is supported. */
+html[data-maya-surface] .lead-filter {
+  display:inline-block;vertical-align:middle;margin-left:8px;color:var(--maya-ink);
+}
+html[data-maya-surface] .lead-filter>summary {
+  display:flex;align-items:center;justify-content:center;width:28px;height:28px;
+  padding:0;list-style:none;cursor:pointer;border-radius:var(--maya-radius-pill);
+}
+html[data-maya-surface] .lead-filter>summary::-webkit-details-marker {display:none;}
+html[data-maya-surface] .lead-filter>summary:hover,
+html[data-maya-surface] .lead-filter[open]>summary {background:var(--maya-selected);}
+html[data-maya-surface] .lead-filter svg {width:16px;height:16px;}
+html[data-maya-surface] .lead-status-menu {
+  position:fixed;inset:auto;margin:0;z-index:1000;box-sizing:border-box;
+  width:185px;max-width:calc(100vw - 16px);padding:8px;overflow:auto;
+  color:var(--maya-ink);background:rgba(7,10,20,.88);
+  border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-panel);
+  box-shadow:var(--maya-floating-shadow);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:normal;text-transform:none;
+  overscroll-behavior:contain;
+}
+html[data-maya-surface] .lead-status-menu[hidden] {display:none;}
+html[data-maya-surface] .lead-status-menu label {
+  display:flex;width:100%;align-items:center;gap:8px;min-height:28px;padding:2px 8px;
+  border-radius:8px;white-space:nowrap;cursor:pointer;
+}
+html[data-maya-surface] .lead-status-menu label:hover {background:var(--maya-hover);}
+html[data-maya-surface] .lead-status-menu input {margin:0;accent-color:var(--maya-accent);}
+html[data-maya-surface] .lead-status-menu::backdrop {background:transparent;}
+html[data-maya-surface="dense"] :is(.sdot,.new-dot,.model-group) {box-shadow:none;}
+/* Legacy unclassified fields use the UI font; explicit saved roles take precedence. */
+html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-group,.msg-number):not([data-maya-type]) {font-family:var(--maya-font-ui)!important;}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  html[data-maya-surface] :is(#drawer,#clients-drawer,dialog,.lead-status-menu,.panel,.detail,.stat) {background:rgba(7,10,20,.92);}
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-maya-surface] *,html[data-maya-surface] *::before,html[data-maya-surface] *::after {
+    animation:none!important;transition:none!important;scroll-behavior:auto!important;
+  }
+}
+/* V3 branding is deliberately exempt from functional heading normalization. */
+html[data-maya-surface] :is(#top-left-brand .brand-title,.brand h1,#brand,.brand-title) {
+  font-family:var(--maya-font-brand);font-weight:400;
+}
+
+/* Owner-approved compact Admin scale; keep V4 fonts and semantic colors. */
+html[data-maya-surface] #adm-mkt #leads-table .lead-subline {margin-top:4px;gap:8px;}
+html[data-maya-surface] #adm-mkt #leads-table .lead-src {cursor:default;}
+
+/* Frontend is the component master. Backend retains its compact data scale.
+   The gradient is the frontend drawer glass, never a pill or data-panel fill. */
+html[data-maya-surface="dense"] :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta,button.wide,button[type="submit"]) {
+  box-shadow:var(--maya-control-shadow);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+}
+html[data-maya-surface="dense"] :is(.adm-tab,.tabs button) {
+  background:rgba(255,255,255,.04);border-color:var(--maya-line);font-weight:400;
+}
+html[data-maya-surface="dense"] :is(.adm-tab.on,.tabs button.active) {
+  border-color:rgba(255,255,255,.62);box-shadow:0 0 0 1px rgba(255,255,255,.10);
+}
+html[data-maya-surface="dense"] #adm-tabtitle {font-weight:400;}
+html[data-maya-surface="dense"] :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select) {
+  background:rgba(255,255,255,.04);box-shadow:inset 0 1px 2px rgba(0,0,0,.18);
+}
+html[data-maya-surface="dense"] #voice-dock {
+  margin-bottom:0;padding:8px 4px 0;gap:4px;
+  border-top:var(--maya-hairline) solid rgba(255,255,255,.06);
+}
+html[data-maya-surface="dense"] #voice-dock .voice-row {
+  width:100%;justify-content:center;gap:16px;
+}
+html[data-maya-surface="dense"] #voice-btn {width:42px;height:42px;flex:none;}
+html[data-maya-surface="dense"] #voice-btn img {width:42px;height:42px;}
+html[data-maya-surface="dense"] #maya-toggle {font-size:10px;gap:9px;box-shadow:none;}
+html[data-maya-surface="dense"] #maya-toggle .mt-switch {width:34px;height:20px;}
+html[data-maya-surface="dense"] #maya-toggle .mt-knob {width:16px;height:16px;}
+html[data-maya-surface="dense"] #maya-toggle.live .mt-knob {transform:translateX(14px);}
+html[data-maya-surface="dense"] :is(.link-button,.msg-rename,.lead-open) {box-shadow:none;backdrop-filter:none;}
+
+html[data-maya-surface="dense"] #drawer .adm-tab {border-radius:50%;box-shadow:none;}
+html[data-maya-surface="dense"] #drawer .adm-tab.on {box-shadow:0 0 0 1px rgba(255,255,255,.10);}
+
+/* September 26 owner refinements: borderless round marks and quieter log details. */
+html[data-maya-surface="dense"] :is(.maya-logo-wrap,#voice-btn,.top-btn.hamburger,#menu-toggle),
+html[data-maya-surface="dense"] :is(.maya-logo-wrap,#voice-btn,.top-btn.hamburger,#menu-toggle):hover {
+  border:0;box-shadow:none;background:transparent;
+}
+html[data-maya-surface="dense"] :is(.maya-logo-wrap,#voice-btn) {overflow:hidden;border-radius:50%;}
+html[data-maya-surface="dense"] #top-left-brand .maya-logo-mark,
+html[data-maya-surface="dense"] .brand .mark {border-radius:50%;clip-path:circle(50%);border:0;box-shadow:none;}
+html[data-maya-surface="dense"] .grid.doors .card b {
+  font-family:var(--maya-font-brand);font-weight:400;letter-spacing:.22em;
+}
+html[data-maya-surface="dense"] #maya-logs-list .maya-log small {
+  color:var(--maya-ink);font-weight:400;
+}
+html[data-maya-surface="dense"] #maya-logs-list .maya-log p {color:var(--maya-secondary);font-weight:400;}
+
+/* Compact backend matches the frontend's small controls; metric sizes stay intact. */
+html[data-maya-surface="dense"] #adm-mkt #leads-table td {padding-top:4px;padding-bottom:4px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-subline {margin-top:2px;gap:6px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-stage {padding-top:2px;padding-bottom:2px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table :is(.lead-note-vp,.lead-note-edit) {line-height:1.35;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-cta {width:22px;height:22px;padding:3px;}
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3) {font-weight:400;}
+html[data-maya-surface="dense"] :is(.bl-step .k,.bl-tile .k,.bl-target,.bl-summary) {font-size:8.5px;font-style:normal;}
+html[data-maya-surface="dense"] :is(.grp,.section-title) {font-size:11px;font-weight:400;font-style:normal;}
+html[data-maya-surface="dense"] #maya-logs-list .maya-log p {font-size:12px;}
+html[data-maya-surface="dense"] body.maya-live .maya-logo-wrap,
+html[data-maya-surface="dense"] #voice-btn.live {animation:none;border:0;box-shadow:none;}
+
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#clients-drawer .drawer-title) {
+  font-family:var(--maya-font-brand);font-size:19px;font-weight:400;font-style:normal;
+}
+
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-open {border:0;box-shadow:none;background:transparent;}
+
+/* Dense surfaces keep controls and model information at the same quiet scale. */
+html[data-maya-surface="dense"] #model-snapshot .model-group {padding:6px 8px;margin:2px 0;}
+html[data-maya-surface="dense"] :is(#adm-mkt .bl-step .v,.bl-step .v) {font-size:20px;font-weight:400;}
+html[data-maya-surface="dense"] :is(#adm-mkt .bl-tile .v,.bl-tile .v) {font-size:14px;}
+html[data-maya-surface="dense"] :is(.pill,.range-chips button,.metric-chips button,.tabs button,button.wide) {font-size:11px;padding:6px 10px;min-height:30px;}
+html[data-maya-surface="dense"] :is(dialog) {max-height:calc(100dvh - 28px);overscroll-behavior:contain;}
+@media(max-width:650px) {
+ html[data-maya-surface="dense"] .layout .row {flex-wrap:wrap;}
+ html[data-maya-surface="dense"] .layout .stats {grid-template-columns:repeat(2,minmax(0,1fr));}
+ html[data-maya-surface="dense"] .layout .stat {min-width:0;padding:10px;overflow-wrap:anywhere;}
+ html[data-maya-surface="dense"] .layout .tabs {width:100%;}
+ html[data-maya-surface="dense"] .layout .search {min-width:0;width:100%;}
+}
+
+/* Avoid stacking expensive blur layers inside already frosted content panels. */
+html[data-maya-surface="dense"] :is(.person,.stat,.model-group) {backdrop-filter:none;-webkit-backdrop-filter:none;}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+#automation-status{line-height:1.6;margin:12px 0;}
+/* Accepted Gemini audit findings, mapped to existing elements. V3 geometry and
+   owner-approved type sizes/status colors remain authoritative. */
+html[data-maya-surface="dense"] #changes-fold>.fold-body{max-height:420px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:16px;}
+html[data-maya-surface="dense"] #features-list .fr-room{max-height:380px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+html[data-maya-surface="dense"] #pe-framing{white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(0,0,0,.15);padding:12px;color:var(--maya-secondary);}
+html[data-maya-surface="dense"] #mkt-ticker{mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);}
+html[data-maya-surface="dense"] :is(.arch>.col,.pe-live){min-width:0;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] #adm-scroll{scroll-padding-bottom:104px;}
+html[data-maya-surface="dense"] .map-footer{padding-bottom:104px;}
+html[data-maya-surface="dense"] .fold>summary .grp{display:inline-flex;align-items:center;gap:8px;}
+
+#features-list:has(.fr-room){grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+#features-list .fr-room{min-width:0;padding:8px;}
+@media(max-width:650px){#features-list:has(.fr-room){grid-template-columns:1fr;}}
+
+
+
+/* Keep the Brief's inactive settings pane inside its drawer and out of tab order. */
+html[data-maya-surface="dense"] #drawer-settings {transform:none;visibility:hidden;opacity:0;transition:opacity var(--maya-duration) var(--maya-ease);}
+html[data-maya-surface="dense"] #drawer-settings.open {visibility:visible;opacity:1;}
+html[data-maya-surface="dense"] #clients-drawer :is(.client-item,.info-row) {overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] #drawer-settings .info-row {gap:12px;}
+html[data-maya-surface="dense"] #drawer-settings .info-row>span {min-width:0;}
+html[data-maya-surface="dense"] #clients-drawer .drawer-settings-link {box-shadow:none;}
+html[data-maya-surface="dense"] #clients-drawer :is(.client-date,.key-row label,.info-row .lbl) {font-style:normal;}
+html[data-maya-surface="dense"] #drawer-settings .settings-title {font:400 19px var(--maya-font-brand);letter-spacing:.04em;text-transform:none;}
+
+/* Pattern workspaces must shrink and stack rather than force a desktop canvas. */
+html[data-maya-surface="dense"] body:has(#plan-a-view) .cols {grid-template-columns:minmax(0,34fr) minmax(0,66fr);}
+html[data-maya-surface="dense"] body:has(#plan-a-view) :is(.panel,.trace-card,.row2>div) {min-width:0;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:repeat(4,minmax(0,1fr));}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .pattern-stage {flex-direction:column;align-items:flex-start;justify-content:flex-end;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .stage-badge {position:static;max-width:calc(100% - 28px);margin:12px 14px;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .pattern-stage>img {margin-top:auto;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .hero-frame img:not([src]) {display:none;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) :is(.drawer label,.sec-title) {font-style:normal;letter-spacing:.12em;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer-head h3 {font:400 19px var(--maya-font-brand);letter-spacing:.04em;}
+@media(max-width:768px) {
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .cols {grid-template-columns:minmax(0,1fr);}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .wrap {padding:24px 16px 48px;}
+}
+@media(max-width:420px) {
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:minmax(0,1fr);}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .brand h1 {font-size:16px;letter-spacing:.12em;}
+}
+
+/* Admin compact dark glass and semantic status chips. */
+html[data-maya-surface="dense"] body:has(#adm-mkt) {
+  --maya-control-shadow:none;
+  --maya-drawer-glass:rgba(3,15,29,.82);
+  --maya-drawer-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.status-pill {
+  --status-color:var(--maya-inactive);
+  display:inline-flex;align-items:center;gap:6px;position:relative;
+  width:max-content;max-width:100%;padding:3px 10px;border-radius:999px;
+  color:var(--status-color);background:var(--maya-glass-dark);
+  border:var(--maya-hairline) solid var(--maya-glass-edge);
+  border-color:color-mix(in srgb,var(--status-color) 32%,transparent);
+  font:400 var(--maya-text-table)/1.5 var(--maya-font-ui);white-space:nowrap;
+}
+.status-pill::before {content:'';width:6px;height:6px;flex:none;border-radius:50%;background:var(--status-color);}
+.status-pill:is([data-status="contacted"],:has(option[value="contacted"]:checked)) {--status-color:var(--maya-contacted);}
+.status-pill:is([data-status="in_progress"],[data-status="follow_up_due"],:has(option[value="in_progress"]:checked)) {--status-color:var(--maya-progress);}
+.status-pill:is([data-status="replied"],[data-status="meeting"],[data-status="booked"],[data-status="closed"],:has(option[value="booked"]:checked)) {--status-color:var(--maya-booked);}
+.status-pill:is([data-status="suppressed"],[data-status="canceled"],:has(option[value="canceled"]:checked)) {--status-color:var(--maya-cancelled);}
+.lead-status {padding-right:22px;}
+.lead-status::after {content:'';position:absolute;right:10px;width:4px;height:4px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg) translateY(-2px);}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-stage {
+  position:absolute;inset:0;width:100%;height:100%;max-width:none;opacity:0;cursor:pointer;
+  color:var(--status-color);padding:0;
+}
+.lead-status:has(:focus-visible) {outline:1px solid var(--maya-ink);outline-offset:3px;}
+.lead-status:has(:disabled) {opacity:.6;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table :is(th,td) {text-align:left;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table td {height:44px;box-sizing:border-box;vertical-align:middle;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table tr:last-child td {padding-bottom:4px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-open {line-height:14px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-cta {width:18px;height:18px;padding:2px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table :is(.lead-identity,.lead-subline) {justify-content:flex-start;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-open {text-align:left;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-note-vp {max-height:30px;}
+html[data-maya-surface="dense"] #adm-mkt :is(#leads-bar,#metric-chips) {justify-content:center;}
+html[data-maya-surface="dense"] body:has(#adm-mkt) .tiles {display:flex;justify-content:center;flex-wrap:wrap;gap:12px;}
+html[data-maya-surface="dense"] body:has(#adm-mkt) .tile {flex:0 0 auto;width:auto;background:var(--maya-glass-dark);border-color:var(--maya-glass-edge);}
+/* Owner commands stay within the same compact Systems typography. */
+maya-owner-crm{display:block;font:400 12px/1.5 var(--maya-font-ui,Jost,sans-serif)}
+maya-owner-crm button{font:inherit;margin:4px 4px 4px 0}
+
+/* Keep account setup out of conversation tabs; calm, consistently spaced controls. */
+#drawer.msgs > maya-owner-crm{display:none!important}
+html[data-maya-surface] #drawer maya-owner-crm{margin:24px 0;padding:0 8px}
+html[data-maya-surface] #drawer .owner-settings summary{cursor:pointer;font:400 12px/1.5 var(--maya-font-ui);color:var(--maya-ink);padding:12px 0}
+html[data-maya-surface] #drawer maya-owner-crm p{margin:12px 0;line-height:1.6;color:var(--maya-secondary)}
+html[data-maya-surface] #drawer maya-owner-crm button,
+html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:8px 12px;margin:4px 8px 8px 0;border:0.5px solid var(--maya-line,rgba(255,255,255,.18));border-radius:999px;background:rgba(3,15,29,.45);color:var(--maya-ink);font:400 12px/1.5 var(--maya-font-ui);text-decoration:none;white-space:normal}

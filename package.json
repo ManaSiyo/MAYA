@@ -1,0 +1,11 @@
+{
+  "name": "maya-release-tests",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=20"},
+  "devDependencies": {
+    "express": "4.22.2",
+    "playwright": "1.62.1",
+    "ws": "8.18.0"
+  }
+}

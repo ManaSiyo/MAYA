@@ -1,0 +1,67 @@
+import {fields} from './surface-editors.js';
+import {addRestore} from './restore-controls.js';
+import {Pill} from '/aesthetics/ui/components/components.js';
+import {setupWorkspacePreviews} from './workspace-previews.js';
+export function setupPresentation({buttons,preview,colors,design,controlSizes}){
+ const shared=window.MayaPresentationControls;
+ const statusStyles=Object.fromEntries(shared.statuses.map(({key})=>[key,{...shared.defaults.statusStyles[key],...design.statusStyles?.[key]}]));
+ const sectionSpacing={...shared.defaults.sectionSpacing,...design.sectionSpacing};
+ const layoutSpacing={...shared.defaults.layoutSpacing,...design.layoutSpacing};
+ const semanticStyles={nonFabric:{...shared.defaults.semanticStyles.nonFabric,...design.semanticStyles?.nonFabric}};
+ const settings=()=>({statusStyles,sectionSpacing,layoutSpacing,semanticStyles});
+ const render=()=>shared.apply({...design,...controlSizes,...settings()});
+ function editor(parent,label,value,spec){
+  const edit=document.createElement('details');edit.className='type-editor';
+  const summary=document.createElement('summary');summary.dataset.mayaType='P3';summary.textContent=['section spacing','field and drawer spacing','non-fabric pieces'].includes(label)?'Edit '+label:'Edit';summary.setAttribute('aria-label','Edit '+label);
+  const grid=document.createElement('div');grid.className='type-editor-fields';edit.append(summary,grid);parent.append(edit);
+  fields(grid,value,spec,render);
+  addRestore(edit,{label,read:()=>value,write:saved=>{Object.assign(value,saved);for(const input of grid.querySelectorAll('[data-field]'))input.value=value[input.dataset.field];render();}});
+  return edit;
+ }
+ for(const status of shared.statuses){
+  const {key,label,meaning,usage}=status,wrap=document.createElement('div');wrap.className='status-style-preview';colors.append(wrap);
+  const controls=document.createElement('div');controls.className='status-style-controls';wrap.append(controls);
+  const edit=editor(controls,label,statusStyles[key],[['color','Color',{type:'color'}],['opacity','Color strength',{min:0,max:100}],['weight','Weight',[200,250,300,350,400,450,500].map(n=>[String(n),String(n)])]]);
+  const pill=Pill({label,onClick:event=>{event.stopPropagation();edit.open=true;edit.querySelector('input')?.focus();}});pill.classList.add('status-pill');pill.dataset.status=key;controls.prepend(pill);
+  const description=document.createElement('p');description.className='status-meaning';description.dataset.mayaType='P1';description.textContent=meaning;wrap.append(description);
+  const locations=document.createElement('details');locations.className='status-usage';const usageSummary=document.createElement('summary');usageSummary.dataset.mayaType='P3';usageSummary.textContent=usage.length?'Where used':'Not currently used';locations.append(usageSummary);
+  for(const [page,href,text] of usage){const row=document.createElement('div'),link=document.createElement('a');row.dataset.mayaType=link.dataset.mayaType='P3';link.href=href;link.textContent=page;row.append(link,document.createTextNode(' · '+text));locations.append(row);}
+  controls.append(locations);
+ }
+ const spacing=document.createElement('section');spacing.className='spacing-controls';
+ const row=document.createElement('div');row.className='surface-edit-row';
+ spacing.append(row);preview.append(spacing);
+ editor(row,'section spacing',sectionSpacing,[['submissions','Mana Siyo → Submissions',{min:0,max:160}],['leads','Before Leads',{min:0,max:160}],['ads','Before Ad campaigns',{min:0,max:160}],['insights','Before Insights',{min:0,max:160}],['headingGap','All headings → content',{min:0,max:160}]]);
+ const help=document.createElement('p');help.className='spacing-usage';help.dataset.mayaType='P1';help.append('Space between Admin headings and content. ');
+ const link=document.createElement('a');link.dataset.mayaType='P1';link.href='/status.html';link.textContent='Used across Admin';help.append(link);spacing.append(help);
+ const sample=document.createElement('div');sample.className='spacing-preview';sample.dataset.mayaPanel='inner';
+ const brand=document.createElement('span');brand.dataset.mayaType=brand.dataset.previewCategory='P3';brand.textContent='Mana Siyo';sample.append(brand);
+ const sections=[
+  ['Submissions','submissions','Latest submission'],['Users and traffic','','Users · 12'],['Leads','leads','Full name · Angela | Status · Not contacted'],
+  ['Ad campaigns','ads','D / W / M · Campaign preview'],['Insights','insights','Lead and campaign totals'],['Recent changes','','Latest change'],
+  ['Feature requests','','Latest request']
+ ];
+ for(const [name,before,text] of sections){
+  const heading=document.createElement('h3');heading.dataset.mayaType=heading.dataset.previewCategory='H3';heading.dataset.previewHeading='';heading.textContent=name;if(before)heading.dataset.spacing=before;
+  const content=document.createElement('div');content.dataset.headingGap='';content.className='spacing-preview-content';content.dataset.mayaType=content.dataset.previewCategory='P1';content.textContent=text;sample.append(heading,content);
+ }
+ const spacingDetails=document.createElement('details');spacingDetails.className='input-control-usage';const spacingSummary=document.createElement('summary');spacingSummary.dataset.mayaType='P3';spacingSummary.textContent='Preview';spacingDetails.append(spacingSummary,sample);spacing.append(spacingDetails);
+ const layout=document.createElement('section');layout.className='layout-spacing-controls';
+ const layoutRow=document.createElement('div');layoutRow.className='surface-edit-row';
+ layout.append(layoutRow);preview.append(layout);
+ editor(layoutRow,'field and drawer spacing',layoutSpacing,[['labelGap','Label → field',{min:0,max:64}],['fieldGap','Between fields',{min:0,max:64}],['drawerDockInset','Voice dock → bottom',{min:0,max:32}]]);
+ const layoutHelp=document.createElement('p');layoutHelp.dataset.mayaType=layoutHelp.dataset.previewCategory='P1';layoutHelp.textContent='Set gaps between labels, fields and the voice dock.';layout.append(layoutHelp);
+ const spacingExample=document.createElement('div');spacingExample.className='workspace-timing-preview';spacingExample.dataset.mayaFieldStack='';
+ for(const [labelText,value] of [['Trigger','No reply after first text'],['Earliest draft time','09:00']]){const label=document.createElement('label');label.dataset.mayaType='P3';label.dataset.mayaFieldRow='';label.textContent=labelText;const field=document.createElement('input');field.dataset.mayaType='P1';field.dataset.mayaControl='field';field.value=value;field.readOnly=true;label.append(field);spacingExample.append(label);}
+ const wrExample=document.createElement('div');wrExample.className='wr-fields-preview';for(const [name,value] of [['Wave','1'],['Number','Phone'],['Name','Name'],['Look','Look'],['Color','Blue'],['Email','Email']]){const label=document.createElement('label');label.dataset.mayaType='P3';label.dataset.mayaFieldRow='';label.textContent=name;const field=document.createElement('input');field.dataset.mayaType='P1';field.dataset.mayaControl='field';field.value=value;field.readOnly=true;label.append(field);wrExample.append(label);}layout.append(wrExample);
+ const studioDetails=document.createElement('details');studioDetails.className='studio-control-preview';const studioSummary=document.createElement('summary');studioSummary.dataset.mayaType='P3';studioSummary.textContent='Design Studio 2 preview';studioDetails.append(studioSummary);const studioCard=document.createElement('div');studioCard.dataset.mayaPanel='inner';const studioTitle=document.createElement('h3');studioTitle.dataset.mayaType=studioTitle.dataset.previewCategory='H3';studioTitle.textContent='Signature';const studioText=document.createElement('p');studioText.dataset.mayaType=studioText.dataset.previewCategory='P1';studioText.textContent='Start with a design and make it yours.';const studioField=document.createElement('label');studioField.dataset.mayaType='P3';studioField.dataset.mayaFieldRow='';studioField.textContent='Name';const studioInput=document.createElement('input');studioInput.dataset.mayaControl='field';studioInput.dataset.mayaType='P1';studioInput.placeholder='Name';studioInput.readOnly=true;studioField.append(studioInput);studioCard.append(studioTitle,studioText,studioField,Pill({label:'Choose Signature'}));studioDetails.append(studioCard);layout.append(studioDetails);
+ const dockExample=document.createElement('div');dockExample.className='workspace-dock-preview';dockExample.append(Pill({label:'Hey Maya'}));const layoutDetails=document.createElement('details');layoutDetails.className='input-control-usage';const layoutSummary=document.createElement('summary');layoutSummary.dataset.mayaType='P3';layoutSummary.textContent='Preview';layoutDetails.append(layoutSummary,spacingExample,dockExample,wrExample);layout.append(layoutDetails);
+ const semantic=document.createElement('section');semantic.className='semantic-style-controls';
+ const semanticRow=document.createElement('div');semanticRow.className='surface-edit-row';
+ semantic.append(semanticRow);preview.append(semantic);
+ const semanticEdit=editor(semanticRow,'non-fabric pieces',semanticStyles.nonFabric,[['color','Text color',{type:'color'}],['opacity','Color strength',{min:0,max:100}]]);
+ const shoe=Pill({label:'Black leather boots',onClick:event=>{event.stopPropagation();semanticEdit.open=true;semanticEdit.querySelector('input').focus();}});shoe.dataset.mayaSemantic='non-fabric';const semanticDetails=document.createElement('details');semanticDetails.className='input-control-usage';const semanticSummary=document.createElement('summary');semanticSummary.dataset.mayaType='P3';semanticSummary.textContent='Preview';semanticDetails.append(semanticSummary,shoe);semantic.append(semanticDetails);
+ const semanticHelp=document.createElement('p');semanticHelp.dataset.mayaType=semanticHelp.dataset.previewCategory='P1';semanticHelp.textContent='Shoes use this color in Brief and Operation Room.';semanticDetails.append(semanticHelp);
+ setupWorkspacePreviews({parent:preview,render});
+ render();return {settings,render};
+}

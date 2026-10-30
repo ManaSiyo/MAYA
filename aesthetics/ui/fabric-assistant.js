@@ -1,0 +1,373 @@
+/* One fabric conversation for the Brief and Operation Room. Private state is memory-only. */
+(function () {
+  'use strict';
+  let dialog, workspace, host, els, context = {}, identity = '', epoch = 0, controller, image = '', originalImage = '';
+  const storeGroups=[
+    {id:'local',label:'Local (Bay Area)',hosts:['britexfabrics.com','stonemountainfabric.com','hartsfabric.com']},
+    {id:'mood',label:'Mood',hosts:['moodfabrics.com']},
+    {id:'swatchon',label:'Swatchon',hosts:['swatchon.com']},
+    {id:'amazon',label:'Amazon',hosts:['amazon.com']},
+    {id:'others',label:'Others',hosts:['blackbirdfabrics.com','thefabricstore.com','tessuti.com.au']},
+  ];
+  let searchSeq=0, autoStarted=false, activeStores=new Set(storeGroups.map(group=>group.id)),filterTouched=false,submittedRequest='',lastSearchStores='',completedStatus='';
+  const storeKey=()=>[...activeStores].sort().join('|');
+  let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
+  let bookSeq = 0, photoSeq = 0, projectEpoch=0, projectIdentity='', reads=new AbortController(),projectReads=new AbortController();
+  let searchDetails=null,searchState='idle';
+  let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null;
+  const token = () => localStorage.getItem('maya_admin_tok') || localStorage.getItem('maya_google_token') || '';
+  function account() {
+    try { const p = JSON.parse(atob(token().split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return p.exp * 1000 > Date.now() ? String(p.sub || '') : ''; }
+    catch (_) { return ''; }
+  }
+  const scope = () => account() + '|' + (context.submissionId || 'unsaved') + '|' + JSON.stringify([context.piece?.id||context.piece?.name||'',context.piece?.fabric||'',context.piece?.fabric_spec||{},context.pieces?.map(p=>[p.id,p.name,p.fabric,p.fabric_spec])||[]]);
+  const current = stamp => stamp === epoch && identity === scope() && !!account();
+  const projectScope=()=>account()+'|'+(context.submissionId||'unsaved');
+  const projectTicket=()=>({epoch:projectEpoch,key:projectIdentity});
+  const projectCurrent=ticket=>ticket.epoch===projectEpoch&&ticket.key===projectIdentity&&ticket.key===projectScope()&&!!account();
+  function pieceMetadata(piece={}){
+    piece=piece&&typeof piece==='object'?piece:{};
+    if(!piece.id&&!piece.name&&!piece.fabric)return {};
+    const out={};for(const [key,max] of [['id',100],['name',80],['category',80],['fabric',180],['fabric_hex',7]])if(typeof piece[key]==='string')out[key]=piece[key].slice(0,max);
+    if(piece.skip)out.skip=true;
+    if(piece.fabric_spec){out.fabric_spec={};for(const key of ['fiber','weave','stretch','sheen','texture'])if(typeof piece.fabric_spec[key]==='string')out.fabric_spec[key]=piece.fabric_spec[key].slice(0,80);}
+    return out;
+  }
+  function selectedProduct(piece=context.piece){
+    const id=piece?.id||'',items=book.items||[];
+    let url=id&&book.selectedByGarment?.[id];
+    if(!url&&id&&!Object.hasOwn(book,'selectedByGarment')&&book.selectedUrl){const legacy=items.find(p=>p.url===book.selectedUrl);const names=(context.pieces||[]).filter(p=>p.name===piece.name);if(legacy&&(legacy.garmentId===id||(!legacy.garmentId&&legacy.garment===piece.name&&names.length===1)))url=legacy.url;}
+    if(!id&&!piece?.name)url=book.selectedUrl;
+    const product=items.find(p=>p.url===url);return product?{...product,...(id?{garmentId:id,garment:piece.name||product.garment}:{} )}:null;
+  }
+
+  const node = (tag, className, value) => { const n = document.createElement(tag); if (className) n.className = className; if (value != null) n.textContent = value; if(['h2','h3','p','label','button','textarea','select'].includes(tag))n.dataset.mayaType=tag==='h2'?'H2':tag==='h3'?'H4':['button','label','select'].includes(tag)?'P3':'P1'; return n; };
+  function waitForSignal(promise,signal) {
+    return new Promise((resolve,reject)=>{
+      const abort=()=>reject(signal.reason);
+      if(signal.aborted){reject(signal.reason);return;}
+      signal.addEventListener('abort',abort,{once:true});
+      Promise.resolve(promise).then(resolve,reject).finally(()=>signal.removeEventListener('abort',abort));
+    });
+  }
+  function action(label, fn) { const b = node('button','pill maya-pill',label); b.type = 'button'; b.addEventListener('click',fn); return b; }
+  function status(message) { els.status.textContent = message || ''; }
+  function reset() {
+    epoch++;photoSeq++;searchSeq++;autoStarted=false;activeStores=new Set(storeGroups.map(group=>group.id));filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
+    const nextProject=projectScope();if(nextProject!==projectIdentity){bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
+    controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
+    searchDetails=null;searchState='idle';els?.details.set(null);
+    if(els){els.input.value='';els.observation.textContent='';els.transcript.replaceChildren();els.results.replaceChildren();els.photo.hidden=true;els.preview.removeAttribute('src');els.file.value='';els.send.disabled=false;els.stop.hidden=true;els.saveStatus.textContent='';els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');status('');}
+  }
+  function icon(label,path,fn) {
+    const b=action('',fn);b.classList.add('maya-icon-button');b.setAttribute('aria-label',label);b.title=label;
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.6');
+    const shape=document.createElementNS(svg.namespaceURI,'path');shape.setAttribute('d',path);svg.append(shape);b.append(svg);return b;
+  }
+  function collapse() {
+    if(dialog.open)dialog.close();
+    if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');}
+    els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');
+  }
+  function expand() {
+    if(dialog.open && host)return collapse();
+    workspace.classList.remove('is-inline');dialog.append(workspace);workspace.hidden=false;
+    if(!dialog.open)dialog.showModal();els.expand.textContent=host?'Collapse':'Close';els.expand.setAttribute('aria-expanded','true');
+  }
+  function close() {
+    if(busy)autoStarted=false;
+    controller?.abort();recognition?.stop();searchSeq++;busy=false;
+    if(searchState==='searching')searchState='interrupted';
+    if(!workspace)return;
+    collapse();workspace.hidden=true;els.details.close();els.send.disabled=false;els.stop.hidden=true;
+  }
+  function make() {
+    if (dialog) return;
+    dialog=node('dialog','fabric-assistant-dialog');dialog.id='fabric-assistant-dialog';dialog.setAttribute('aria-labelledby','fabric-assistant-title');document.body.append(dialog);
+    workspace=node('section','fabric-assistant maya-surface');workspace.id='fabric-assistant';workspace.dataset.mayaSurface='outer';
+    const header=node('header','fa-header');
+    const title=node('h2','', 'Fabrics');title.id='fabric-assistant-title';
+    const toolbar=node('div','fa-toolbar');
+    const refresh=icon('Refresh fabrics','M20 7v5h-5M20 12a8 8 0 1 0-2 5',()=>refreshView());
+    const expandButton=action('Expand',()=>host?expand():close());expandButton.setAttribute('aria-expanded','false');
+    toolbar.append(refresh,expandButton);
+    const sub=node('p','fa-context');
+    const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');tabs.dataset.mayaControl='segmented';
+    const inhouse=action('In House',()=>{view='inhouse';paint();});
+    const search=action('Sourceable',()=>{view='search';paint();});
+    const saved=action('Favorites',async()=>{view='saved';paint();await loadBook();});
+    const fresh=action('New search',()=>open({...context,forceReset:true}));
+    for(const button of [inhouse,search,saved])button.dataset.mayaSegment='';
+    const filter=icon('Filter stores','M4 5h16M7 12h10M10 19h4',()=>{storeWrap.hidden=!storeWrap.hidden;filter.setAttribute('aria-expanded',String(!storeWrap.hidden));if(!storeWrap.hidden)storeButtons[0].focus();});filter.setAttribute('aria-expanded','false');
+    const storeWrap=node('div','fa-store-wrap');storeWrap.hidden=true;storeWrap.setAttribute('role','group');storeWrap.setAttribute('aria-label','Fabric stores');
+    const storeButtons=storeGroups.map(group=>{const button=action(group.label,()=>{
+      activeStores.has(group.id)?activeStores.delete(group.id):activeStores.add(group.id);filterTouched=true;
+      // Filtering is free. Refresh is the explicit new provider request; cancel
+      // an obsolete stream so it cannot overwrite the changed scope or its hint.
+      if(busy){controller?.abort();searchSeq++;busy=false;products=[];searchState='interrupted';autoStarted=false;els.send.disabled=false;els.stop.hidden=true;lastSearchStores='';}
+      paint();
+      if(searchDetails){searchDetails={...searchDetails,stage:'Store filter changed; Refresh to search this selection'};els.details.set(searchDetails);}
+      status(!activeStores.size?'Choose at least one store group.':submittedRequest&&lastSearchStores!==storeKey()?'Refresh to search these stores.':completedStatus);
+    });button.classList.add('fa-store-filter');button.dataset.mayaSegment='';button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
+    tabs.append(inhouse,search,saved,filter,fresh);
+    const body=node('div','fa-body');body.dataset.mayaScrollbar='visible';body.tabIndex=0;body.setAttribute('aria-label','Fabric results');
+    const transcript=node('div','fa-transcript');transcript.setAttribute('aria-label','Your requests');
+    const observation=node('p','fa-observation'),results=node('div','fa-results'),saveStatus=node('p','fa-save-status');saveStatus.setAttribute('role','status');body.append(transcript,observation,results,saveStatus);
+    const form=node('form','fa-composer');
+    const photo=node('div','fa-photo');photo.hidden=true;
+    const preview=node('img');preview.alt='Original look reference';photo.append(preview,action('Remove photo',()=>{image='';paintPhoto();}));
+    const label=node('label','fa-input-label','Describe the fabric');label.htmlFor='fabric-request';
+    const input=node('textarea');input.id='fabric-request';input.rows=2;input.maxLength=1200;input.dataset.mayaControl='field';input.placeholder='A matte burgundy wool, preferably local…';
+    const row=node('div','fa-actions'),file=node('input');file.type='file';file.accept='image/jpeg,image/png,image/webp';file.hidden=true;
+    const upload=action('Add photo',()=>file.click());file.addEventListener('change',()=>attach(file.files?.[0]));
+    const mic=action('Dictate',dictate);mic.hidden=!(window.SpeechRecognition||window.webkitSpeechRecognition);
+    const send=node('button','pill maya-pill','Find fabric');send.type='submit';
+    const stop=action('Stop',()=>controller?.abort());stop.hidden=true;row.append(upload,mic,send,stop,file);form.append(photo,label,input,row);
+    const live=node('p','fa-status');live.setAttribute('role','status');live.setAttribute('aria-live','polite');
+    form.addEventListener('submit',e=>{e.preventDefault();run();});
+    input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!busy)run();}});
+    input.addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/'));if(f){e.preventDefault();attach(f);}});
+    header.append(title,tabs,toolbar);workspace.append(header,sub,storeWrap,body,form,live);dialog.append(workspace);
+    const details=window.MayaFabricSearchDetails.create({parent:workspace});tabs.append(details.trigger);details.set(null);
+    // Native close events are queued. A prior close must not cancel or move a
+    // workspace that has already been reopened for a new search.
+    dialog.addEventListener('close',()=>{if(dialog.open)return;if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');}else{controller?.abort();recognition?.stop();}});
+    els={details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
+  }
+  let recognition;
+  function dictate() {
+    const API = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!API) return;
+    if (recognition) { recognition.stop(); return; }
+    const stamp = epoch;
+    recognition = new API(); recognition.lang='en-US'; recognition.interimResults=false;
+    recognition.onresult = e => { if (current(stamp)) els.input.value = (els.input.value + ' ' + e.results[0][0].transcript).trim().slice(0,1200); };
+    recognition.onerror = () => status('Dictation unavailable. You can type your request.');
+    recognition.onend = () => { recognition=null; els.mic.textContent='Dictate'; };
+    els.mic.textContent='Stop dictation';
+    try { recognition.start(); } catch (_) { recognition=null; els.mic.textContent='Dictate'; }
+  }
+  function headers() { return { Authorization:'Bearer '+token(), 'Content-Type':'application/json' }; }
+  async function json(url, options={}) {
+    const signal=options.signal||(!options.method||options.method==='GET'?AbortSignal.any([reads.signal,AbortSignal.timeout(10000)]):AbortSignal.timeout(15000));
+    const r = await fetch(url, { ...options, signal, headers: headers(), cache:'no-store' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw Error(data.error || 'Request failed. Try again.');
+    return data;
+  }
+  async function photoData(source) {
+    if (!source) return '';
+    const blob = typeof source === 'string' ? await (await fetch(source,{signal:AbortSignal.any([reads.signal,AbortSignal.timeout(10000)])})).blob() : source;
+    if (!/^image\/(jpeg|png|webp)$/.test(blob.type) || blob.size > 15*1024*1024) throw Error('Use a JPEG, PNG or WebP photo under 15 MB.');
+    const bitmap = await createImageBitmap(blob);
+    try {
+      const scale = Math.min(1,1200/Math.max(bitmap.width,bitmap.height));
+      const canvas=document.createElement('canvas'); canvas.width=Math.round(bitmap.width*scale); canvas.height=Math.round(bitmap.height*scale);
+      canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);
+      return canvas.toDataURL('image/jpeg',.85);
+    } finally { bitmap.close(); }
+  }
+  async function attach(file) {
+    if (!file) return;
+    const stamp=epoch, photoRequest=++photoSeq;
+    try { const value=await photoData(file); if (!current(stamp) || photoRequest!==photoSeq) return; image=value; paintPhoto(); status('Photo added. Add a description or press Find fabric.'); }
+    catch (e) { if (current(stamp)) status(e.message); }
+    els.file.value='';
+  }
+  function paintPhoto() { els.photo.hidden=!image; if (image) els.preview.src=image; else els.preview.removeAttribute('src'); }
+  async function loadInventory(force=false) {
+    if(Array.isArray(context.inhouse)&&!force)return;
+    if(inventoryRequest&&!force)return inventoryRequest;
+    const stamp=epoch,signal=AbortSignal.any([reads.signal,AbortSignal.timeout(6000)]);
+    const task=(async()=>{
+      const response=await fetch('/aesthetics/fabrics/fabrics.json?v=2',{cache:force?'no-store':'default',signal});
+      if(!response.ok)throw Error('In-house photos unavailable.');
+      const data=await response.json();if(!current(stamp))return;
+      context.inhouse=(data.items||[]).filter(p=>typeof p.fileName==='string'&&!/[\\/]/.test(p.fileName)&&/\.(?:png|jpe?g|webp)$/i.test(p.fileName)).map(p=>{
+        const original='/aesthetics/fabrics/'+encodeURIComponent(p.fileName);
+        const thumbnail=typeof p.thumbnail==='string'&&p.thumbnail.match(/^thumbs\/([^\\/]+\.(?:png|jpe?g|webp))$/i);
+        return {title:p.name||p.fileName,url:original,image:thumbnail?'/aesthetics/fabrics/thumbs/'+encodeURIComponent(thumbnail[1]):original,description:[p.weave,p.weight,p.color].filter(Boolean).join(' · ')};
+      });
+      paint();
+    })();inventoryRequest=task;try{await task;}finally{if(inventoryRequest===task)inventoryRequest=null;}
+  }
+  async function loadContext(stamp) {
+    if (!context.submissionId || context.referenceImage) return;
+    const data = await json('/api/admin/submissions');
+    const folder=(data.folders || []).find(f=>f.id===context.submissionId);
+    if (!folder) throw Error('This submission is unavailable. Open it from Admin.');
+    const files=folder.files || [];
+    const summary=files.find(f=>f.name==='summary.json');
+    const hero=files.find(f=>/^dream-garment\.(png|jpe?g)$/i.test(f.name));
+    const [preferences, reference] = await Promise.all([
+      summary ? json('/api/admin/subfile?id='+encodeURIComponent(summary.id)).then(s=> typeof s.fabric_preferences==='string' ? s.fabric_preferences : JSON.stringify(s.fabric_preferences || '')) : '',
+      hero ? fetch('/api/admin/subfile?id='+encodeURIComponent(hero.id),{headers:headers(),signal:AbortSignal.any([reads.signal,AbortSignal.timeout(10000)])}).then(r=>{if(!r.ok)throw Error('Reference photo could not load.');return r.blob();}).then(photoData) : '',
+    ]);
+    if (!current(stamp)) return;
+    context.preferences=preferences; context.referenceImage=reference; image=originalImage=reference; paintPhoto();
+    window.dispatchEvent(new CustomEvent('maya:fabric-context',{detail:{submissionId:context.submissionId,referenceImage:reference}}));
+  }
+  async function loadBook(forSave=false) {
+    if(saves.pending.size&&!forSave)return;
+    const ticket=projectTicket(),sequence=++bookSeq;
+    if(!context.submissionId){if(view==='saved')status('Open a submission to save fabrics.');return;}
+    try{
+      const data=await json('/api/admin/fabrics/lookbook?submissionId='+encodeURIComponent(context.submissionId),{signal:AbortSignal.any([projectReads.signal,AbortSignal.timeout(10000)])});
+      if(!projectCurrent(ticket)||(!forSave&&sequence!==bookSeq))return;
+      book=data;paint();notifySelection();
+    }catch(e){if(projectCurrent(ticket)&&sequence===bookSeq)els.saveStatus.textContent=e.message;}
+  }
+  function notifySelection(){
+    window.dispatchEvent(new CustomEvent('maya:fabric-selected',{detail:{submissionId:context.submissionId,garmentId:context.piece?.id||'',product:selectedProduct()}}));
+  }
+  function save(product,actionName,button){
+    const ticket=projectTicket(),queue=saves,submissionId=context.submissionId;
+    if(!submissionId)return status('Open a submission to save this fabric.');
+    const snapshot=structuredClone(product),garmentId=context.piece?.id||product.garmentId||'',garmentName=context.piece?.name||product.garment||'';
+    const key=actionName+'|'+snapshot.url+'|'+garmentId;if(queue.pending.has(key))return;
+    queue.pending.add(key);bookSeq++;button.disabled=true;button.setAttribute('aria-busy','true');
+    const task=async()=>{
+      if(!projectCurrent(ticket))return;
+      if(book.generation===null){await loadBook(true);if(!projectCurrent(ticket)||book.generation===null)return;}
+      try{
+        const payload=book.items.some(p=>p.url===snapshot.url)?{url:snapshot.url}:{...snapshot,garment:snapshot.garment||garmentName,garmentId:snapshot.garmentId||garmentId};
+        const data=await json('/api/admin/fabrics/lookbook',{method:'POST',body:JSON.stringify({submissionId,generation:book.generation,action:actionName,garmentId,product:payload})});
+        if(!projectCurrent(ticket))return;
+        book=data;paint();notifySelection();els.saveStatus.textContent=actionName==='remove'?'Removed.':actionName==='select'?'Selected: '+(garmentName||'this look')+'.':'Saved'+(garmentName?': '+garmentName:'')+'.';
+      }catch(e){if(projectCurrent(ticket)){book.generation=null;els.saveStatus.textContent=e.name==='TimeoutError'?'Change not confirmed. Check Favorites before retrying.':e.message;await loadBook(true);}}
+    };
+    queue.tail=queue.tail.catch(()=>{}).then(task).finally(()=>{queue.pending.delete(key);button.removeAttribute('aria-busy');button.disabled=false;if(projectCurrent(ticket))paint();});return queue.tail;
+  }
+  function inventory() {
+    return (context.inhouse||[]).map(p=>({...p,url:p.url&&p.url!=='#'?p.url:(p.image||p.img||''),image:p.image||p.img||'',evidence:'atelier_inventory',price:'',unit:'',availability:'unknown',garment:p.garment||''})).filter(p=>p.image && p.url);
+  }
+  function card(p) {
+    const item=node('article','fa-product');item.dataset.mayaPanel='inner';
+    const local=p.evidence==='atelier_inventory';
+    const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
+    const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
+    if(p.image && /^(?:https:\/\/|\/aesthetics\/fabrics\/|data:image\/)/.test(p.image)){
+      const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');},{once:true});link.append(img);
+    }
+    const title=node('h3','fa-card-title',p.title);
+    const use=p.garment?'For '+p.garment:'';
+    const caption=node('p','fa-card-caption',[use,local?'':p.merchant,knownPrice].filter(Boolean).join(' · ')||(local?'Availability not recorded':'Delivery unconfirmed'));caption.dataset.mayaType='P3';
+    link.append(title,caption);item.append(link);
+    if(view==='saved'){
+      const controls=node('div','fa-card-actions'),remove=action('Remove',()=>save(p,'remove',remove));
+      remove.disabled=saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''));controls.append(remove);item.append(controls);
+    }
+    return item;
+  }
+  function paint() {
+    els.search.setAttribute('aria-pressed',String(view==='search'));els.saved.setAttribute('aria-pressed',String(view==='saved'));els.inhouse.setAttribute('aria-pressed',String(view==='inhouse'));
+    els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=!!context.automatic;els.sub.hidden=!!context.automatic;
+    els.details.setEnabled(view==='search');
+    els.filter.hidden=view!=='search';if(view!=='search'){els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');}
+    for(const button of els.storeButtons)button.setAttribute('aria-pressed',String(activeStores.has(button.dataset.storeGroup)));
+    const candidates=view==='saved'?book.items:view==='inhouse'?inventory():products;
+    const allowed=new Set(storeGroups.filter(group=>activeStores.has(group.id)).flatMap(group=>group.hosts));
+    const items=candidates.filter(p=>view!=='search'||(()=>{try{return allowed.has(new URL(p.url).hostname.replace(/^www\./,''));}catch{return false;}})());
+    els.results.replaceChildren(...items.map(card));
+    if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':searchState==='preparing'?'Preparing the saved reference…':busy?'Results will appear after seller and photo checks.':searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No relevant fabric products confirmed yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
+    els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
+  }
+  async function refreshView(){
+    if(view==='saved')return loadBook();
+    if(view==='inhouse'){try{if(context.loadInhouse){const stamp=epoch;const items=await context.loadInhouse();if(current(stamp)){context.inhouse=items;paint();}}else await loadInventory(true);}catch(e){status(e.message);}return;}
+    if(searchState==='preparing')return;
+    if(context.automatic&&!image)return open({...context,host,forceReset:true});
+    return run(true,!!submittedRequest);
+  }
+  async function run(force=false,filterOnly=false) {
+    if(busy&&!force)return;
+    if(force)controller?.abort();
+    if (!account()) { reset(); paint(); return status('Sign in to Admin to search fabrics.'); }
+    if (identity!==scope()) { reset(); identity=scope(); paint(); return status('Account changed. Start a new search.'); }
+    if(!activeStores.size)return status('Choose at least one store group.');
+    const request=context.automatic?'Find fabrics for this saved look.':filterOnly?submittedRequest:els.input.value.trim()||(force?submittedRequest:'');
+    if (!request && !image) return status('Describe a fabric or add a photo.');
+    recognition?.stop();
+    const stamp=epoch, sequence=++searchSeq; controller=new AbortController(); const active=controller;
+    const signal=AbortSignal.any([active.signal,AbortSignal.timeout(60000)]);
+    const valid=()=>current(stamp)&&sequence===searchSeq;
+    busy=true;searchState='searching';completedStatus=''; els.send.disabled=true; els.stop.hidden=false; view='search'; els.saveStatus.textContent='';
+    products=[]; searchDetails=null;els.details.set(null);paint(); status('Searching fabric shops…');
+    const submitted=request || 'Find fabrics like this photo';
+    submittedRequest=submitted;
+    const line=node('p','fa-request',submitted); els.transcript.append(line);
+    while(els.transcript.children.length>6)els.transcript.firstElementChild.remove();
+    if(!filterOnly)els.input.value='';
+    let finished=false;
+    try {
+      const r=await waitForSignal(fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal,
+        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(filterTouched?{storeGroups:[...activeStores]}:{}),history})}),signal);
+      if(!r.ok){const data=await waitForSignal(r.json().catch(()=>({})),signal);throw Error(data.error || 'Fabric search failed. Try again.');}
+      const reader=r.body.getReader(), decoder=new TextDecoder();let buffer='';
+      const accept=raw=>{
+        if(!raw.trim() || !valid())return;
+        const event=JSON.parse(raw);
+        if(event.type==='error')throw Error(event.message);
+        if(event.searchDetails){searchDetails=event.searchDetails;els.details.set(searchDetails);}
+        if(event.type==='status')status(event.message);
+        if(event.type==='products' && event.preliminary)status('Retailer candidates. Photo comparison pending…');
+        if(event.type==='done'){
+          products=Array.isArray(event.products)?event.products:[];
+          finished=true;searchState='complete';history.push({request:submitted,query:event.query});history=history.slice(-6);
+          els.observation.textContent=event.observation?'Reference interpretation: '+event.observation:'';
+          lastSearchStores=storeKey();completedStatus=event.warning || event.message || '';status(completedStatus);
+        }
+      };
+      try {
+        while(!finished){const{value,done}=await waitForSignal(reader.read(),signal);if(done)break;buffer+=decoder.decode(value,{stream:true});if(buffer.length>512*1024)throw Error('Search response was too large.');let n;while(!finished&&(n=buffer.indexOf('\n'))>=0){accept(buffer.slice(0,n));buffer=buffer.slice(n+1);}}
+        if(!finished){buffer+=decoder.decode();if(buffer.trim())accept(buffer);}
+      } finally { void reader.cancel().catch(()=>{}); }
+      if(!finished)throw Error('Search ended early. You can retry your request.');
+    } catch(e) {
+      if(valid()){ searchState='interrupted';products=[];autoStarted=false;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}if(!filterOnly&&!els.input.value)els.input.value=request; }
+    } finally { if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;paint();} }
+  }
+  async function open(next={}) {
+    make();
+    const previousContext=context, prevIdentity=identity;
+    context={...next};
+    const nextIdentity=scope();
+    const changed=next.forceReset||prevIdentity!==nextIdentity||(next.referenceImage&&next.referenceImage!==originalImage);
+    if(next.silent&&!changed){context={...previousContext,...next};return;}
+    if(changed){reset();identity=nextIdentity;}
+    else {context.referenceImage=context.referenceImage||previousContext.referenceImage;context.preferences=context.preferences||previousContext.preferences;}
+    const stamp=epoch,preparationSequence=searchSeq;
+    if(next.host instanceof HTMLElement){collapse();host=next.host;host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';}
+    else if(!next.silent){host=null;expand();}
+    workspace.hidden=!!next.silent;
+    els.sub.textContent=next.submissionId?'This submission’s fabrics'+(next.piece?.name?' · '+next.piece.name:''):'Open a submission to save favorites';
+    if(changed)searchState='preparing';
+    paint();
+    if(!account()){status('Sign in to Admin to search fabrics.');return;}
+    // The book belongs to the project, so photo loading or garment changes must
+    // not cancel its only hydration request.
+    void loadBook();
+    // Inventory must remain usable even if the private reference photo fails.
+    void loadInventory().catch(e=>{if(current(stamp)&&view==='inhouse')status(e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':e.message);});
+    if(changed)status(context.automatic?'Loading the saved look…':'Describe what you need. A photo is optional.');
+    els.send.disabled=true;
+    try{
+      if(changed&&next.referenceImage){const value=await photoData(next.referenceImage);if(!current(stamp)||preparationSequence!==searchSeq)return;image=value;originalImage=next.referenceImage;paintPhoto();}
+      await loadContext(stamp);if(!current(stamp)||preparationSequence!==searchSeq)return;
+      if(searchState==='preparing'){searchState='idle';paint();}
+      if(current(stamp)&&context.automatic&&!next.silent&&!autoStarted){autoStarted=true;await run();}
+    }catch(e){if(current(stamp)){searchState='interrupted';status(e.message);paint();}}
+    finally{if(current(stamp)&&!busy)els.send.disabled=false;}
+    if(current(stamp)&&!next.silent&&!context.automatic)els.input.focus();
+  }
+  function guardAccount(){if(dialog && identity!==scope()){
+    const previousSubmission=context.submissionId;
+    context={};reset();identity=scope();paint();els.sub.textContent='Fabric search';
+    window.dispatchEvent(new CustomEvent('maya:fabric-selected',{detail:{submissionId:previousSubmission,product:null}}));
+    window.dispatchEvent(new CustomEvent('maya:fabric-context',{detail:{submissionId:previousSubmission,referenceImage:''}}));
+    status('Account changed. Start a new search.');
+  }}
+  window.addEventListener('storage',guardAccount);window.addEventListener('focus',guardAccount);window.addEventListener('maya-owner-session-changed',guardAccount);
+  setInterval(()=>{if(dialog)guardAccount();},1000);
+  window.MayaFabricAssistant={open,close,expand,prepare:next=>open({...next,silent:true}),reset:()=>{context={};reset();identity=scope();if(els){els.sub.textContent='';paint();}},selection:piece=>{guardAccount();return selectedProduct(piece);},focusGarment:piece=>{guardAccount();if(!context.submissionId)return;context={...context,piece:pieceMetadata(piece)};if(identity!==scope()){reset();identity=scope();paint();notifySelection();}}};
+})();

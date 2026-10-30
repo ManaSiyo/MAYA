@@ -1,0 +1,648 @@
+# MAYA assistant instructions
+
+Fabric combined abort signals must retain their timeout/parent sources on Node 20.
+Keep the WeakMap lifetime guard and tests/fabric-search-gc.mjs release gate; the
+forced-GC subprocess exercises real deadline fixtures with a bounded watchdog.
+Run fabric gates under the release Node major as well as the local runtime.
+
+Voice preparation cancellation must settle even if token, SDP, microphone or
+track attachment ignores abort; late microphone tracks are stopped. Startup has
+a 20-second deadline including warm-line microphone/track attachment, and real
+provider errors must not be replaced by cancellation errors. Concurrent start
+calls wait for the same microphone attachment or cancellation. Shared runtime
+references are v3. Run voice-preparation, realtime-voice, client/admin voice,
+communications and hands suites. Admin's image health check uses the Red Royal
+thumbnail; it is a sample, not proof every image is healthy.
+
+Admin and frontend deployment watchers use the small Hosting release marker,
+with legacy page fallback; never reload while voice is active or unsaved frontend
+work cannot flush. Hidden tabs do not poll message threads. Admin submissions
+refresh at 15 seconds normally and 5 seconds while arriving. Run
+tests/refresh-efficiency.mjs, app-regression and the release/aesthetic gates for
+these paths.
+
+Operation Room unknown-garment retrieval uses a bounded admin-only OpenAI
+Decisions category hint, with adaptive grammar and broad retrieval fallback.
+Run tests/pattern-decisions.mjs and the existing Operations, proxy and release
+gates. Its confidence cutoff is not calibrated; validate against labeled examples.
+
+October 29 owner review: Design Studio 2 is only in the Systems drawer. Shared
+selected Glass/Regular pills use the hover-style white rim without a blue fill.
+Sourceable Search details is explicit and concise; never open it from empty
+results on hover. Wide Operation Room garment sheets pan visually while the
+original front image remains the pattern input. Matching identically described
+garments can yield a shared fabric candidate without assigning a garment ID;
+different constraints and duplicate names remain ambiguous. All seller,
+visual-review, project and account safeguards remain in force.
+
+## October 27: Outbound retired
+
+Outbound is removed at Fromsa's request. `/outbound.html` and `/backend/outbound.html` redirect to Admin, and its API returns 410. Never restore its Gmail outreach, Sheets imports, provider events or page without a new request. Previous Outbound-specific notes below are historical and superseded. Keep the independent Leads, owner SMS/phone, Wix callback alerts and text AI services. Legacy private Outbound objects, OAuth grants and Scheduler settings are not deleted or changed; the owner must manage external cleanup. `OUTBOUND_SCHEDULER_*` still authenticates the independent callback worker and must not be removed as dead configuration. Run `tests/leads-ui.mjs`, `tests/retired-workspaces.mjs`, event/communications and smoke checks.
+
+Aesthetic Control: Glass and Regular own pill materials; selected pills use the same white rim as hover, with the saved material unchanged. Admin traffic metrics use Glass. Pill states sit beside their families; dropdown and checkbox previews pair on desktop. The sole page-style usage sample is Fabrics; typography is edited in Typography. Preserve semantic status colors and legacy design saves.
+
+
+Conversational fabric sourcing: docs/server/fabric-search.mjs and the shared
+aesthetics/ui/fabric-assistant.{js,css}, used by Brief and Operation Room. Read
+docs/FABRIC-SEARCH.md. Preserve original photo + client words, qualified visual
+traits, source-backed product URLs, seller-only price/unit/stock facts, and
+account/submission-scoped lookbooks with generation preconditions. Never cache
+private requests/images in the shared catalog or equate swatch price with yardage.
+Run tests/fabric-search.mjs and tests/fabric-search-ui.mjs (release gates), existing
+fabric-sourcing/ai-routing, container-contract, app-regression and smoke.
+
+This repository is worked on by Codex. The repository files,
+not chat memory, are the shared source of continuity.
+
+Before changing anything:
+
+1. Read `docs/README.md`.
+2. Read `docs/AI-HANDOFF.md`.
+3. Read `docs/requests.txt` and `docs/fixes.txt`.
+4. Run `git status --short --branch` and inspect the latest commits.
+
+While working:
+
+- Preserve the sealed-project rule: one user has many projects and project data
+  must never cross project or account boundaries.
+- Never touch credentials, tokens, billing settings, or production environment
+  variables unless Fromsa explicitly handles that step.
+- Do not delete legacy migration or Storage cleanup paths merely because they
+  look old. Confirm the migration is complete first.
+- Keep changes focused and verify every edited path.
+- Never push unless Fromsa explicitly asks. The current Cloud Build trigger can
+  deploy a pushed branch to production.
+- Before connecting to or controlling any of Fromsa's Chrome windows, tabs, or
+  profiles, send a permission notification and wait for his explicit answer.
+  Ask again for each new Chrome access session, even if a previous task had
+  access. Silence is not permission. Never use either Chrome while he says he
+  is working in it. The MAYA and World of CEO Chrome sign-ins are separate;
+  do not assume access to one grants access to the other. Use non-Chrome tools
+  when possible, and do not switch profiles without that session's approval.
+- Fromsa authorizes local commits of completed, verified requested work. Prepare
+  an accurate commit summary and description covering changes, validation and
+  remaining limitations, then commit the task's files so only Push remains for
+  Fromsa in GitHub Desktop. Do not include unrelated edits. No computer use is
+  needed: use Git directly. Never amend existing commits unless explicitly asked.
+  Keep docs/COMMIT-REVIEW.txt aligned with the current prepared commit.
+
+Before handing off:
+
+1. Run the narrowest relevant tests, then broader checks when available.
+2. Update `docs/AI-HANDOFF.md` with changed files, validation, open risks, and
+   the exact next step.
+3. Update `docs/requests.txt` for owner-visible requests, `docs/fixes.txt` for operational
+   incidents, and `docs/history.txt` only for meaningful shipped milestones.
+
+## Where things live (v13.37)
+
+Firebase Hosting still serves this repository with `public: "."`, but the
+pages no longer sit loose at the root. `docs/firebase.json` maps every old
+address onto its new file, so every URL that ever worked still works.
+
+```
+frontend/index.html        the app            → served at /
+backend/status.html        Systems Map        → /status.html
+backend/operations.html    Operation Room     → /operations.html
+backend/backend.html       the Brief          → /backend.html
+backend/privacy.html       privacy policy     → /privacy.html
+backend/verify.html        deploy check       → /verify.html
+aesthetics/                every picture the site serves, at the root
+docs/                      everything an agent reads, nothing the web serves
+docs/server/               Cloud Run: server.js, Dockerfile, rules,
+                           maya-mcp.mjs (Maya's MCP door) and
+                           maya-character.md (who Maya is, read per call)
+docs/firebase.json         the hosting map. Moving a page starts HERE.
+Retired routes            /playground* → /; /affiliates* → /status.html
+                           No staging or Affiliates implementation remains. Legacy Operations
+                           URLs redirect to /operations.html; its shared library assets stay.
+robots.txt                 a real file, so a crawler is not handed the app
+cloudbuild.yaml            Cloud Build reads it at the root, leave it there
+tests/                     the suite resolves the repo root from its own folder
+docs/MAYA-INDEPENDENCE.md  the roadmap for Maya as an entity; read it before
+                           touching her voice, memory, tools or the door
+AGENTS.md                  active assistant instructions at the repository root
+```
+
+- `aesthetics/` CANNOT move into `docs/`: `docs/**` is in the hosting ignore
+  list, so the pictures would stop deploying and every page would lose its
+  background and logo.
+- Never move or rename a served page without editing the rewrites in
+  `docs/firebase.json` in the SAME commit, and never touch `.git` or
+  `.firebaserc`.
+
+## The handoff is part of the change, not a chore afterwards
+
+Every commit that changes behaviour updates, in the same commit:
+
+1. This file, if the layout, the rules or the tooling changed.
+2. `docs/AI-HANDOFF.md`: what changed, what was verified, what is still open,
+   and the exact next step. It is a state file, not a log; replace stale lines.
+3. `docs/requests.txt` for a request Fromsa made, `docs/fixes.txt` for an
+   incident, `docs/history.txt` only for a shipped milestone.
+4. `tests/app-regression.mjs`: one assertion per completed request. A change
+   with no assertion is a regression waiting to happen.
+
+`AGENTS.md` stays at the repository root so Codex loads it automatically.
+The retired Claude duplicate is in `_to_delete/`.
+
+Communications changes also run `tests/maya-phone.mjs`, `tests/maya-messages.mjs`,
+`tests/maya-transfer.mjs` and `tests/maya-feedback.mjs`. These use fake providers;
+live call audio, SMS delivery and owner transfer acceptance still need an owner
+verification after deployment. Unapproved Avatar/Pinterest experiments were removed with Playground; never
+promote that retired code without explicit approval.
+
+Shared text AI remains in docs/server/crm-ai.mjs and crm-store.mjs, used by owner SMS and text automations. Its existing private usage ledger path remains compatible and its $1 cap does not cover voice, images or provider invoices.
+Owner SMS access: docs/server/owner-sms-access.mjs provides AI-free history,
+inbox, recorded actions, help/status and exact client-reply previews. Only raw
+owner SMS SEND code authorizes a previewed client send; model/voice tools cannot
+confirm it. Preserve recipient revalidation, block/STOP checks, expiry and the
+non-retryable claim before provider calls. Reports are account-scoped snapshots
+with explicit page commands. Read reports never mark client messages read.
+Messages overflow archives privately via docs/server/message-archive.mjs before
+the 400-entry live inbox is trimmed. Failed archive writes must not trim history;
+explicit history deletion starts a new archive epoch. Run tests/owner-sms-access.mjs
+and all communications suites; new runtime imports must ship in Dockerfile.
+Owner conversation: docs/server/owner-conversation.mjs shares recent Messages
+history and private account-bound memory/preferences across signed owner SMS and
+owner phone calls. Supported runtime changes are remembered facts, response
+style and signup SMS format; they do not execute code or alter authorization.
+Owner phone `owner_control` is unavailable to clients. Signup formats use actual
+lead fields, never example contacts. Run tests/owner-conversation.mjs plus the
+communications suites. It is also a Cloud Build release gate.
+Owner commands: docs/server/owner-crm.mjs and aesthetics/ui/owner-crm.js. Run
+tests/owner-crm.mjs and tests/owner-crm-ui.mjs. Owner activation binds a verified
+allowlisted Admin account to the configured phone; never accept a phone or UID
+from SMS text. The retired Outbound mailbox-review feature is no longer available.
+
+Model defaults and chat compatibility: docs/server/model-config.mjs. Run tests/leads-ui.mjs for the Admin Lead Station and its shared filters.
+
+## Visual canon
+
+Read `docs/design.md` before any aesthetic change. It is the sole active design
+specification. Retired V3/V4 reports are under `_to_delete/`.
+The shared component system is aesthetics/ui/components/{tokens.css,components.css,
+components.js}. Owner-approved Aesthetic Control lives at
+aesthetics/aesthetic-control.html and is linked from Admin → Systems. Saving
+on the live site requires Admin auth and persists through /api/admin/design;
+all served pages load aesthetics/ui/typography-controls.js. Local Save affects
+only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
+not independent design authorities. Typography offers one preview per role, with validated Jost/Cormorant and
+Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
+controls. Preserve old saved schemas and semantic status colors when applying
+shared text settings. Served pages load typography runtime v24 (gallery v34).
+Aesthetic Control opens within Admin through aesthetics/ui/admin-design.js; same-origin/source-checked close messages return via its logo. All Edit menus use the shared numeric input/select grid; popup padding has X/Y axes and legacy single-padding reads remain compatible. The fixed table formatting toolbar follows shared inner-panel material. Gallery Filter previews are retired; functional data filters remain. The saved editor material controls actual popups; formatting offers 200–500 weights and italic. Padding debug highlights exist only while a padding field is active. Restore uses the shared Refresh SVG. Run tests/component-gallery.mjs. Table preview cells use a fixed formatting toolbar; body selections edit complete semantic columns. Legacy row styles normalize to column settings without writing on load. The review section itself is the outer panel; never add a wrapper around its inner-panel pair. Every Edit restore returns to its last successful Save. Padding highlights are automatic and preview-only. Role counts are authored-template counts with linked pages and expandable source locations; regenerate with tests/typography-role-usage.py. Design saves atomically include a private audit trail;
+/api/design must strip _history and /api/admin/design-history must stay Admin-gated.
+Padding debug highlights are preview-only, never saved.
+
+Lead Station includes Contacted as a distinct persisted status. The regression HTTP fixture must serve CSS as text/css; tests/leads-ui.mjs covers Lead Station and its filters.
+
+Standalone Marketing was retired September 29. `/marketing.html` and
+`/backend/marketing.html` redirect to Admin; keep its embedded marketing modules
+and server endpoints intact.
+
+Aesthetic Control live surface editors: aesthetics/aesthetic-control/surface-editors.js.
+Runtime v14 saves independent inner/filter geometry and three Lead Station column
+styles, top-row and first-column materials via validated optional design keys.
+Keep preview/live table data-col keys in sync so drag reordering preserves column
+settings. Run component-gallery, design-config/design-contract and leads-ui
+(including lead-filter-ui) for these controls and Lead Station interactions.
+
+October 2 controls: temporary editors anchor to their own trigger, with black popup
+backings and validated Black table/header/first-column background choices. Inner
+panel previews contain heading and metric together; outer padding surrounds them.
+Panel/table controls share desktop rows; Leads uses the later H4/H5 hierarchy below. Wake changes
+run tests/admin-wake.mjs (fake recognition; no microphone) in the release gate,
+plus the existing communications and the frontend hands battery.
+
+Admin Systems changes run tests/admin-systems-ui.mjs (also in app-regression).
+Provider hover cards expose authenticated configuration, not inference verification.
+Owner approvals remain gated in a dashboard dialog; conversation stays inside Logs.
+
+October 5 audit: Table geometry lives in
+the Table Edit dropdown under Panels. Outer, Inner and Table share numeric/select material controls including background, blur, saturation and X/Y padding. The fixed cell formatting toolbar follows Inner material; Table remains independent. Optional semantic columnWidths (80–800px, name/contact/stage/note) apply to preview and live Leads; resize handles support pointer dragging and arrow keys. Legacy saves remain valid.
+Functional Leads status choices use aesthetics/ui/lead-stage-menu.js with the
+shared Edit dropdown material/X/Y padding, trigger anchoring, top layer and keyboard
+navigation. The native select remains the authenticated save source. Systems no
+longer loads Owner tools; underlying SMS access stays intact. Provider hover cards
+load authenticated models independently of mailbox status and show explicit errors.
+Vault restores compact grouping and descriptions of at most four words. Run
+component-gallery, admin-systems-ui, leads-ui/lead-filter-ui, design-config,
+design-contract, CRM suites and app-regression for these changes.
+
+Owner lead SMS reads: owner-conversation.mjs routes common newest-lead/count and
+contact-number requests without text AI; the verified owner binding still gates
+entry. Lead lists use durable owner-sms-access report pages. Phone owner_control
+text_owner reports fetch live lead/contact fields rather than voice-formatted
+prose; generic text normalizes spoken phone digits. Requested counts are 1–20.
+Preserve non-retryable send claims, fixed owner recipient and client SEND gates.
+Run owner-conversation, owner-sms-access, owner-crm, communications and app-regression.
+
+October 5 Leads edits: Contact is the stored phone column; H4 names and H5 dates
+are independently styled, date below name, with no category badges. Gallery and
+live cells share semantic data-col keys. Old three-column design saves remain
+valid; a fourth Contact column style is optional on the server and normalized
+on the client. Run tests/lead-notes-ui.mjs and tests/lead-note-persistence.mjs
+(both in app-regression) for reviewed note typing, save failures,
+refresh precedence and unsent Booking Link drafts. Actual account changes close note
+editors; same-account token renewal preserves them. Note dictation is retired. Note edits use
+lead-update by stable ID; timestamps preserve reviewed edits over older notes.
+
+Deployment verification: run the exact tests listed in cloudbuild.yaml, including
+admin-ui-contract, before declaring a release ready. app-regression alone does
+not cover that separate gate. Category badges are retired; the gate asserts
+Contact/H4/H5 and reviewed message actions instead. tests/verify-release.mjs
+proves tests/verify-live.mjs rejects an older commit even when maya-version is
+unchanged. Verify release.json, page build stamps and /api/healthz commit after the owner's Push;
+Vercel success does not establish Firebase/Cloud Run deployment success.
+
+October 5 inline Leads and drawer, updated by the October 6 review: Latest Notes edits within its cell; Enter/Save persist, blur/outside/Escape/Cancel discard and failed saves keep the draft. Active edits resist refresh and release the frozen first column to keep controls reachable. Notes have no Dictate control. Messages keeps its H2 heading above the plain H3 contact name, hides duplicate numbers, and uses circular Phone/Share icons. Share contains booking drafts and reviewed invoices; never send automatically. Drawer scroll regions flex above its bottom voice dock. Run lead-notes-ui, component-gallery, leads-ui, design-config/design-contract, communications and the exact Cloud Build test list before handoff.
+
+Messages hierarchy: keep #adm-tabtitle (H2) fixed and visible when opening contacts; #msg-name is plain H3 with a hover/focus pencil. Systems Automations opens the drawer view, not a browser tab. docs/server/text-automations.mjs stores owner-account draft rules, uses the shared CRM AI budget, and has no send/timer capability. Only explicit Messages Send submits texts. Run tests/text-automations.mjs and tests/lead-notes-ui.mjs plus communications suites. Opening suggestions must not overwrite composer drafts; ignore stale account/recipient responses.
+
+October 5 icon/status controls: icons always center vertically on their assigned rows; saved text vertical alignment must not move row icons. Optional iconPillGap/iconTextGap (0–32px, defaults 6/8) are shared saved design keys. Gallery samples open their actual settings and may not invent live metrics. Leads supports Completed through Admin and owner CRM with existing green semantic status styling. Run component-gallery, profile-crm, owner-crm, leads-ui/lead-filter-ui and communications gates for these paths.
+
+Callback notifications: docs/server/lead-alerts.mjs owns durable independent SMS
+and call claims plus health. /api/tasks/lead-alerts is Scheduler-authenticated
+and independent of Outbound accountId; /api/admin/lead-alerts/status is read-only
+and owner-gated. Reuse verified Scheduler identity; production setup remains
+owner-only. Accepted is not delivered. Never retry claimed/uncertain alerts
+without provider reconciliation. Read docs/CALLBACK-ALERTS.md and run
+tests/lead-alerts.mjs plus communications, app-regression and smoke checks.
+
+October 6 latency/event ingress: docs/server/event-triggers.mjs verifies Wix JWTs,
+enqueues durable Cloud Tasks and accepts authenticated Gmail Pub/Sub events.
+Owner-only setup is in docs/EVENT-TRIGGERS.md; code alone does not activate providers.
+Never acknowledge Wix before durable enqueue. Preserve exact installation/form
+scope, OIDC audience, private mailbox bindings and independent durable SMS/call
+claims. Run tests/event-triggers.mjs, tests/lead-feed-latency.mjs, admin-command,
+CRM intelligence and all communications suites. Raw lead reads bypass AI and
+cache for ten seconds; optional voice context has an explicit unavailable fallback.
+
+October 7 parallel audit: Admin async work binds to account/session and stable lead
+IDs. Same-account token renewal preserves drafts and request IDs; an actual account
+change clears private state and cancels stale voice/results. Invoice creation and
+lead attachment are separate outcomes: keep a created URL and retry attachment
+without recreating the link. Invoice Text creates an unsent Messages draft. Run
+tests/admin-state-races.mjs and tests/message-races.mjs.
+
+docs/server/lead-store.mjs owns generation-checked legacy lead/note mutations and
+account-bound lead-add receipts. Preserve failed-read/invalid-data failures and
+legacy deletion tombstones; never overwrite an unreadable store with an empty one.
+Admin lead-add receipts fail closed at capacity instead of evicting accepted requests. Run
+tests/lead-store.mjs, tests/admin-storage.mjs and all communications suites.
+
+Client project async writes pin UID/account generation and preserve edits newer
+than an initial save/upload. Shared images require independent Storage copies;
+the retired Playground avatar lifetime patch was not promoted. Run
+tests/project-lifecycle.mjs. Brief generation/save retry and Operations account,
+garment and run identity are covered by tests/brief-operation-races.mjs. Reading
+a saved dissection must never generate missing pieces automatically.
+
+Design Save snapshots its payload before awaiting and locks preview editing until
+acknowledgement; failed saves must not replace the Restore baseline.
+
+Release tooling uses the root package-lock.json for mandatory test dependencies
+and docs/server/package-lock.json for the container. Run npm ci; Cloud Build must
+fail if Chromium or communications dependencies cannot install. Build metadata is
+baked by MAYA_BUILD_COMMIT (not a production environment setting), and public
+health reports it. Run tests/release-contract.mjs and tests/verify-release.mjs.
+
+
+## Governing rule: Aesthetic Control
+
+Aesthetic Control is the final completion gate.
+
+This governing rule applies to every addition or change anywhere in MAYA-new,
+including Admin, frontend, backend-generated UI, Outbound and supporting pages. Functional exclusions never exempt shared aesthetics.
+Backend-only or documentation-only work must record that it adds no visible UI;
+it still preserves this rule and runs the shared authority gate.
+
+Before implementation, read docs/design.md and identify the shared typography,
+material, icon, dropdown and table settings the change uses. Every new visible
+component must be represented by an active Aesthetic Control preview and governed
+by its saved settings. Reuse existing controls; extend the control, validation,
+runtime and tests together if a genuinely new presentation setting is needed.
+Do not introduce an independent visual authority or a competing local override.
+
+Complete functional tests first. The last verification before declaring work
+complete, preparing a commit or handing off is the Aesthetic Control check:
+- Verify defaults and visibly different valid saved settings on every new or
+  changed visible element, using computed styles and visual inspection.
+- Check hierarchy, colors, materials, borders, icons, dropdowns, X/Y padding,
+  table independence, active previews, Save propagation and responsive layout.
+- Check phone, tablet and desktop widths and applicable open/focus/error states.
+- Extend tests/aesthetic-authority.mjs for the changed surface; run it last.
+  A loaded stylesheet, a screenshot alone or an unchanged fixture is insufficient.
+
+Any subsequent change affecting presentation invalidates the check: rerun it.
+An unresolved mismatch blocks completion; report the actual limitation instead
+of claiming it passed. Local verification never proves the deployed release.
+
+New markup uses data-maya-type for its role, data-maya-control="field" for fields
+and data-maya-panel="inner" for inner surfaces. Page CSS owns layout, not a
+competing visual standard. Preserve semantic status colors and independent table
+settings. Remove conflicting declarations, not necessary active adapters or
+unconfirmed migration paths. Follow docs/design.md for the implementation canon.
+
+
+October 7 typed-number Messages: Begin texting uses existing authenticated contact
+name, Messages Send and confirmed Call endpoints; no automatic sends. Explicit
+international country codes are accepted for SMS; calls remain US-only. Cancel and
+account/recipient changes invalidate pending starts. Run tests/message-compose-ui.mjs
+and communications gates. Optional statusStyles, sectionSpacing and iconColor/
+iconOpacity/iconStroke keys extend Aesthetic Control with validated defaults and
+active previews. Status header uses the shared dropdown chevron. Final
+tests/aesthetic-authority.mjs covers changed roles/materials, colors, icon weight,
+section spacing and six widths; keep it last after functional verification.
+
+
+October 7 late owner review: typography schema typeVersion 2 merges lead names
+into H4, moves old H6 dates to H5, and merges captions into P3. Legacy saves read
+without migration writes. presentation-runtime.js and pill-runtime.js load before
+typography runtime v24 (gallery v34). Capsules size from content/glyph + saved X/Y
+padding. Glass and Regular pills have independent material/padding and usage
+previews; all Edit triggers are Regular, Save/icons are Glass. Nine semantic status
+editors list consumers; saved colors remain explicit overrides. All seven active Admin
+heading gaps include empty states and Ad campaigns' D/W/M row; redundant range
+copy stays hidden. Final aesthetic-authority imports presentation-consistency and
+pill-consistency, after functional gates and before commit/handoff.
+
+Owner natural SMS lists/counts read full retained callback/manual leads before
+status filtering; durable MORE snapshots remain account bound. Source/page/time
+limits and missing status history must be reported as partial, never all. Default
+Admin feed remains 60 rows with parallel note enrichment. Full-report reads have
+a six-second read-only timeout; never race report storage or send mutations. Conversation uses structured provider output with safe
+error categories and no automatic paid retry. Keep verified owner binding and
+client SEND gates. Run owner-conversation, owner-sms-access, lead-feed-latency,
+CRM intelligence and all communications suites. Production AI availability and
+SMS acceptance require deployed owner verification; fixtures do not establish it.
+
+October 8 founder audit: tests/founder-conversation-stress.mjs executes the
+60-intent synthetic owner-SMS corpus (also in app-regression). Scripted model
+actions prove execution/context contracts, never model semantic accuracy.
+tests/message-stress.mjs now passes all 44 strict transport checks and is a
+mandatory release/app-regression gate. Preserve STOP/send concurrency guards,
+archived dedup/delivery aliases and international SMS parity. It uses only fake
+providers and local storage; see docs/FOUNDER-CONVERSATION-AUDIT.md for historical
+failures and the remaining founder capability gaps.
+Backend/test/doc-only changes add no visible UI and still finish with the shared
+Aesthetic Control authority check.
+
+
+October 17 audit repairs and voice readiness: Fabrics opens only for acknowledged
+saved dissections, uses stable garment IDs (legacy saved-piece array indices on
+read), and preserves the selected garment and client words across Brief/Operations.
+Never generate missing pieces on read. Sourceable results must be actual fabric
+listings with valid source-backed images and respect exclusions/replacements.
+The selected saved garment crop is the visual comparison target; retain the full
+photo for discovery. The existing fabric.visual_rank route gets at most eight
+candidates, one attempt and eight seconds; weak/failed comparison stays empty.
+Run fabric-search, fabric-sourcing, fabric-search-ui and brief-workspace-ui.
+
+Shared web voice preparation is aesthetics/ui/voice-preparation.js, used by
+Frontend and Admin. Silent standby is opt-in, visible/account/project
+bound and capped at 120 seconds, without timer-driven reconnection or mic audio.
+Activation requests microphone permission immediately, waits for channel plus
+server session readiness, sends current context before attaching audio, and
+releases cancelled/hidden/expired sessions. Playback recovery must be reachable
+and must resume audio rather than hang up. Its pointer press must not dismiss an
+open drawer or move the button before click delivery; verify actual held clicks,
+not only direct JavaScript handler calls. Same-account token renewal preserves
+voice/drafts; real account/project change invalidates old results and tools.
+docs/server/realtime-voice.mjs owns shared concise delivery, Marin/configured
+voice, 1.05 speed, 300ms VAD and one total 10s token deadline. Context reads are 400ms
+optional bounds, not a total latency SLA. Standby may expire; the next explicit
+interaction can prepare again. Do not claim mocked audio proves live voice quality.
+Run voice-preparation, realtime-voice, client-voice-ui, admin-voice-ui and
+client-account-races in addition to all communications and hands suites.
+
+Messages retains content-free inbound SID receipts through explicit history
+deletion; fail closed at 10000 receipts instead of evicting accepted identities.
+Legacy deleted/blocked events from before this receipt guard are unreconstructable.
+STOP still persists at capacity. Archive failures must preserve history.
+New workspace/automation/Brief/voice tests are mandatory Cloud Build gates and
+app-regression imports. Final aesthetic-authority re-executes changed-surface
+fixtures after functional checks, including real Save propagation and six widths.
+
+CI diagnostics: every Node release gate keeps a full temporary log, emits compact
+success, and prints full-log failure lines plus a bounded tail on error. Preserve
+the original exit status and every gate. Escape shell dollars as $$ in Cloud Build
+YAML. The release-contract behavior probes cover success, nonzero exit and an
+earlier surface failure. Geometry fixtures must await the actual native drawer
+scroll destination before comparing coordinates; fixed delays are not settled
+layout evidence. Messages keeps exact heading equality with classic overflow at
+six widths/default and changed saved settings. A passed Vercel check does not
+establish Firebase/Cloud Run success.
+
+Shared fabric/voice runtime delivery: fabric-assistant.js/css and
+voice-preparation.js have exact no-cache Hosting rules. Brief/Operations fabric
+references are v4 to bypass already-fresh week-cached v3 files. Preserve image
+caching/security headers and verify exact live asset bytes plus cache policy
+when shipping shared behavior. Config-only changes add no visible UI and still
+finish with the shared Aesthetic Control authority gate.
+
+October 17 deeper save/fabric audit: shared fabric requests carry bounded garment
+metadata, not nested rendered images/patterns/meshes. The server reads canonical
+saved crops. Inventory loads independently of photo/lookbook/search. Preserve
+project-bound lookbook hydration through garment focus changes and prepare the
+actual selected Operations garment. Save/Use/Remove serialize per account and
+submission, retaining explicit garment intent across picker changes and same-account
+renewal. Cancel unsent work on project/account changes. The 15-second write deadline
+requires read reconciliation after uncertainty, never automatic resend. Preserve
+generation preconditions, selectedByGarment and private stored-only
+selectedGarmentFingerprints; changed or ambiguous legacy garments must not inherit
+another material. New dissections use UUID IDs; keep legacy read/local-folder
+compatibility. First saves verify new seller listings; saved-URL reuse preserves
+seller facts. Do not restore the removed unreachable Brief sourcing implementation.
+Brief UTF-8 payload overflow must retain the full generated draft and report failure,
+never silently drop patterns. Run fabric-workflow-ui, fabric-search, fabric-sourcing,
+fabric-search-ui and brief-operation-races alongside the existing release gates.
+
+Project saves coalesce only already-covered requests from the same account/board;
+edits made while a target project loads require a second successful flush before
+detach. Save/rename acknowledge only persisted work; preserve later edits, failed
+drafts and oversized transcripts. Deletion continuations pin account generation.
+Dirty/pending online work also warns on refresh, but browser termination is best-
+effort. Run project-lifecycle, client-account-races and the frontend hands battery.
+The retired Admin Prompt Engine editor is backed up under
+_to_delete/admin-dashboard-retired-2026-10-17; active client Firestore
+config/prompting readers and stored settings remain intact. Outbound
+workspace revisions reject old reads after Save and coalesce overlapping refreshes.
+Run admin-prompt-saves and leads-ui; both remain release/app-regression gates.
+The copy-only cleanup changes existing helper passages, with no CSS/role/material
+authority changes. Full functional validation and final aesthetic-authority are
+still required. Public release checks and synthetic fixtures do not substitute
+for the private fur/green-pants demo or owner/provider acceptance; fresh Chrome
+permission is required for each access session.
+
+October 17 dissection save audit: /api/admin/subfile exposes X-Maya-Generation
+and mutable JSON uses private,no-store. /api/admin/savepieces requires the reviewed
+generation, returns the acknowledged generation, rejects stale writes with 409 and
+missing review with 428. Brief pins raw-dissection lineage; never rebase a retained
+draft automatically, publish an unacknowledged snapshot or remove generated
+patterns to fit the 25 MiB UTF-8 limit. Legacy saved files remain readable; old
+open clients must reload before saving. Run admin-storage, brief-operation-races
+and brief-workspace-ui with the existing release and final aesthetic gates.
+
+October 17 Operations save failures: account-scoped Pattern Logic/Test lock keys
+must preserve legacy globals without adopting unknown-owner values. Save/Reset/lock
+failures retain reviewed state; unsaved/unreadable logic blocks paid work. Failed
+measurement writes retain current scoped page-memory values; unreadable initial
+values block generation. Saved piece ID plus image scopes measurements; legacy
+session keys remain intact and may require re-entry. Run operation-save-failures,
+brief-operation-races and final aesthetic-authority. The later screenshot review explicitly authorizes visual repairs: Operations
+measurement/Logic fields declare shared Editor/P1, warnings use P3, and Settings
+uses shared dropdown backing, verified over a bright pattern.
+
+October 17 CI fixture isolation: shorten a timeout only for its intended request
+and restore the native API before independent scenarios. fabric-workflow-ui keeps
+its strict unsent-action counts/storage assertions with a 250ms slow interaction,
+explicit acknowledgement settling and optional MAYA_FABRIC_CPU_RATE for 4x/8x
+probes. Test-only fixes still run final aesthetic-authority before commit.
+
+October 17 screenshot review: Leads status preferences are local, validated and
+keyed by authenticated subject; empty selections persist, account changes reload
+that account's choices. Retired Prompting/Architecture dashboard sections do not
+remove live prompting configuration or client readers. Their code backup remains
+Hosting-excluded. Run admin-status-preferences and active admin-prompt-saves.
+Checkbox and scrollbar objects are optional backward-compatible design keys with
+active Dropdown previews, usage links and actual runtime consumers; run
+input-controls-ui and design-config/design-contract. Keep native labels/keyboard
+and forced-colors behavior. Hidden navigation tracks stay hidden; annotate actual
+content scrollers with data-maya-scrollbar="visible" when needed.
+Brief's fixed H1 switches Backend/Operation Room; no duplicate inner title/Brief
+button. The hamburger opens the active room settings through same-origin/source-
+checked messages. Fabrics stays by garment/view controls inside the viewer column.
+Operations Settings follows data-maya-popup Editor material, declared P1 fields
+and P3 notices. Closed settings are inert; Escape restores focus. Do not restore
+the unused ~24MB fabric-original warmup or download sandbox samples with saved
+submissions/embeds. Run brief-workspace-ui, operation-controls and operation-save-failures, full release
+gates, then standalone aesthetic-authority last.
+
+Standalone Operations Settings must paint above its page header and expose its own
+visible shared Glass/Close control; the background hamburger hides while open. Check real paint
+hit-testing as well as rectangles, especially phone widths. Preserve active field
+focus on repeated opens, and restore the opener only after it becomes visible.
+Embedded parent focus/toggle remains source-checked. Run operation-controls,
+operation-save-failures, brief-workspace-ui, exact release and final authority.
+
+## October 20 owner cleanup
+
+Playground and Affiliates are removed, with permanent legacy-route redirects and
+no experiment promotion. The frontend is the sole client implementation. Keep
+shared Leads APIs, legal uses of the word affiliates and legacy data paths.
+
+All actual hamburger drawers use data-maya-drawer and the optional validated
+drawer settings (MAYA/navy material by default). They do not use popup Editor
+material. Aesthetic Control has an active Drawer preview/Edit/Restore and
+interactive Glass segments. Preserve independent panel/table/Editor settings.
+Operations has no pipeline subtitle or duplicate Measurements action; saved
+projects use canonical Brief measurements. Standalone uploads retain their own
+manual entry panel. The embedded Settings iframe temporarily fills the actual
+viewport without reloading, changing a garment/run or losing parent scroll.
+
+Scrollbar version 2 defaults to 4px on both axes, a half-length painted native
+handle, transparent track and 800ms idle hiding. Earlier saved widths halve once
+on read, without modifying stored settings. Native drag/keyboard behavior stays
+intact; forced colors keep a native high-contrast handle.
+
+Fabric groups are Local (Bay Area), Mood, Swatchon, Amazon and Others, initially
+all enabled. Toggling only filters results; explicit Refresh searches the selected
+scope. No visible Save/Use actions or automatic replacements are added. Historical
+private lookbooks and assignments remain readable, and Favorites Remove retains
+CAS/account/submission guards. Never invent Swatchon price units, photos or stock.
+
+Image/submission hover metadata and automatic model snapshots are removed. API
+and Images configuration remains an explicit authenticated click/keyboard action.
+P2 titles (Biography/Vision and Gmail) and P1 descriptions remain editable roles.
+Run retired-workspaces/UI, admin-systems-ui, fabric and Brief/Operations suites,
+input-controls-ui, design-config/contract and exact release gates; final
+aesthetic-authority re-executes these changed visible surfaces and stays last.
+
+October 21 audit repairs: dated Brief URL first paint uses the existing shared H3
+name/time row; no injected date sibling may survive load or account cleanup.
+Inventory catalog v2 declares existing thumbnail paths for card previews, with
+original photo links retained through preview failure. Keep legacy catalog reads
+compatible and metadata revalidating independently of cached photographs. Run
+brief-workspace-ui, fabric-search-ui/workflow, release-contract and final authority.
+
+October 21 SMS composer: reserve the text field/Send row above the voice dock.
+Pending previews, thread content/ideas and delivery feedback must scroll within
+their available regions. Never rely on element existence or width alone: run
+message-compose-ui, including center-point hit testing and expanded drafts at
+six widths/three heights under default and changed valid shared settings. Keep
+the inbox Begin texting action synchronized on open/Back/account reset. Final
+aesthetic-authority reexecutes message-compose-ui; communications gates still use
+fake providers and cannot establish carrier delivery.
+
+October 21 fabric search audit: fabric-retailers.mjs owns merchant policy and
+fabric-discovery.mjs owns the fabric-only provider contract. Saved material seeds
+run alongside web discovery; empty web results must not erase eligible retailer
+candidates before the single visual check. Keep original look and canonical crop,
+qualified traits and seller-only facts. In House loads independently of reference
+conversion. Sourceable search details use the shared presenter also active in
+Aesthetic Control: H4/P3, Inner and Glass. Hover/focus/tap never start paid work;
+account/project/garment resets clear private context. Fabric assets are v5 and
+search-details.js revalidates. Run domain-boundaries, all fabric suites and exact
+release gates, then aesthetic-authority last. Import boundaries do not imply
+separate Cloud Run deployments; see docs/MODULE-BOUNDARIES.md.
+
+October 21 real-retailer follow-up: brocade/jacquard are recognized fabric
+constructions; never reject real yardage solely because older material vocabulary
+omits a weave. Keep explicit weave constraints, seller-only facts and tool/garment
+exclusions. Run fabric-sourcing/search plus regression/final authority.
+
+October 21 CI STOP fixture: clearing the composer follows send acceptance but
+precedes its awaited thread refresh. Before an independent direct paint/STOP
+proof, await the final completion feedback and enabled Send. message-compose-ui
+deliberately holds/releases that refresh and retains exact no-extra-write plus
+both disabled-control assertions. Never mask this with a delay or remove STOP
+coverage. Runtime SMS is unchanged by this fixture-only repair.
+
+October 21 live fabric criteria: preserve full saved descriptions/client words
+and identity fingerprints, while qualifying the base cloth separately from
+appliqué/trim. Automatic whole-look preference directions must not overwrite one
+saved garment's base material. Preserve explicit/named requirements, blends and
+all exclusions; unknown inferred traits require the single successful visual
+comparison. Client preferences/Store scope remain in the shared active details
+preview. Keep the two-query/four-store seed budget and balance merchants.
+Cloud Build retains every gate and final authority with a bounded 1800s deadline;
+START/PASS elapsed diagnostics do not change exit handling or log preservation.
+
+
+## WR workspace
+
+`backend/wr.html` is the single WR page, served at `/wr.html` and linked from
+Admin Systems. `aesthetics/ui/wr.{js,css}` holds its layout and client logic;
+`docs/server/wr-store.mjs` stores idempotent, generation-checked applicants privately
+per authenticated Admin; legacy records without Email remain valid. WR reads the
+existing Admin submission feed; its newest-first thumbnails are bounded to four
+concurrent requests. WR mirrors Admin card/table proportions and uses shared table
+settings. Never mix
+accounts or expose private lead records. Run `tests/wr-store.mjs`,
+`tests/wr-ui.mjs`, container-contract, app-regression and the final
+aesthetic-authority gate. `docs/CLO3D-RESEARCH.md` is research only.
+
+
+## Avatar camera
+
+`aesthetics/ui/avatar-camera.js` provides the frontend's explicit front-camera
+flow; the avatar picker and image processing live in `frontend/index.html`. Camera
+streams stop on dismissal, hidden page and account/project/client changes. Preserve
+client-bound picker/read guards, explicit Use photo and the existing upload path.
+Run `tests/avatar-camera-ui.mjs`, frontend hands/account/project tests, component
+gallery, app-regression and the final aesthetic-authority check. Its camera is a
+synthetic fixture and cannot establish real-device behavior.
+
+
+## Design Studio 2 preview
+
+`backend/design-studio-2.html` is served at `/design-studio-2.html` and is linked
+from the Admin doors and Systems drawer. Its CSS/JS live in `aesthetics/ui/` and
+its form is intentionally non-sending and non-persistent, including if the page
+script fails. Do not connect it to live callbacks, consent, notifications or Wix
+without a new owner instruction. Its images reference the owner's existing Wix
+site. Use existing Aesthetic Control roles, panels, pills, fields and checkbox;
+run `tests/design-studio-2-ui.mjs`, Admin navigation, gallery, app-regression and
+the final aesthetic-authority gate.
