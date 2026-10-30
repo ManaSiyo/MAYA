@@ -1,15 +1,21 @@
-Title: [Codex] Record approved live fabric and voice checks
+Title: [Codex] Fix fabric knit classification and weave qualification
 
-Record two authorized saved-look fabric requests: HTTP 200 in 12.846s and
-9.427s, both without confirmed seller listings. Record Admin voice reaching
-Listening and producing an assistant transcript after refresh, plus cleanup
-observations and unreliable native-control limits. No runtime or visible UI change.
+Fix generic knit being treated as mandatory jersey and satin sheen overwriting
+saved weave constraints. Keep knit family and specific subtypes distinct, read
+saved spec fields in their own dimensions, and allow qualified weave alternatives
+only into the existing visual-review path. Preserve original saved/client words,
+explicit requirements/exclusions, seller URLs/photos/prices, private scope and
+provider budgets. No additional paid attempts or visible UI changes.
 
-Public release verification still finds 3873ced instead of local 6ea4d40;
-the three identity checks fail while remaining checks pass. These are older-release
-baselines, not acceptance of pending fixes. Exact speech latency, audio quality,
-fabric relevance and final independent microphone confirmation remain open.
-The owner requested stopping live testing; no further Chrome actions were taken.
+Regression evidence: the original matcher fails both new representative sourcing
+cases. Repaired sourcing passes 17 checks; the full fabric service passes 50,
+including tracksuit/tailcoat full looks, successful/empty/failed photo comparison,
+missing comparison and explicit exclusions. Forced-GC fabric deadlines pass on
+Node 20. All 74 functional/syntax release commands, integrated app-regression and
+server smoke pass. Final standalone Aesthetic Control passed last, including saved-style/responsive
+checks and captured-surface visual inspection. No visible UI was added.
 
-Standalone shared Aesthetic Control passed last on Node 20 with isolated Chromium.
-Owner retains Push.
+Local fix only. Last observed production is 3873ced; actual seller inventory and
+owner-image relevance remain unverified. Owner asked to stop live testing and
+will report results himself. No Chrome, microphone, live provider testing or push
+was performed for this repair. Owner retains Push.

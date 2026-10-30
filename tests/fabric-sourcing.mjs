@@ -31,6 +31,33 @@ const products = [
 
 console.log('\nMAYA fabric sourcing test\n');
 
+test('qualified saved weaves reach visual review without turning sheen into a weave requirement',()=>{
+  const piece={id:'coat',name:'Tailcoat',fabric:'Green embroidered satin-sheen woven',fabric_spec:{weave:'smooth woven, possibly twill-like',sheen:'moderate satin sheen',texture:'smooth'}};
+  const satin={title:'Forest Green Polyester Satin Fabric',description:'Smooth polyester satin, sold by the yard.',image:'https://seller.example/green.jpg',evidence:'seller_listing'};
+  const input={automatic:true,pieces:[piece],allowVisualOnly:true};
+  const twill={...satin,title:'Forest Green Polyester Twill Fabric',description:'Smooth polyester twill, sold by the yard.'};
+  assert.equal(fabricProductMatch(twill,input)?.garmentId,'coat','Satin sheen does not demand a satin weave');
+  assert.equal(fabricProductMatch(satin,input)?.garmentId,'coat','An uncertain twill guess must reach the photo check');
+  assert.equal(fabricProductMatch(satin,{...input,allowVisualOnly:false}),null,'An alternative to an inferred weave needs visual review');
+  for(const request of ['Only twill','No satin'])assert.equal(fabricProductMatch(satin,{...input,automatic:false,request}),null,'Explicit construction constraints remain strict');
+  assert.equal(fabricProductMatch(satin,{...input,pieces:[{...piece,fabric_spec:{weave:'twill',sheen:'moderate satin sheen'}}]}),null,'Sheen must not overwrite a definite saved twill weave');
+  assert.equal(fabricProductMatch({...satin,title:'Red Polyester Satin Fabric'},input),null,'A qualified weave does not loosen color matching');
+});
+
+test('knit is a family, not a mandatory jersey construction',()=>{
+  const piece={id:'jacket',name:'Track jacket',fabric:'Green synthetic-looking knit, possibly polyester tricot',fabric_spec:{weave:'knit-like',sheen:'subtle sheen',texture:'smooth'}};
+  const tricot={title:'Forest Green Polyester Tricot Fabric',description:'Smooth warp knitted fabric with a satin finish. Sold by the yard.',image:'https://seller.example/tricot.jpg',evidence:'seller_listing'};
+  const input={automatic:true,pieces:[piece],allowVisualOnly:true};
+  assert.equal(fabricProductMatch(tricot,input)?.garmentId,'jacket');
+  assert.equal(fabricProductMatch({...tricot,title:'Green Denim Fabric',description:'Cotton denim twill, sold by the yard.'},input),null,'Knit-like remains a knit-family hint, not any construction');
+  assert.equal(fabricProductMatch(tricot,{...input,automatic:false,request:'Only jersey'}),null,'A specifically requested jersey is not every knit');
+  assert.equal(fabricProductMatch(tricot,{...input,automatic:false,request:'No knit'}),null,'Knit exclusion includes tricot');
+  assert.equal(fabricProductMatch(tricot,{...input,automatic:false,request:'No jersey'})?.garmentId,'jacket','One excluded subtype must not exclude every knit');
+  assert.equal(fabricProductMatch(tricot,{...input,automatic:false,request:'Only interlock'}),null);
+  assert.equal(fabricProductMatch(tricot,{...input,automatic:false,request:'No tricot'}),null);
+  assert.doesNotMatch(fabricSeedQueries(input).join(' '),/jersey/,'Do not substitute jersey for the saved tricot/knit family');
+});
+
 test('saved dominant color and reptile texture inform bounded retailer seeds without accepting opposite colors',()=>{
   const jacket={id:'jacket',name:'Shag jacket',fabric:'Long-pile faux fur',fabric_hex:'#991b2a',fabric_spec:{fiber:'polyester',texture:'long-pile'}};
   const input={automatic:true,pieces:[jacket],preferences:['Leather','Denim'],allowVisualOnly:true};

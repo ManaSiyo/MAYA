@@ -308,3 +308,13 @@ when a transport ignores abort; a late result cannot initiate a redirect or
 replace completed output. Verified direct results still pass the one bounded
 visual review. This reduces avoidable waits in the reproduced fixtures, but does
 not establish the cause or measured duration of the live stalled search.
+
+October 29 qualification repair: a generic knit is not a jersey-only requirement.
+Tricot, interlock and ponte belong to the knit family; an explicit jersey or tricot
+request still requires that subtype. Saved spec fields apply in their own dimension:
+fiber to composition, weave to construction, texture/sheen to appearance. Satin
+sheen/finish is not itself a satin-weave mandate. Qualified saved weave alternatives
+may reach the existing single photo comparison, but cannot be confirmed when that
+comparison is unavailable or fails. Definite construction and client constraints
+remain strict; saved words and seller facts are never rewritten. Local fixtures
+cover reported tracksuit/tailcoat descriptions; live result quality is unverified.

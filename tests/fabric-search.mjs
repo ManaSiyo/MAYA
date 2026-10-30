@@ -27,6 +27,43 @@ await test('full-look matching keeps a verified shared fabric without inventing 
   await service.search(user,{submissionId:'project-A',automatic:true,image},e=>events.push(e));
   assert.equal(rankCalls,1);assert.equal(events.at(-1).products.length,1);assert.equal(events.at(-1).products[0].garment,'Jacket & Pants');assert.equal(events.at(-1).products[0].garmentId,undefined);
 });
+await test('saved tracksuit and qualified tailcoat fabrics reach one visual check with seller facts intact',async()=>{
+  const cases=[
+    {names:['Track jacket','Track pants'],fabric:'Green synthetic-looking knit, possibly polyester tricot',fabric_spec:{weave:'knit-like',sheen:'subtle sheen',texture:'smooth'},name:'Forest Green Polyester Tricot Fabric',description:'Smooth warp knitted fabric with a satin finish. Sold by the yard.'},
+    {names:['Tailcoat','Slim trousers'],fabric:'Green embroidered satin-sheen woven',fabric_spec:{weave:'smooth woven, possibly twill-like',sheen:'moderate satin sheen',texture:'smooth'},name:'Forest Green Polyester Satin Fabric',description:'Smooth polyester satin, sold by the yard.'},
+  ];
+  for(const sample of cases){
+    const pieces=sample.names.map((name,i)=>({id:'piece-'+i,name,fabric:sample.fabric,fabric_spec:{fiber:'',stretch:'',...sample.fabric_spec}}));
+    for(const outcome of ['match','reject','error','unavailable','excluded']){
+      const s=store(),events=[];let rankCalls=0,webCalls=0;
+      s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
+      s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:outcome==='excluded'?'No polyester':[]})),generation:'1'});
+      const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
+        if(target.includes('openai.com')){
+          webCalls++;const sent=JSON.parse(JSON.parse(options.body).input[0].content[0].text);
+          assert.deepEqual(sent.garments.map(({id,name,fabric,fabric_spec})=>({id,name,fabric,fabric_spec})),pieces,'Original saved descriptions must reach discovery unchanged');
+          return Response.json(response());
+        }
+        if(target.includes('/search/suggest.json'))return Response.json({resources:{results:{products:[]}}});
+        return new Response(seller({name:sample.name,description:sample.description,material:'100% polyester'}));
+      },...(outcome==='unavailable'?{}:{rank:async ({products,traits,garmentImage})=>{
+        rankCalls++;assert.equal(products.length,1);assert.equal(products[0].url,url);
+        assert.equal(products[0].price,'69.99');assert.equal(products[0].unit,'yard');
+        assert.equal(products[0].garment,sample.names.join(' & '));assert.equal(products[0].garmentId,undefined);
+        assert.equal(garmentImage,image);assert.deepEqual(traits.garments.map(({id,name,fabric,fabric_spec})=>({id,name,fabric,fabric_spec})),pieces);
+        if(outcome==='error')throw Error('comparison unavailable');
+        return outcome==='match'?products:[];
+      }})});
+      await service.search(user,{submissionId:'project-A',automatic:true,image},e=>events.push(e));
+      assert.equal(webCalls,1,'No extra paid discovery attempts');
+      assert.equal(rankCalls,['match','reject','error'].includes(outcome)?1:0,outcome+' / '+sample.names[0]);
+      // Without a ranker the factual tricot listing still matches the saved
+      // knit family, but the alternative to a guessed twill cannot be confirmed.
+      const count=outcome==='match'||outcome==='unavailable'&&sample===cases[0]?1:0;
+      assert.equal(events.at(-1).products.length,count,outcome+' / '+sample.names[0]);
+    }
+  }
+});
 await test('only approved seller product URLs can become candidates',()=>{
   for(const bad of ['http://britexfabrics.com/products/a','https://britexfabrics.com.evil.test/products/a','https://127.0.0.1/a','https://user@britexfabrics.com/products/a','https://britexfabrics.com:8443/products/a','https://britexfabrics.com/search?q=wool'])assert.equal(merchantURL(bad,true),null);
   assert.equal(merchantURL(url+'?utm_source=test',true).url,url);

@@ -3,7 +3,7 @@ const MAX_VISUAL_CANDIDATES = 12;
 
 // A seller being a fabric shop does not make every item in its feed fabric.
 // Use listing facts, never the model's reason, to qualify a recommendation.
-const MATERIALS = /\b(?:fabric|yardage|brocade|jacquard|denim|chambray|wool|cashmere|cotton|linen|silk|satin|velvet|twill|poplin|canvas|chiffon|organza|crepe|crêpe|viscose|rayon|polyester|acrylic|modacrylic|fur|jersey|knit|woven|tweed|flannel|corduroy|suiting|shirting|lace|tulle|fleece|leather|leatherette|vinyl|suede)\b/i;
+const MATERIALS = /\b(?:fabric|yardage|brocade|jacquard|denim|chambray|wool|cashmere|cotton|linen|silk|satin|velvet|twill|poplin|canvas|chiffon|organza|crepe|crêpe|viscose|rayon|polyester|acrylic|modacrylic|fur|jersey|knit|knitted|tricot|interlock|ponte|woven|tweed|flannel|corduroy|suiting|shirting|lace|tulle|fleece|leather|leatherette|vinyl|suede)\b/i;
 const NOT_FABRIC = /\b(?:scissors?|shears?|rotary cutters?|cutting mats?|seam rippers?|sewing machines?|needles?|rulers?|zippers?|buttons?|patterns?|sewing kits?|thread spools?|(?:sewing|embroidery) threads?|yarns?|skeins?|boots?|shoes?|sandals?|sneakers?|handbags?)\b/i;
 export function isFabricProduct(product) {
   const title=String(product?.title||''),facts=[title,product?.description,product?.composition].join(' ');
@@ -18,7 +18,7 @@ export function isFabricPiece(piece) {
   return !!piece && !piece.skip && !piece._virtual && !/\b(?:footwear|boots?|shoes?|sandals?|sneakers?|loafers?|heels?|bags?|belts?|jewelry|jewellery|accessor(?:y|ies))\b/i.test([piece.name,piece.category].join(' '));
 }
 const fibers=[['leather','leather|suede'],['wool','wool|cashmere|merino|worsted'],['silk','silk'],['linen','linen|flax'],['cotton','cotton'],['viscose','viscose|rayon|lyocell|tencel'],['polyester','polyester|poly'],['nylon','nylon|polyamide'],['acrylic','acrylic|modacrylic']];
-const constructions=[['brocade','brocade'],['jacquard','jacquard'],['faux_fur','faux[ -]fur|fake[ -]fur|imitation[ -]fur'],['fur','fur'],['denim','denim|chambray'],['velvet','velvet|velveteen'],['corduroy','corduroy'],['twill','twill|gabardine|denim'],['poplin','poplin|broadcloth'],['satin','satin'],['chiffon','chiffon'],['organza','organza'],['crepe','crepe|crêpe'],['jersey','jersey|knit'],['tweed','tweed'],['flannel','flannel'],['lace','lace'],['tulle','tulle'],['fleece','fleece'],['canvas','canvas|duck']];
+const constructions=[['brocade','brocade'],['jacquard','jacquard'],['faux_fur','faux[ -]fur|fake[ -]fur|imitation[ -]fur'],['fur','fur'],['denim','denim|chambray'],['velvet','velvet|velveteen'],['corduroy','corduroy'],['twill','twill|gabardine|denim'],['poplin','poplin|broadcloth'],['satin','satin'],['chiffon','chiffon'],['organza','organza'],['crepe','crepe|crêpe'],['knit','knit|knitted'],['jersey','jersey'],['tricot','tricot'],['interlock','interlock'],['ponte','ponte'],['tweed','tweed'],['flannel','flannel'],['lace','lace'],['tulle','tulle'],['fleece','fleece'],['canvas','canvas|duck']];
 const colors=[['blue','blue|navy|indigo'],['white','white|ivory|cream|ecru'],['red','red|crimson|burgundy|wine|maroon'],['black','black'],['gray','gray|grey|charcoal|silver'],['green','green|olive|emerald|sage'],['brown','brown|tan|beige|camel'],['yellow','yellow|gold|mustard'],['pink','pink|rose|magenta'],['purple','purple|violet|lavender']];
 const textures=[['matte','matte|matt'],['shiny','shiny|glossy|lustrous'],['brushed','brushed'],['ribbed','ribbed'],['smooth','smooth'],['textured','textured|slub']];
 const has=(value,pattern)=>new RegExp('\\b(?:'+pattern+')\\b','i').test(value);
@@ -74,6 +74,9 @@ function terms(value,definitions){
     const denied=/(?:\b(?:no|not|without|avoid|exclude|excluding|less)|free of|instead of)\s+(?:(?:any|all|using|added|containing|too)\s+)?(?:[\w -]+\s+(?:or|and)\s+)?$/i.test(before)||/^[ -]free\b/i.test(after);
     (denied?negative:positive).add(key);
   }
+  // A positive subtype supplies family evidence. Excluding one subtype must
+  // not exclude the entire family ("no jersey" can still allow tricot).
+  if(definitions===constructions&&['jersey','tricot','interlock','ponte'].some(key=>positive.has(key)))positive.add('knit');
   return {positive,negative};
 }
 // Only matching hints are reduced to the base cloth. Keep the original saved
@@ -101,10 +104,23 @@ function fabricColorHint(piece){
   return '';
 }
 function constraints(piece,input,definitions){
-  let required=new Set(),excluded=new Set(),inferredRequired=false;
+  let required=new Set(),excluded=new Set(),inferredRequired=false,uncertainRequired=false;
   const pieces=(input.allPieces?.length?input.allPieces:input.pieces?.length?input.pieces:[piece]).filter(isFabricPiece);
-  const apply=(value,positive=true,inferred=false)=>{const source=primaryFabricText(value),found=terms(source,definitions),negative=terms(value,definitions).negative;if(positive&&found.positive.size&&!(inferred&&definitions===fibers&&/\b(?:likely|possibly|appears?|unknown|uncertain|unconfirmed|may|might|could|suggests?)\b|\b\w+[ -]like\b/i.test(source))){required=found.positive;inferredRequired=inferred;}for(const key of negative)excluded.add(key);};
-  for(const value of [piece.fabric,...Object.values(piece.fabric_spec||{})])apply(value,true,true);
+  const apply=(value,positive=true,inferred=false)=>{
+    // Sheen describes appearance, not construction. A satin finish on tricot
+    // must not turn it into satin woven yardage or overwrite a saved weave.
+    let source=primaryFabricText(value);
+    if(inferred&&definitions===constructions)source=source.replace(/\bsatin(?:[ -]like)?[ -]+(?:sheen|finish|lustre|luster)\b/gi,'');
+    const found=terms(source,definitions),negative=terms(value,definitions).negative;
+    const uncertain=/\b(?:likely|possibly|appears?|unknown|uncertain|unconfirmed|may|might|could|suggests?)\b|\b\w+[ -]like\b/i.test(source);
+    if(positive&&found.positive.size&&!(inferred&&definitions===fibers&&uncertain)){
+      required=found.positive;inferredRequired=inferred;
+      uncertainRequired=inferred&&definitions===constructions&&uncertain&&!found.positive.has('knit');
+    }
+    for(const key of negative)excluded.add(key);
+  };
+  const fields=definitions===fibers?['fiber']:definitions===constructions?['weave']:definitions===textures?['texture','sheen']:[];
+  for(const value of [piece.fabric,...fields.map(key=>piece.fabric_spec?.[key])])apply(value,true,true);
   if(definitions===colors&&!required.size){
     const observed=input.visualColors?.[piece.id];
     apply(Array.isArray(observed)&&observed.length?observed.join(' '):fabricColorHint(piece),true,true);
@@ -122,7 +138,7 @@ function constraints(piece,input,definitions){
     apply(clause.text,positive);
   }
   for(const key of excluded)required.delete(key);
-  return {required,excluded,inferredRequired};
+  return {required,excluded,inferredRequired,uncertainRequired};
 }
 // Supplementary retailer seeds use only known textile vocabulary. No free-form
 // client text or garment names can enter a public suggest endpoint.
@@ -160,11 +176,19 @@ export function fabricProductMatch(product,input={}){
   for(const piece of targets){
     let rejected=false,materialEvidence=false,strength=0;
     for(const definitions of [fibers,constructions,colors,textures]){
-      const {required,excluded,inferredRequired}=constraints(piece,input,definitions);
+      const {required,excluded,inferredRequired,uncertainRequired}=constraints(piece,input,definitions);
       const actual=terms(facts,definitions).positive;
       if([...excluded].some(key=>actual.has(key))){rejected=true;break;}
       if(definitions===fibers||definitions===constructions){
-        if(required.size){if(!actual.size&&inferredRequired&&!excluded.size&&input.allowVisualOnly===true)continue;materialEvidence=true;if(![...required].every(key=>actual.has(key))){rejected=true;break;}strength+=required.size*2;}
+        if(required.size){
+          const matches=[...required].every(key=>actual.has(key));
+          // Qualified saved guesses may be alternatives only when the existing
+          // photo comparison is available. User requirements never take this path.
+          if(!matches&&inferredRequired&&(!actual.size||uncertainRequired)&&!excluded.size&&input.allowVisualOnly===true)continue;
+          materialEvidence=true;
+          if(!matches){rejected=true;break;}
+          strength+=required.size*2;
+        }
       }else if(required.size&&actual.size){if(![...required].some(key=>actual.has(key))){rejected=true;break;}strength++;}
     }
     if(!rejected&&(!input.automatic||materialEvidence||input.allowVisualOnly===true))matches.push({piece,strength});
@@ -177,7 +201,7 @@ export function fabricProductMatch(product,input={}){
     // Only present a shared match when their saved descriptions and all
     // scoped material constraints agree. Never assign it to either ID.
     const material=piece=>String(piece.fabric||'').trim().replace(/\s+/g,' ').toLowerCase();
-    const signature=piece=>JSON.stringify([fibers,constructions,colors,textures].map(definitions=>{const c=constraints(piece,input,definitions);return [[...c.required].sort(),[...c.excluded].sort(),c.inferredRequired];}));
+    const signature=piece=>JSON.stringify([fibers,constructions,colors,textures].map(definitions=>{const c=constraints(piece,input,definitions);return [[...c.required].sort(),[...c.excluded].sort(),c.inferredRequired,c.uncertainRequired];}));
     if(!material(tied[0].piece)||new Set(tied.map(x=>material(x.piece))).size!==1||new Set(tied.map(x=>signature(x.piece))).size!==1||new Set(tied.map(x=>String(x.piece.name||'').trim().toLowerCase())).size!==tied.length||tied.some(x=>!String(x.piece.name||'').trim()))return null;
     return {garment:cleanText(tied.map(x=>x.piece.name).join(' & '),80)};
   }

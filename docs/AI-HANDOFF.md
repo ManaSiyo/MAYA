@@ -1,6 +1,44 @@
 # Current handoff — October 29, 2026
 
-## Current work — approved live fabric and voice acceptance
+## Current work — fabric qualification repair (local, not deployed)
+
+Fromsa narrowed the request to fixing Fabrics and will report live results himself.
+All live Chrome, microphone and paid-provider testing remains stopped.
+
+Reproduced two qualification defects using the reported garment descriptions:
+generic knit was synonymous with mandatory jersey, rejecting source-backed tricot;
+and every fabric_spec field could overwrite every constraint, so satin sheen
+could replace a twill weave. Qualified weave guesses were also treated as exact
+requirements even when the configured visual reviewer was available.
+
+Changed docs/server/fabric-sourcing.js: recognize the knit family independently
+of jersey/tricot subtypes; read fiber/weave/texture/sheen in their own dimensions;
+exclude satin-sheen wording from inferred weave requirements. A qualified saved
+weave alternative may proceed only through the existing visual-review path.
+Known knit-family contradictions and explicit client requirements/exclusions
+remain strict. Original descriptions, canonical saved pieces, seller URLs/photos,
+price/unit facts, private storage and request budgets are unchanged. No new paid
+calls, retries, credentials, global model changes or visible UI were introduced.
+The existing cards retain Aesthetic Control typography/materials/icons.
+
+Tests: new sourcing assertions fail before the repair; 17 sourcing and 50 search
+checks now pass, including full-look tracksuit/tailcoat service fixtures, original
+context retention, one discovery/visual call, explicit exclusions, missing ranker,
+failed comparison and empty comparison. Node 20 forced-GC deadline gate passes.
+All 74 functional/syntax release commands, integrated app-regression and server
+smoke passed on Node 20 with isolated Chromium and fake providers. Final standalone
+Aesthetic Control passed last, including default/changed saved settings and
+responsive fixtures; its captured Messages surface was visually inspected.
+Changed tests: fabric-sourcing.mjs, fabric-search.mjs, app-regression.mjs.
+Supporting docs: this handoff, FABRIC-SEARCH.md, requests.txt, fixes.txt,
+COMMIT-REVIEW.txt. Backend-only; no visible UI addition.
+
+Open limit: these fixtures prove repaired filtering, not live merchant inventory
+or successful matches for the owner's exact images. Last observed production
+was 3873ced, predating these and earlier pending repairs. Next: owner Push after the verified local commit, then owner checks the two
+reported looks on the deployed release. Do not resume live testing.
+
+## Previous work — approved live fabric and voice acceptance
 
 Fromsa explicitly approved sending saved tailcoat/tracksuit images and client
 descriptions to configured OpenAI services, merchant search terms to approved
