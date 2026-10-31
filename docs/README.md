@@ -32,7 +32,7 @@ do not call paid search. Refresh searches explicitly. Card Save/Use is removed;
 historical Favorites remain readable/removable.
 
 Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
-Aesthetic Control groups Visuals (Glass and Regular pills, Panels and Tables) before single-preview
+Aesthetic Control groups Visuals (Glass pills, Panels and Tables) before single-preview
 Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.
 
 Immediate Wix/Gmail event activation and OpenAI latency audit: [EVENT-TRIGGERS.md](EVENT-TRIGGERS.md).

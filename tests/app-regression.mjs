@@ -1,4 +1,4 @@
-import './design-studio-2-ui.mjs';
+import './ad-reporting.mjs';
 import './pattern-decisions.mjs';
 import './refresh-efficiency.mjs';
 import './avatar-camera-ui.mjs';
@@ -112,14 +112,16 @@ assertContainer(); // Missing runtime files must fail before deploying Cloud Run
 if(MAP_SOURCE.includes('<maya-owner-crm>'))throw Error('Retired Owner tools must not appear in Systems');
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
-// Design Studio 2 stays an internal design preview with a non-sending form.
-{const studio=readFileSync(join(ROOT,'backend/design-studio-2.html'),'utf8');ok('Design Studio 2 presents four experiences and an explicit non-sending form',(studio.match(/class="studio-tier"/g)||[]).length===4&&studio.includes('This form does not send or save information.'));}
+const fabricClientSource=readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8');
+ok('Fabric results survive garment returns and empty refreshes within the sealed project',fabricClientSource.includes('const resultCache=new Map()') && fabricClientSource.includes('resultCache.clear()') && fabricClientSource.includes('Previously loaded fabrics are kept.') && fabricClientSource.includes('storeGroups:[...activeStores]'));
+ok('Ad reporting exposes missing connections and honors provider paused state',MAP_SOURCE.includes('id="ads-connection-status"') && MAP_SOURCE.includes("state==='paused'") && SERVER_SOURCE.includes('withDirectGoogle(out.adCombined,gads)'));
+ok('Retired Studio implementation has no served page or Admin/gallery entry', !existsSync(join(ROOT,'backend/design-studio-2.html')) && !MAP_SOURCE.includes('/design-studio-2.html') && !readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('studio-control-preview'));
 ok('MAYA door keeps its menu above the sign-in panel during its opacity transition', MAP_SOURCE.includes('.card-maya{position:relative;z-index:2}'));
-ok('Design Studio 2 stays in Systems without a main-screen door', !MAP_SOURCE.includes('class="card card-studio"') && MAP_SOURCE.includes('href="/design-studio-2.html">Design Studio 2'));
 ok('Brief keeps Biography and Vision without the Direction chip row', !BACKEND_SOURCE.includes('id="op-chips-section"') && BACKEND_SOURCE.includes('id="op-biography"') && BACKEND_SOURCE.includes('id="op-vision"'));
 
 // WR retains Admin-sized submissions and an isolated Applicants form.
-{const wr=readFileSync(join(ROOT,'backend/wr.html'),'utf8');ok('WR exposes Applicants with one Wave and Number and an Email field',wr.includes('>Applicants</h2>')&&(wr.match(/name="wave"/g)||[]).length===1&&(wr.match(/name="phone"/g)||[]).length===1&&wr.includes('name="email"'));}
+{const wr=readFileSync(join(ROOT,'backend/wr.html'),'utf8');ok('Shared pills have one Glass authority', !readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8').includes('regular-pill-editor') && readFileSync(join(ROOT,'aesthetics/ui/pill-runtime.js'),'utf8').includes('select[data-maya-pill]'));
+ok('WR exposes Applicants with one Wave and Number and an Email field',wr.includes('>Applicants</h2>')&&(wr.match(/name="wave"/g)||[]).length===1&&(wr.match(/name="phone"/g)||[]).length===1&&wr.includes('name="email"'));}
 
 // September 28: populated status popovers must escape the table's clipping layer.
 ok('Lead status filter has an isolated readable layer and scoped section carets',
@@ -959,7 +961,7 @@ ok('the marketing page never invents an ad number',
 ok('marketing reads Analytics, Meta and Google Ads separately',
   SERVER_SOURCE.includes("app.get('/api/admin/marketing'") &&
   SERVER_SOURCE.includes('async function metaInsights()') &&
-  SERVER_SOURCE.includes('async function googleAdsInsights()') &&
+  SERVER_SOURCE.includes('googleAdsInsights=createGoogleAdsReader({config:GADS})') &&
   SERVER_SOURCE.includes('MARKETING_GA_PROPERTY_ID'));
 ok('nothing hangs below the row of five',
   !MAP_SOURCE.includes('id="marketing-fold"') && !MAP_SOURCE.includes('id="traffic-fold"') &&
@@ -1189,7 +1191,7 @@ ok('legacy merchant searches retain real feeds without sharing private queries',
 // Shared sourcing replaced the legacy Brief wall; verify the active provider/UI handoff.
 ok('Sourceable streams verified merchant photographs through the active shared assistant',
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true') &&
-  FABRIC_UI_SOURCE.includes("fetch('/api/admin/fabrics/search'") && FABRIC_UI_SOURCE.includes('products=Array.isArray(event.products)?event.products:[];') &&
+  FABRIC_UI_SOURCE.includes("fetch('/api/admin/fabrics/search'") && FABRIC_UI_SOURCE.includes('const confirmed=Array.isArray(event.products)?event.products:[];') &&
   FABRIC_SEARCH_SOURCE.includes('.map(c => verify(c, signal))') && FABRIC_SOURCE.includes("product.evidence==='search_link'||!product.image"));
 ok('Dissection material context preserves client preferences and qualified garment traits',
   BACKEND_SOURCE.includes('"fabric_spec"') && BACKEND_SOURCE.includes('Only fill weight_gsm from an explicit client specification') &&
@@ -1215,8 +1217,8 @@ ok('Fabric ranking describes closest visual matches and never claims exact image
 ok('Failed visual comparison is explicit and cannot promote unchecked products as confirmed matches',
   FABRIC_SEARCH_SOURCE.includes("products=[];warning='Fabric photo comparison was unavailable.") &&
   FABRIC_SEARCH_SOURCE.includes("send({ type: 'products', products, preliminary: false })") &&
-  FABRIC_UI_SOURCE.includes('products=Array.isArray(event.products)?event.products:[];') &&
-  FABRIC_UI_SOURCE.includes("completedStatus=event.warning || event.message || '';status(completedStatus)"));
+  FABRIC_UI_SOURCE.includes('const confirmed=Array.isArray(event.products)?event.products:[];') &&
+  FABRIC_UI_SOURCE.includes("completedStatus=event.warning ||") && FABRIC_UI_SOURCE.includes('products=retained;autoStarted=false;'));
 ok('only real retailer thumbnails enter visual comparison',
   FABRIC_SOURCE.includes("filter(product => product.image && product.url && product.title)") &&
   FABRIC_SOURCE.includes("error.status = 422") &&
@@ -1423,9 +1425,9 @@ ok('the ticker starts mid story and loops seamlessly',
   MKT_SOURCE.includes('el.innerHTML = line + line') &&
   MKT_SOURCE.includes('to{transform:translateX(-50%)}') &&
   !MKT_SOURCE.includes('padding-left:100%'));
-ok('the connecting fold is gone; its one living instruction moved to the note',
-  !MKT_SOURCE.includes('Connecting what is missing') &&
-  MKT_SOURCE.includes('WINDSOR_API_KEY'));
+ok('Empty ad charts distinguish unavailable time-series data from reporting configuration',
+  !MKT_SOURCE.includes('Connecting what is missing') && !MKT_SOURCE.includes('WINDSOR_API_KEY') &&
+  MKT_SOURCE.includes('Available campaign reports appear in the table above.'));
 // ── v13.57: terms at the door, a truthful wall, a complete Users count ─────
 const TERMS_SOURCE = existsSync(join(ROOT, 'backend/terms.html'))
   ? readFileSync(join(ROOT, 'backend/terms.html'), 'utf8') : '';
@@ -2604,7 +2606,7 @@ ok('Owner can read client texts/calls and recorded actions over SMS without AI',
 ok('SMS client replies require an exact confirmation code and retained consent',smsAccessSource.includes('Nothing sent. Reply SEND') && smsAccessSource.includes("contact?.consent==='stop'") && smsAccessSource.includes("p.status='attempted'"));
 ok('Messages archive overflow before trimming the live inbox',SERVER_SOURCE.includes('archive:createMessageArchive') && readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('await deps.archive.append'));
 ok('Aesthetic Control groups buttons/icons and panels/tables before single-row typography',compactGallery.includes("section('Glass, Panels and Tables'") && compactGallery.includes("divider.className='visual-divider'") && !compactGallery.includes('glossary') && !compactGallery.includes('addStyleReference'));
-ok('Aesthetic Control groups the Glass and Regular pill editors in a responsive pair',compactGallery.includes("pillFamilies.className='pill-families'") && readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8').includes('.pill-families{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))'));
+ok('Glass is the sole pill editor and governs all pills including Edit',compactGallery.includes("pillFamilies.className='pill-families'") && !compactGallery.includes('regular-pill-editor') && activeTypeSource.includes('delete v.regularPill') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8').includes('.pill-families{display:grid;grid-template-columns:minmax(0,1fr)'));
 ok('Aesthetic Control keeps one fabric preview and selected pill states beside their families',compactGallery.includes('pillFamilies.after(states)') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/workspace-previews.js'),'utf8').includes("title.textContent='Fabric preview'") && MAP_SOURCE.includes('data-maya-pill=\"glass\"') && BACKEND_SOURCE.includes('data-maya-segment aria-pressed'));
 ok('Typography exposes saved font family and capitalization per role',compactGallery.includes('data-field="font"') && compactGallery.includes('data-field="case"') && readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes("['none','uppercase']"));
 
@@ -2656,7 +2658,7 @@ ok('Aesthetic Control opens inside Admin and its logo returns to Admin',!MAP_SOU
 ok('All surface edits use numeric fields and split padding axes',!readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes("input.type='range'")&&!readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("input.type='range'")&&galleryScript.includes("['paddingX','Padding X'")&&galleryScript.includes("['paddingY','Padding Y'"));
 ok('Table housing stays independent while formatting toolbar shares Inner material',ownerDesignRuntime.includes('#panels .inner-panel,#cell-format-toolbar')&&ownerDesignRuntime.includes("const tableHousing="));
 ok('Shared borders include gray while tables have separate borders and corners',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("export const borders=[...tableBorders,['gray','Gray']]")&&ownerDesignConfig.includes('t.radius!==undefined')&&ownerDesignRuntime.includes('outerWidth:1,innerWidth:1'));
-ok('Gallery uses H2 sections, H3 pill families and P3 Edit summaries without a Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes("regularTitle.dataset.mayaType='H3'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("title.dataset.mayaType='H3'")&&galleryScript.includes('<summary>Edit dropdown</summary>')&&/P3:'[^']*\.type-editor>summary/.test(ownerDesignRuntime)&&!galleryScript.includes("label:'Filter'"));
+ok('Gallery uses H2 sections, H3 pill families and P3 Edit summaries without a Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&!galleryScript.includes('regular-pill-editor')&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("title.dataset.mayaType='H3'")&&galleryScript.includes('<summary>Edit dropdown</summary>')&&/P3:'[^']*\.type-editor>summary/.test(ownerDesignRuntime)&&!galleryScript.includes("label:'Filter'"));
 const pillRuntimeSource=readFileSync(join(ROOT,'aesthetics/ui/pill-runtime.js'),'utf8');
 ok('Save shares governed glass, padding and glyph sizing while the logo/title align left',readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('id="save" class="maya-ui maya-glass maya-icon-button"')&&pillRuntimeSource.includes('.maya-icon-button')&&pillRuntimeSource.includes('padding:var(--maya-pill-y) var(--maya-pill-x)')&&pillRuntimeSource.includes('box-shadow:inset 0 1px')&&pillRuntimeSource.includes('inline-size:var(--maya-icon-glyph)')&&!galleryCss.includes('html body #save{border:0!important;box-shadow:none!important}')&&galleryCss.includes('grid-template-columns:40px minmax(0,1fr)'));
 
@@ -2765,16 +2767,16 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=5'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=6'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));
 ok('Brief removes redundant navigation/date metadata and uses one name/date typography',!BACKEND_SOURCE.includes('id="fabric-workspace-actions"')&&!BACKEND_SOURCE.includes('Saved August')&&BACKEND_SOURCE.includes('class="op-identity"'));
 ok('Operations uses recorded Brief measurements without duplicate drawer inputs or dead Measurements action',OPS_SOURCE.includes('measurements:summary._measurements||{}')&&!OPS_SOURCE.includes('id="operation-settings"')&&!OPS_SOURCE.includes('id="room-sub"')&&OPS_SOURCE.includes('id="standalone-measurements"'));
 ok('Fabrics browsing removes card Save and Use while retaining private historical selections',!FABRIC_UI_SOURCE.includes("action('Save'")&&!FABRIC_UI_SOURCE.includes("action('Use'")&&FABRIC_SEARCH_SOURCE.includes('selectedByGarment'));
-ok('Fabrics publishes product cards only from a completed search',FABRIC_UI_SOURCE.includes("products=Array.isArray(event.products)?event.products:[];") && !FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}'));
+ok('Fabrics publishes product cards only from a completed search',FABRIC_UI_SOURCE.includes("const confirmed=Array.isArray(event.products)?event.products:[];") && !FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}'));
 ok('Fabrics checks a balanced set of seller candidates and overlaps saved-context reads',
-  FABRIC_SEARCH_SOURCE.includes('unique.slice(0, 8).map(c => verify(c, signal))') &&
+  FABRIC_SEARCH_SOURCE.includes('balancedFabricCandidates(unique).map(c => verify(c, signal))') &&
   FABRIC_SEARCH_SOURCE.includes('const [summary,dissection] = await Promise.all(['));
 // Keep this last: functional checks precede the governing aesthetic verification.
 ok('Messages accepts typed numbers through reviewed Send and confirmed Call',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('function msgBegin')&&readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('msgTypedNumber'));

@@ -58,7 +58,7 @@ try{
    assert.equal((await style('#checkbox-preview-unchecked')).width,'24px');assert.equal((await style('#scrollbar-preview','::-webkit-scrollbar')).width,'12px');
    for(const role of ['H3','P1','P3'])await editFields('[data-category='+role+'] .type-editor',{font:'cormorant',weight:500,color:role==='H3'?'gray':'white'});
    await editFields('.popup-editor',{background:'black',fill:95,rim:70,radius:6,paddingX:18,paddingY:12});
-   await editFields('.regular-pill-editor',{background:'green',fill:70,paddingX:20,paddingY:9});
+   await editFields('.finish-controls details.type-editor',{fill:70,paddingX:20,paddingY:9});
    await editFields('[data-editor=inner] .type-editor',{background:'green',fill:70,radius:20,paddingX:20,paddingY:12});
    await page.locator('.drawer-editor summary').click();await page.locator('.drawer-editor [data-field=fill]').fill('79');await page.keyboard.press('Escape');await page.locator('.control-size-editor summary').click();await page.locator('.control-size-editor [data-field=iconSize]').fill('30');await page.keyboard.press('Escape');await page.getByRole('button',{name:'Drawer',exact:true}).click();assert.equal(await page.locator('dialog.maya-drawer').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(23, 91, 59, 0.79)','Editing another control preserves the unsaved Drawer preview');await page.locator('dialog.maya-drawer').getByRole('button',{name:'Close Settings',exact:true}).click();await setField('drawer','fill',80);await page.keyboard.press('Escape');
    await save();assert.deepEqual(saved.checkbox,changed.checkbox);assert.deepEqual(saved.scrollbar,changed.scrollbar);assert.deepEqual(saved.drawer,changed.drawer);
@@ -72,7 +72,7 @@ try{
    assert.equal((await style('#scrollbar-preview','::-webkit-scrollbar-thumb')).radius,'2px');assert.equal((await style('#scrollbar-preview','::-webkit-scrollbar-track')).background,'rgba(21, 53, 47, 0.6)');
    assert.equal((await style('#scrollbar-preview')).background,'rgba(23, 91, 59, 0.7)','Scroll preview follows saved Inner material');
    for(const selector of ['#input-controls-preview>h3','.checkbox-preview-states label','.checkbox-editor summary'])assert.match(await page.locator(selector).first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/,selector+' uses shared typography');
-   assert.equal((await style('.checkbox-editor summary')).background,'rgba(23, 91, 59, 0.7)','New Edit follows Regular pill material');
+   assert.equal((await style('.checkbox-editor summary')).background,'rgba(3, 15, 29, 0.7)','Every Edit follows the saved Glass material');
   }
   const segments=page.locator('#segmented-controls-preview');await segments.getByRole('button',{name:'Favorites',exact:true}).click();assert.equal(await segments.locator('[aria-pressed=true]').count(),1);assert.match(await segments.locator('[aria-live]').textContent(),/Favorites preview/);assert.notEqual(await segments.getByRole('button',{name:'Favorites',exact:true}).evaluate(e=>getComputedStyle(e).borderTopColor),await segments.getByRole('button',{name:'Sourceable',exact:true}).evaluate(e=>getComputedStyle(e).borderTopColor),'Active segments use a visible shared rim');assert.equal(await segments.getByRole('button',{name:'Edit glass pill',exact:true}).count(),0,'Glass is edited only in its own section');
   for(const width of widths){

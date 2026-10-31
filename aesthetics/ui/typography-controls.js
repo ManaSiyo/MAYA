@@ -10,7 +10,7 @@
       P1:{size:12,weight:300,color:'gray'}, P2:{size:12,weight:400,color:'white'},
       P3:{size:10,weight:300,color:'white'}
     },
-    typeVersion:2,regularPill:{fill:0,rim:22,borderColor:'white',background:'black',paddingX:14,paddingY:6},
+    typeVersion:2,
     finish:'current',glass:{fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},
     overlay:{fill:18,rim:22,blur:22,saturation:180,radius:12},editor:{fill:100,rim:14,radius:12,paddingX:8,paddingY:8,background:'black',borderColor:'white'},pillX:14,pillY:6,iconSize:28,dropdownHeight:28,iconPillGap:6,iconTextGap:8
   };
@@ -33,7 +33,7 @@
   defaults.drawer=structuredClone(window.MayaPresentationControls.defaults.drawer);
   function applyPresentation(value){window.MayaPresentationControls.apply(normalizeSurfaces(structuredClone(value)));}
   function normalizeSurfaces(v){
-    v.regularPill={...defaults.regularPill,...v.regularPill};
+    delete v.regularPill; // Retired material: older saves remain readable; Glass owns every pill.
     v.checkbox={...defaults.checkbox,...v.checkbox};
     const oldScrollbar=v.scrollbar;
     v.scrollbar={...defaults.scrollbar,...oldScrollbar};

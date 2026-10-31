@@ -93,30 +93,19 @@ addRestore(document.querySelector('.overlay-controls'),{label:'outer panel',read
 
 
 
-const regularPill={...storedDesign.regularPill};
-const regularEdit=document.createElement('details');regularEdit.className='type-editor regular-pill-editor';regularEdit.innerHTML='<summary>Edit regular pill</summary><div class="type-editor-fields"></div>';
-const regularSection=document.createElement('section');regularSection.className='pill-family';regularSection.dataset.pillFamily='regular';
-const regularTitle=document.createElement('h3');regularTitle.dataset.mayaType='H3';regularTitle.dataset.previewCategory='H3';regularTitle.textContent='Regular';const regularControls=document.createElement('div');regularControls.className='surface-edit-row';regularControls.append(regularEdit);regularSection.append(regularTitle,regularControls);
-const glassSection=document.querySelector('.finish-controls'),pillFamilies=document.createElement('div');pillFamilies.className='pill-families';glassSection.before(pillFamilies);pillFamilies.append(glassSection,regularSection);pillFamilies.after(states);glassSection.insertBefore(contextActions,glassSection.querySelector('.type-editor'));
+const glassSection=document.querySelector('.finish-controls'),pillFamilies=document.createElement('div');pillFamilies.className='pill-families';glassSection.before(pillFamilies);pillFamilies.append(glassSection);pillFamilies.after(states);glassSection.insertBefore(contextActions,glassSection.querySelector('.type-editor'));
 const trafficSample=document.createElement('div');trafficSample.className='traffic-pill-preview';trafficSample.dataset.mayaPill='glass';trafficSample.innerHTML='<span data-maya-type="P3">● Live now</span><span data-maya-type="P2">0</span>';contextActions.append(trafficSample);
-const regularSample=Pill({label:'Regular pill',onClick:event=>{event.stopPropagation();regularEdit.open=true;regularEdit.querySelector('input').focus();}});regularSample.dataset.mayaPill='regular';regularSample.classList.remove('maya-glass');regularTitle.after(regularSample);
-function renderRegular(){MayaTypographyControls.previewPills({...storedDesign,regularPill,pillX:pillPadding.paddingX,pillY:pillPadding.paddingY});}
-fields(regularEdit.lastChild,regularPill,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['paddingX','Padding X',{min:4,max:32}],['paddingY','Padding Y',{min:2,max:16}]],renderRegular);
-addRestore(regularEdit,{label:'regular pill',read:()=>regularPill,write:v=>{Object.assign(regularPill,v);for(const input of regularEdit.querySelectorAll('[data-field]'))input.value=regularPill[input.dataset.field];renderRegular();}});
-highlightPadding(regularEdit,()=>[regularSample,...document.querySelectorAll('.type-editor>summary')],()=>({x:regularPill.paddingX,y:regularPill.paddingY}));
-for(const [kind,host] of [['glass',document.querySelector('.finish-controls')],['regular',regularSection]]){
- const usage=document.createElement('details');usage.className='pill-usage';const summary=document.createElement('summary');summary.dataset.mayaType='P3';summary.textContent='Where used';usage.append(summary);
- for(const [label,url,uses] of MayaPillControls.usage[kind]){const line=document.createElement('p');line.dataset.mayaType='P1';const link=document.createElement('a');link.href=url;link.textContent=label;line.append(link,document.createTextNode(' — '+uses));usage.append(line);}host.append(usage);
-}
+const pillUsage=document.createElement('details');pillUsage.className='pill-usage';const usageSummary=document.createElement('summary');usageSummary.dataset.mayaType='P3';usageSummary.textContent='Where used';pillUsage.append(usageSummary);
+for(const [label,url,uses] of MayaPillControls.usage.glass){const line=document.createElement('p');line.dataset.mayaType='P1';const link=document.createElement('a');link.href=url;link.textContent=label;line.append(link,document.createTextNode(' — '+uses));pillUsage.append(line);}glassSection.append(pillUsage);
 const pillPadding={paddingX:storedDesign.pillX,paddingY:storedDesign.pillY};
-function renderPillPadding(){MayaTypographyControls.previewPills({...storedDesign,regularPill,pillX:pillPadding.paddingX,pillY:pillPadding.paddingY});}
+function renderPillPadding(){MayaTypographyControls.previewPills({...storedDesign,pillX:pillPadding.paddingX,pillY:pillPadding.paddingY});}
 fields(form,pillPadding,[['paddingX','Padding X',{min:4,max:32}],['paddingY','Padding Y',{min:2,max:16}]],renderPillPadding);renderPillPadding();
 document.querySelector('#save').addEventListener('click',async()=>{
  const sizes=['H1','H2','H3','H4','P1','P2','P3'].map(k=>typeSettings[k].size);
  if(sizes.slice(0,4).some((n,i)=>i&&n>=sizes[i-1])||sizes.slice(4).some((n,i)=>i&&n>sizes[i+3])){say('Headlines must descend in size; paragraphs must not grow down the list.');return;}
  const pillX=pillPadding.paddingX,pillY=pillPadding.paddingY;
  if(!Number.isInteger(pillX)||pillX<4||pillX>32||!Number.isInteger(pillY)||pillY<2||pillY>16){say('Pill padding must stay within 4–32px sideways and 2–16px vertically.');return;}
- const glass=finishes.settings();const value={...controlSizes,...presentation.settings(),...inputControls.settings(),...sharedSurfaces.settings(),typeVersion:2,type:typeSettings,regularPill,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation','borderColor'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY};
+ const glass=finishes.settings();const value={...controlSizes,...presentation.settings(),...inputControls.settings(),...sharedSurfaces.settings(),typeVersion:2,type:typeSettings,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation','borderColor'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY};
  const button=document.querySelector('#save'),editors=[gallery,document.querySelector('#cell-format-toolbar')].filter(Boolean);
  const previousInert=editors.map(el=>el.inert);button.disabled=true;editors.forEach(el=>el.inert=true);say('Saving…');
  try{say(await window.MayaTypographyControls.save(structuredClone(value)));document.dispatchEvent(new Event('maya-gallery-saved'));}
@@ -125,7 +114,7 @@ document.querySelector('#save').addEventListener('click',async()=>{
 });
 
 addRestore(document.querySelector('.finish-controls details'),{label:'glass',read:()=>({...finishes.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY}),write:v=>{finishes.set(v);Object.assign(pillPadding,{paddingX:v.pillX,paddingY:v.pillY});for(const input of form.querySelectorAll('[data-field]'))input.value=pillPadding[input.dataset.field];renderPillPadding();}});
-highlightPadding(document.querySelector('.finish-controls details'),()=>[...document.querySelectorAll('#gallery .maya-pill:not([data-maya-pill=regular]),#gallery .maya-icon-button,#save')],()=>({x:pillPadding.paddingX,y:pillPadding.paddingY}));
+highlightPadding(document.querySelector('.finish-controls details'),()=>[...document.querySelectorAll('#gallery .maya-pill,#gallery .maya-icon-button,#save')],()=>({x:pillPadding.paddingX,y:pillPadding.paddingY}));
 setupDismissal();
 
 for(const pill of document.querySelectorAll('.maya-pill'))pill.dataset.previewCategory='P3';for(const label of document.querySelectorAll('.maya-metric-label,.maya-metric-value'))label.dataset.previewCategory='P2';for(const group of hierarchy.querySelectorAll('.type-group'))group.renderType();

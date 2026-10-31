@@ -952,7 +952,7 @@ try {
     </div>
   </div>
   <div id="drawer-systems">
-  <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button" href="/wr.html">WR</a><a data-maya-type="P3" class="maya-glass-button" href="/design-studio-2.html">Design Studio 2</a><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
+  <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button" href="/wr.html">WR</a><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
   <button data-maya-type="P3" class="maya-glass-button design-quicklink" onclick="admTab('automations')">Automations</button></div>
   <h3>Vault</h3>
   <a data-maya-type="P2" href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small data-maya-type="P1">Data and hosting</small></a>
@@ -965,6 +965,7 @@ try {
   <a data-maya-type="P2" href="https://console.cloud.google.com/billing?project=pro-maya" target="_blank" rel="noopener">Google Cloud billing<small data-maya-type="P1">Cloud costs</small></a>
   <h3>Outside tools</h3>
   <a data-maya-type="P2" href="https://ads.google.com/aw/overview" target="_blank" rel="noopener">Google Ads Manager<small data-maya-type="P1">Search campaigns</small></a>
+  <a data-maya-type="P2" href="https://ads.openai.com/manage/campaigns" target="_blank" rel="noopener">ChatGPT Ads Manager<small data-maya-type="P1">Campaigns</small></a>
   <a data-maya-type="P2" href="https://adsmanager.facebook.com/adsmanager" target="_blank" rel="noopener">Meta Ads Manager<small data-maya-type="P1">Social campaigns</small></a>
   <a data-maya-type="P2" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank" rel="noopener">Wix<small data-maya-type="P1">Website and forms</small></a>
   <h3>Privacy</h3>
@@ -977,7 +978,7 @@ try {
     <form data-maya-field-stack id="text-automations-form" onsubmit="event.preventDefault();saveTextAutomations()">
       <section class="automation-rule" data-maya-panel="inner" data-maya-field-stack><h3 class="subheadline" data-maya-type="H3">First text</h3>
         <label data-maya-type="P3"><input id="automation-first-enabled" type="checkbox"> Suggest first text</label>
-        <div class="automation-example-actions"><button data-maya-type="P3" data-maya-pill="regular" id="automation-first-example" type="button" onclick="generateAutomationExample('first')">Example</button><button data-maya-type="P3" class="maya-icon-button" id="automation-first-refresh" type="button" aria-label="Generate another first text example" title="Generate another example" onclick="generateAutomationExample('first')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 5"/></svg></button></div>
+        <div class="automation-example-actions"><button data-maya-type="P3" data-maya-pill="glass" id="automation-first-example" type="button" onclick="generateAutomationExample('first')">Example</button><button data-maya-type="P3" class="maya-icon-button" id="automation-first-refresh" type="button" aria-label="Generate another first text example" title="Generate another example" onclick="generateAutomationExample('first')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 5"/></svg></button></div>
         <textarea aria-label="First text example" data-maya-type="P1" data-maya-control="field" id="automation-first-text" maxlength="1000" placeholder="Click Example to generate a draft, or write your own." required></textarea>
         <p data-maya-type="P1" class="automation-example-status" id="automation-first-example-status" role="status" aria-live="polite"></p>
         <div class="automation-timing" data-maya-field-stack><label data-maya-type="P3" data-maya-field-row>Trigger<select data-maya-type="P1" data-maya-control="field" id="automation-first-trigger"><option value="new_lead">New lead, no outgoing texts</option></select></label>
@@ -985,7 +986,7 @@ try {
       </section>
       <section class="automation-rule" data-maya-panel="inner" data-maya-field-stack><h3 class="subheadline" data-maya-type="H3">Second text</h3>
         <label data-maya-type="P3"><input id="automation-second-enabled" type="checkbox"> Suggest follow-up</label>
-        <div class="automation-example-actions"><button data-maya-type="P3" data-maya-pill="regular" id="automation-second-example" type="button" onclick="generateAutomationExample('second')">Example</button><button data-maya-type="P3" class="maya-icon-button" id="automation-second-refresh" type="button" aria-label="Generate another second text example" title="Generate another example" onclick="generateAutomationExample('second')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 5"/></svg></button></div>
+        <div class="automation-example-actions"><button data-maya-type="P3" data-maya-pill="glass" id="automation-second-example" type="button" onclick="generateAutomationExample('second')">Example</button><button data-maya-type="P3" class="maya-icon-button" id="automation-second-refresh" type="button" aria-label="Generate another second text example" title="Generate another example" onclick="generateAutomationExample('second')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 5"/></svg></button></div>
         <textarea aria-label="Second text example" data-maya-type="P1" data-maya-control="field" id="automation-second-text" maxlength="1000" placeholder="Click Example to generate a draft, or write your own." required></textarea>
         <p data-maya-type="P1" class="automation-example-status" id="automation-second-example-status" role="status" aria-live="polite"></p>
         <div class="automation-timing" data-maya-field-stack><label data-maya-type="P3" data-maya-field-row>Trigger<select data-maya-type="P1" data-maya-control="field" id="automation-second-trigger"><option value="no_reply">No reply after first text</option></select></label>
@@ -1087,6 +1088,7 @@ try {
       <button class="range-chip" aria-pressed="false" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
     </span>
   </div>
+  <p id="ads-connection-status" data-maya-type="P1" role="status"></p>
   <div class="panel" style="margin-bottom:12px"><table id="campaigns-table"><tbody></tbody></table></div>
   <div class="panel" id="ad-combined-panel">
     <div class="metric-chips" id="metric-chips">
@@ -3771,9 +3773,7 @@ function paintAdCombined() {
     svg.innerHTML = ''; if (ylab) ylab.innerHTML = ''; if (xaxis) xaxis.innerHTML = '';
     if (yword) yword.textContent = '';
     note.style.display = '';
-    note.innerHTML = '<b>No combined ad data yet.</b> ' +
-      esc(_windsorWhy || 'Windsor has nothing for the last 7 days.') +
-      ' Set <code>WINDSOR_API_KEY</code> on the API and both networks appear here.';
+    note.textContent = 'No combined ad data yet for this window. Available campaign reports appear in the table above.';
     return;
   }
   note.style.display = 'none';
@@ -3941,18 +3941,19 @@ function paintCampaigns() {
     tb.innerHTML = '<tr><td style="color:var(--dim)">No campaigns reported for this window.</td></tr>';
     return;
   }
-  const srcName = (s) => /google/.test(s) ? 'Google' : /facebook|meta/.test(s) ? 'Meta' : s;
-  // Status is honest: it says whether the campaign actually delivered
-  // impressions inside the window, which is all the feed can prove.
+  const srcName = (s) => /google/.test(s) ? 'Google' : /facebook|meta/.test(s) ? 'Meta' : /chatgpt|openai/.test(s)?'ChatGPT':s;
+  // Prefer provider campaign state. Without it, label historical delivery only.
   // v13.56: the Cost column carries what the two big panels used to say,
   // and clicks mean LINK clicks on both networks here too.
   tb.innerHTML = '<tr><th>Status</th><th>Campaign</th><th>Network</th>' +
     '<th class="num">Cost</th><th class="num">Impressions</th><th class="num">Link clicks</th><th class="num">CTR</th><th class="num">CPC</th></tr>' +
     rows.map(c => {
-      const on = Number(c.impressions) > 0;
+      const state=String(c.status||'').toLowerCase(),paused=state==='paused',enabled=/^(active|enabled)$/.test(state);
+      const on = !paused&&(enabled||Number(c.impressions)>0);
+      const stateLabel=paused?'paused':enabled?'active':on?'delivering':'no delivery';
       const lnk = c.linkClicks != null ? c.linkClicks : c.clicks;
-      return '<tr><td><span class="status-word ' + (on ? 'on' : 'off') + '" data-status="' + (on ? 'delivering' : 'new') + '" title="' + (on ? 'Impressions recorded in the selected window; this does not confirm the campaign is enabled now.' : 'No impressions recorded in the selected window.') + '">' +
-        (on ? '&#9679; delivering' : '&#9675; no delivery') + '</span></td>' +
+      return '<tr><td><span class="status-word ' + (on ? 'on' : 'off') + '" data-status="' + (on ? 'delivering' : 'new') + '" title="' + (paused?'Campaign is reported paused; historical delivery remains in this window.':enabled?'Campaign is reported enabled; impressions show delivery in this window.':on?'Impressions recorded in the selected window; this does not confirm the campaign is enabled now.':'No impressions recorded in the selected window.') + '">' +
+        (on?'&#9679; ':'&#9675; ')+stateLabel + '</span></td>' +
         '<td>' + esc(c.campaign) + '</td>' +
         '<td>' + esc(srcName(String(c.source || ''))) + '</td>' +
         '<td class="num">' + usd(c.spend) + '</td>' +
@@ -3997,6 +3998,9 @@ function _paintMkt(d, alsoBrief){
   try{ paintVisitors(d); }catch(e){ console.warn('[mkt] visitors',e); }
   try{ paintSite(d.analytics||{}); }catch(e){ console.warn('[mkt] sources',e); }
   _adData = d.adCombined||null;
+  const adConnections=document.getElementById('ads-connection-status');
+  const googleReporting=d.googleAds?.connected||[...(d.adCombined?.campaignDaily||[]),...(d.adCombined?.campaigns||[])].some(row=>/google/i.test(row.source));
+  if(adConnections)adConnections.textContent=(googleReporting?'Google reporting connected. ':'Google reporting unavailable. ')+(d.chatgptAds?.connected?'ChatGPT reporting connected. ':'ChatGPT Ads reporting is not connected to MAYA.');
   _windsorWhy = (d.windsor&&d.windsor.why)||'';
   try{ paintAdCombined(); }catch(e){ console.warn('[mkt] ads',e); }
   try{ paintCampaigns(); }catch(e){ console.warn('[mkt] campaigns',e); }

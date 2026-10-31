@@ -112,7 +112,7 @@ assert.equal(validDesign({...canonical,type:{...canonical.type,P3:{...canonical.
 assert.equal(validDesign({...canonical,type:{...canonical.type,H5:{...canonical.type.H5,size:24}}}),true,'Date sizing remains independent, as in legacy H6');
 
 const regularPill={fill:25,rim:30,borderColor:'gray',background:'black',paddingX:12,paddingY:6};
-for(const design of [canonical,compact])assert.equal(validDesign({...design,regularPill}),true,'Regular pills are optional and independent of glass settings');
+for(const design of [canonical,compact])assert.equal(validDesign({...design,regularPill}),true,'Retired pill schema remains accepted for legacy design reads');
 for(const background of ['black','gray','blue','yellow','green','pink'])assert.equal(validDesign({...canonical,regularPill:{...regularPill,background}}),true);
 for(const borderColor of ['black','white','gray'])assert.equal(validDesign({...canonical,regularPill:{...regularPill,borderColor}}),true);
 for(const [key,min,max] of [['fill',0,100],['rim',0,100],['paddingX',4,32],['paddingY',2,16]]){

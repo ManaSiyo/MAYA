@@ -47,7 +47,7 @@ never calls image generation. No purchase capability is added.
 ## Runtime
 
 Node 20 combined abort signals use a WeakMap lifetime guard so garbage collection
-cannot discard their timeout sources. Route, web, feed and seller deadlines keep
+cannot discard their timeout sources. Web discovery is capped at 20 seconds; route, feed and seller deadlines retain
 their existing budgets. tests/fabric-search-gc.mjs forces collection through all
 behavioral deadline fixtures in a bounded subprocess and is a release gate.
 
@@ -318,3 +318,23 @@ may reach the existing single photo comparison, but cannot be confirmed when tha
 comparison is unavailable or fails. Definite construction and client constraints
 remain strict; saved words and seller facts are never rewritten. Local fixtures
 cover reported tracksuit/tailcoat descriptions; live result quality is unverified.
+
+## October 30 continuity repair
+
+Confirmed results are kept in a bounded (24-context) in-memory cache for the
+current account/submission. Returning to identical garment metadata, reference
+and preferences restores results without discovery, photo preparation or another
+visual comparison. A changed material/reference context starts fresh. Actual
+account/project changes clear the cache; nothing private goes into browser
+persistent storage or the public catalog. Refresh retains confirmed products
+while checking for more and keeps them on empty/error responses. New conversational
+requirements start a separate result set; preliminary events remain unpublished.
+
+All five selected store groups are sent explicitly on initial requests. Direct
+seed discovery covers the five existing Shopify merchants with up to two queries
+each. Cited candidates and verified seeds are balanced by merchant host before
+the eight-item cap so local shops cannot fill every review slot first. Provider
+web output is bounded to sixteen cited candidates, reduced to eight for seller
+and the existing single visual review. These changes preserve source-backed
+URLs, seller-only facts, original photos/client words and strict exclusions;
+they do not guarantee that a selected merchant has a matching eligible listing.

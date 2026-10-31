@@ -56,8 +56,9 @@ try{
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('#msg-new').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Begin texting fits '+width);}
  await page.setViewportSize({width:1440,height:900});if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#drawer').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-messages.png')});
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="P3"] .type-row').waitFor();await page.waitForFunction(()=>document.getElementById('maya-surface-control-style')?.textContent.includes('#table-preview'));
- const pillHeadings=page.locator('.finish-controls>h3,[data-pill-family=regular]>h3');
- assert.equal(await pillHeadings.count(),2);
+ const pillHeadings=page.locator('.finish-controls>h3');
+ assert.equal(await pillHeadings.count(),1,'Glass is the sole pill family');
+ assert.equal(await page.locator('[data-pill-family=regular],.regular-pill-editor,.studio-control-preview').count(),0,'Retired pill and Studio previews are absent');
  await page.locator('[data-category=H3] summary').first().click();
  await page.locator('[data-category=H3] [data-field=font]').selectOption('cormorant');
  await page.locator('[data-category=H3] [data-field=size]').fill('18');
@@ -67,7 +68,7 @@ try{
  assert.equal(await page.locator('.pill-families + .pill-states').count(),1,'Pill states sit next to the family editors');assert.equal(await page.locator('#workspace-previews .workspace-preview-card').count(),1,'Only fabric preview remains');assert.equal(await page.locator('#workspace-previews button').filter({hasText:'Edit'}).count(),0,'Typography is edited in its own section');assert.equal(await page.locator('.input-control-usage').filter({hasText:'scrollbars'}).count(),0,'One shared scrollbar needs no repeated usage list');
  for(const selector of ['.dropdown-preview-details','.checkbox-preview-details','.scrollbar-preview-details','#workspace-previews']){const preview=page.locator(selector);assert.equal(await preview.evaluate(e=>e.open),false,selector+' starts collapsed');await preview.locator(':scope > summary').click();assert.equal(await preview.evaluate(e=>e.open),true,selector+' opens');await preview.locator(':scope > summary').click();}
  const typographyPair=await page.locator('.type-hierarchy').evaluate(el=>{const a=el.querySelector('[data-category=H1]').getBoundingClientRect(),b=el.querySelector('[data-category=H2]').getBoundingClientRect();return {right:a.right,left:b.left,top:a.top,otherTop:b.top};});assert.ok(typographyPair.right<=typographyPair.left+1&&Math.abs(typographyPair.top-typographyPair.otherTop)<2,'Changed H3 settings preserve compact typography layout');
- for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});const pair=await page.locator('.input-control-pair').evaluate(e=>{const [a,b]=[...e.children].map(n=>n.getBoundingClientRect());return {ar:a.right,ab:a.bottom,at:a.top,bl:b.left,bt:b.top};});if(width>700)assert.ok(pair.ar<=pair.bl+1&&Math.abs(pair.at-pair.bt)<2,'Dropdown and checkbox side by side '+width);else assert.ok(pair.ab<=pair.bt+1,'Dropdown and checkbox stack '+width);assert.ok(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1),'Aesthetic Control fits '+width);const layout=await page.locator('.pill-families').evaluate(el=>{const [a,b]=[...el.children].map(e=>e.getBoundingClientRect());return {aLeft:a.left,aRight:a.right,aTop:a.top,aBottom:a.bottom,bLeft:b.left,bTop:b.top};});if(width>700)assert.ok(layout.aRight<=layout.bLeft+1&&Math.abs(layout.aTop-layout.bTop)<2,'Saved H3 pill families share a row '+width);else assert.ok(layout.aBottom<=layout.bTop+1,'Saved H3 pill families stack '+width);}
+ for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});const pair=await page.locator('.input-control-pair').evaluate(e=>{const [a,b]=[...e.children].map(n=>n.getBoundingClientRect());return {ar:a.right,ab:a.bottom,at:a.top,bl:b.left,bt:b.top};});if(width>700)assert.ok(pair.ar<=pair.bl+1&&Math.abs(pair.at-pair.bt)<2,'Dropdown and checkbox side by side '+width);else assert.ok(pair.ab<=pair.bt+1,'Dropdown and checkbox stack '+width);assert.ok(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1),'Aesthetic Control fits '+width);assert.equal(await page.locator('.pill-families > *').count(),1,'Single Glass family at '+width);}
 
  await page.setViewportSize({width:1440,height:900});await page.locator('.status-style-preview').filter({has:page.locator('[data-status="completed"]')}).locator('.type-editor > summary').click();
  if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#pill-colors').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-statuses.png')});
@@ -78,7 +79,7 @@ try{
 // Actual section and capsule geometry extend the shared authority check.
 await import('./presentation-consistency.mjs');
 await import('./pill-consistency.mjs');
-console.log('Aesthetic authority passed: shared roles/materials, all Admin heading gaps, real Glass/Regular pill geometry, active previews and saved settings across responsive pages.');
+console.log('Aesthetic authority passed: shared roles/materials, all Admin heading gaps, shared Glass pill geometry, active previews and saved settings across responsive pages.');
 
 // Re-execute changed-surface fixtures even when app-regression imported them earlier.
 await import('./workspace-authority.mjs?authority');
@@ -106,5 +107,3 @@ console.log('Final Aesthetic Control authority passed: active previews, saved se
 await import('./wr-ui.mjs?authority');
 
 await import('./avatar-camera-ui.mjs?authority');
-
-await import('./design-studio-2-ui.mjs?authority');

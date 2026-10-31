@@ -26,8 +26,10 @@ Decisions category hint, with adaptive grammar and broad retrieval fallback.
 Run tests/pattern-decisions.mjs and the existing Operations, proxy and release
 gates. Its confidence cutoff is not calibrated; validate against labeled examples.
 
-October 29 owner review: Design Studio 2 is only in the Systems drawer. Shared
-selected Glass/Regular pills use the hover-style white rim without a blue fill.
+October 30 owner review: the internal Studio preview is removed entirely from
+served implementation, navigation and Aesthetic Control. Glass is the sole pill
+family, including Edit; selected Glass pills use the hover-style white rim without
+a blue fill. Legacy regularPill saves remain readable but have no runtime authority.
 Sourceable Search details is explicit and concise; never open it from empty
 results on hover. Wide Operation Room garment sheets pan visually while the
 original front image remains the pattern input. Matching identically described
@@ -39,7 +41,7 @@ visual-review, project and account safeguards remain in force.
 
 Outbound is removed at Fromsa's request. `/outbound.html` and `/backend/outbound.html` redirect to Admin, and its API returns 410. Never restore its Gmail outreach, Sheets imports, provider events or page without a new request. Previous Outbound-specific notes below are historical and superseded. Keep the independent Leads, owner SMS/phone, Wix callback alerts and text AI services. Legacy private Outbound objects, OAuth grants and Scheduler settings are not deleted or changed; the owner must manage external cleanup. `OUTBOUND_SCHEDULER_*` still authenticates the independent callback worker and must not be removed as dead configuration. Run `tests/leads-ui.mjs`, `tests/retired-workspaces.mjs`, event/communications and smoke checks.
 
-Aesthetic Control: Glass and Regular own pill materials; selected pills use the same white rim as hover, with the saved material unchanged. Admin traffic metrics use Glass. Pill states sit beside their families; dropdown and checkbox previews pair on desktop. The sole page-style usage sample is Fabrics; typography is edited in Typography. Preserve semantic status colors and legacy design saves.
+Aesthetic Control: Glass owns all pill materials; selected pills use the same white rim as hover, with the saved material unchanged. Admin traffic metrics use Glass. Pill states sit beside their families; dropdown and checkbox previews pair on desktop. The sole page-style usage sample is Fabrics; typography is edited in Typography. Preserve semantic status colors and legacy design saves.
 
 
 Conversational fabric sourcing: docs/server/fabric-search.mjs and the shared
@@ -361,8 +363,8 @@ October 7 late owner review: typography schema typeVersion 2 merges lead names
 into H4, moves old H6 dates to H5, and merges captions into P3. Legacy saves read
 without migration writes. presentation-runtime.js and pill-runtime.js load before
 typography runtime v24 (gallery v34). Capsules size from content/glyph + saved X/Y
-padding. Glass and Regular pills have independent material/padding and usage
-previews; all Edit triggers are Regular, Save/icons are Glass. Nine semantic status
+padding. October 30 supersedes the two-family split: one Glass material/padding
+and usage preview governs Edit, Save, icons and all other pills. Nine semantic status
 editors list consumers; saved colors remain explicit overrides. All seven active Admin
 heading gaps include empty states and Ad campaigns' D/W/M row; redundant range
 copy stays hidden. Final aesthetic-authority imports presentation-consistency and
@@ -583,7 +585,7 @@ candidates before the single visual check. Keep original look and canonical crop
 qualified traits and seller-only facts. In House loads independently of reference
 conversion. Sourceable search details use the shared presenter also active in
 Aesthetic Control: H4/P3, Inner and Glass. Hover/focus/tap never start paid work;
-account/project/garment resets clear private context. Fabric assets are v5 and
+account/project/garment resets clear private context. Fabric assets are v6 and
 search-details.js revalidates. Run domain-boundaries, all fabric suites and exact
 release gates, then aesthetic-authority last. Import boundaries do not imply
 separate Cloud Run deployments; see docs/MODULE-BOUNDARIES.md.
@@ -606,7 +608,9 @@ appliqué/trim. Automatic whole-look preference directions must not overwrite on
 saved garment's base material. Preserve explicit/named requirements, blends and
 all exclusions; unknown inferred traits require the single successful visual
 comparison. Client preferences/Store scope remain in the shared active details
-preview. Keep the two-query/four-store seed budget and balance merchants.
+preview. Keep two bounded seed queries across the five approved Shopify merchants and
+balance merchant hosts before the eight-candidate cap. Web discovery has a 20s
+deadline with the Node 20 lifetime guard; one visual pass of at most eight remains.
 Cloud Build retains every gate and final authority with a bounded 1800s deadline;
 START/PASS elapsed diagnostics do not change exit handling or log preservation.
 
@@ -636,13 +640,27 @@ gallery, app-regression and the final aesthetic-authority check. Its camera is a
 synthetic fixture and cannot establish real-device behavior.
 
 
-## Design Studio 2 preview
+## October 30 fabric continuity and ad reporting
 
-`backend/design-studio-2.html` is served at `/design-studio-2.html` and is linked
-from the Admin doors and Systems drawer. Its CSS/JS live in `aesthetics/ui/` and
-its form is intentionally non-sending and non-persistent, including if the page
-script fails. Do not connect it to live callbacks, consent, notifications or Wix
-without a new owner instruction. Its images reference the owner's existing Wix
-site. Use existing Aesthetic Control roles, panels, pills, fields and checkbox;
-run `tests/design-studio-2-ui.mjs`, Admin navigation, gallery, app-regression and
-the final aesthetic-authority gate.
+Confirmed Sourceable cards are retained in a bounded memory-only cache scoped to
+account, submission, canonical garment metadata, reference and preferences.
+Switching garments restores unchanged results; Refresh can add verified results
+without blanking existing cards. Account/project changes clear private caches.
+Never retain candidates from a different material request or publish preliminary
+results before seller/visual checks. All selected merchant groups are sent on
+initial requests. Run fabric search/UI/workflow, forced GC on Node 20 and local
+runtime, then the exact release gates and final authority.
+
+WR Applicants uses the same Table authority as Admin, with Wave, Number, Name,
+Look, Color and Email; Add applicant is a collapsed form below the table. Native
+Garment pill height follows shared P3 plus saved Glass padding, not the header row.
+
+Read-only Google Ads reporting lives in docs/server/ad-reporting.mjs using the
+owner's existing server configuration, supported v26 endpoint and bounded
+pagination. It feeds campaigns directly if Windsor has no Google report. Preserve
+account-local completed-day totals and distinguish reported PAUSED/ENABLED from
+historical delivery. tests/ad-reporting.mjs is a release/app-regression gate and
+the module must ship in Dockerfile. ChatGPT Ads needs a supported reporting API;
+a service key alone is not a reporting contract. Never store credentials or
+hardcode connector observations into live dashboard metrics. No campaign state,
+budget or production environment change is authorized by this dashboard repair.

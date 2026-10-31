@@ -210,8 +210,14 @@ await test('retailer expansion stays balanced and capped at eight visual candida
     visited.push(target);return new Response(seller({url:target,name:'Red wool fabric',description:'Red wool fabric sold by the yard.'}));
   },rank:async({products})=>{ranks++;assert.equal(products.length,8);return products;}});
   await service.search(user,{request:'red wool',piece:{name:'Coat',fabric:'red wool'},image},event=>events.push(event));
-  assert.equal(visited.length,8);assert.equal(new Set(visited.map(link=>new URL(link).hostname)).size,4,'One seller cannot occupy the whole verification budget');
+  assert.equal(visited.length,8);assert.equal(new Set(visited.map(link=>new URL(link).hostname)).size,5,'One seller cannot occupy the whole verification budget');
   assert.equal(ranks,1);assert.equal(events.at(-1).products.length,8);
+});
+await test('cited online merchants survive a local-heavy discovery list',async()=>{
+ const urls=[...Array.from({length:9},(_,i)=>'https://britexfabrics.com/products/red-wool-'+i),'https://www.moodfabrics.com/products/red-wool','https://www.swatchon.com/fabric/QL-061078','https://amazon.com/dp/B000000001','https://www.tessuti.com.au/products/red-wool'];
+ const discovery=response({candidates:urls.map(url=>({url,reason:'Red wool fabric'}))});discovery.output[0].action.sources=urls.map(url=>({url}));
+ const found=readDiscovery(discovery);assert.equal(found.candidates.length,8);for(const host of ['www.moodfabrics.com','www.swatchon.com','amazon.com','www.tessuti.com.au'])assert.ok(found.candidates.some(c=>new URL(c.url).hostname===host),'Online merchant preserved: '+host);
+ const req=webSearchBody(normalizeFabricRequest({request:'wool',storeGroups:['local','mood','swatchon','amazon','others']}),'fixture');assert.equal(req.tools[0].filters.allowed_domains.length,9);
 });
 await test('empty/error searches retry and never populate a shared private query cache',async()=>{
   const s=store();let calls=0;const events=[];
@@ -495,7 +501,7 @@ await test('saved garment retailer results survive an empty web answer and still
     return new Response(seller());
   },rank:async({products})=>{ranks++;return products;}});
   await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'coat'},image},e=>events.push(e));
-  assert.ok(feeds.length&&feeds.length<=8,'Automatic saved garments get bounded direct retailer queries');
+  assert.ok(feeds.length&&feeds.length<=10,'Automatic saved garments get bounded direct retailer queries');
   assert.ok(feeds.every(q=>/wool|twill/.test(q)&&!q.includes('PRIVATE')),'Public queries contain material vocabulary only');
   assert.equal(ranks,1);assert.deepEqual(events.at(-1).products.map(p=>p.url),[url]);
   assert.ok(events.find(e=>e.type==='context')?.searchDetails.retailerQueries.length);
@@ -599,7 +605,7 @@ await test('seller redirects and variant facts share one total verification budg
 await test('a non-cooperative web search cannot block reviewed retailer results',async()=>{
   const nativeTimeout=AbortSignal.timeout,events=[];let release,ranks=0;
   const keepAlive=setInterval(()=>{},1000);
-  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===35000?40:ms);
+  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===20000?40:ms);
   try{
     const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
       if(target.includes('api.openai.com'))return new Promise(resolve=>release=()=>resolve(Response.json(response())));

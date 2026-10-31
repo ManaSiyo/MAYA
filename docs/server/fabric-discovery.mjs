@@ -1,5 +1,5 @@
 // Fabric-only provider contract. No messaging, CRM or private storage dependencies.
-import {merchantURL,merchantIdentity,requestedShops} from './fabric-retailers.mjs';
+import {merchantURL,merchantIdentity,requestedShops,balancedFabricCandidates} from './fabric-retailers.mjs';
 const text=(v,max=1000)=>String(v??'').replace(/\s+/g,' ').trim().slice(0,max);
 const fail=(message,status=502)=>Object.assign(new Error(message),{status});
 const list=v=>Array.isArray(v)?v:[];
@@ -26,7 +26,7 @@ Search real fabric PRODUCT pages (yardage, not garments, shoes, scissors, tools,
 Do not put client names, measurements, contact details or private image URLs into a public search query. Search using material requirements only. Do not invent a product, URL, price, stock, composition or delivery date.
 Return ONLY a JSON object: {"query":"short resolved fabric search, retaining refinements","observation":"brief qualified description of the reference; no product stock or prices","garmentColors":[{"garmentId":"exact saved garment id","colors":["red"]}],"candidates":[{"url":"a product URL actually returned by search","garment":"exact saved garment name this material is for, if provided","reason":"short explanation of why it may match, qualified where uncertain"}]}.
 garmentColors contains only clearly visible dominant BASE-cloth color families per saved garment: red, blue, green, brown, black, white, gray, yellow, pink or purple. Omit uncertain colors and trim/lining colors. This is a qualified visual hint, never an exact shade or composition claim. Preserve exact saved IDs; never assign one garment's color to another.
-Return up to 8 candidates in relevance order. All candidate URLs must appear in your web search sources. An empty list is better than fabricated results. No markdown fences.`,
+Return up to 16 candidates in relevance order, spanning the selected merchant groups when relevant listings exist. Do not fill the list with one local retailer when other selected stores have suitable products. All candidate URLs must appear in your web search sources. An empty list is better than fabricated results. No markdown fences.`,
     input: [{ role: 'user', content }],
   };
 }
@@ -48,12 +48,12 @@ export function readDiscovery(response) {
   try { data = JSON.parse(raw); } catch { throw fail('Search returned an unreadable answer. Try again.', 502); }
   if(!data||Array.isArray(data)||typeof data!=='object'||!Array.isArray(data.candidates))throw fail('Search returned an invalid result. Refresh to retry.');
   const seen = new Set();
-  const candidates = list(data.candidates).slice(0, 16).flatMap(c => {
+  const candidates = balancedFabricCandidates(list(data.candidates).slice(0, 16).flatMap(c => {
     const u = merchantURL(c?.url, true);
     if (!u || !sources.has(merchantIdentity(u.url)) || seen.has(merchantIdentity(u.url))) return [];
     seen.add(merchantIdentity(u.url));
     return [{ url: u.url, reason: text(c.reason, 220),garment:text(c.garment,80) }];
-  }).slice(0, 8);
+  }));
   const garmentColors=list(data.garmentColors).slice(0,12).flatMap(item=>{
     const garmentId=typeof item?.garmentId==='string'?text(item.garmentId,100):'';
     const colors=[...new Set(list(item?.colors).filter(c=>typeof c==='string'&&/^(?:red|blue|green|brown|black|white|gray|yellow|pink|purple)$/.test(c)))].slice(0,2);

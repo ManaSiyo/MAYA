@@ -1,19 +1,43 @@
-Title: [Codex] Measure current fabric card during release checks
+Title: [Codex] Keep fabric results and unify MAYA shared controls
 
-Fix the null-parent geometry assertion that stopped Cloud Build 2dabafd5 before
-the requested aesthetic release could deploy. Independent lookbook hydration may
-replace a card after locator resolution. Query the current connected card and
-measure it and its parent in one synchronous browser task. Keep the <75% width
-assertion and require positive width. No runtime, CSS, provider, credentials,
-configuration or production data changes.
+Fabrics preserves confirmed per-garment results within the current private
+account/submission instead of erasing them on switching, filtering or Refresh.
+Returning to an unchanged garment restores results without another provider
+request; empty/failed refreshes retain prior cards. Changed requests/photos and
+account/project changes invalidate incompatible private state. Balance approved
+merchants before the eight-candidate cap, include all five bounded Shopify seed
+sources, send every selected store group and cap web discovery at 20 seconds.
+Keep seller evidence, exclusions, canonical crops, Node 20 deadline retention and
+the single visual comparison; never publish preliminary products as confirmed.
 
-Validation: held lookbook response reproduces the original null-parent failure;
-corrected full fabric UI fixture passes with 4x CPU throttling on Node 20.20.2.
-All 74 functional/syntax release checks, integrated app-regression and server
-smoke passed. Final standalone Aesthetic Control passed last, including saved-style
-propagation and responsive fixtures. The default fabric workspace was visually
-inspected.
+Make Glass the only active pill material/editor, including Edit. Fix native
+Operation Room selector height using shared P3 plus saved X/Y padding and retain
+voice visibility rules. Remove the internal Studio page, assets, navigation,
+Hosting mapping and gallery sample. WR Applicants uses Admin's shared Table,
+with Wave/Number/Name/Look/Color/Email and a collapsed Add applicant form below.
+Legacy design saves remain readable without a second active pill authority.
 
-Production remains 3873ced. The requested aesthetic changes already exist in
-f346c66 and its pushed descendants; owner Push and exact deployed verification
-remain necessary. No personal Chrome, microphone or paid-provider tests resumed.
+Extract read-only Google Ads reporting to a shipped module with the supported
+v26 endpoint, bounded pagination, completed account-local week and direct
+campaign/chart fallback. Honor provider PAUSED/ENABLED before historical delivery.
+Explicitly identify unavailable Google/ChatGPT reporting using existing P1/Table;
+empty charts distinguish absent time-series rows from configuration. No ad state,
+budget, credentials or production configuration changes. ChatGPT
+reporting still needs a supported API contract and owner-managed setup. The
+secret pasted in chat was not used or stored. External ad campaigns are unchanged.
+
+Validation: locked npm ci completed. All 74 functional/syntax Cloud Build checks
+pass under Node 20.20.2 (retired UI/asset assertions updated and rerun), plus
+integrated app-regression and server smoke. Forced-GC fabric deadlines also pass
+under local Node 24. Tests cover merchant distribution, exact selected store
+scope, cached garment returns, empty/failed refresh retention, changed-request
+invalidation, account/project isolation, same Admin/WR table styles, hidden voice
+states and actual design Save/reload. Final standalone Aesthetic Control authority
+passed last, covering different valid saved settings, actual Save propagation and
+six widths. Default/changed WR, Glass/gallery, Ads copy and selector screenshots
+were visually reviewed. No personal Chrome, microphone or live
+paid fabric tests were resumed; synthetic checks do not establish live relevance
+or provider latency.
+
+Verified deployed baseline is 43cddf8. This commit is local only; owner Push and
+exact Cloud Build/Hosting/page/API/asset verification remain necessary.

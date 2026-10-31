@@ -1,4 +1,4 @@
-<!-- October 27: Outbound and the multi-page usage gallery are retired. Earlier references to them describe historical layouts. Only the fabric usage preview remains. Glass/Regular are the two pill materials; Glass also governs Admin traffic metrics, and selected pills use the same white rim as hover without a blue fill. Pill states are beside their families; dropdown and checkbox examples pair above 700px and stack below. -->
+<!-- October 30 owner review supersedes earlier pill/Studio layouts: Glass is the sole pill material, including Edit. Regular has no active editor/runtime authority. The internal Studio preview is removed. Historical notes are retained only when compatible with this rule. -->
 
 # Aesthetic Control — MAYA design standard
 
@@ -62,8 +62,8 @@ and long content must remain accessible at 320–1920px widths.
 ## Owner review controls
 
 Glass, Panels and Tables, Typography, Pills, Panels and Table headings use H2.
-Pill family headings use H3; every Edit trigger uses P3 and Regular pill material.
-Pills groups presets, separate Glass/Regular editors, X/Y padding, icons, nine
+The Glass family heading uses H3; every Edit trigger uses P3 and Glass material.
+Pills groups presets, one Glass editor, X/Y padding, icons, nine
 semantic status previews with usage links, and button States.
 A divider separates Panels, another separates Table. Panels have independent
 outer padding/material/corners; Outer panel, Inner panel and Table appear together under Panels using the same Edit dropdown grid. All offer background, opacity, border color/opacity, corners, blur, saturation and X/Y padding. Inner also offers percentage width; Table offers independent outside/inside border thickness and grid color/opacity. Tables stay outside Inner material, while the cell formatting toolbar follows Inner material. The unused Filter preview/button/editor are removed; saved filter data and functional Admin/Outbound filters remain compatible.
@@ -336,13 +336,15 @@ editors use the shared grid, dismissal and last-Save restore. Closed editor fiel
 must not create invisible overflow. Runtime v24/gallery v34 ship to all served pages.
 
 
-October 7 late review: two pill families share intrinsic geometry. Glass pills
-use the saved glass material; Regular pills use independent fill/rim/background
-and X/Y padding, without blur/highlight. Each family's editor lists rendered
-uses. Width and height equal content/glyph plus twice X/Y padding and borders;
-no fixed listen width or icon box may defeat this. Preserve semantic colors and
-native select input overlays. Save's glyph has explicit dimensions independent
-of its wrapper. Padding highlights are temporary overlays, never fills or saves.
+October 30 review: one Glass family owns every pill, including Edit, action,
+status, traffic, icon and native garment-selector pills. Width and height equal
+content/glyph plus saved X/Y padding and borders. Native garment selects use the
+shared P3 line height plus padding and glyph clearance; flex rows must not stretch
+their height. Legacy regularPill data is accepted for old-schema compatibility,
+but ignored by the runtime and omitted from new saves. Preserve semantic colors,
+native status-select overlays and visible focus. Selected and hover use the same
+white rim without a blue fill. Save glyphs retain explicit dimensions. Padding
+highlights remain temporary overlays.
 
 Section spacing's “All headings → content” means the vertical distance from an
 Admin section's heading box to its first visible content. All seven active Admin groups,
@@ -538,12 +540,10 @@ load a verified image. No new search or save action is added.
 
 ## October 26 — compact pill controls
 
-Aesthetic Control presents the existing Glass and Regular pill previews, Edit,
-Restore and usage links together in two columns above 700px, and stacks them on
-smaller screens. The concise headings are Glass and Regular; usage details are
-under “Where used.” This rearranges the existing controls without creating new
-materials, saved keys, previews or overrides. Both editors retain independent
-settings, anchored popups and last-Save Restore. At 1100px and wider, typography
+Aesthetic Control presents one Glass pill preview, Edit, Restore and usage
+links. The obsolete Regular family and its controls are removed. The existing
+Glass settings govern all consumers; no replacement visual authority is added.
+At 1100px and wider, typography
 roles share two columns, with the large H0 preview spanning both. Smaller layouts
 remain single-column. Page links move into the existing locations disclosure;
 authored counts and individual source links remain available.
@@ -552,7 +552,9 @@ authored counts and individual source links remain available.
 
 WR reuses Admin’s background, horizontal submissions strip and centered table
 width. Submission cards are slightly taller (36vh versus 34vh). The Applicants
-form and table use shared typography, field, inner-panel, table and pill settings;
+table is the primary Applicants view with Wave, Number, Name, Look, Color and
+Email. The Add applicant form is collapsed beneath it. Both use shared typography,
+field, inner-panel, table and Glass settings;
 the existing Fields and drawer spacing sample previews the form. Page CSS owns
 responsive layout. WR reads the Admin submission feed and stores Applicants
 privately per authenticated Admin account.
@@ -563,22 +565,32 @@ The frontend camera dialog uses the shared popup material, H3/P1 typography and
 Glass pills. The collapsible camera sample beside dropdown controls previews the
 same settings. Page CSS owns only placement and video layout.
 
-### Design Studio 2
-
-The internal design preview uses the existing H0 headline (adaptively capped to
-its container), H1 brand, H2 sections, H3 tier titles, P1/P2/P3 text, inner-panel
-material, Glass pills, fields, dropdown and checkbox settings. Its compact
-collapsible Aesthetic Control sample reuses those controls. The demo form never
-sends or stores information. Page CSS owns placement and responsive layout.
-
 ### October 29 compact controls
 
-Design Studio 2 remains in the Systems drawer, not the Admin door row. Selected
-Glass and Regular pills retain their saved material and use the same white rim
-as hover. Dropdown, checkbox, scrollbar, spacing, shoe and fabric previews open
+October 30 supersedes the drawer-only preview: its page, assets, navigation and
+Aesthetic Control sample are removed. Selected Glass pills retain their saved
+material and use the same white rim as hover. Dropdown, checkbox, scrollbar, spacing, shoe and fabric previews open
 on demand. The Brief Fabrics controls and Operation Room garment selector use
 the shared Glass pill; the selector retains its saved icon settings. Fabric
 views share one toolbar with explicit, concise Search details. The Operation
 Room aligns its inner panels and pans wide garment sheets without changing the
 original pattern input. These controls use existing settings; no new visual
 authority or private-data sharing is introduced.
+
+### October 30 fabric continuity and ads reporting
+
+Fabrics retains confirmed Sourceable results in memory when switching garments
+within the same Admin account/submission. Returning to an unchanged garment/photo,
+material and preferences restores its results without another provider request.
+Refresh keeps confirmed cards while looking for additional matches; an empty or
+failed refresh cannot erase them. A new reference/material context starts fresh.
+Private caches clear on actual account/project changes and never enter shared
+catalogs or persistent browser storage. All five merchant filters start enabled;
+only explicit Refresh starts another search after filtering. Seller and visual
+qualification remain mandatory; merchant balancing never promises a match.
+
+Ad connection copy uses existing P1 and role=status; the campaign table retains
+shared Table settings and semantic status colors. Provider PAUSED/ENABLED status
+takes precedence over historical impressions. Unknown configuration uses delivery
+wording only. An unavailable reporting connection is explicit, with no invented
+campaign metrics or independent styles.

@@ -97,6 +97,7 @@ try{
  const spacing=page.locator('.spacing-controls');
  await spacing.locator('.type-editor > summary').click();
  await spacing.locator('[data-field="headingGap"]').fill('37');
+ await page.keyboard.press('Escape'); // Close the actual editor before opening its usage preview.
  await spacing.locator('details.input-control-usage > summary').click();
  assert.equal(await spacing.locator('[data-heading-gap]').count(),7,'Every Admin group has a spacing preview');
  for(const sample of await spacing.locator('[data-heading-gap]').all())assert.ok(Math.abs(await sample.evaluate(e=>e.getBoundingClientRect().top-e.previousElementSibling.getBoundingClientRect().bottom)-37)<1,'Preview visibly applies heading distance');

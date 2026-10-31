@@ -107,7 +107,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
   .panel{border:var(--maya-hairline) solid var(--hair);border-radius:20px;
 
     padding:16px}
-  .col-head{display:flex;justify-content:center;margin-bottom:12px;min-height:54px}
+  .col-head{display:flex;align-items:center;justify-content:center;margin-bottom:12px;min-height:54px}
 
   /* left: dream garment */
   .hero-frame{aspect-ratio:3/4;border-radius:16px;border:var(--maya-hairline) solid var(--hair);
@@ -289,9 +289,9 @@ if (self !== top) document.documentElement.classList.add('embedded');
 <script src="/aesthetics/ui/presentation-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=5">
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=6">
 <script defer src="/aesthetics/ui/fabric-search-details.js?v=1"></script>
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=5"></script>
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=6"></script>
 </head>
 <body>
 <!-- Front End drawer model: horizontal scroll-snap with a main pane + a drawer pane.
@@ -447,7 +447,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
       <div class="logic-chips" id="logic-chips"></div>
       <textarea data-maya-control="field" data-maya-type="P1" id="logic-edit" spellcheck="false" placeholder="front leg x2&#10;back leg x2&#10;waistband x1"></textarea>
       <div class="logic-actions">
-        <button type="button" class="pill sm" data-maya-pill="regular" id="logic-edit-btn" onclick="editLogic()">Edit</button>
+        <button type="button" class="pill sm" data-maya-pill="glass" id="logic-edit-btn" onclick="editLogic()">Edit</button>
         <button type="button" class="pill sm" id="logic-save-btn" onclick="saveLogic()" style="display:none">Save</button>
         <button type="button" class="pill sm" id="logic-reset-btn" onclick="resetLogic()">Reset</button>
         <button type="button" class="pill sm" id="logic-lock-btn" onclick="toggleLogicLock()" title="Ignore user-edited logic, cut-list from the book grammar only, for credible eval runs">Test lock</button>

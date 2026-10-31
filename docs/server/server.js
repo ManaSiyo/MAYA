@@ -1,3 +1,4 @@
+import {createGoogleAdsReader,withDirectGoogle} from './ad-reporting.mjs';
 // ═══════════════════════════════════════════════════════════════════════════
 // MAYA — Cloud Run API service (replaces the three Vercel functions)
 //
@@ -2663,42 +2664,7 @@ async function metaInsights() {
   }
 }
 
-async function googleAdsInsights() {
-  const missing = Object.entries(GADS).filter(([k, v]) => k !== 'login' && !v).map(([k]) => k);
-  if (missing.length) return { connected: false, why: 'missing: ' + missing.join(', ') };
-  try {
-    const tr = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ client_id: GADS.id, client_secret: GADS.secret,
-        refresh_token: GADS.refresh, grant_type: 'refresh_token' }),
-      signal: AbortSignal.timeout(12000),
-    });
-    const tj = await tr.json();
-    if (!tr.ok) throw new Error(tj.error_description || tj.error || 'token refused');
-    const hdr = { 'Authorization': 'Bearer ' + tj.access_token, 'developer-token': GADS.dev,
-                  'Content-Type': 'application/json' };
-    if (GADS.login) hdr['login-customer-id'] = GADS.login;
-    const gaql = 'SELECT metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions ' +
-                 'FROM customer WHERE segments.date DURING LAST_7_DAYS';
-    const r = await fetch('https://googleads.googleapis.com/v18/customers/' + GADS.customer + '/googleAds:search', {
-      method: 'POST', headers: hdr, body: JSON.stringify({ query: gaql }),
-      signal: AbortSignal.timeout(15000),
-    });
-    const j = await r.json();
-    if (!r.ok) throw new Error((j.error && j.error.message) || ('ads ' + r.status));
-    let cost = 0, impressions = 0, clicks = 0, conversions = 0;
-    for (const row of (j.results || [])) {
-      const m = row.metrics || {};
-      cost += Number(m.costMicros || 0) / 1e6;
-      impressions += Number(m.impressions || 0);
-      clicks += Number(m.clicks || 0);
-      conversions += Number(m.conversions || 0);
-    }
-    return { connected: true, customer: GADS.customer, d7: { spend: cost, impressions, clicks, conversions } };
-  } catch (e) {
-    return { connected: false, why: String(e.message).slice(0, 160) };
-  }
-}
+const googleAdsInsights=createGoogleAdsReader({config:GADS});
 
 // v13.43: Windsor. One key, and it relays what Google Ads and Meta already
 // know: impressions, clicks, spend, by day. Set WINDSOR_API_KEY on Cloud Run
@@ -3068,6 +3034,7 @@ app.get('/api/admin/marketing', async (req, res) => {
   out.wixSite = wixSite;
   out.meta = meta;
   out.googleAds = gads;
+  out.chatgptAds={connected:false,why:'ChatGPT Ads reporting connection is not configured.'};
   out.windsor = windsor;
   out.leads = leads;
   // Windsor fills whichever ad panel has no direct credentials of its own.
@@ -3119,6 +3086,7 @@ app.get('/api/admin/marketing', async (req, res) => {
       campaignDaily: windsor.campaignDaily || [],
     };
   }
+  out.adCombined=withDirectGoogle(out.adCombined,gads);
   // v13.54: cost per lead, the row the whole dashboard exists for.
   const spend7 = (((out.googleAds || {}).d7 || {}).spend || 0) + (((out.meta || {}).d7 || {}).spend || 0);
   out.costPerLead = (leads.connected && leads.d7 > 0) ? spend7 / leads.d7 : null;

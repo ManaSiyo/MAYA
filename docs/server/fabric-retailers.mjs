@@ -64,3 +64,11 @@ export function requestedShops(input) {
 // Shopify collection and direct product routes identify the same listing. Keep
 // actual fetch/source destinations and selected variants intact.
 export function merchantIdentity(value){const found=merchantURL(value,true);if(!found)return '';const u=new URL(found.url);u.hostname=u.hostname.replace(/^www\./,'');if(found.shop.shopify)u.pathname=u.pathname.replace(/^\/collections\/[^/]+(\/products\/[^/]+)\/?$/i,'$1').replace(/^(\/products\/[^/]+)\/$/i,'$1');return u.href;}
+
+// Spend bounded verification/visual slots across selected merchants before adding
+// more listings from the same merchant. Every candidate still needs seller review.
+export function balancedFabricCandidates(candidates,limit=8){
+  const groups=new Map();const seen=new Set();
+  for(const candidate of candidates){const id=merchantIdentity(candidate.url),shop=merchantURL(candidate.url,true)?.shop;if(!id||seen.has(id)||!shop)continue;seen.add(id);const group=shop.host;if(!groups.has(group))groups.set(group,[]);groups.get(group).push(candidate);}
+  const out=[];for(let i=0;out.length<limit;i++){let added=false;for(const group of groups.values()){if(group[i]){out.push(group[i]);added=true;if(out.length===limit)break;}}if(!added)break;}return out;
+}

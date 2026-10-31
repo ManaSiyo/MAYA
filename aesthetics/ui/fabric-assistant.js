@@ -14,6 +14,17 @@
   let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
   let bookSeq = 0, photoSeq = 0, projectEpoch=0, projectIdentity='', reads=new AbortController(),projectReads=new AbortController();
   let searchDetails=null,searchState='idle';
+  const resultCache=new Map();
+  const resultKey=()=>scope()+'|'+JSON.stringify([context.preferences||'',!!context.automatic]);
+  function rememberResults(){
+    if(identity!==scope()||!account()||!context.submissionId||!products.length)return;
+    const key=resultKey();resultCache.delete(key);resultCache.set(key,{products:structuredClone(products),searchDetails:structuredClone(searchDetails),history:structuredClone(history),submittedRequest,lastSearchStores,completedStatus,stores:[...activeStores],filterTouched,image,originalImage,reference:context.referenceImage||'',view,inhouse:context.inhouse});
+    if(resultCache.size>24)resultCache.delete(resultCache.keys().next().value);
+  }
+  function restoreResults(){
+    const cached=resultCache.get(resultKey());if(!cached||cached.reference!==(context.referenceImage||''))return false;
+    ({submittedRequest,lastSearchStores,completedStatus,filterTouched,image,originalImage,view}=cached);products=structuredClone(cached.products);searchDetails=structuredClone(cached.searchDetails);history=structuredClone(cached.history);activeStores=new Set(cached.stores);context.inhouse=cached.inhouse;searchState='complete';autoStarted=true;els.details.set(searchDetails);paintPhoto();status(completedStatus);return true;
+  }
   let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null;
   const token = () => localStorage.getItem('maya_admin_tok') || localStorage.getItem('maya_google_token') || '';
   function account() {
@@ -54,7 +65,7 @@
   function status(message) { els.status.textContent = message || ''; }
   function reset() {
     epoch++;photoSeq++;searchSeq++;autoStarted=false;activeStores=new Set(storeGroups.map(group=>group.id));filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
-    const nextProject=projectScope();if(nextProject!==projectIdentity){bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
+    const nextProject=projectScope();if(nextProject!==projectIdentity){resultCache.clear();bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
     controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
     searchDetails=null;searchState='idle';els?.details.set(null);
     if(els){els.input.value='';els.observation.textContent='';els.transcript.replaceChildren();els.results.replaceChildren();els.photo.hidden=true;els.preview.removeAttribute('src');els.file.value='';els.send.disabled=false;els.stop.hidden=true;els.saveStatus.textContent='';els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');status('');}
@@ -75,6 +86,7 @@
     if(!dialog.open)dialog.showModal();els.expand.textContent=host?'Collapse':'Close';els.expand.setAttribute('aria-expanded','true');
   }
   function close() {
+    rememberResults();
     if(busy)autoStarted=false;
     controller?.abort();recognition?.stop();searchSeq++;busy=false;
     if(searchState==='searching')searchState='interrupted';
@@ -104,7 +116,7 @@
       activeStores.has(group.id)?activeStores.delete(group.id):activeStores.add(group.id);filterTouched=true;
       // Filtering is free. Refresh is the explicit new provider request; cancel
       // an obsolete stream so it cannot overwrite the changed scope or its hint.
-      if(busy){controller?.abort();searchSeq++;busy=false;products=[];searchState='interrupted';autoStarted=false;els.send.disabled=false;els.stop.hidden=true;lastSearchStores='';}
+      if(busy){controller?.abort();searchSeq++;busy=false;searchState='interrupted';autoStarted=false;els.send.disabled=false;els.stop.hidden=true;lastSearchStores='';}
       paint();
       if(searchDetails){searchDetails={...searchDetails,stage:'Store filter changed; Refresh to search this selection'};els.details.set(searchDetails);}
       status(!activeStores.size?'Choose at least one store group.':submittedRequest&&lastSearchStores!==storeKey()?'Refresh to search these stores.':completedStatus);
@@ -115,7 +127,7 @@
     const observation=node('p','fa-observation'),results=node('div','fa-results'),saveStatus=node('p','fa-save-status');saveStatus.setAttribute('role','status');body.append(transcript,observation,results,saveStatus);
     const form=node('form','fa-composer');
     const photo=node('div','fa-photo');photo.hidden=true;
-    const preview=node('img');preview.alt='Original look reference';photo.append(preview,action('Remove photo',()=>{image='';paintPhoto();}));
+    const preview=node('img');preview.alt='Original look reference';photo.append(preview,action('Remove photo',()=>replaceReference('')));
     const label=node('label','fa-input-label','Describe the fabric');label.htmlFor='fabric-request';
     const input=node('textarea');input.id='fabric-request';input.rows=2;input.maxLength=1200;input.dataset.mayaControl='field';input.placeholder='A matte burgundy wool, preferably local…';
     const row=node('div','fa-actions'),file=node('input');file.type='file';file.accept='image/jpeg,image/png,image/webp';file.hidden=true;
@@ -167,10 +179,15 @@
       return canvas.toDataURL('image/jpeg',.85);
     } finally { bitmap.close(); }
   }
+  function replaceReference(value){
+    resultCache.delete(resultKey());controller?.abort();searchSeq++;busy=false;autoStarted=false;
+    image=value;originalImage=value;context.referenceImage=value;products=[];history=[];submittedRequest='';lastSearchStores='';completedStatus='';searchDetails=null;searchState='idle';
+    els.details.set(null);els.send.disabled=false;els.stop.hidden=true;paintPhoto();paint();
+  }
   async function attach(file) {
     if (!file) return;
     const stamp=epoch, photoRequest=++photoSeq;
-    try { const value=await photoData(file); if (!current(stamp) || photoRequest!==photoSeq) return; image=value; paintPhoto(); status('Photo added. Add a description or press Find fabric.'); }
+    try { const value=await photoData(file); if (!current(stamp) || photoRequest!==photoSeq) return; replaceReference(value); status('Photo added. Add a description or press Find fabric.'); }
     catch (e) { if (current(stamp)) status(e.message); }
     els.file.value='';
   }
@@ -188,7 +205,7 @@
         const thumbnail=typeof p.thumbnail==='string'&&p.thumbnail.match(/^thumbs\/([^\\/]+\.(?:png|jpe?g|webp))$/i);
         return {title:p.name||p.fileName,url:original,image:thumbnail?'/aesthetics/fabrics/thumbs/'+encodeURIComponent(thumbnail[1]):original,description:[p.weave,p.weight,p.color].filter(Boolean).join(' · ')};
       });
-      paint();
+      if(view==='inhouse')paint();
     })();inventoryRequest=task;try{await task;}finally{if(inventoryRequest===task)inventoryRequest=null;}
   }
   async function loadContext(stamp) {
@@ -214,7 +231,7 @@
     try{
       const data=await json('/api/admin/fabrics/lookbook?submissionId='+encodeURIComponent(context.submissionId),{signal:AbortSignal.any([projectReads.signal,AbortSignal.timeout(10000)])});
       if(!projectCurrent(ticket)||(!forSave&&sequence!==bookSeq))return;
-      book=data;paint();notifySelection();
+      book=data;if(view==='saved')paint();notifySelection();
     }catch(e){if(projectCurrent(ticket)&&sequence===bookSeq)els.saveStatus.textContent=e.message;}
   }
   function notifySelection(){
@@ -233,7 +250,7 @@
         const payload=book.items.some(p=>p.url===snapshot.url)?{url:snapshot.url}:{...snapshot,garment:snapshot.garment||garmentName,garmentId:snapshot.garmentId||garmentId};
         const data=await json('/api/admin/fabrics/lookbook',{method:'POST',body:JSON.stringify({submissionId,generation:book.generation,action:actionName,garmentId,product:payload})});
         if(!projectCurrent(ticket))return;
-        book=data;paint();notifySelection();els.saveStatus.textContent=actionName==='remove'?'Removed.':actionName==='select'?'Selected: '+(garmentName||'this look')+'.':'Saved'+(garmentName?': '+garmentName:'')+'.';
+        book=data;if(view==='saved')paint();notifySelection();els.saveStatus.textContent=actionName==='remove'?'Removed.':actionName==='select'?'Selected: '+(garmentName||'this look')+'.':'Saved'+(garmentName?': '+garmentName:'')+'.';
       }catch(e){if(projectCurrent(ticket)){book.generation=null;els.saveStatus.textContent=e.name==='TimeoutError'?'Change not confirmed. Check Favorites before retrying.':e.message;await loadBook(true);}}
     };
     queue.tail=queue.tail.catch(()=>{}).then(task).finally(()=>{queue.pending.delete(key);button.removeAttribute('aria-busy');button.disabled=false;if(projectCurrent(ticket))paint();});return queue.tail;
@@ -291,8 +308,10 @@
     const stamp=epoch, sequence=++searchSeq; controller=new AbortController(); const active=controller;
     const signal=AbortSignal.any([active.signal,AbortSignal.timeout(60000)]);
     const valid=()=>current(stamp)&&sequence===searchSeq;
+    const retained=(context.automatic||filterOnly||request===submittedRequest)?products:[];
+    if(!retained.length)resultCache.delete(resultKey());
     busy=true;searchState='searching';completedStatus=''; els.send.disabled=true; els.stop.hidden=false; view='search'; els.saveStatus.textContent='';
-    products=[]; searchDetails=null;els.details.set(null);paint(); status('Searching fabric shops…');
+    products=retained;if(!retained.length){searchDetails=null;els.details.set(null);}paint();status(retained.length?'Checking for more fabrics…':'Searching fabric shops…');
     const submitted=request || 'Find fabrics like this photo';
     submittedRequest=submitted;
     const line=node('p','fa-request',submitted); els.transcript.append(line);
@@ -301,7 +320,7 @@
     let finished=false;
     try {
       const r=await waitForSignal(fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal,
-        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(filterTouched?{storeGroups:[...activeStores]}:{}),history})}),signal);
+        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,storeGroups:[...activeStores],history})}),signal);
       if(!r.ok){const data=await waitForSignal(r.json().catch(()=>({})),signal);throw Error(data.error || 'Fabric search failed. Try again.');}
       const reader=r.body.getReader(), decoder=new TextDecoder();let buffer='';
       const accept=raw=>{
@@ -312,10 +331,11 @@
         if(event.type==='status')status(event.message);
         if(event.type==='products' && event.preliminary)status('Retailer candidates. Photo comparison pending…');
         if(event.type==='done'){
-          products=Array.isArray(event.products)?event.products:[];
+          const confirmed=Array.isArray(event.products)?event.products:[];
+          products=[...new Map([...retained,...confirmed].map(p=>[p.url,p])).values()].slice(-48);
           finished=true;searchState='complete';history.push({request:submitted,query:event.query});history=history.slice(-6);
           els.observation.textContent=event.observation?'Reference interpretation: '+event.observation:'';
-          lastSearchStores=storeKey();completedStatus=event.warning || event.message || '';status(completedStatus);
+          lastSearchStores=storeKey();completedStatus=event.warning || (retained.length&&!confirmed.length?'No additional matches. Previously loaded fabrics are kept.':event.message) || '';status(completedStatus);rememberResults();
         }
       };
       try {
@@ -324,36 +344,39 @@
       } finally { void reader.cancel().catch(()=>{}); }
       if(!finished)throw Error('Search ended early. You can retry your request.');
     } catch(e) {
-      if(valid()){ searchState='interrupted';products=[];autoStarted=false;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}if(!filterOnly&&!els.input.value)els.input.value=request; }
+      if(valid()){ searchState='interrupted';products=retained;autoStarted=false;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}if(!filterOnly&&!els.input.value)els.input.value=request; }
     } finally { if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;paint();} }
   }
   async function open(next={}) {
     make();
+    rememberResults();
     const previousContext=context, prevIdentity=identity;
     context={...next};
     const nextIdentity=scope();
-    const changed=next.forceReset||prevIdentity!==nextIdentity||(next.referenceImage&&next.referenceImage!==originalImage);
+    const changed=next.forceReset||prevIdentity!==nextIdentity||(next.referenceImage&&next.referenceImage!==originalImage)||(next.preferences!==undefined&&next.preferences!==previousContext.preferences);
     if(next.silent&&!changed){context={...previousContext,...next};return;}
     if(changed){reset();identity=nextIdentity;}
     else {context.referenceImage=context.referenceImage||previousContext.referenceImage;context.preferences=context.preferences||previousContext.preferences;}
+    if(next.forceReset)resultCache.delete(resultKey());
+    const restored=changed&&!next.forceReset&&restoreResults();
     const stamp=epoch,preparationSequence=searchSeq;
     if(next.host instanceof HTMLElement){collapse();host=next.host;host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';}
     else if(!next.silent){host=null;expand();}
     workspace.hidden=!!next.silent;
     els.sub.textContent=next.submissionId?'This submission’s fabrics'+(next.piece?.name?' · '+next.piece.name:''):'Open a submission to save favorites';
-    if(changed)searchState='preparing';
+    if(changed&&!restored)searchState='preparing';
     paint();
     if(!account()){status('Sign in to Admin to search fabrics.');return;}
     // The book belongs to the project, so photo loading or garment changes must
     // not cancel its only hydration request.
-    void loadBook();
+    if(!restored)void loadBook();
     // Inventory must remain usable even if the private reference photo fails.
     void loadInventory().catch(e=>{if(current(stamp)&&view==='inhouse')status(e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':e.message);});
-    if(changed)status(context.automatic?'Loading the saved look…':'Describe what you need. A photo is optional.');
+    if(changed&&!restored)status(context.automatic?'Loading the saved look…':'Describe what you need. A photo is optional.');
     els.send.disabled=true;
     try{
-      if(changed&&next.referenceImage){const value=await photoData(next.referenceImage);if(!current(stamp)||preparationSequence!==searchSeq)return;image=value;originalImage=next.referenceImage;paintPhoto();}
-      await loadContext(stamp);if(!current(stamp)||preparationSequence!==searchSeq)return;
+      if(changed&&!restored&&next.referenceImage){const value=await photoData(next.referenceImage);if(!current(stamp)||preparationSequence!==searchSeq)return;image=value;originalImage=next.referenceImage;paintPhoto();}
+      if(!restored)await loadContext(stamp);if(!current(stamp)||preparationSequence!==searchSeq)return;
       if(searchState==='preparing'){searchState='idle';paint();}
       if(current(stamp)&&context.automatic&&!next.silent&&!autoStarted){autoStarted=true;await run();}
     }catch(e){if(current(stamp)){searchState='interrupted';status(e.message);paint();}}
@@ -369,5 +392,5 @@
   }}
   window.addEventListener('storage',guardAccount);window.addEventListener('focus',guardAccount);window.addEventListener('maya-owner-session-changed',guardAccount);
   setInterval(()=>{if(dialog)guardAccount();},1000);
-  window.MayaFabricAssistant={open,close,expand,prepare:next=>open({...next,silent:true}),reset:()=>{context={};reset();identity=scope();if(els){els.sub.textContent='';paint();}},selection:piece=>{guardAccount();return selectedProduct(piece);},focusGarment:piece=>{guardAccount();if(!context.submissionId)return;context={...context,piece:pieceMetadata(piece)};if(identity!==scope()){reset();identity=scope();paint();notifySelection();}}};
+  window.MayaFabricAssistant={open,close,expand,prepare:next=>open({...next,silent:true}),reset:()=>{context={};reset();identity=scope();if(els){els.sub.textContent='';paint();}},selection:piece=>{guardAccount();return selectedProduct(piece);},focusGarment:piece=>{guardAccount();if(!context.submissionId)return;rememberResults();context={...context,piece:pieceMetadata(piece)};if(identity!==scope()){reset();identity=scope();paint();notifySelection();}}};
 })();

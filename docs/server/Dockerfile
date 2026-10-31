@@ -6,7 +6,7 @@ RUN node -e "const commit=process.argv[1];if(!/^(local|[0-9a-f]{40})$/.test(comm
 ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
-COPY server.js ./
+COPY server.js ad-reporting.mjs ./
 COPY build-info.mjs lead-store.mjs ./
 COPY model-config.mjs ./
 COPY crm-store.mjs crm-ai.mjs wr-store.mjs ./

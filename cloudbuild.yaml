@@ -64,6 +64,7 @@ steps:
         node tests/lead-note-persistence.mjs
         node tests/text-automations.mjs
         node tests/canon-contract.mjs
+        node tests/ad-reporting.mjs
         node tests/ai-routing.mjs
         node tests/fabric-sourcing.mjs
         node tests/fabric-search.mjs
@@ -119,7 +120,6 @@ steps:
         node tests/wr-store.mjs
         node tests/wr-ui.mjs
         node tests/avatar-camera-ui.mjs
-        node tests/design-studio-2-ui.mjs
         node tests/aesthetic-authority.mjs
   - id: Build server
     name: gcr.io/cloud-builders/docker

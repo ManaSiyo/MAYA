@@ -1,7 +1,7 @@
 // Fabric discovery uses web evidence; seller facts come only from fetched listings.
 // No private image, request, conversation or lookbook is stored in a shared cache.
 import {isFabricProduct, isFabricPiece, fabricProductMatch, fabricSeedQueries} from './fabric-sourcing.js';
-import {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,merchantIdentity,requestedShops} from './fabric-retailers.mjs';
+import {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,merchantIdentity,requestedShops,balancedFabricCandidates} from './fabric-retailers.mjs';
 import {webSearchBody,readDiscovery} from './fabric-discovery.mjs';
 export {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,requestedShops} from './fabric-retailers.mjs';
 export {webSearchBody,readDiscovery} from './fabric-discovery.mjs';
@@ -350,7 +350,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     const queries=fabricSeedQueries(input);
     if (!queries.length) return [];
     const allowed = requestedShops(input);
-    const shops=allowed.filter(shop=>shop.shopify).slice(0,4);
+    const shops=allowed.filter(shop=>shop.shopify);
     const results = await Promise.all(shops.flatMap(shop=>queries.map(async q => {
       try {
         const url = 'https://' + shop.host + '/search/suggest.json?q=' + encodeURIComponent(q) + '&resources[type]=product&resources[limit]=3';
@@ -365,7 +365,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     const groups=shops.map(shop=>results.flat().filter(c=>merchantURL(c.url,true)?.shop===shop)),balanced=[];
     for(let index=0;index<queries.length*3;index++)for(const group of groups)if(group[index])balanced.push(group[index]);
     const unique=[...new Map(balanced.map(candidate=>[merchantIdentity(candidate.url),candidate])).values()];
-    return (await Promise.all(unique.slice(0, 8).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
+    return (await Promise.all(balancedFabricCandidates(unique).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
   }
   async function search(user, body, emit, signal = new AbortController().signal) {
     const input = normalizeFabricRequest(body);
@@ -408,7 +408,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     let discovery = null, warning = '';
     try {
       if (!apiKey()) throw fail('Web search is unavailable. Showing retailer results where available.', 503);
-      const webSignal=combineSignals([signal,AbortSignal.timeout(35000)]);
+      const webSignal=combineSignals([signal,AbortSignal.timeout(20000)]);
       const r = await untilAborted(fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { Authorization: 'Bearer ' + apiKey(), 'Content-Type': 'application/json' },
         signal: webSignal, body: JSON.stringify(webSearchBody({...input,selectedReference}, model)),
@@ -429,7 +429,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       const checked = await Promise.all(discovery.candidates.filter(c => allowed.includes(merchantURL(c.url, true)?.shop)).map(c => verify(c, signal)));
       if(signal.aborted)return;
       const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
-      products=[...new Map([...discovered,...products].map(p=>[merchantIdentity(p.url),p])).values()].slice(0,8);
+      products=balancedFabricCandidates([...discovered,...products]);
       products=products.filter(product=>fabricProductMatch(product,{...input,pieces:product.garmentId?input.pieces.filter(piece=>piece.id===product.garmentId):input.pieces,allowVisualOnly:!!rank&&!!input.image}));
     }
     const eligibleCount=products.length;

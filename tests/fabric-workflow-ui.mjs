@@ -20,6 +20,7 @@ const write=async(key,buf,type,generation)=>{assert.equal(type,'application/json
 const service=createFabricSearch({read,write,fetchImpl:async url=>{const p=products.find(p=>p.url===url);assert.ok(p,'Only fixture seller URLs are fetched');return new Response('<script type="application/ld+json">'+JSON.stringify({'@type':'Product',name:p.title,description:p.description,material:p.composition,image:p.image,url:p.url,offers:{price:'25',priceCurrency:'USD',availability:'https://schema.org/InStock',url:p.url}})+'</script>');}});
 const token=(sub,extra=0)=>'fixture.'+Buffer.from(JSON.stringify({sub,exp:Math.floor(Date.now()/1000)+3600+extra})).toString('base64url')+'.fixture';
 const user={sub:'owner-A'},searches=[],saves=[],errors=[];
+let holdSearch=false,releaseSearch;
 let searchProducts=[fur,leather],holdCatalog=true,catalogRoutes=[],holdAck=false,releaseAck,failSave=false,holdBook=false,releaseBook;
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH}),page=await browser.newPage({viewport:{width:1440,height:900}});
 page.on('pageerror',e=>errors.push(e.message));
@@ -30,7 +31,7 @@ await page.route('**/*',async route=>{
  if(url.hostname==='cdn.shopify.com')return url.searchParams.has('fixture-unavailable')?route.fulfill({status:404,body:'Missing fixture image'}):route.fulfill({body:png,contentType:'image/png'});
  if(url.hostname!=='maya-workflow.test')return route.abort();
  const body=request.postDataJSON();
- if(url.pathname==='/api/admin/fabrics/search'){searches.push(body);return route.fulfill({contentType:'application/x-ndjson',body:JSON.stringify({type:'done',products:searchProducts,message:'Fabrics found.'})+'\n'});}
+ if(url.pathname==='/api/admin/fabrics/search'){searches.push(body);if(holdSearch){holdSearch=false;await new Promise(r=>releaseSearch=r);}return route.fulfill({contentType:'application/x-ndjson',body:JSON.stringify({type:'done',products:searchProducts,message:'Fabrics found.'})+'\n'});}
  if(url.pathname==='/api/admin/fabrics/lookbook'){
   try{
    if(request.method()==='POST'){
@@ -69,6 +70,23 @@ try{
  const payload=searches.at(-1),bytes=Buffer.byteLength(JSON.stringify(payload));
  assert.ok(bytes<512*1024,'Metadata-only request, got '+bytes+' bytes');
  assert.ok(payload.pieces.every(p=>!Object.keys(p).some(key=>key.startsWith('_'))));assert.equal(payload.piece.id,'coat');assert.equal(JSON.stringify(payload).includes('PRIVATE_PATTERN'),false);
+
+ // Returning to a previously verified garment reuses results without another paid request.
+ searchProducts=[fur];await open({piece:pieces[0],forceReset:true});await card(fur).waitFor();
+ searchProducts=[leather];await open({piece:pieces[1]});await card(leather).waitFor();
+ const beforeReturn=searches.length;
+ await open({piece:pieces[0]});await card(fur).waitFor();assert.equal(searches.length,beforeReturn,'Garment return restores verified results without search');assert.equal(await card(leather).count(),0,'Garment results do not cross contexts');
+ assert.deepEqual(searches.at(-1).storeGroups,['local','mood','swatchon','amazon','others'],'All visible selected stores reach the server');
+ holdSearch=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await waitUntil(()=>!!releaseSearch);await card(fur).waitFor();
+ searchProducts=[];releaseSearch();releaseSearch=null;await page.getByText('No additional matches. Previously loaded fabrics are kept.',{exact:true}).waitFor();await card(fur).waitFor();
+ assert.equal(await page.locator('.fa-product').count(),1,'An empty refresh preserves previously confirmed results');
+ // A failed refresh also keeps prior confirmed results; new material requests do not.
+ await page.evaluate(()=>{const native=window.fetch;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){window.fetch=native;return Promise.resolve(new Response(JSON.stringify({error:'Fixture refresh failed.'}),{status:503,headers:{'Content-Type':'application/json'}}));}return native(url,options);};});
+ await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.getByText('Fixture refresh failed.',{exact:true}).waitFor();await card(fur).waitFor();
+ searchProducts=[fur];await open({piece:pieces[0],automatic:false,forceReset:true});await page.locator('#fabric-request').fill('brown fur');await page.getByRole('button',{name:'Find fabric',exact:true}).click();await card(fur).waitFor();
+ searchProducts=[];await page.locator('#fabric-request').fill('blue cotton instead');await page.getByRole('button',{name:'Find fabric',exact:true}).click();await page.getByText('Fabrics found.',{exact:true}).waitFor();assert.equal(await card(fur).count(),0,'New material cannot inherit old results');
+ await open({piece:pieces[1],automatic:false});await open({piece:pieces[0],automatic:false});assert.equal(await card(fur).count(),0,'Old cache cannot resurrect a replaced material request');
+ searchProducts=[fur,leather];
 
  // Existing books remain manageable; browsing never silently saves or selects.
  await seed(fur);await seed(leather);
