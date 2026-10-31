@@ -79,7 +79,7 @@ async function adminChecks(label,x,y){
  await ready('/status.html');await populateAdmin();
  check((await page.locator('#campaigns-table .status-word').first().innerText()).toLowerCase().includes('paused'),label+' historical impressions do not relabel a paused campaign as delivering');
  check((await page.locator('#ad-combined-note').innerText()).includes('Available campaign reports appear in the table above.'),label+' empty chart does not imply a missing credential');
- check((await page.locator('#ads-connection-status').innerText()).includes('Google reporting connected. ChatGPT Ads reporting is not connected to MAYA.'),label+' unavailable Ads integration is explicit');
+ check(await page.locator('#ads-connection-status').evaluate(e=>e.textContent.includes('Google: direct reporting connected.')&&e.textContent.includes('ChatGPT: direct reporting unavailable.')),label+' unavailable Ads integration is explicit');
  check(await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontSize)===await page.locator('#drawer p[data-maya-type=P1]').first().evaluate(e=>getComputedStyle(e).fontSize),label+' Ads connection copy follows the shared P1 role');
  check(await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontSize)===(label==='saved'?'16px':'12px'),label+' Ads connection copy visibly follows saved P1 size');
  if(label==='saved')check((await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontFamily)).includes('Cormorant'),label+' Ads connection copy follows saved P1 font');

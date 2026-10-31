@@ -1,94 +1,81 @@
-# Current handoff — October 31, 2026
+# Current handoff - October 31, 2026
 
-## Owner request and release boundary
+## Owner request / release boundary
 
-Fromsa clarified that every table must use the same Aesthetic Control aesthetics,
-with independent data. WR should currently be empty. He also asked to dive into
-Fabrics and undo the bottlenecks that made it less responsive.
+Fromsa retired Windsor and requires direct connections only for campaign reports.
+The working branch was clean and synchronized at ac048354edb2826ce6e4bccde398dfd92ebabe1e.
+Its Hosting release marker and API health commit were observed matching after the
+owner's Push earlier October 31. Prior WR independence, fabric responsiveness,
+Glass-only controls and Studio removal remain intact. This task does not Push.
 
-Working branch maya-v2 was clean at 03311d3, one commit ahead of origin. That
-October 30 overhaul is still local. The last verified deployed baseline was
-43cddf822a1a14331094633ef8d17b14c5547322 on October 30, Cloud Build
-cd73c38b-faf9-4e45-91d6-3177b053e501. This task does not Push or deploy.
-No personal Chrome, microphone, paid fabric/provider test, credentials or
-production configuration was accessed. Live acceptance remains stopped.
+No owner Chrome, microphone, paid fabric search, production credentials or
+environment settings were accessed. No advertising campaign, goal, audience,
+ad, spending limit, budget or provider account was changed. A previously pasted
+key was not used or stored; owner must manage its revocation. Live fabric/voice
+acceptance remains stopped at the owner's request.
 
-## WR repair
+## Direct reporting change
 
-WR's applicants were already in private account-bound WR storage, but its gallery
-incorrectly fetched /api/admin/submissions and client thumbnails. Removed that
-Admin-data connection and its thumbnail queue from aesthetics/ui/wr.js. The page
-now starts with an empty WR gallery and reads only its own WR applicants. Opening
-it never inserts sample records. Existing deliberately saved WR records remain;
-no production records were deleted or hidden by a new storage namespace.
+- docs/server/ad-reporting.mjs owns read-only Google, Meta and ChatGPT reports.
+  Google retains its existing owner configuration and v26 GAQL campaign report.
+  Meta uses its existing token/account and direct account metadata, independent
+  seven/thirty-day reach/frequency aggregates, daily campaigns and current states.
+  ChatGPT follows the official OpenAI Advertiser API contract checked October 31:
+  /v1/ad_account, /v1/campaigns and /v1/ad_account/insights at api.ads.openai.com.
+- ChatGPT requires owner-installed OPENAI_ADS_API_KEY and OPENAI_ADS_ACCOUNT_ID;
+  the model OPENAI_API_KEY is not reused. Account identity is verified first.
+  Meta identity also verifies its configured account. No credentials installed.
+  Missing/failed reporting stays visible; raw provider bodies and keys stay out
+  of responses. Provider pagination is bounded and partial reports fail closed.
+  Returned next URLs are never followed with credentials.
+- Removed Windsor's runtime calls, fallback, environment-key read and MCP
+  configuration field. Updated Maya's architecture description. Retired external
+  account/grant/secret cleanup remains owner-managed. No external setup changed.
+- Marketing and command snapshots share each provider's in-flight read and short
+  server-memory cache (60s success / 10s failure). Sources fail independently.
+  USD is combined only with USD; other/unknown currencies are explicit exclusions.
+- Combined data uses thirty completed calendar days and provider account timezone
+  reporting. A missing current-day report is unavailable, rather than yesterday
+  mislabeled as today. Google/Meta/ChatGPT feed Admin and Maya's snapshot together.
+- Campaign table identity includes provider plus ID, so identical names do not
+  merge. Current inventory preserves active/paused/inactive/zero-delivery objects.
+  Known inactive states cannot become "delivering" from old impressions.
+  ChatGPT is included in the existing chart, legend, ticker and totals. Account
+  daily CPC preserves provider values; table CPC labels its spend/click calculation.
+  No conversion count is relabeled as a lead count.
 
-All tables still use the existing global Table material/header/body settings.
-No alternate table style, token or editor was added. WR retains Wave, Number,
-Name, Look, Color, Email and its collapsed Add applicant form. Loading/error
-states appear outside that form; a failed or invalid read cannot claim an empty
-workspace, and stale read failures cannot replace a newer request. The served
-WR script reference is v3. tests/wr-ui.mjs supplies populated Admin fixtures but
-requires zero WR reads of them, zero thumbnail requests, zero sample writes,
-independent explicit applicant saves, visible read failures, and default/changed
-saved settings at six widths.
+## Shared aesthetics / tests
 
-## Fabric bottlenecks reproduced and removed
+The existing Table, chart/legend, P1 note and Glass controls govern all reporting.
+No new editor/material family or page CSS authority. Role usage was regenerated.
+The new ad-reporting-ui fixture checks ChatGPT-only reports, duplicate names,
+zero/paused/archived states, D/W/M, connection failures and different valid saved
+Table/P1 settings at six phone/tablet/desktop widths. It runs through the existing
+admin-ui-contract release gate, app-regression and final aesthetic-authority.
 
-- A held keyword-feed fixture reproduces the serial barrier: web-discovered
-  seller checks did not start until every seed operation finished. They now start
-  immediately after discovery and overlap the seed branch. Exact duplicate URLs
-  share a verification promise within that request only, with separate candidate
-  reasons and garment qualification. No private cross-request result cache or
-  extra paid provider attempt was introduced.
-- Optional Shopify price/unit metadata could consume the remaining eight-second
-  seller budget even for an otherwise valid listing. It now gets at most 1.2s
-  inside that budget. Known swatches, unavailable and non-fabric pages skip this
-  unnecessary enrichment. Fast variant prices still work; selected swatches remain
-  rejected and unknown facts remain blank. Main seller/redirect bounds, the Node
-  20 WeakMap lifetime guard and one visual pass of at most eight are unchanged.
-- Retaining product arrays did not retain their DOM: paint rebuilt loaded cards
-  during Refresh. Unchanged cards/images now stay mounted, including while more
-  results arrive. Explicit Refresh retries failed photos without replacing healthy
-  images. It does not loop failed-image retries automatically.
-- At most two prepared reference photos are reused within the current account /
-  submission, avoiding repeated fetch/decode/resize for unchanged garment context.
-  Explicit reset/new reference invalidates the relevant preparation; account/project
-  changes clear it. Completed empty contexts can be reused for 30 seconds on a
-  return, avoiding another automatic paid search. Refresh remains explicit.
-- Safe timing now starts before saved-context reads and firstResultsMs describes
-  checked results, rather than the earlier hidden preliminary-candidate event.
+Server fixtures exercise exact provider URL/headers/fields, pagination/caps,
+identity mismatch, missing/auth/empty states, currency isolation, separate Meta
+link clicks/aggregate reach, cached concurrent reads and current-day unavailability.
+The lead-feed-latency test extracted code using a retired Windsor-adjacent comment;
+it now uses the explicit Marketing route boundary and asserts that boundary. All
+lead assertions are retained. Historical literal Windsor assertions were replaced
+with direct reader/connection contracts; no functional gate was removed.
 
-Changed runtime paths: aesthetics/ui/fabric-assistant.js, aesthetics/ui/wr.js,
-backend/wr.html, docs/server/fabric-search.mjs. Updated fabric server/workflow,
-WR and app-regression fixtures plus AGENTS, design, FABRIC-SEARCH, README,
-requests/fixes and COMMIT-REVIEW. Typography usage metadata was regenerated. No new visible component or visual authority.
+Validation: focused ad-reporting passes on release Node 20.20.2 and local Node 24.
+All exact functional/syntax release gates pass, as do the complete integrated
+app-regression and server smoke. Focused admin-ui-contract, pill consistency,
+admin-command and lead-feed-latency pass. Direct Ads UI verifies an actual
+Admin-authenticated design Save from a separate Aesthetic Control page, then
+computed live styles at six widths. Default/changed Ads screenshots were visually
+inspected. Final standalone shared Aesthetic Control passed last before commit.
+These are fake providers/synthetic accounts; they do not prove live API access.
 
-## Validation and remaining work
+## Exact next steps / limitations
 
-Locked npm ci completed. All 74 functional/syntax release gates and the latest focused WR/fabric checks
-have passed; integrated app-regression and final server smoke also pass. The fabric server
-suite has 53 behavioral checks, including held transport overlap/deduplication,
-short optional metadata deadlines, fast variant facts and swatch/stock rejection.
-Forced-GC deadline fixtures pass on release Node 20.20.2 and local Node 24.
-The full fabric UI workflow passes at 4x CPU, including actual image-node identity,
-prepared-photo reuse, empty-result reuse and account/project cancellation.
-
-The retry fixture now explicitly sets its own response instead of depending on
-a prior image-failure scenario. Final standalone Aesthetic Control passed last with default/changed saved
-settings, real Save propagation and visual review. The empty WR default/changed
-screenshots were inspected; all changed elements follow the existing controls. These are fake
-providers and synthetic data: no assertion establishes live seller relevance,
-paid-provider speed, microphone quality or current production behavior.
-
-Next: the verified change is prepared as a new local commit without amending
-03311d3. Fromsa retains Push, which publishes both local commits. After owner Push,
-verify the exact Cloud Build, release.json, page/API commit and shared asset bytes /
-cache headers before calling these repairs live. Fresh session-specific permission
-is required for any future personal Chrome access.
-
-## Separate unresolved ad setup
-
-The October 30 Google reporting / Glass / Studio removal changes remain in
-03311d3. ChatGPT Ads reporting still needs a supported reporting API contract and
-owner-managed setup. A key pasted earlier was not used or stored; owner was told
-to revoke it. No campaign state, spending or external account setup changed here.
+Functional verification, visual review and final standalone aesthetic-authority
+are complete and passed. Prepare the verified local commit without amend or Push. docs/COMMIT-REVIEW.txt records the final prepared change and validation.
+Owner handles direct provider credentials per docs/DIRECT-AD-REPORTING.md. A local
+fixture does not establish live API-key health, account access, ad delivery or
+conversion completeness. After owner Push, verify Cloud Build, Hosting/page/API
+commit and authenticated direct reporting before claiming this release is live.
+Fresh per-session permission is required for future owner Chrome access.

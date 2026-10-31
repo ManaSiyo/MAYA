@@ -130,4 +130,5 @@ await test('image health probe uses the actual lightweight fabric thumbnail', ()
 });
 
 console.log('\n' + (failed ? failed + ' FAILED' : passed + ' passed') + '\n');
+if(!failed)await import('./ad-reporting-ui.mjs');
 process.exit(failed ? 1 : 0);

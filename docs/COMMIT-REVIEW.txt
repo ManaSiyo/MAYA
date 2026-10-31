@@ -1,33 +1,27 @@
-Title: [Codex] Unblock Fabrics and keep WR records independent
+Title: [Codex] Replace Windsor with direct advertising reports
 
-WR shares table aesthetics, never Admin data. Remove its Admin submission/gallery
-and thumbnail reads; retain only private, account-bound WR applicants and the
-existing table controls/columns. Opening WR inserts no samples. Loading/read
-failures stay visible outside the collapsed form, and failed reads cannot claim
-an empty workspace. Existing WR records are preserved; no production data deletion.
+Retire Windsor's runtime/configuration dependency from Admin and Maya's command
+snapshot. Read Google Ads, Meta and ChatGPT Ads directly with owner-managed server
+configuration. Use the documented OpenAI Advertiser API and verify the Ads account
+before reporting; never reuse model credentials or install a key from chat.
 
-Remove Fabric's serial barrier by checking web seller listings while keyword
-feeds/checks continue. Deduplicate exact seller reads within each request and
-bound optional Shopify price/unit metadata to 1.2 seconds inside the existing
-seller budget. Preserve seller facts, swatch/stock exclusions, original photos,
-canonical crops, Node 20 deadline retention and the single visual comparison.
+Bound pagination and fail closed on partial reports; keep credentials in headers,
+ignore provider next URLs, isolate currency and provider failures, and share short
+in-flight/result caches. Preserve Meta aggregate reach/frequency, current campaign
+state and independent IDs. Include ChatGPT in the existing Table/chart/legend,
+ticker and Maya context. Completed-day reports cannot call yesterday "today";
+known inactive states cannot be promoted by historical impressions.
 
-Keep actual healthy card/image nodes mounted through Refresh and added matches;
-explicit Refresh retries failed photos only. Reuse two prepared references in
-private project memory and recently completed empty contexts for 30 seconds,
-without automatic paid retries. Account/project changes clear private state.
-Timings include saved-context reads and checked rather than provisional results.
+Reuse existing Aesthetic Control Table/P1/Glass. No new style family or editor.
+Add provider-contract and six-width saved-settings UI fixtures; update obsolete
+Windsor assertions and the lead-loader extraction boundary without removing gates.
+Document owner-only direct setup and preserve prior fabric/WR repairs.
 
-Validation: locked npm ci and all 74 functional/syntax release gates passed;
-latest focused WR/fabric checks, integrated regression and server smoke passed.
-Final standalone Aesthetic Control passed last, including real Save propagation
-and visual inspection of empty WR default/changed styles. Fabric has 53 server behavior
-checks with forced GC on Node 20.20.2 and Node 24. The 4x CPU workflow verifies
-stable image nodes, preparation/empty-result reuse, explicit retry, seller gates
-and account/project cancellation. WR covers truly independent empty state,
-explicit saves, read errors and default/changed shared styles across six widths.
-No personal Chrome, paid providers, microphone or production data was accessed.
-Local fixtures cannot establish live merchant relevance or provider latency.
-
-This is a new local commit above unpublished 03311d3. Owner Push and exact live
-Cloud Build/Hosting/API/asset verification remain necessary.
+Validation: all exact functional/syntax release gates, complete app-regression
+and smoke pass. Focused Node 20/24 provider checks, Admin UI contract, pill
+consistency, admin-command and lead-feed-latency pass. Isolated Ads UI verifies
+real authenticated cross-page Save propagation and shared styles at six widths;
+default/changed screenshots were inspected. Final standalone Aesthetic Control
+passed last before commit. No owner Chrome, live provider, credentials, production
+settings, campaign/budget changes, Push or deployment. Owner handles direct API
+setup and Push; deployed authenticated reporting remains unverified.

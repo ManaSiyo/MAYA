@@ -1,4 +1,5 @@
 import './ad-reporting.mjs';
+import './ad-reporting-ui.mjs';
 import './pattern-decisions.mjs';
 import './refresh-efficiency.mjs';
 import './avatar-camera-ui.mjs';
@@ -112,9 +113,10 @@ assertContainer(); // Missing runtime files must fail before deploying Cloud Run
 if(MAP_SOURCE.includes('<maya-owner-crm>'))throw Error('Retired Owner tools must not appear in Systems');
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
+const AD_REPORTING_SOURCE=readFileSync(join(ROOT,'docs/server/ad-reporting.mjs'),'utf8');
 const fabricClientSource=readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8');
 ok('Fabric results survive garment returns and empty refreshes within the sealed project',fabricClientSource.includes('const resultCache=new Map()') && fabricClientSource.includes('resultCache.clear()') && fabricClientSource.includes('Previously loaded fabrics are kept.') && fabricClientSource.includes('storeGroups:[...activeStores]'));
-ok('Ad reporting exposes missing connections and honors provider paused state',MAP_SOURCE.includes('id="ads-connection-status"') && MAP_SOURCE.includes("state==='paused'") && SERVER_SOURCE.includes('withDirectGoogle(out.adCombined,gads)'));
+ok('Ad reporting exposes missing connections and honors provider paused state',MAP_SOURCE.includes('id="ads-connection-status"') && MAP_SOURCE.includes("state==='paused'") && SERVER_SOURCE.includes('combineDirectAds({google:gads,meta,chatgpt})'));
 ok('Retired Studio implementation has no served page or Admin/gallery entry', !existsSync(join(ROOT,'backend/design-studio-2.html')) && !MAP_SOURCE.includes('/design-studio-2.html') && !readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('studio-control-preview'));
 const wrClientSource=readFileSync(join(ROOT,'aesthetics/ui/wr.js'),'utf8');
 ok('WR is independently empty and never copies Admin submissions or lead data',!wrClientSource.includes('/api/admin/submissions')&&!wrClientSource.includes('/api/admin/subthumb')&&wrClientSource.includes('/api/admin/wr/leads')&&wrClientSource.includes('No submissions yet.'));
@@ -960,11 +962,11 @@ ok('the marketing page never invents an ad number',
   // v13.56: the panels are gone; honesty lives in the chart note and the
   // null conversions that can never paint as a fake zero.
   MKT_SOURCE.includes('No combined ad data yet') &&
-  SERVER_SOURCE.includes('conversions: null'));
+  AD_REPORTING_SOURCE.includes('metrics.conversions') && !AD_REPORTING_SOURCE.includes('lead_created'));
 ok('marketing reads Analytics, Meta and Google Ads separately',
   SERVER_SOURCE.includes("app.get('/api/admin/marketing'") &&
-  SERVER_SOURCE.includes('async function metaInsights()') &&
-  SERVER_SOURCE.includes('googleAdsInsights=createGoogleAdsReader({config:GADS})') &&
+  SERVER_SOURCE.includes('createMetaAdsReader({config:{token:META_TOKEN,account:META_ACCOUNT}})') &&
+  SERVER_SOURCE.includes('googleAdsInsights=cachedAdReader(createGoogleAdsReader({config:GADS}))') &&
   SERVER_SOURCE.includes('MARKETING_GA_PROPERTY_ID'));
 ok('nothing hangs below the row of five',
   !MAP_SOURCE.includes('id="marketing-fold"') && !MAP_SOURCE.includes('id="traffic-fold"') &&
@@ -1100,9 +1102,8 @@ ok('Admin opens to a swipe like MAYA does (native horizontal scroll-snap now)',
   /#adm-hscroll\{[^}]*scroll-snap-type:x mandatory/.test(MAP_SOURCE));
 ok('marketing never clears the shared sign in on a deploy',
   !/maya_seen_version_mkt[\s\S]{0,200}removeItem/.test(MKT_SOURCE));
-ok('Windsor can feed both ad panels through one key',
-  SERVER_SOURCE.includes('async function windsorInsights()') &&
-  SERVER_SOURCE.includes("via: 'windsor'"));
+ok('Ads uses only direct provider connections',
+  SERVER_SOURCE.includes('createChatGPTAdsReader') && SERVER_SOURCE.includes('createMetaAdsReader') && !/windsorInsights|WINDSOR_API_KEY/.test(SERVER_SOURCE));
 ok('two admins, and only two, unless the env says otherwise',
   SERVER_SOURCE.includes("'fromsa@manasiyo.com,worldofsiyo@gmail.com')"));
 
@@ -1157,7 +1158,7 @@ ok('sharing the site property alone is enough for marketing to pick it',
   SERVER_SOURCE.includes("all.find(p => !/pro-maya/i.test(p.displayName || ''))"));
 // ── v13.48: marketing is marketing, the wall fits its frame ────────────────
 ok('Admin: manasiyo.com visitors come straight from Wix',
-  SERVER_SOURCE.includes('async function wixInsights()') && SERVER_SOURCE.includes('analytics/v2/site-analytics/data') && SERVER_SOURCE.includes('out.wixSite = wixSite;') && MAP_SOURCE.includes('function paintVisitors(') && MAP_SOURCE.includes('id="mkt-wix-tiles"'));
+  SERVER_SOURCE.includes('async function wixInsights()') && SERVER_SOURCE.includes('analytics/v2/site-analytics/data') && SERVER_SOURCE.includes('Object.assign(out,{wixSite,meta,googleAds:gads,chatgptAds:chatgpt,leads})') && MAP_SOURCE.includes('function paintVisitors(') && MAP_SOURCE.includes('id="mkt-wix-tiles"'));
 ok('the last checked line and the MAYA arrival tiles left marketing',
   !MKT_SOURCE.includes("'last checked '") &&
   !MKT_SOURCE.includes('id="site-tiles"'));
@@ -1271,14 +1272,13 @@ ok('the Backend calls itself Backend and its drawer says Submissions',
   BACKEND_SOURCE.includes('<div class="drawer-title">Submissions</div>') &&
   !BACKEND_SOURCE.includes('<div class="drawer-title">Clients</div>') &&
   BACKEND_SOURCE.includes("'no submissions yet'"));
-ok('marketing draws both networks on one chart with a campaign table',
+ok('marketing draws three direct networks on one chart with the shared campaign table',
   MKT_SOURCE.includes('id="ad-chart"') &&
   MKT_SOURCE.includes('function paintAdCombined()') &&
   MKT_SOURCE.includes('id="campaigns-table"') &&
   SERVER_SOURCE.includes('out.adCombined') &&
   // v13.54: each network is asked in its own words now, not through /all.
-  SERVER_SOURCE.includes("'date,campaign,campaign_status,ad_group_name,ad_group_status,impressions,clicks,spend'") &&
-  SERVER_SOURCE.includes("'date,campaign,impressions,clicks,link_clicks,spend'"));
+  AD_REPORTING_SOURCE.includes("source:'chatgpt'") && AD_REPORTING_SOURCE.includes("source:'meta'") && AD_REPORTING_SOURCE.includes("source:'google'"));
 ok('Shared sourcing offers exactly five free store filters and explicit scoped Refresh',
   ['local','mood','swatchon','amazon','others'].every(id=>FABRIC_UI_SOURCE.includes("id:'"+id+"'")) &&
   FABRIC_UI_SOURCE.includes('activeStores=new Set(storeGroups.map(group=>group.id))') &&
@@ -1336,20 +1336,18 @@ ok('Active fabric results never substitute generated swatches for seller or atel
   FABRIC_SEARCH_SOURCE.includes("!verified.image||!isFabricProduct(verified)"));
 // ── v13.54: marketing tells the truth and counts what matters ──────────────
 ok('Meta and Google compare link clicks, never all interactions',
-  SERVER_SOURCE.includes('inline_link_clicks') &&
-  SERVER_SOURCE.includes('link_clicks') &&
+  AD_REPORTING_SOURCE.includes('inline_link_clicks') &&
+  AD_REPORTING_SOURCE.includes('linkClicks:number(r.inline_link_clicks||0)') &&
   MKT_SOURCE.includes('>Link clicks<') &&
-  SERVER_SOURCE.includes('linkClicks: g.linkClicks'));
-ok('Meta reach and frequency come from the deduplicated aggregate, never 0',
-  SERVER_SOURCE.includes("'spend,impressions,clicks,link_clicks,reach,frequency'") &&
-  SERVER_SOURCE.includes('reach: f.reach || 0') &&
-  !SERVER_SOURCE.includes('reach: 0,'));
-ok('Google conversions are absence, never a fake zero',
-  SERVER_SOURCE.includes('conversions: null'));
+  AD_REPORTING_SOURCE.includes('linkClicks:Number(row.metrics?.clicks||0)'));
+ok('Meta reach and frequency come from provider aggregates',
+  AD_REPORTING_SOURCE.includes('d7:aggregate(w),d30:aggregate(m)') && AD_REPORTING_SOURCE.includes('reach:number(rows[0]?.reach||0)'));
+ok('Google goal conversions remain distinct from lead events',
+  AD_REPORTING_SOURCE.includes('metrics.conversions') && !AD_REPORTING_SOURCE.includes('lead_created'));
 ok('leads come from the Wix form record itself, no pixel, no Gmail parsing',
   SERVER_SOURCE.includes('async function wixLeads(') &&
   SERVER_SOURCE.includes('https://www.wixapis.com/form-submission-service/v4/submissions/namespace/query') &&
-  SERVER_SOURCE.includes('out.leads = leads') &&
+  SERVER_SOURCE.includes('chatgptAds:chatgpt,leads') &&
   MKT_SOURCE.includes('function paintLeads(') &&
   MKT_SOURCE.includes('id="leads-table"'));
 // v13.55: revenue was cancelled by Fromsa; nothing on the page or the
@@ -1390,9 +1388,8 @@ ok('an information dump per lead is stored and steers the next draft',
   SERVER_SOURCE.includes('async function loadLeadNotes(') &&
   SERVER_SOURCE.includes("emailsSent === 0 ? 'first contact'") &&
   MKT_SOURCE.includes('function saveLeadNote('));
-ok('one Windsor connector failing never blanks the other',
-  SERVER_SOURCE.includes('const gErr = gRes instanceof Error') &&
-  SERVER_SOURCE.includes('if (gErr && fErr)'));
+ok('Direct ad providers independently expose connection state',
+  SERVER_SOURCE.includes('googleAds:gads,chatgptAds:chatgpt') && MAP_SOURCE.includes("['ChatGPT',d.chatgptAds]"));
 ok('the D W M chips sit close together',
   MKT_SOURCE.includes('display:inline-flex;gap:3px" id="range-chips"'));
 // ── v13.56: marketing reads itself out and folds away ──────────────────────
@@ -1404,7 +1401,7 @@ ok('Admin: the visitor pills pair manasiyo.com with MAYA and never fake a zero t
   MAP_SOURCE.includes('function paintVisitors(') && MAP_SOURCE.includes('Users and traffic') && SERVER_SOURCE.includes('todayRow ? Number(todayRow.value || 0) : null'));
 ok('the campaign table carries cost and link clicks; the two panels are gone',
   MKT_SOURCE.includes('<th class="num">Cost</th>') &&
-  SERVER_SOURCE.includes('c.linkClicks += lnk') &&
+  MAP_SOURCE.includes('c.linkClicks += Number(r.linkClicks || 0)') &&
   !MKT_SOURCE.includes('google-ads-panel') &&
   !MKT_SOURCE.includes('meta-ads-panel'));
 // Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
@@ -1419,8 +1416,7 @@ ok('four pills, live now first, manasiyo white and MAYA in the logo blue',
   !MKT_SOURCE.includes("tile('visits, 28 days'"));
 // Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
 ok('D W M steer the campaign table too, from the raw campaign days',
-  SERVER_SOURCE.includes('const campaignDaily = []') &&
-  SERVER_SOURCE.includes('campaignDaily: windsor.campaignDaily') &&
+  SERVER_SOURCE.includes('combineDirectAds({google:gads,meta,chatgpt})') &&
   MKT_SOURCE.includes('_adData.campaignDaily') &&
   MKT_SOURCE.includes('id="range-word"') &&
   /setAdRange[\s\S]{0,700}paintCampaigns\(\);/.test(MKT_SOURCE));
@@ -1764,9 +1760,9 @@ ok('the command snapshot breaks ad clicks into today, yesterday and the last sev
   ADMIN_COMMAND_SOURCE.includes('today: adToday, yesterday: adYesterday, daily: adDailyTail') &&
   ADMIN_COMMAND_SOURCE.includes('ad link clicks today and') &&
   SERVER_SOURCE.includes('tz: process.env.WIX_TZ'));
-ok('the ads panel and get_briefing hand Maya today and yesterday link clicks live',
+ok('the ads panel gives Maya actual calendar reports and explicit missing current-day coverage',
   MAP_SOURCE.includes("if(panel==='ads'){") &&
-  MAP_SOURCE.includes('yesterday={linkClicks') &&
+  MAP_SOURCE.includes('today:forDate(todayKey),yesterday:forDate(yesterdayKey)') && ADMIN_COMMAND_SOURCE.includes('current-day activity is unavailable') &&
   MAP_SOURCE.includes('adClicks:'));
 ok('the Lead Station is dynamic: hand-added leads merge with Wix, each lead sourced and labelled',
   SERVER_SOURCE.includes('async function loadLeadFeed(') &&

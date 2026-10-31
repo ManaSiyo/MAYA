@@ -116,9 +116,7 @@ export function buildFeatureDigest(items, now = new Date()) {
 
 // v13.82: merge every source's per-day map into one calendar, so today and
 // yesterday's ad clicks are answerable the same way the dashboard's daily
-// chart shows them. Windsor ships a { 'YYYY-MM-DD': {clicks,linkClicks,...} }
-// map per source; the direct-provider fallback has no daily and yields zeros,
-// which is honest rather than invented.
+// chart shows them. Each direct provider supplies its own daily map.
 function mergeAdDaily(sources) {
   const merged = {};
   for (const key of Object.keys(sources || {})) {
@@ -126,8 +124,8 @@ function mergeAdDaily(sources) {
     for (const d of Object.keys(daily)) {
       const v = daily[d] || {};
       const m = merged[d] || (merged[d] = { impressions: 0, clicks: 0, linkClicks: 0, spend: 0 });
-      m.impressions += number(v.impressions); m.clicks += number(v.clicks);
-      m.linkClicks += number(v.linkClicks); m.spend += number(v.spend);
+      m.impressions += number(v?.impressions); m.clicks += number(v?.clicks);
+      m.linkClicks += number(v?.linkClicks); m.spend += number(v?.spend);
     }
   }
   return merged;
@@ -154,9 +152,10 @@ export function buildAdminCommandSnapshot(raw = {}, now = new Date()) {
   const sources = ads ? (ads.sources || {}) : {};
   const google = sources.google_ads || sources.googleads || sources.google || {};
   const meta = sources.facebook || sources.meta || sources.facebook_ads || {};
-  const spend7 = number(google.spend) + number(meta.spend);
+  const chatgpt = sources.chatgpt || {};
+  const spend7 = number(google.spend) + number(meta.spend) + number(chatgpt.spend);
   const clicks7 = number(google.linkClicks != null ? google.linkClicks : google.clicks) +
-    number(meta.linkClicks != null ? meta.linkClicks : meta.clicks);
+    number(meta.linkClicks != null ? meta.linkClicks : meta.clicks) + number(chatgpt.linkClicks != null ? chatgpt.linkClicks : chatgpt.clicks);
   const leads7 = leadData ? number(leadData.d7) : null;
   const cpl = leads7 > 0 ? spend7 / leads7 : null;
 
@@ -166,9 +165,10 @@ export function buildAdminCommandSnapshot(raw = {}, now = new Date()) {
   const todayStr = isoDay(new Date(now), tz);
   const yesterdayStr = isoDay(new Date(new Date(now).getTime() - 86400000), tz);
   const dayRow = key => {
-    const v = adDaily[key] || {};
-    return { date: key, linkClicks: Math.round(number(v.linkClicks)), clicks: Math.round(number(v.clicks)),
-      spend: Number(number(v.spend).toFixed(2)), impressions: Math.round(number(v.impressions)) };
+    const v = adDaily[key];
+    if (!v && ads?.today) return null; // Completed-day reports do not establish today.
+    return { date: key, linkClicks: Math.round(number(v?.linkClicks)), clicks: Math.round(number(v?.clicks)),
+      spend: Number(number(v?.spend).toFixed(2)), impressions: Math.round(number(v?.impressions)) };
   };
   const adToday = dayRow(todayStr);
   const adYesterday = dayRow(yesterdayStr);
@@ -183,7 +183,7 @@ export function buildAdminCommandSnapshot(raw = {}, now = new Date()) {
   }
   if (ads) {
     briefing.push(money(spend7) + ' spent across ' + Math.round(clicks7) + ' ad link clicks in the last 7 days.');
-    briefing.push(adToday.linkClicks + ' ad link clicks today and ' + adYesterday.linkClicks + ' yesterday.');
+    briefing.push(adToday && adYesterday ? adToday.linkClicks + ' ad link clicks today and ' + adYesterday.linkClicks + ' yesterday.' : 'Ad reporting covers completed days; current-day activity is unavailable.');
   }
   if (leadData) briefing.push(number(leadData.d7) + ' leads arrived in the last 7 days' +
     (leads[0] ? '; newest is ' + leads[0].name + '.' : '.'));

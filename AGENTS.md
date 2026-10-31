@@ -655,15 +655,17 @@ WR Applicants uses the same Table authority as Admin, with Wave, Number, Name,
 Look, Color and Email; Add applicant is a collapsed form below the table. Native
 Garment pill height follows shared P3 plus saved Glass padding, not the header row.
 
-Read-only Google Ads reporting lives in docs/server/ad-reporting.mjs using the
-owner's existing server configuration, supported v26 endpoint and bounded
-pagination. It feeds campaigns directly if Windsor has no Google report. Preserve
-account-local completed-day totals and distinguish reported PAUSED/ENABLED from
-historical delivery. tests/ad-reporting.mjs is a release/app-regression gate and
-the module must ship in Dockerfile. ChatGPT Ads needs a supported reporting API;
-a service key alone is not a reporting contract. Never store credentials or
-hardcode connector observations into live dashboard metrics. No campaign state,
-budget or production environment change is authorized by this dashboard repair.
+Read-only direct Google, Meta and ChatGPT Ads reporting lives in
+`docs/server/ad-reporting.mjs`; Windsor is retired and must not be restored.
+Read docs/DIRECT-AD-REPORTING.md for contracts and owner-only setup. Never reuse
+model credentials for the Ads API or install credentials from chat. Preserve
+account-ID checks, USD-only combination, completed account-local calendar days,
+provider state, duplicate-name identity, pagination limits and shared short cache.
+Missing current-day reports remain unavailable in Maya's context. Reporting never
+changes campaigns, budgets or production environment settings. Run ad-reporting
+on release/local Node, ad-reporting-ui, admin-command, admin-ui-contract, exact
+release gates/app-regression/smoke and final authority. The UI reuses the existing
+Table, chart/legend, P1 and Glass controls; no independent aesthetic authority.
 
 October 31 fabric responsiveness: web seller checks overlap keyword-feed checks;
 exact duplicate listing reads share one promise only within that request. Main

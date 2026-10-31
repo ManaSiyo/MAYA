@@ -3,7 +3,8 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../docs/server/server.js',import.meta.url),'utf8');
-const start=source.indexOf('let _leadsCache ='),end=source.indexOf('// v13.54:',start);
+const start=source.indexOf('let _leadsCache ='),end=source.indexOf("app.get('/api/admin/marketing'",start);
+assert.ok(start>=0&&end>start,'Lead loader extraction has explicit runtime boundaries');
 let queries=0,summaries=0,now=Date.now();
 const id='11111111-1111-4111-8111-111111111111';
 const formId='d6894a81-9660-42ba-ae5b-874a85024837';

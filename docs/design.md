@@ -605,3 +605,11 @@ reference photos are reused only inside the current account/submission and clear
 with project changes. New references and explicit resets invalidate preparation.
 No visual setting or new component family is added. All existing typography,
 Glass, Inner, Table and empty/error previews remain the authority.
+
+
+October 31 direct Ads reporting uses the existing Ad campaigns Table and its
+independent saved material/header/body geometry, existing chart/legend, Glass
+range/metric pills and P1 connection note. ChatGPT is an additional data series,
+not a new visual family. No local material/typography controls were introduced.
+The final authority reexecutes provider-only/connection/error cases with different
+saved Table/P1 settings at phone, tablet and desktop widths.

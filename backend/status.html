@@ -1094,7 +1094,7 @@ try {
     <div class="metric-chips" id="metric-chips">
       <button class="metric-chip on" aria-pressed="true" data-m="clicks" onclick="setAdMetric('clicks')" title="Link clicks: people who actually left for the site.">Link clicks</button>
       <button class="metric-chip" aria-pressed="false" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
-      <button class="metric-chip" aria-pressed="false" data-m="cpc" onclick="setAdMetric('cpc')" title="Dollars per link click, on both networks">Cost per click</button>
+      <button class="metric-chip" aria-pressed="false" data-m="cpc" onclick="setAdMetric('cpc')" title="Provider daily cost per link click where available">Cost per click</button>
       <button class="metric-chip" aria-pressed="false" data-m="all" onclick="setAdMetric('all')" title="Link clicks, impressions and cost per click at once">All three</button>
     </div>
     <div style="position:relative" id="ad-chart-wrap">
@@ -1106,6 +1106,7 @@ try {
     <div class="chart-legend" id="ad-legend">
       <span><span class="dot" style="background:#8ab4f8"></span>Google Ads</span>
       <span><span class="dot" style="background:#81c995"></span>Meta Ads</span>
+      <span data-maya-type="P3"><span class="dot" style="background:currentColor"></span>ChatGPT Ads</span>
       <span id="ad-yaxis-word" style="margin-left:auto"></span>
     </div>
     <div id="ad-combined-note" class="note" style="display:none;margin-top:10px"></div>
@@ -1221,7 +1222,7 @@ try {
     <div class="chg"><b>Aug 22</b>The pill is anchored now, not chasing. In MAYA its position is written from the drawer's own motion every frame, so the two are glued together, and on this page and the Backend the drawer glides with exactly the pill's timing, one piece. Fabrics and Pinterest stand the same full height as the main drawer, and Back in either one only steps back: the main drawer stays. The doors say it properly: MANA SIYO, MARKETING, MAYA.</div>
     <div class="chg"><b>Aug 22</b>The hamburger rides with the drawer now. Open it and the pill slides left with the panel, coming to rest just outside the drawer's edge, still there, still one tap to close. A click anywhere else on the screen closes the drawer too, here, in MAYA, in the Backend and in Marketing. The doors read Mana, Marketing, MAYA, and resting on MAYA reveals the two back rooms, Operations Room Beta and the Playground. On a phone the cards start a little smaller, the words sit a little smaller, and a two finger pinch on any card resizes it, saved like any other change.</div>
     <div class="chg"><b>Aug 22</b>The viewer's notes and attributes are one column now: every value in the design notes is a small pill you can cross off, exactly the way attributes worked, so what you keep and what you drop reads in one place. The button that fires it all says Visualize, and picking a picture says Use this reference. On this page the four doors dropped their pills and stand as plain words, a size up and closer together, with Mana as the third; the drawer runs the full height and answers a mouse drag as well as a finger, and the hamburger rides over with it, sitting in the drawer's own corner, here, in MAYA, in the Backend and in the Operations Room. The Backend calls itself Backend in the corner and its drawer says Submissions, because that is what they are. Marketing draws both ad networks on one Google style chart, clicks, impressions or cost per click, with a campaign table underneath that says honestly whether each one delivered. And fabric sourcing looks across the world: four columns to a page, swiped sideways, Mood in New York through Tokyo, Antwerp and Sydney, working straight from the full view without waiting for a dissection, with the in-house library warmed early so it opens instantly.</div>
-    <div class="chg"><b>Aug 21</b>Nothing renders until Submit. Switch fabric and Add reference now STAGE: each choice becomes a small circle beside Submit, the spoken changes sit under it, and one Submit fires everything as one render, one price. The picker opens over the viewer, so Back is just Back and listening keeps listening. Pinterest pictures stopped wearing their file hash as a name. On Admin: hover Users and it answers who, by account and last seen; the drawer opens to a swipe; the MAYA door reveals the Playground, a private copy for trying things; and Marketing stops asking for a second sign in. One key from Windsor can now feed both ad panels with impressions, clicks and spend.</div>
+    <div class="chg"><b>Aug 21</b>Nothing renders until Submit. Switch fabric and Add reference now STAGE: each choice becomes a small circle beside Submit, the spoken changes sit under it, and one Submit fires everything as one render, one price. The picker opens over the viewer, so Back is just Back and listening keeps listening. Pinterest pictures stopped wearing their file hash as a name. On Admin: hover Users and it answers who, by account and last seen; the drawer opens to a swipe; the MAYA door reveals the Playground, a private copy for trying things; and Marketing stops asking for a second sign in. Ad reports show impressions, clicks and spend.</div>
     <div class="chg"><b>Aug 21</b>This page is called Admin now, and it stopped clearing its throat: the last-checked line, the empty checking box, the Operations Room aside and the credits footer are gone. Users and traffic folds away like everything else, staying right where it is. In MAYA, submitting is faster because the folder opens and the picture is fetched while the one-pager renders, resting a cursor on the wall holds only that row while the other two keep drifting, the heart mirrors the close on the picture, note categories lead with what MAYA heard underneath, restored projects find their fabric swatches again, and the sign in screen is just the sign in.</div>
     <div class="chg"><b>Aug 21</b>MAYA listens about itself now. Feedback lives in the menu where Privacy used to be, since Privacy already lives on the sign in screen and this map: speak or type a problem, an idea or a wish, press Submit, and it lands in MAYA's own store with the account it came from. There is a private list of every note at /api/admin/feedback.</div>
     <div class="chg"><b>Aug 21</b>The launch hardening pass. A submission can now only be written by the account that opened it, which closes the one real hole in the submission store. The second Pinterest implementation is deleted, so there is exactly one sign in, one retry and one import flow. Pinterest brings pictures in two at a time and reports honestly which arrived. The menu button answers a finger with a full size target and tells assistive tech what it opens. An OS level reduce motion request holds the community wall still. And no words on screen say Drive any more, because Drive is gone.</div>
@@ -1980,15 +1981,10 @@ function _mayaPanelData(panel){
     // v13.82: today and yesterday link clicks, from the same daily series the
     // ad chart paints, so Maya sees exactly what Fromsa sees on screen.
     const ac=m.adCombined||{};
-    const dayOf=(series,off)=>{ const a=series||[]; const r=a[a.length-1-off]||{}; return r; };
-    const clk=r=>Number((r.linkClicks!=null?r.linkClicks:r.clicks)||0);
-    const spd=r=>Number(r.spend||0);
-    const gT=dayOf(ac.google,0),mT=dayOf(ac.meta,0),gY=dayOf(ac.google,1),mY=dayOf(ac.meta,1);
-    const today={linkClicks:Math.round(clk(gT)+clk(mT)),spend:Number((spd(gT)+spd(mT)).toFixed(2)),
-      date:(gT.date||mT.date||'')};
-    const yesterday={linkClicks:Math.round(clk(gY)+clk(mY)),spend:Number((spd(gY)+spd(mY)).toFixed(2)),
-      date:(gY.date||mY.date||'')};
-    return {today,yesterday,googleAds:m.googleAds||null,meta:m.meta||null,
+    const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:ac.timeZone||'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    const yesterdayKey=new Date(Date.parse(todayKey+'T12:00:00Z')-86400000).toISOString().slice(0,10);
+    const forDate=date=>{const rows=[ac.google,ac.meta,ac.chatgpt].flatMap(series=>(series||[]).filter(r=>r.date===date));return rows.length?{date,linkClicks:rows.reduce((sum,r)=>sum+Number(r.linkClicks||0),0),spend:rows.reduce((sum,r)=>sum+Number(r.spend||0),0)}:null;};
+    return {today:forDate(todayKey),yesterday:forDate(yesterdayKey),googleAds:m.googleAds||null,meta:m.meta||null,chatgptAds:m.chatgptAds||null,
       campaigns:((m.adCombined||{}).campaigns||[]).slice(0,10),warnings:m.warnings||[]};
   }
   if(panel==='leads') return m.leads ? {today:m.leads.today,d7:m.leads.d7,d28:m.leads.d28,
@@ -2521,7 +2517,7 @@ try{ if(localStorage.getItem('maya_wake')==='1'){ _wakeWantOn=true; _wakeLabel()
 const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const n0 = v => Number(v || 0).toLocaleString();
 const usd = v => '$' + Number(v || 0).toFixed(2);
-let _adData = null, _adMetric = 'clicks', _windsorWhy = '';
+let _adData = null, _adMetric = 'clicks';
 let _adRange = 'W';
 try { _adRange = localStorage.getItem('maya_mkt_range') || 'W'; } catch (_) {}
 if (!['D', 'W', 'M'].includes(_adRange)) _adRange = 'W';
@@ -2599,9 +2595,9 @@ function paintBottomLine(d) {
   const ac = d.adCombined || {};
   const sum7 = (series, field) => (series || []).slice(-7).reduce((t, r) => t + Number(r[field] || 0), 0);
   const sumPrev7 = (series, field) => (series || []).slice(-14, -7).reduce((t, r) => t + Number(r[field] || 0), 0);
-  const clicks7 = sum7(ac.google, 'linkClicks') + sum7(ac.meta, 'linkClicks');
-  const spend7 = sum7(ac.google, 'spend') + sum7(ac.meta, 'spend');
-  const spendPrev = sumPrev7(ac.google, 'spend') + sumPrev7(ac.meta, 'spend');
+  const clicks7 = sum7(ac.google, 'linkClicks') + sum7(ac.meta, 'linkClicks') + sum7(ac.chatgpt, 'linkClicks');
+  const spend7 = sum7(ac.google, 'spend') + sum7(ac.meta, 'spend') + sum7(ac.chatgpt, 'spend');
+  const spendPrev = sumPrev7(ac.google, 'spend') + sumPrev7(ac.meta, 'spend') + sumPrev7(ac.chatgpt, 'spend');
   const site7 = (w.d7 || {}).visitors, maya7 = (a.d7 || {}).users, leads7 = l.connected ? l.d7 : null;
   const pct = (part, whole) => (whole > 0 && part != null) ? Math.round(100 * part / whole) + '%' : '&#8230;';
   const step = (v, k) => '<div class="bl-step"><div class="v">' + (v == null ? '&#8230;' : n0(v)) + '</div><div class="k">' + k + '</div></div>';
@@ -2673,14 +2669,17 @@ function buildTicker(d) {
   for (const w of (d.warnings || [])) {
     bits.push('<span class="tk-' + (w.severity === 'red' ? 'red' : 'amber') + '">' + compact(w.text) + '</span>');
   }
-  const g = (d.googleAds && d.googleAds.d7) || {};
-  const f = (d.meta && d.meta.d7) || {};
+  const src=d.adCombined?.sources||{};
+  const g = src.google_ads || {};
+  const f = src.facebook || {};
+  const ai = src.chatgpt || {};
   const gL = Number(g.linkClicks != null ? g.linkClicks : g.clicks || 0);
   const fL = Number(f.linkClicks || 0);
-  const spend = Number(g.spend || 0) + Number(f.spend || 0);
-  if (spend) bits.push('this week ' + usd(spend) + ' spent, ' + n0(gL + fL) + ' link clicks');
+  const spend = Object.values(d.adCombined?.sources||{}).reduce((sum,r)=>sum+Number(r.spend||0),0);
+  if (spend) bits.push('this week ' + usd(spend) + ' spent, ' + n0(gL + fL + Number(ai.linkClicks||0)) + ' link clicks');
   if (g.spend) bits.push('Google CPL ' + usd(gL ? g.spend / gL : 0));
   if (f.spend) bits.push('Meta CPL ' + usd(fL ? f.spend / fL : 0));
+  if (ai.spend) bits.push('ChatGPT spend ' + usd(ai.spend));
   if (d.leads && d.leads.connected) {
     bits.push('<span class="tk-green">' + n0(d.leads.d7) + ' lead' + (d.leads.d7 === 1 ? '' : 's') + ' this week, ' + n0(d.leads.d28) + ' this month</span>');
     if (d.costPerLead != null) bits.push('<span class="tk-amber">cost per lead ' + usd(d.costPerLead) + '</span>');
@@ -3785,11 +3784,12 @@ function paintAdCombined() {
   const nets = [
     { name: 'Google', pts: d.google, color: '#8ab4f8' },
     { name: 'Meta', pts: d.meta, color: '#81c995' },
+    { name: 'ChatGPT', pts: d.chatgpt, color: 'currentColor' },
   ].filter(s => Array.isArray(s.pts) && s.pts.length)
    .map(s => ({ ...s, pts: s.pts.slice(from) }));
   const x = (i) => days.length < 2 ? W / 2 : PAD + i * (W - PAD * 2) / (days.length - 1);
   const yOf = (v, max) => H - PAD - (v / max) * (H - PAD * 2);
-  const fmt = (m, v) => m === 'cpc' ? usd(v) : n0(Math.round(v));
+  const fmt = (m, v) => v==null?'Unavailable':m === 'cpc' ? usd(v) : n0(Math.round(v));
   let out = '';
   for (let g = 1; g <= 3; g++) {
     const gy = PAD + g * (H - PAD * 2) / 4;
@@ -3798,12 +3798,12 @@ function paintAdCombined() {
   }
   const maxima = {};
   const drawSeries = (pts, color, metric, max, style) => {
-    const line = pts.map((r, i) => x(i).toFixed(1) + ',' + yOf(metricVal(r, metric), max).toFixed(1)).join(' ');
-    out += '<polyline points="' + line + '" fill="none" stroke="' + color + '"' +
+    const runs=[];let run=[];pts.forEach((r,i)=>{const v=metricVal(r,metric);if(v==null){if(run.length)runs.push(run);run=[];}else run.push(x(i).toFixed(1)+','+yOf(v,max).toFixed(1));});if(run.length)runs.push(run);
+    for(const points of runs)out += '<polyline points="' + points.join(' ') + '" fill="none" stroke="' + color + '"' +
       ' stroke-width="' + style.w + '"' + (style.dash ? ' stroke-dasharray="5 5"' : '') +
       (style.op ? ' stroke-opacity="' + style.op + '"' : '') +
       ' stroke-linejoin="round" stroke-linecap="round"/>';
-    if (style.dots) out += pts.map((r, i) =>
+    if (style.dots) out += pts.map((r, i) => metricVal(r,metric)==null?'':
       '<circle cx="' + x(i).toFixed(1) + '" cy="' + yOf(metricVal(r, metric), max).toFixed(1) +
       '" r="2.6" fill="' + color + '"/>').join('');
   };
@@ -3883,7 +3883,7 @@ function paintAdCombined() {
     let overlay = '<line x1="' + gx.toFixed(1) + '" y1="0" x2="' + gx.toFixed(1) + '" y2="' + st.H +
       '" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>';
     const metrics = _adMetric === 'all' ? ['impressions', 'clicks', 'cpc'] : [_adMetric];
-    const fmtV = (m, v) => m === 'cpc' ? usd(v) : n0(Math.round(v));
+    const fmtV = (m, v) => v==null?'Unavailable':m === 'cpc' ? usd(v) : n0(Math.round(v));
     let rows = '';
     for (const s of st.nets) {
       const r = s.pts[i]; if (!r) continue;
@@ -3919,11 +3919,14 @@ function paintCampaigns() {
   const daily = (_adData && _adData.campaignDaily) || [];
   if (daily.length) {
     const keep = _adRange === 'M' ? 30 : _adRange === 'D' ? 2 : 7;
-    const cut = new Date(Date.now() - keep * 86400000).toISOString().slice(0, 10);
+    const selectedDays=new Set((_adData.days||[]).slice(-keep));
+    const cut=new Date(Date.now()-keep*86400000).toISOString().slice(0,10);
     const byKey = {};
+    const key=r=>r.source+' | '+(r.campaignId||r.campaign);
+    for(const c of (_adData.campaigns||[]))byKey[key(c)]={...c,spend:0,impressions:0,clicks:0,linkClicks:0};
     for (const r of daily) {
-      if (r.date < cut) continue;
-      const k = r.source + ' | ' + r.campaign;
+      if (selectedDays.size ? !selectedDays.has(r.date) : r.date<cut) continue;
+      const k = key(r);
       if (!byKey[k]) byKey[k] = { source: r.source, campaign: r.campaign, status: '',
         impressions: 0, clicks: 0, linkClicks: 0, spend: 0 };
       const c = byKey[k];
@@ -3949,8 +3952,8 @@ function paintCampaigns() {
     '<th class="num">Cost</th><th class="num">Impressions</th><th class="num">Link clicks</th><th class="num">CTR</th><th class="num">CPC</th></tr>' +
     rows.map(c => {
       const state=String(c.status||'').toLowerCase(),paused=state==='paused',enabled=/^(active|enabled)$/.test(state);
-      const on = !paused&&(enabled||Number(c.impressions)>0);
-      const stateLabel=paused?'paused':enabled?'active':on?'delivering':'no delivery';
+      const on = enabled||(!state&&Number(c.impressions)>0);
+      const stateLabel=paused?'paused':enabled?'active':state?state.replace(/_/g,' '):on?'delivering':'no delivery';
       const lnk = c.linkClicks != null ? c.linkClicks : c.clicks;
       return '<tr><td><span class="status-word ' + (on ? 'on' : 'off') + '" data-status="' + (on ? 'delivering' : 'new') + '" title="' + (paused?'Campaign is reported paused; historical delivery remains in this window.':enabled?'Campaign is reported enabled; impressions show delivery in this window.':on?'Impressions recorded in the selected window; this does not confirm the campaign is enabled now.':'No impressions recorded in the selected window.') + '">' +
         (on?'&#9679; ':'&#9675; ')+stateLabel + '</span></td>' +
@@ -3960,7 +3963,7 @@ function paintCampaigns() {
         '<td class="num">' + n0(c.impressions) + '</td>' +
         '<td class="num">' + n0(lnk) + '</td>' +
         '<td class="num">' + (c.impressions ? (100 * lnk / c.impressions).toFixed(2) + '%' : '0%') + '</td>' +
-        '<td class="num">' + usd(lnk ? c.spend / lnk : 0) + '</td></tr>';
+        '<td class="num" title="Spend divided by link clicks for this window">' + usd(lnk ? c.spend / lnk : 0) + '</td></tr>';
     }).join('');
 }
 
@@ -3999,9 +4002,10 @@ function _paintMkt(d, alsoBrief){
   try{ paintSite(d.analytics||{}); }catch(e){ console.warn('[mkt] sources',e); }
   _adData = d.adCombined||null;
   const adConnections=document.getElementById('ads-connection-status');
-  const googleReporting=d.googleAds?.connected||[...(d.adCombined?.campaignDaily||[]),...(d.adCombined?.campaigns||[])].some(row=>/google/i.test(row.source));
-  if(adConnections)adConnections.textContent=(googleReporting?'Google reporting connected. ':'Google reporting unavailable. ')+(d.chatgptAds?.connected?'ChatGPT reporting connected. ':'ChatGPT Ads reporting is not connected to MAYA.');
-  _windsorWhy = (d.windsor&&d.windsor.why)||'';
+  if(adConnections){
+    const reports=[['Google',d.googleAds],['Meta',d.meta],['ChatGPT',d.chatgptAds]];
+    adConnections.textContent=reports.map(([name,r])=>name+': '+(r?.connected?(d.adCombined?.excludedSources||[]).includes(name.toLowerCase())?'reported currency cannot be combined with USD.':'direct reporting connected.':r?.why||'direct reporting unavailable.')).join(' ')+' Daily results use completed days in each ad account timezone.';
+  }
   try{ paintAdCombined(); }catch(e){ console.warn('[mkt] ads',e); }
   try{ paintCampaigns(); }catch(e){ console.warn('[mkt] campaigns',e); }
   try{ paintLeads(d.leads||{}); }catch(e){ console.warn('[mkt] leads',e); }

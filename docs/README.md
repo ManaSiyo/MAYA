@@ -15,6 +15,8 @@ Backend/docs-only work records no visible UI impact and runs the shared gate.
 Unresolved mismatches block completion. See [AGENTS.md](../AGENTS.md) for the
 mandatory workflow and [design.md](design.md) for the sole presentation canon.
 
+Direct ad reporting and owner-only setup: [DIRECT-AD-REPORTING.md](DIRECT-AD-REPORTING.md). Windsor is retired; Google, Meta and ChatGPT Ads use their own reporting APIs.
+
 Current screen, file and backend architecture: [ARCHITECTURE-MAP.md](ARCHITECTURE-MAP.md).
 
 Conversational fabric search and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).

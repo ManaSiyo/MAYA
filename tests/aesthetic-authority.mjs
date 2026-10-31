@@ -109,3 +109,6 @@ console.log('Final Aesthetic Control authority passed: active previews, saved se
 await import('./wr-ui.mjs?authority');
 
 await import('./avatar-camera-ui.mjs?authority');
+
+// Direct Ads reuse the existing shared Table/P1/Glass authority.
+await import('./ad-reporting-ui.mjs?authority');
