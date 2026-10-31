@@ -1,14 +1,14 @@
 // Read-only Google Ads reporting. Uses only the owner's existing server config.
 export function createGoogleAdsReader({config,fetchImpl=fetch,now=Date.now}){
  return async function googleAdsInsights(){
-  const missing=['dev','id','secret','refresh','customer'].filter(key=>!config?.[key]);
-  if(missing.length)return {connected:false,why:'Google Ads reporting is not configured.'};
+  const missing=['id','secret','refresh','customer'].filter(key=>!config?.[key]);
+  if(missing.length)return {connected:false,code:'not_configured',missing,why:'Google Ads reporting is not configured.'};
   const signal=AbortSignal.timeout(18000);
   try{
    const tr=await fetchImpl('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:config.id,client_secret:config.secret,refresh_token:config.refresh,grant_type:'refresh_token'}),signal});
    if(!tr.ok)throw Error('Google Ads authorization could not be refreshed.');
    const token=await tr.json();if(!token.access_token)throw Error('Google Ads authorization is unavailable.');
-   const headers={Authorization:'Bearer '+token.access_token,'developer-token':config.dev,'Content-Type':'application/json',...(config.login?{'login-customer-id':config.login}:{})};
+   const headers={Authorization:'Bearer '+token.access_token,'Content-Type':'application/json',...(config.login?{'login-customer-id':config.login}:{})};
    const query='SELECT campaign.id, campaign.name, campaign.status, customer.currency_code, customer.time_zone, segments.date, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions FROM campaign WHERE segments.date DURING LAST_30_DAYS';
    const rows=[];let pageToken='';
    for(let page=0;page<10;page++){

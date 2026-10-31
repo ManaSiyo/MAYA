@@ -1,3 +1,5 @@
+October 31 setup follow-up — Owner reports direct Ads are not configured and asks to finish setup. Verify deployed commit, request fresh MAYA Chrome access and Ads-key readiness, and guide owner-entered credentials. Fix obsolete Google developer-token requirement; current API uses OAuth and Cloud-project access. No keys accepted in chat, production changes or automatic Push.
+
 October 31 — Direct connections only (supersedes Windsor setup)
 [local] Remove Windsor reporting and credential dependency from Admin and Maya's
 briefing. Use direct Google, Meta and ChatGPT Ads APIs only; preserve campaign

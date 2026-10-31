@@ -1,27 +1,22 @@
-Title: [Codex] Replace Windsor with direct advertising reports
+Title: [Codex] Remove retired Google Ads setup requirement
 
-Retire Windsor's runtime/configuration dependency from Admin and Maya's command
-snapshot. Read Google Ads, Meta and ChatGPT Ads directly with owner-managed server
-configuration. Use the documented OpenAI Advertiser API and verify the Ads account
-before reporting; never reuse model credentials or install a key from chat.
+Google retired developer tokens September 9, 2026. The direct reader still
+required one, falsely rejecting valid OAuth-only configuration before reporting.
+Remove the obsolete preflight/header and unused server environment read. Retain
+OAuth client ID/secret/refresh, customer ID, optional manager login, account-local
+reporting, pagination, direct-only providers and credential protections. Missing
+OAuth setup returns safe field names to authenticated Admin diagnostics.
 
-Bound pagination and fail closed on partial reports; keep credentials in headers,
-ignore provider next URLs, isolate currency and provider failures, and share short
-in-flight/result caches. Preserve Meta aggregate reach/frequency, current campaign
-state and independent IDs. Include ChatGPT in the existing Table/chart/legend,
-ticker and Maya context. Completed-day reports cannot call yesterday "today";
-known inactive states cannot be promoted by historical impressions.
+Add regression checks for token-free authenticated reads, missing OAuth failing
+before network access, no retired token header and optional manager login. Update
+owner setup to Google's Cloud-project production access and document where the
+separate ChatGPT Advertiser API key is created. No new visible UI.
 
-Reuse existing Aesthetic Control Table/P1/Glass. No new style family or editor.
-Add provider-contract and six-width saved-settings UI fixtures; update obsolete
-Windsor assertions and the lead-loader extraction boundary without removing gates.
-Document owner-only direct setup and preserve prior fabric/WR repairs.
-
-Validation: all exact functional/syntax release gates, complete app-regression
-and smoke pass. Focused Node 20/24 provider checks, Admin UI contract, pill
-consistency, admin-command and lead-feed-latency pass. Isolated Ads UI verifies
-real authenticated cross-page Save propagation and shared styles at six widths;
-default/changed screenshots were inspected. Final standalone Aesthetic Control
-passed last before commit. No owner Chrome, live provider, credentials, production
-settings, campaign/budget changes, Push or deployment. Owner handles direct API
-setup and Push; deployed authenticated reporting remains unverified.
+Validation: Node 20/24 provider tests pass. All exact functional release checks,
+complete integrated regression and smoke pass. Final standalone Aesthetic Control
+passed last before commit.
+Public Hosting/Admin/API all match already-pushed 7232f50; this patch is local.
+Owner declined Chrome and says a key was supplied last night. No Chrome,
+credentials, provider accounts, production environment or campaigns were changed.
+Key source and Cloud Run setting presence are pending owner answers; actual
+reporting setup is not claimed complete. Owner retains Push and secret entry.

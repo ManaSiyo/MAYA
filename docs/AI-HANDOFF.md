@@ -1,6 +1,39 @@
 # Current handoff - October 31, 2026
 
-## Owner request / release boundary
+## Setup follow-up - current work
+
+Owner reports Ads "not configured" and requests completing direct setup. Public
+release.json, Admin build stamp and API health all report
+7232f508944c4510a9696ec39bef361f09b27f7d (published October 31 21:43:36 UTC).
+The missing-configuration state is on the new direct build, not an older release.
+Owner declined Chrome access for this setup and says a key was supplied last
+night. No Chrome access is authorized. Key source (Ads Manager versus Platform)
+and presence of OPENAI_ADS_API_KEY / OPENAI_ADS_ACCOUNT_ID in Cloud Run were
+requested without values; those answers are pending. The pasted key was not
+installed or used. Only the owner handles credential entry. No production
+configuration or live Ads report has been accessed in this follow-up.
+
+Found an actual adapter/setup bug while checking current Google documentation:
+Google retired developer tokens September 9, but the reader still required dev
+and sent the old header. Remove that preflight requirement/header and the unused
+GADS env read. Keep OAuth/client secret/refresh/customer requirements and optional
+manager login ID. Missing OAuth config now returns safe field names and a
+not_configured code to authenticated Admin diagnostics, without values. Fixtures
+assert no token required/sent, no manager needed for direct account access, and
+missing OAuth fails before fetching. Node 20/24 focused tests, all exact functional release gates, complete integrated
+regression and smoke pass. Final standalone Aesthetic Control passed last. A separate local commit is
+prepared; owner retains Push and credential setup. Owner controls Push.
+No new visible UI; existing shared authority remains required.
+
+Next: owner Push for the Google correction; obtain the pending key-source and
+Cloud Run setting-presence answers, then guide owner-entered secrets and Cloud
+project access without any Chrome control. The direct Ads Manager connector
+confirmed the sole accessible account is Mana Siyo INC; its account Settings
+link was obtained without Chrome. No account configuration or keys changed. No credentials should be pasted into chat. Do not restore Windsor.
+
+## Previous verified direct reporting change
+
+### Owner request / release boundary
 
 Fromsa retired Windsor and requires direct connections only for campaign reports.
 The working branch was clean and synchronized at ac048354edb2826ce6e4bccde398dfd92ebabe1e.

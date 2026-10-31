@@ -660,7 +660,9 @@ Read-only direct Google, Meta and ChatGPT Ads reporting lives in
 Read docs/DIRECT-AD-REPORTING.md for contracts and owner-only setup. Never reuse
 model credentials for the Ads API or install credentials from chat. Preserve
 account-ID checks, USD-only combination, completed account-local calendar days,
-provider state, duplicate-name identity, pagination limits and shared short cache.
+provider state, duplicate-name identity, pagination limits and shared short cache. Google developer tokens were
+retired September 9, 2026: never require/read/send one. OAuth plus Cloud-project
+production access governs Google reporting; manager login ID is optional.
 Missing current-day reports remain unavailable in Maya's context. Reporting never
 changes campaigns, budgets or production environment settings. Run ad-reporting
 on release/local Node, ad-reporting-ui, admin-command, admin-ui-contract, exact

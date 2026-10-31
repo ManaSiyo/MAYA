@@ -114,6 +114,7 @@ if(MAP_SOURCE.includes('<maya-owner-crm>'))throw Error('Retired Owner tools must
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
 const AD_REPORTING_SOURCE=readFileSync(join(ROOT,'docs/server/ad-reporting.mjs'),'utf8');
+ok('Google direct setup uses OAuth without retired developer-token configuration',AD_REPORTING_SOURCE.includes("const missing=['id','secret','refresh','customer']") && !SERVER_SOURCE.includes('GOOGLE_ADS_DEVELOPER_TOKEN') && !AD_REPORTING_SOURCE.includes("'developer-token'"));
 const fabricClientSource=readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8');
 ok('Fabric results survive garment returns and empty refreshes within the sealed project',fabricClientSource.includes('const resultCache=new Map()') && fabricClientSource.includes('resultCache.clear()') && fabricClientSource.includes('Previously loaded fabrics are kept.') && fabricClientSource.includes('storeGroups:[...activeStores]'));
 ok('Ad reporting exposes missing connections and honors provider paused state',MAP_SOURCE.includes('id="ads-connection-status"') && MAP_SOURCE.includes("state==='paused'") && SERVER_SOURCE.includes('combineDirectAds({google:gads,meta,chatgpt})'));

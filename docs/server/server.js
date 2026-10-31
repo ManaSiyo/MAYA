@@ -2598,7 +2598,6 @@ app.get('/api/admin/analytics', async (req, res) => {
 const META_TOKEN   = process.env.META_ADS_TOKEN || '';
 const META_ACCOUNT = String(process.env.META_AD_ACCOUNT_ID || '').replace(/^act_/, '');
 const GADS = {
-  dev:    process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '',
   id:     process.env.GOOGLE_ADS_CLIENT_ID || '',
   secret: process.env.GOOGLE_ADS_CLIENT_SECRET || '',
   refresh: process.env.GOOGLE_ADS_REFRESH_TOKEN || '',

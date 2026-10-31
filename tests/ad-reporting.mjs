@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds} from '../docs/server/ad-reporting.mjs';
-const config={dev:'fixture-dev',id:'fixture-id',secret:'fixture-secret',refresh:'fixture-refresh',customer:'123',login:'456'};
+const config={id:'fixture-id',secret:'fixture-secret',refresh:'fixture-refresh',customer:'123',login:'456'};
 const row=(id,date,cost)=>({campaign:{id,name:'Campaign '+id,status:'PAUSED'},customer:{currencyCode:'USD',timeZone:'America/Los_Angeles'},segments:{date},metrics:{costMicros:String(cost),clicks:'2',impressions:'10',conversions:'1'}});
 let calls=0;
 const read=createGoogleAdsReader({config,now:()=>Date.parse('2026-10-31T02:00:00Z'),fetchImpl:async(url,options)=>{
  calls++;assert.equal(options.method,'POST');assert.ok(options.signal);
  if(url.includes('oauth2'))return Response.json({access_token:'fixture-access'});
- assert.equal(url,'https://googleads.googleapis.com/v26/customers/123/googleAds:search');assert.equal(options.headers['login-customer-id'],'456');
+ assert.equal(url,'https://googleads.googleapis.com/v26/customers/123/googleAds:search');assert.equal(options.headers['login-customer-id'],'456');assert.ok(!('developer-token' in options.headers),'Retired token is neither required nor sent');
  const body=JSON.parse(options.body);assert.match(body.query,/FROM campaign/);assert.match(body.query,/LAST_30_DAYS/);
  return body.pageToken?Response.json({results:[row('B','2026-10-20',2000000)]}):Response.json({results:[row('A','2026-10-29',1500000)],nextPageToken:'next'});
 }});
@@ -78,3 +78,6 @@ console.log('Direct Ads: Google, ChatGPT and Meta contracts, account identity, p
 const {buildAdminCommandSnapshot}=await import('../docs/server/admin-command.mjs');
 const snap=buildAdminCommandSnapshot({ads:all},new Date(at()));assert.equal(snap.panels.ads.spend7,14.5);assert.equal(snap.panels.ads.today,null);assert.equal(snap.panels.ads.yesterday.linkClicks,11);assert.match(snap.briefing.join(' '),/current-day activity is unavailable/);
 let failedReads=0;const failedCache=cachedAdReader(async()=>{failedReads++;return {connected:false};},{now:()=>clock});await failedCache();await failedCache();assert.equal(failedReads,1);clock+=10001;await failedCache();assert.equal(failedReads,2);
+
+const missingGoogle=await createGoogleAdsReader({config:{customer:'123'},fetchImpl:()=>{throw Error('Missing OAuth must not fetch');}})();assert.equal(missingGoogle.code,'not_configured');assert.deepEqual(missingGoogle.missing,['id','secret','refresh']);assert.ok(!missingGoogle.missing.includes('dev'));
+const noManager=await createGoogleAdsReader({config:{...config,login:''},fetchImpl:async(url,options)=>{if(url.includes('oauth2'))return Response.json({access_token:'fixture'});assert.ok(!('login-customer-id' in options.headers));assert.ok(!('developer-token' in options.headers));return Response.json({results:[row('A','2026-10-29',1000000)]});}})();assert.equal(noManager.connected,true,'Direct account access needs no manager account or retired developer token');

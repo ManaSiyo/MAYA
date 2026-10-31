@@ -1,3 +1,5 @@
+October 31 setup follow-up — Confirmed Hosting/Admin/API all run 7232f50. Google reader incorrectly required a developer token retired September 9; valid OAuth-only configuration could be falsely called not configured. Remove retired preflight/header/env read, retain required OAuth/customer and optional manager login. Add credential-free fixtures and current owner setup guidance. Actual provider configuration remains uninspected pending fresh Chrome approval.
+
 October 31 — Ad dashboard depended on retired Windsor; ChatGPT was hardcoded
 disconnected. Replace the intermediary with direct provider readers and shared
 safe DTOs for Admin/voice. Meta daily reports retain provider aggregate reach;

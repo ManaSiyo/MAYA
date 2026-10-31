@@ -12,10 +12,28 @@ Only Fromsa handles production credentials and environment settings. Do not past
 keys into chat, commit them, put them in browser code, or reuse the exposed key.
 No credentials were read, installed or changed by this repair.
 
-Google uses the existing GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID,
-GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_ADS_CUSTOMER_ID and
-optional GOOGLE_ADS_LOGIN_CUSTOMER_ID configuration. The server refreshes OAuth
-and reads the v26 search endpoint with bounded pagination.
+Google uses GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET,
+GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_ADS_CUSTOMER_ID and optional
+GOOGLE_ADS_LOGIN_CUSTOMER_ID. The server refreshes OAuth and reads the v26 search
+endpoint with bounded pagination. Google retired developer tokens on September 9,
+2026; MAYA no longer requires, reads or sends GOOGLE_ADS_DEVELOPER_TOKEN.
+Existing unrelated provider secrets/configuration are not removed automatically.
+
+The Google Cloud project that owns the OAuth client must enable Google Ads API
+and have production access (Explorer or higher). Test access alone cannot read
+real campaigns. Owner authorizes https://www.googleapis.com/auth/adwords and
+installs the resulting refresh token privately on the server. A login customer ID
+is needed only when accessing the Ads account through a manager account; do not
+create a manager account or request a retired developer token for this setup.
+Official current setup/migration guidance checked October 31:
+https://developers.google.com/google-ads/api/docs/api-policy/developer-token
+https://developers.google.com/google-ads/api/docs/api-policy/access-levels
+https://developers.google.com/google-ads/api/docs/oauth/overview
+
+ChatGPT's Advertiser API key is created in Ads Manager > Settings, per
+https://developers.openai.com/ads/api-overview. The owner enters it in the server's
+secure configuration, never in chat. Connecting the Ads Manager plugin to this
+chat does not install credentials into MAYA's separate Cloud Run service.
 
 Meta uses the existing META_ADS_TOKEN and META_AD_ACCOUNT_ID. Tokens travel in
 Authorization headers. Account currency/timezone and campaign inventory are read
