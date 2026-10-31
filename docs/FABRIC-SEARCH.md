@@ -90,7 +90,7 @@ unless the owner actually selected that scope.
   Tessuti are the allowed discovery domains. Amazon is web discovery, NOT a
   Creators API integration or a promise of exhaustive Amazon inventory.
 - A bounded material-vocabulary Shopify pass runs alongside web discovery for
-  saved looks and initial text requests (at most two seeds/four eligible stores).
+  saved looks and initial text requests (at most two seeds across the five eligible Shopify stores).
   Up to three feed products per query are eligible for balanced selection; at
   most eight distinct seller listings are verified concurrently.
   It never sends client names or free-form private prose to retailer feeds.
@@ -98,7 +98,8 @@ unless the owner actually selected that scope.
   only completed matches appear as cards. Empty later web discovery cannot
   erase eligible direct candidates. Refinements bypass seeds rather than replay
   stale literal terms. The browser search stream has a 60-second read deadline. Seller redirects and
-  optional variant facts share one eight-second verification budget; the route
+  optional variant facts share one eight-second verification budget, with a
+  shorter 1.2-second cap on optional price/unit enrichment; the route
   terminates at 55 seconds even if private reads or a provider never settle.
   Preparation, active search, interruption and completed no-match are distinct
   states. A terminal done event completes without waiting for EOF; interrupted
@@ -338,3 +339,27 @@ web output is bounded to sixteen cited candidates, reduced to eight for seller
 and the existing single visual review. These changes preserve source-backed
 URLs, seller-only facts, original photos/client words and strict exclusions;
 they do not guarantee that a selected merchant has a matching eligible listing.
+
+## October 31 critical-path repair
+
+Seller checks for web-discovered listings start as soon as discovery completes,
+while keyword feeds and their seller checks may still be pending. Exact duplicate
+listing requests share one check only within the same search; candidate reasons
+and garment matching remain separate. This removes the previous serial barrier
+without increasing paid attempts or weakening qualification. Already rejected
+swatches/out-of-stock/non-fabric listings skip optional metadata. Missing optional
+Shopify metadata times out after 1.2 seconds within the original eight-second
+listing budget; unknown price/unit/stock facts remain unknown. The original
+photo, canonical crop, material exclusions and one visual comparison remain.
+
+Refresh preserves actual healthy card/image nodes, preventing a loaded grid from
+blanking or reloading thumbnails. Explicit Refresh retries missing photos only.
+A completed empty result is reusable for 30 seconds on a garment return, while
+explicit Refresh still searches. At most two prepared reference photos are reused
+inside the current account/submission; explicit reset/new input invalidates the
+relevant preparation and account/project changes clear every private cache.
+Server firstResultsMs measures completion of qualification, including saved-context
+reads, rather than the earlier hidden preliminary-candidate event. Fake gated
+transports prove overlap/deduplication and optional deadlines; a 4x CPU browser
+fixture proves photo reuse and stable nodes. They do not prove live seller matches
+or paid-provider latency. Live acceptance remains stopped until requested again.

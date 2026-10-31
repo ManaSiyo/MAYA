@@ -215,10 +215,13 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     try {
       const page = await untilAborted(getPage(target.url, listingSignal),listingSignal);
       let product = parseListing(page.body, page.url, now());
+      if (product && (product.isSwatch || product.availability === 'out_of_stock' || !isFabricProduct(product))) return null;
       if (product && target.shop.shopify && !product.price) {
         try {
           const variantUrl = new URL(product.url); variantUrl.search=''; variantUrl.pathname=variantUrl.pathname.replace(/\/$/,'')+'.js';
-          const variantPage = await untilAborted(getPage(variantUrl.href, listingSignal),listingSignal);
+          // Unknown price/unit is preferable to holding an eligible listing behind optional metadata.
+          const variantSignal=combineSignals([listingSignal,AbortSignal.timeout(1200)]);
+          const variantPage = await untilAborted(getPage(variantUrl.href, variantSignal),variantSignal);
           product = applyShopifyVariant(product, JSON.parse(variantPage.body), page.body);
         } catch { /* unknown variant or unit remains unknown */ }
       }
@@ -344,7 +347,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     catch (e) { throw fail(e.status === 412 ? 'Lookbook changed in another window. Reload it before saving.' : 'Fabric did not save. Try again.', e.status === 412 ? 409 : 503); }
     return loadBook(user, id,readGarments);
   }
-  async function direct(input, signal) {
+  async function direct(input, signal, check = candidate=>verify(candidate,signal)) {
     // Public queries use bounded material vocabulary, never client names/measurements.
     // Refinements remain with web discovery rather than replaying a stale seed.
     const queries=fabricSeedQueries(input);
@@ -365,9 +368,10 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     const groups=shops.map(shop=>results.flat().filter(c=>merchantURL(c.url,true)?.shop===shop)),balanced=[];
     for(let index=0;index<queries.length*3;index++)for(const group of groups)if(group[index])balanced.push(group[index]);
     const unique=[...new Map(balanced.map(candidate=>[merchantIdentity(candidate.url),candidate])).values()];
-    return (await Promise.all(balancedFabricCandidates(unique).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
+    return (await Promise.all(balancedFabricCandidates(unique).map(check))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
   }
   async function search(user, body, emit, signal = new AbortController().signal) {
+    const started=now();
     const input = normalizeFabricRequest(body);
     let selectedReference='',savedDissection=null;
     if (input.submissionId) {
@@ -396,16 +400,25 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       input.history=[];
     }
     signal.throwIfAborted();
-    const started = now(); let firstAt = null; let products = [];
+    let firstAt = null; let products = [];
     const send = event => { if (!signal.aborted) emit(event); };
     const searchDetails={preferences:input.preferences,garments:input.pieces.map(p=>({name:p.name,fabric:p.fabric,traits:p.fabric_spec})),
       retailerQueries:requestedShops(input).some(s=>s.shopify)?fabricSeedQueries(input):[],stores:requestedShops(input).map(s=>s.name),webQueries:[],query:'',observation:'',stage:'Searching retailers'};
     send({type:'context',searchDetails});
     send({ type: 'status', message: 'Searching fabric shops…' });
-    const quick = direct(input, signal).then(items => {
-      if (items.length) { products = items; firstAt = now() - started; send({ type: 'products', products, preliminary: true }); }
+    // Share exact public listing checks only within this request. Reasons and
+    // garment matching remain per candidate; no private context enters the cache.
+    const checks=new Map();
+    const check=candidate=>{
+      const key=merchantURL(candidate.url,true)?.url||candidate.url;
+      if(!checks.has(key))checks.set(key,verify({url:candidate.url},signal));
+      return checks.get(key).then(product=>product?{...product,reason:candidate.reason||''}:null);
+    };
+    const quick = direct(input, signal, check).then(items => {
+      if (items.length) send({ type: 'products', products:items, preliminary: true });
+      return items;
     });
-    let discovery = null, warning = '';
+    let discovery = null, discoveryChecks=Promise.resolve([]), warning = '';
     try {
       if (!apiKey()) throw fail('Web search is unavailable. Showing retailer results where available.', 503);
       const webSignal=combineSignals([signal,AbortSignal.timeout(20000)]);
@@ -418,15 +431,19 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       Object.assign(searchDetails,{query:discovery.query,observation:discovery.observation,webQueries:discovery.webQueries,stage:'Checking seller listings'});
       send({type:'context',searchDetails});
       send({type:'status',message:'Checking seller listings…'});
+      const allowed=requestedShops(input);
+      input.visualColors=Object.fromEntries(discovery.garmentColors.filter(hint=>input.pieces.some(piece=>piece.id===hint.garmentId)).map(hint=>[hint.garmentId,hint.colors]));
+      // Do not serialize web sellers behind slow keyword feeds/other retailers.
+      discoveryChecks=Promise.allSettled(discovery.candidates.filter(c=>allowed.includes(merchantURL(c.url,true)?.shop)).map(check));
     } catch (e) { warning = e.status ? e.message : 'Web search took too long or was interrupted. You can retry.'; }
-    await quick;
+    const [seedProducts,checkedDiscovery]=await Promise.all([quick,discoveryChecks]);
+    products=seedProducts;
     if (signal.aborted) return;
     if (discovery) {
       const allowed = requestedShops(input);
       // Qualified base colors belong only to canonical saved garment IDs. They
       // cannot replace explicit words or flow to another garment/account.
-      input.visualColors=Object.fromEntries(discovery.garmentColors.filter(hint=>input.pieces.some(piece=>piece.id===hint.garmentId)).map(hint=>[hint.garmentId,hint.colors]));
-      const checked = await Promise.all(discovery.candidates.filter(c => allowed.includes(merchantURL(c.url, true)?.shop)).map(c => verify(c, signal)));
+      const checked=checkedDiscovery.filter(result=>result.status==='fulfilled').map(result=>result.value);
       if(signal.aborted)return;
       const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
       products=balancedFabricCandidates([...discovered,...products]);

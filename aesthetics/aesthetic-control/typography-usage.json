@@ -607,7 +607,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4086,
+          "line": 4084,
           "tag": "h2",
           "id": "maya-confirmation-title",
           "class": "",
@@ -753,7 +753,7 @@
           "class": "",
           "reason": "subheadline",
           "role": "subheadline",
-          "snippet": "<h2 data-maya-type=\"H3\" id=\"submissions-title\">Submissions</h2><p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">Loading subm"
+          "snippet": "<h2 data-maya-type=\"H3\" id=\"submissions-title\">Submissions</h2><p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">No submissio"
         },
         {
           "page": "backend/wr.html",
@@ -1072,7 +1072,7 @@
             },
             {
               "page": "backend/status.html",
-              "line": 4086
+              "line": 4084
             },
             {
               "page": "backend/terms.html",
@@ -1371,7 +1371,7 @@
       }
     },
     "P1": {
-      "count": 188,
+      "count": 187,
       "locations": [
         {
           "page": "aesthetics/ui/admin-systems.js",
@@ -2505,17 +2505,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3778,
-          "tag": "code",
-          "id": null,
-          "class": "",
-          "reason": "technical",
-          "role": "technical",
-          "snippet": "<code>WINDSOR_API_KEY</code> on the API and both networks appear here.';"
-        },
-        {
-          "page": "backend/status.html",
-          "line": 3943,
+          "line": 3941,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2525,7 +2515,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3950,
+          "line": 3948,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2535,7 +2525,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3950,
+          "line": 3948,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2545,7 +2535,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3950,
+          "line": 3948,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2555,7 +2545,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3951,
+          "line": 3949,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2565,7 +2555,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3951,
+          "line": 3949,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2575,7 +2565,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3951,
+          "line": 3949,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2585,7 +2575,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3951,
+          "line": 3949,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2595,7 +2585,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3951,
+          "line": 3949,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -2605,7 +2595,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3957,
+          "line": 3955,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2615,7 +2605,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3959,
+          "line": 3957,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2625,7 +2615,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3960,
+          "line": 3958,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2635,7 +2625,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3961,
+          "line": 3959,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2645,7 +2635,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3962,
+          "line": 3960,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2655,7 +2645,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3963,
+          "line": 3961,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2665,7 +2655,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3964,
+          "line": 3962,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2675,7 +2665,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3965,
+          "line": 3963,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -2901,7 +2891,7 @@
           "class": "",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">Loading submissions\u2026</p><div class=\"wr-submissions\" id=\"submissions\" aria-label=\"Submissio"
+          "snippet": "<p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">No submissions yet.</p><div class=\"wr-submissions\" id=\"submissions\" aria-label=\"Submission"
         },
         {
           "page": "backend/wr.html",
@@ -2911,7 +2901,7 @@
           "class": "",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p id=\"applicants-empty\" data-maya-type=\"P1\" hidden>No applicants yet.</p><details class=\"wr-add-applicant\"><summary class=\"maya-pill\" data-ma"
+          "snippet": "<p id=\"applicants-empty\" data-maya-type=\"P1\" role=\"status\" hidden>No applicants yet.</p><details class=\"wr-add-applicant\"><summary class=\"maya-pill\" data-ma"
         },
         {
           "page": "backend/wr.html",
@@ -3842,7 +3832,7 @@
           ]
         },
         "technical": {
-          "count": 4,
+          "count": 3,
           "locations": [
             {
               "page": "backend/operations.html",
@@ -3855,10 +3845,6 @@
             {
               "page": "backend/status.html",
               "line": 1635
-            },
-            {
-              "page": "backend/status.html",
-              "line": 3778
             }
           ]
         },
@@ -3960,43 +3946,51 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3943
+              "line": 3941
             },
             {
               "page": "backend/status.html",
-              "line": 3950
+              "line": 3948
             },
             {
               "page": "backend/status.html",
-              "line": 3950
+              "line": 3948
             },
             {
               "page": "backend/status.html",
-              "line": 3950
+              "line": 3948
             },
             {
               "page": "backend/status.html",
-              "line": 3951
+              "line": 3949
             },
             {
               "page": "backend/status.html",
-              "line": 3951
+              "line": 3949
             },
             {
               "page": "backend/status.html",
-              "line": 3951
+              "line": 3949
             },
             {
               "page": "backend/status.html",
-              "line": 3951
+              "line": 3949
             },
             {
               "page": "backend/status.html",
-              "line": 3951
+              "line": 3949
+            },
+            {
+              "page": "backend/status.html",
+              "line": 3955
             },
             {
               "page": "backend/status.html",
               "line": 3957
+            },
+            {
+              "page": "backend/status.html",
+              "line": 3958
             },
             {
               "page": "backend/status.html",
@@ -4017,14 +4011,6 @@
             {
               "page": "backend/status.html",
               "line": 3963
-            },
-            {
-              "page": "backend/status.html",
-              "line": 3964
-            },
-            {
-              "page": "backend/status.html",
-              "line": 3965
             }
           ]
         },
@@ -5942,7 +5928,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4085,
+          "line": 4083,
           "tag": "button",
           "id": "voice-chip",
           "class": "maya-pill",
@@ -5952,7 +5938,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4086,
+          "line": 4084,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8045,11 +8031,11 @@
             },
             {
               "page": "backend/status.html",
-              "line": 4085
+              "line": 4083
             },
             {
               "page": "backend/status.html",
-              "line": 4086
+              "line": 4084
             },
             {
               "page": "backend/status.html",

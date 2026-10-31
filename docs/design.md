@@ -550,14 +550,14 @@ authored counts and individual source links remain available.
 
 ### WR
 
-WR reuses Admin’s background, horizontal submissions strip and centered table
-width. Submission cards are slightly taller (36vh versus 34vh). The Applicants
-table is the primary Applicants view with Wave, Number, Name, Look, Color and
-Email. The Add applicant form is collapsed beneath it. Both use shared typography,
-field, inner-panel, table and Glass settings;
-the existing Fields and drawer spacing sample previews the form. Page CSS owns
-responsive layout. WR reads the Admin submission feed and stores Applicants
-privately per authenticated Admin account.
+Every table uses the existing Table settings from Aesthetic Control. Shared
+appearance never means shared records. WR uses those same materials, header/body
+formatting and geometry with its own Wave, Number, Name, Look, Color and Email
+columns. Its Add applicant form remains collapsed beneath the table and uses
+existing field, Inner and Glass settings. Its gallery starts empty and never
+imports Admin submissions, client thumbnails or Leads. Only explicitly added,
+account-bound WR applicants populate its table. Existing WR records are preserved.
+Page CSS owns responsive layout; no alternate table style or editor is introduced.
 
 ### Avatar camera
 
@@ -594,3 +594,14 @@ shared Table settings and semantic status colors. Provider PAUSED/ENABLED status
 takes precedence over historical impressions. Unknown configuration uses delivery
 wording only. An unavailable reporting connection is explicit, with no invented
 campaign metrics or independent styles.
+
+### October 31 fabric responsiveness
+
+Sourceable keeps unchanged card and image nodes mounted through Refresh and added
+results. Explicit Refresh retries missing photographs without rebuilding healthy
+cards. A recent completed empty result can be reused for 30 seconds when returning
+to that context; Refresh always remains an explicit new search. At most two prepared
+reference photos are reused only inside the current account/submission and clear
+with project changes. New references and explicit resets invalidate preparation.
+No visual setting or new component family is added. All existing typography,
+Glass, Inner, Table and empty/error previews remain the authority.

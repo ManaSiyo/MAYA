@@ -85,7 +85,8 @@ console.log('Aesthetic authority passed: shared roles/materials, all Admin headi
 await import('./workspace-authority.mjs?authority');
 await import('./admin-automation-examples.mjs?authority');
 await import('./brief-workspace-ui.mjs?authority');
-// Includes multiple reviewed results, a missing-photo fallback, pending visual review,
+// Includes retained image nodes, prepared-photo/empty-context reuse and explicit
+// missing-photo retry, plus multiple reviewed results and pending visual review,
 // and default/changed shared P1 copy at phone and desktop widths.
 await import('./fabric-workflow-ui.mjs?authority');
 // Reexecutes the concise, explicitly opened Sourceable details and preview after real Save.
@@ -103,7 +104,8 @@ await import('./message-compose-ui.mjs?authority');
 
 console.log('Final Aesthetic Control authority passed: active previews, saved settings, actual Admin/Brief/Operations/fabric controls and voice surfaces across responsive widths.');
 
-// WR follows the shared form and panel controls at six widths.
+// WR shares Table aesthetics only. Recheck independent empty/error states,
+// explicit WR saves and default/changed settings at six widths.
 await import('./wr-ui.mjs?authority');
 
 await import('./avatar-camera-ui.mjs?authority');

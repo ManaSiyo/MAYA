@@ -72,20 +72,29 @@ try{
  assert.ok(payload.pieces.every(p=>!Object.keys(p).some(key=>key.startsWith('_'))));assert.equal(payload.piece.id,'coat');assert.equal(JSON.stringify(payload).includes('PRIVATE_PATTERN'),false);
 
  // Returning to a previously verified garment reuses results without another paid request.
+ await page.evaluate(()=>{window.fixtureBitmapCount=0;window.fixtureBitmap=createImageBitmap;window.createImageBitmap=(...args)=>{fixtureBitmapCount++;return fixtureBitmap(...args);};});
  searchProducts=[fur];await open({piece:pieces[0],forceReset:true});await card(fur).waitFor();
+ const preparedCount=await page.evaluate(()=>fixtureBitmapCount);
  searchProducts=[leather];await open({piece:pieces[1]});await card(leather).waitFor();
+ assert.equal(await page.evaluate(()=>fixtureBitmapCount),preparedCount,'Unchanged project photo is not decoded again for another garment');await page.evaluate(()=>window.createImageBitmap=fixtureBitmap);
  const beforeReturn=searches.length;
  await open({piece:pieces[0]});await card(fur).waitFor();assert.equal(searches.length,beforeReturn,'Garment return restores verified results without search');assert.equal(await card(leather).count(),0,'Garment results do not cross contexts');
  assert.deepEqual(searches.at(-1).storeGroups,['local','mood','swatchon','amazon','others'],'All visible selected stores reach the server');
+ await page.evaluate(()=>window.retainedFabricCard=document.querySelector('.fa-product'));
  holdSearch=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await waitUntil(()=>!!releaseSearch);await card(fur).waitFor();
+ assert.equal(await page.evaluate(()=>retainedFabricCard===document.querySelector('.fa-product')),true,'Refresh keeps the actual loaded photo/card node');
  searchProducts=[];releaseSearch();releaseSearch=null;await page.getByText('No additional matches. Previously loaded fabrics are kept.',{exact:true}).waitFor();await card(fur).waitFor();
  assert.equal(await page.locator('.fa-product').count(),1,'An empty refresh preserves previously confirmed results');
+ assert.equal(await page.evaluate(()=>retainedFabricCard===document.querySelector('.fa-product')),true,'An empty refresh does not replace or reload the retained image');
  // A failed refresh also keeps prior confirmed results; new material requests do not.
  await page.evaluate(()=>{const native=window.fetch;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){window.fetch=native;return Promise.resolve(new Response(JSON.stringify({error:'Fixture refresh failed.'}),{status:503,headers:{'Content-Type':'application/json'}}));}return native(url,options);};});
  await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.getByText('Fixture refresh failed.',{exact:true}).waitFor();await card(fur).waitFor();
  searchProducts=[fur];await open({piece:pieces[0],automatic:false,forceReset:true});await page.locator('#fabric-request').fill('brown fur');await page.getByRole('button',{name:'Find fabric',exact:true}).click();await card(fur).waitFor();
  searchProducts=[];await page.locator('#fabric-request').fill('blue cotton instead');await page.getByRole('button',{name:'Find fabric',exact:true}).click();await page.getByText('Fabrics found.',{exact:true}).waitFor();assert.equal(await card(fur).count(),0,'New material cannot inherit old results');
  await open({piece:pieces[1],automatic:false});await open({piece:pieces[0],automatic:false});assert.equal(await card(fur).count(),0,'Old cache cannot resurrect a replaced material request');
+ searchProducts=[];await open({piece:pieces[0],forceReset:true});assert.equal(await page.locator('.fa-product').count(),0);
+ searchProducts=[leather];await open({piece:pieces[1]});const beforeEmptyReturn=searches.length;
+ await open({piece:pieces[0]});assert.equal(searches.length,beforeEmptyReturn,'Returning to a completed empty search does not repeat paid discovery');assert.equal(await page.locator('.fa-product').count(),0,'Empty context cannot borrow another garment result');
  searchProducts=[fur,leather];
 
  // Existing books remain manageable; browsing never silently saves or selects.
@@ -264,6 +273,10 @@ try{
  const missing=page.locator('.fa-product').filter({hasText:broken.title});await missing.getByText('Photo unavailable',{exact:true}).waitFor();
  assert.equal(await page.locator('.fa-product-link').count(),3,'One browser image failure does not remove a reviewed listing');
  assert.equal(await missing.locator('a').getAttribute('href'),broken.url,'The reviewed seller link remains available');
+ await page.evaluate(()=>{window.failedFabricNode=document.querySelector('.has-missing-photo');window.healthyFabricNode=[...document.querySelectorAll('.fa-product')].find(el=>!el.classList.contains('has-missing-photo'));});
+ searchProducts=[broken,leather,lining];await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await missing.getByText('Photo unavailable',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(()=>failedFabricNode===document.querySelector('.has-missing-photo')),false,'Explicit Refresh retries a failed photograph');
+ assert.equal(await page.evaluate(()=>healthyFabricNode===[...document.querySelectorAll('.fa-product')].find(el=>!el.classList.contains('has-missing-photo'))),true,'Retrying one missing photo preserves healthy loaded cards');
  for(const mode of ['default','saved']){
   await page.evaluate(mode=>{const d=structuredClone(MayaTypographyControls.defaults);if(mode==='saved')Object.assign(d.type.P3,{font:'cormorant',size:14,weight:450,color:'gray'});MayaTypographyControls.apply(d);},mode);
   for(const width of [320,390,768,1024,1440,1920]){
@@ -321,7 +334,7 @@ try{
  try{await page.getByText('Search timed out. Refresh to retry.',{exact:true}).waitFor();}catch(error){console.error('Partial-stream fixture state:',await page.locator('#fabric-assistant').innerText());throw error;}
  await page.evaluate(()=>partialSearch);
  assert.equal(await page.locator('.fa-product').count(),0,'Timed-out streams remove provisional candidates');
- await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await card(late).waitFor();
+ searchProducts=[late];await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await card(late).waitFor();
  assert.equal(await page.locator('.fa-status').textContent(),'Fabrics found.','Explicit Refresh recovers without a stuck busy flag');
  // A response with error headers but a stalled body must also release the UI.
  await page.evaluate(({reference,pieces})=>{

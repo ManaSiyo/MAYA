@@ -1,43 +1,33 @@
-Title: [Codex] Keep fabric results and unify MAYA shared controls
+Title: [Codex] Unblock Fabrics and keep WR records independent
 
-Fabrics preserves confirmed per-garment results within the current private
-account/submission instead of erasing them on switching, filtering or Refresh.
-Returning to an unchanged garment restores results without another provider
-request; empty/failed refreshes retain prior cards. Changed requests/photos and
-account/project changes invalidate incompatible private state. Balance approved
-merchants before the eight-candidate cap, include all five bounded Shopify seed
-sources, send every selected store group and cap web discovery at 20 seconds.
-Keep seller evidence, exclusions, canonical crops, Node 20 deadline retention and
-the single visual comparison; never publish preliminary products as confirmed.
+WR shares table aesthetics, never Admin data. Remove its Admin submission/gallery
+and thumbnail reads; retain only private, account-bound WR applicants and the
+existing table controls/columns. Opening WR inserts no samples. Loading/read
+failures stay visible outside the collapsed form, and failed reads cannot claim
+an empty workspace. Existing WR records are preserved; no production data deletion.
 
-Make Glass the only active pill material/editor, including Edit. Fix native
-Operation Room selector height using shared P3 plus saved X/Y padding and retain
-voice visibility rules. Remove the internal Studio page, assets, navigation,
-Hosting mapping and gallery sample. WR Applicants uses Admin's shared Table,
-with Wave/Number/Name/Look/Color/Email and a collapsed Add applicant form below.
-Legacy design saves remain readable without a second active pill authority.
+Remove Fabric's serial barrier by checking web seller listings while keyword
+feeds/checks continue. Deduplicate exact seller reads within each request and
+bound optional Shopify price/unit metadata to 1.2 seconds inside the existing
+seller budget. Preserve seller facts, swatch/stock exclusions, original photos,
+canonical crops, Node 20 deadline retention and the single visual comparison.
 
-Extract read-only Google Ads reporting to a shipped module with the supported
-v26 endpoint, bounded pagination, completed account-local week and direct
-campaign/chart fallback. Honor provider PAUSED/ENABLED before historical delivery.
-Explicitly identify unavailable Google/ChatGPT reporting using existing P1/Table;
-empty charts distinguish absent time-series rows from configuration. No ad state,
-budget, credentials or production configuration changes. ChatGPT
-reporting still needs a supported API contract and owner-managed setup. The
-secret pasted in chat was not used or stored. External ad campaigns are unchanged.
+Keep actual healthy card/image nodes mounted through Refresh and added matches;
+explicit Refresh retries failed photos only. Reuse two prepared references in
+private project memory and recently completed empty contexts for 30 seconds,
+without automatic paid retries. Account/project changes clear private state.
+Timings include saved-context reads and checked rather than provisional results.
 
-Validation: locked npm ci completed. All 74 functional/syntax Cloud Build checks
-pass under Node 20.20.2 (retired UI/asset assertions updated and rerun), plus
-integrated app-regression and server smoke. Forced-GC fabric deadlines also pass
-under local Node 24. Tests cover merchant distribution, exact selected store
-scope, cached garment returns, empty/failed refresh retention, changed-request
-invalidation, account/project isolation, same Admin/WR table styles, hidden voice
-states and actual design Save/reload. Final standalone Aesthetic Control authority
-passed last, covering different valid saved settings, actual Save propagation and
-six widths. Default/changed WR, Glass/gallery, Ads copy and selector screenshots
-were visually reviewed. No personal Chrome, microphone or live
-paid fabric tests were resumed; synthetic checks do not establish live relevance
-or provider latency.
+Validation: locked npm ci and all 74 functional/syntax release gates passed;
+latest focused WR/fabric checks, integrated regression and server smoke passed.
+Final standalone Aesthetic Control passed last, including real Save propagation
+and visual inspection of empty WR default/changed styles. Fabric has 53 server behavior
+checks with forced GC on Node 20.20.2 and Node 24. The 4x CPU workflow verifies
+stable image nodes, preparation/empty-result reuse, explicit retry, seller gates
+and account/project cancellation. WR covers truly independent empty state,
+explicit saves, read errors and default/changed shared styles across six widths.
+No personal Chrome, paid providers, microphone or production data was accessed.
+Local fixtures cannot establish live merchant relevance or provider latency.
 
-Verified deployed baseline is 43cddf8. This commit is local only; owner Push and
-exact Cloud Build/Hosting/page/API/asset verification remain necessary.
+This is a new local commit above unpublished 03311d3. Owner Push and exact live
+Cloud Build/Hosting/API/asset verification remain necessary.

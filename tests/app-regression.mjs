@@ -116,10 +116,13 @@ const fabricClientSource=readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.
 ok('Fabric results survive garment returns and empty refreshes within the sealed project',fabricClientSource.includes('const resultCache=new Map()') && fabricClientSource.includes('resultCache.clear()') && fabricClientSource.includes('Previously loaded fabrics are kept.') && fabricClientSource.includes('storeGroups:[...activeStores]'));
 ok('Ad reporting exposes missing connections and honors provider paused state',MAP_SOURCE.includes('id="ads-connection-status"') && MAP_SOURCE.includes("state==='paused'") && SERVER_SOURCE.includes('withDirectGoogle(out.adCombined,gads)'));
 ok('Retired Studio implementation has no served page or Admin/gallery entry', !existsSync(join(ROOT,'backend/design-studio-2.html')) && !MAP_SOURCE.includes('/design-studio-2.html') && !readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('studio-control-preview'));
+const wrClientSource=readFileSync(join(ROOT,'aesthetics/ui/wr.js'),'utf8');
+ok('WR is independently empty and never copies Admin submissions or lead data',!wrClientSource.includes('/api/admin/submissions')&&!wrClientSource.includes('/api/admin/subthumb')&&wrClientSource.includes('/api/admin/wr/leads')&&wrClientSource.includes('No submissions yet.'));
+ok('Fabric responsiveness overlaps seller checks, bounds optional metadata and preserves loaded image nodes',FABRIC_SEARCH_SOURCE.includes('discoveryChecks=Promise.allSettled')&&FABRIC_SEARCH_SOURCE.includes('AbortSignal.timeout(1200)')&&FABRIC_UI_SOURCE.includes('preparedPhotos.clear()')&&FABRIC_UI_SOURCE.includes('insertBefore(el,els.results.children[index]||null)'));
 ok('MAYA door keeps its menu above the sign-in panel during its opacity transition', MAP_SOURCE.includes('.card-maya{position:relative;z-index:2}'));
 ok('Brief keeps Biography and Vision without the Direction chip row', !BACKEND_SOURCE.includes('id="op-chips-section"') && BACKEND_SOURCE.includes('id="op-biography"') && BACKEND_SOURCE.includes('id="op-vision"'));
 
-// WR retains Admin-sized submissions and an isolated Applicants form.
+// WR shares aesthetics only; its records never come from the Admin feed.
 {const wr=readFileSync(join(ROOT,'backend/wr.html'),'utf8');ok('Shared pills have one Glass authority', !readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8').includes('regular-pill-editor') && readFileSync(join(ROOT,'aesthetics/ui/pill-runtime.js'),'utf8').includes('select[data-maya-pill]'));
 ok('WR exposes Applicants with one Wave and Number and an Email field',wr.includes('>Applicants</h2>')&&(wr.match(/name="wave"/g)||[]).length===1&&(wr.match(/name="phone"/g)||[]).length===1&&wr.includes('name="email"'));}
 
@@ -1192,7 +1195,7 @@ ok('legacy merchant searches retain real feeds without sharing private queries',
 ok('Sourceable streams verified merchant photographs through the active shared assistant',
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true') &&
   FABRIC_UI_SOURCE.includes("fetch('/api/admin/fabrics/search'") && FABRIC_UI_SOURCE.includes('const confirmed=Array.isArray(event.products)?event.products:[];') &&
-  FABRIC_SEARCH_SOURCE.includes('.map(c => verify(c, signal))') && FABRIC_SOURCE.includes("product.evidence==='search_link'||!product.image"));
+  FABRIC_SEARCH_SOURCE.includes('verify({url:candidate.url},signal)') && FABRIC_SOURCE.includes("product.evidence==='search_link'||!product.image"));
 ok('Dissection material context preserves client preferences and qualified garment traits',
   BACKEND_SOURCE.includes('"fabric_spec"') && BACKEND_SOURCE.includes('Only fill weight_gsm from an explicit client specification') &&
   FABRIC_UI_SOURCE.includes('piece:pieceMetadata(context.piece)') &&
@@ -2776,7 +2779,7 @@ ok('Operations uses recorded Brief measurements without duplicate drawer inputs 
 ok('Fabrics browsing removes card Save and Use while retaining private historical selections',!FABRIC_UI_SOURCE.includes("action('Save'")&&!FABRIC_UI_SOURCE.includes("action('Use'")&&FABRIC_SEARCH_SOURCE.includes('selectedByGarment'));
 ok('Fabrics publishes product cards only from a completed search',FABRIC_UI_SOURCE.includes("const confirmed=Array.isArray(event.products)?event.products:[];") && !FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}'));
 ok('Fabrics checks a balanced set of seller candidates and overlaps saved-context reads',
-  FABRIC_SEARCH_SOURCE.includes('balancedFabricCandidates(unique).map(c => verify(c, signal))') &&
+  FABRIC_SEARCH_SOURCE.includes('balancedFabricCandidates(unique).map(check)') &&
   FABRIC_SEARCH_SOURCE.includes('const [summary,dissection] = await Promise.all(['));
 // Keep this last: functional checks precede the governing aesthetic verification.
 ok('Messages accepts typed numbers through reviewed Send and confirmed Call',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('function msgBegin')&&readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('msgTypedNumber'));

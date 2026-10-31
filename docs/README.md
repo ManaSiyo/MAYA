@@ -31,6 +31,9 @@ Fabric filters: Local (Bay Area), Mood, Swatchon, Amazon, Others; filter toggles
 do not call paid search. Refresh searches explicitly. Card Save/Use is removed;
 historical Favorites remain readable/removable.
 
+Tables share Aesthetic Control settings across MAYA; their records remain separate.
+WR starts with its own empty gallery/applicants and does not import Admin data.
+
 Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
 Aesthetic Control groups Visuals (Glass pills, Panels and Tables) before single-preview
 Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.

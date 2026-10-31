@@ -620,11 +620,11 @@ START/PASS elapsed diagnostics do not change exit handling or log preservation.
 `backend/wr.html` is the single WR page, served at `/wr.html` and linked from
 Admin Systems. `aesthetics/ui/wr.{js,css}` holds its layout and client logic;
 `docs/server/wr-store.mjs` stores idempotent, generation-checked applicants privately
-per authenticated Admin; legacy records without Email remain valid. WR reads the
-existing Admin submission feed; its newest-first thumbnails are bounded to four
-concurrent requests. WR mirrors Admin card/table proportions and uses shared table
-settings. Never mix
-accounts or expose private lead records. Run `tests/wr-store.mjs`,
+per authenticated Admin; legacy records without Email remain valid. WR starts
+with an empty gallery and does not read Admin submissions, client thumbnails or
+Leads. Shared Table aesthetics apply to all tables, but data remains independent.
+Only explicit WR applicant additions populate its table; preserve existing WR
+records rather than masking or deleting them. Never mix accounts. Run `tests/wr-store.mjs`,
 `tests/wr-ui.mjs`, container-contract, app-regression and the final
 aesthetic-authority gate. `docs/CLO3D-RESEARCH.md` is research only.
 
@@ -664,3 +664,17 @@ the module must ship in Dockerfile. ChatGPT Ads needs a supported reporting API;
 a service key alone is not a reporting contract. Never store credentials or
 hardcode connector observations into live dashboard metrics. No campaign state,
 budget or production environment change is authorized by this dashboard repair.
+
+October 31 fabric responsiveness: web seller checks overlap keyword-feed checks;
+exact duplicate listing reads share one promise only within that request. Main
+seller verification remains bounded at eight seconds; optional Shopify price/unit
+metadata gets at most 1.2 seconds within that budget, leaving unknown facts blank.
+Reject already-known swatches/out-of-stock/non-fabric listings before enrichment.
+Keep source/variant/seller/photo gates, one paid discovery and one visual pass.
+Confirmed cards retain actual DOM/image nodes; only explicit Refresh retries
+failed photos. Two prepared references and 24 results contexts are private project
+memory; recently completed empty contexts are reused for 30 seconds without an
+automatic paid retry. Account/project changes clear all private caches. Timing
+starts before saved-context reads and firstResultsMs means checked results,
+not hidden preliminary candidates. Run fabric-search/GC on Node 20 and local Node,
+fabric-workflow-ui at 4x CPU, WR UI/store, exact release gates and final authority.

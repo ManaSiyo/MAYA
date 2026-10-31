@@ -634,4 +634,42 @@ await test('non-cooperative retailer responses respect their independent budgets
     assert.equal(attempts,1,'A late response cannot launch another redirect after the budget');
   }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);release?.();}
 });
+await test('web seller checks start while keyword feeds are still pending and share duplicate checks',async()=>{
+  let releaseFeeds,releaseSeller,feedCalls=0,sellerCalls=0,webCalls=0,ranks=0;
+  const feeds=new Promise(resolve=>releaseFeeds=resolve),sellerGate=new Promise(resolve=>releaseSeller=resolve);
+  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
+    if(target.includes('openai.com')){webCalls++;return Response.json(response());}
+    if(target.includes('suggest.json')){feedCalls++;await feeds;return Response.json({resources:{results:{products:[{url,title:'Crimson wool fabric'}]}}});}
+    sellerCalls++;await sellerGate;return new Response(seller());
+  },rank:async({products})=>{ranks++;return products;}});
+  const events=[],pending=service.search(user,{request:'crimson wool, only Britex',image},event=>events.push(event));
+  try{
+    for(let i=0;i<20&&(!feedCalls||!webCalls||!sellerCalls);i++)await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(sellerCalls,1,'Web listing verification must not wait for the slowest seed feed');
+    releaseFeeds();for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(sellerCalls,1,'The same listing is fetched once across discovery and direct seeds');
+    releaseSeller();await pending;assert.equal(ranks,1);assert.equal(webCalls,1);assert.equal(events.at(-1).products.length,1);assert.ok(events.at(-1).timings.firstResultsMs<=events.at(-1).timings.totalMs,'Timings reflect completed checks');
+  }finally{releaseFeeds();releaseSeller();await pending;}
+});
+await test('optional variant metadata has a short deadline without dropping valid seller listings',async()=>{
+  const nativeTimeout=AbortSignal.timeout,keepAlive=setInterval(()=>{},1000);let variantSignal;
+  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===1200?35:ms);
+  try{
+    const service=createFabricSearch({...store(),fetchImpl:async(target,options)=>{
+      if(target.endsWith('.js')){variantSignal=options.signal;return new Promise(()=>{});}
+      return new Response(seller({offers:{'@type':'Offer',priceCurrency:'USD',availability:'https://schema.org/InStock'}}));
+    }});
+    const pending=service.verify({url});
+    const result=await Promise.race([pending,new Promise((_,reject)=>setTimeout(()=>reject(Error('Optional price lookup blocked the eligible fabric')),180))]);
+    assert.equal(result.evidence,'seller_listing');assert.equal(result.price,'');assert.equal(variantSignal.aborted,true,'Variant lookup has its own short deadline');
+    const variants={handle:'crimson-wool',variants:[{id:1,title:'Default Title',price:6999,available:true},{id:2,title:'Swatch',price:300,available:true}]};
+    const html=seller({offers:{'@type':'AggregateOffer',priceCurrency:'USD',lowPrice:3,highPrice:69.99}})+'<p>69.99 per yard</p>';
+    const fast=createFabricSearch({...store(),fetchImpl:async target=>target.endsWith('.js')?Response.json(variants):new Response(html)});
+    assert.equal((await fast.verify({url})).price,'69.99','Fast seller variant facts remain available');
+    assert.equal(await fast.verify({url:url+'?variant=2'}),null,'A selected swatch cannot become yardage');
+    let visits=0;const unavailable=createFabricSearch({...store(),fetchImpl:async()=>{visits++;return new Response(seller({offers:{'@type':'Offer',priceCurrency:'USD',availability:'https://schema.org/OutOfStock'}}));}});
+    assert.equal(await unavailable.verify({url}),null);assert.equal(visits,1,'Known unavailable products do not spend time fetching optional prices');
+
+  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);}
+});
 console.log(`Fabric search: ${count} behavioral checks passed.`);
