@@ -682,3 +682,18 @@ automatic paid retry. Account/project changes clear all private caches. Timing
 starts before saved-context reads and firstResultsMs means checked results,
 not hidden preliminary candidates. Run fabric-search/GC on Node 20 and local Node,
 fabric-workflow-ui at 4x CPU, WR UI/store, exact release gates and final authority.
+
+
+October 31 scrollbar/Ads diagnostic audit: Aesthetic Control alone owns visible
+scrollbar paint and sizing. Never add page scrollbar-color, thumb/track/hover
+palettes or visible thin-width rules: non-auto native width can bypass WebKit
+paint. Shared low-specificity native defaults preserve deliberate hidden tracks;
+keep Operations' hidden rule specific enough. All served references use
+presentation-runtime v2 and its exact no-cache rule. Run scrollbar-authority-ui,
+input-controls-ui, admin-ui-contract, release gates/app-regression and final
+aesthetic-authority. Test actual gutter/native precedence, not pseudo colors alone.
+Public Ads health exposes only presence booleans; authenticated Admin may see
+fixed missing setting names/labels, never values. Provider exception codes are
+allowlisted; do not reflect raw error strings. Configuration presence does not
+prove provider authorization/delivery. Chrome access remains forbidden for this
+task; use code/HTTP and keep credential/environment entry owner-only.

@@ -254,8 +254,8 @@ html[data-maya-surface="dense"] :is(.person,.stat,.model-group) {backdrop-filter
 #automation-status{line-height:1.6;margin:12px 0;}
 /* Accepted Gemini audit findings, mapped to existing elements. V3 geometry and
    owner-approved type sizes/status colors remain authoritative. */
-html[data-maya-surface="dense"] #changes-fold>.fold-body{max-height:420px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:16px;}
-html[data-maya-surface="dense"] #features-list .fr-room{max-height:380px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+html[data-maya-surface="dense"] #changes-fold>.fold-body{max-height:420px;overflow-y:auto;overscroll-behavior:contain;padding:16px;}
+html[data-maya-surface="dense"] #features-list .fr-room{max-height:380px;overflow-y:auto;overscroll-behavior:contain;}
 html[data-maya-surface="dense"] #pe-framing{white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(0,0,0,.15);padding:12px;color:var(--maya-secondary);}
 html[data-maya-surface="dense"] #mkt-ticker{mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);}
 html[data-maya-surface="dense"] :is(.arch>.col,.pe-live){min-width:0;overflow-wrap:anywhere;}

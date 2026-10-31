@@ -18,4 +18,6 @@ console.log('Design contract passed: one standard, shared runtime, owner save, r
 
 const hosting=JSON.parse(read('docs/firebase.json')).hosting;assert.ok(hosting.headers.some(h=>h.source==='/aesthetics/ui/typography-controls.js' && h.headers.some(v=>v.key==='Cache-Control'&&v.value==='no-cache')));
 
-for(const helper of ['presentation-runtime','pill-runtime'])for(const page of canonPages){const source=read(page);assert.ok(source.includes('/aesthetics/ui/'+helper+'.js?v=1'),page+' '+helper);assert.ok(source.indexOf(helper+'.js')<source.indexOf('typography-controls.js'),page+' helper loads first');}
+for(const [helper,version] of [['presentation-runtime',2],['pill-runtime',1]])for(const page of canonPages){const source=read(page);assert.ok(source.includes('/aesthetics/ui/'+helper+'.js?v='+version),page+' '+helper);assert.ok(source.indexOf(helper+'.js')<source.indexOf('typography-controls.js'),page+' helper loads first');}
+
+assert.ok(hosting.headers.some(h=>h.source==='/aesthetics/ui/presentation-runtime.js'&&h.headers.some(v=>v.key==='Cache-Control'&&v.value==='no-cache')),'Shared scrollbar runtime revalidates on live pages');

@@ -828,7 +828,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/presentation-runtime.js?v=1"></script>
+<script src="/aesthetics/ui/presentation-runtime.js?v=2"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
 <script src="/aesthetics/ui/voice-preparation.js?v=3"></script>
@@ -4004,7 +4004,8 @@ function _paintMkt(d, alsoBrief){
   const adConnections=document.getElementById('ads-connection-status');
   if(adConnections){
     const reports=[['Google',d.googleAds],['Meta',d.meta],['ChatGPT',d.chatgptAds]];
-    adConnections.textContent=reports.map(([name,r])=>name+': '+(r?.connected?(d.adCombined?.excludedSources||[]).includes(name.toLowerCase())?'reported currency cannot be combined with USD.':'direct reporting connected.':r?.why||'direct reporting unavailable.')).join(' ')+' Daily results use completed days in each ad account timezone.';
+    const why=(name,r)=>{const setup=d.adSetup?.[name.toLowerCase()];return setup?.missingLabels?.length?'Missing '+setup.missingLabels.join(', ')+'.':r?.why||'direct reporting unavailable.';};
+    adConnections.textContent=reports.map(([name,r])=>name+': '+(r?.connected?(d.adCombined?.excludedSources||[]).includes(name.toLowerCase())?'reported currency cannot be combined with USD.':'direct reporting connected.':why(name,r))).join(' ')+' Daily results use completed days in each ad account timezone.';
   }
   try{ paintAdCombined(); }catch(e){ console.warn('[mkt] ads',e); }
   try{ paintCampaigns(); }catch(e){ console.warn('[mkt] campaigns',e); }

@@ -1,5 +1,6 @@
 import './ad-reporting.mjs';
 import './ad-reporting-ui.mjs';
+import './scrollbar-authority-ui.mjs';
 import './pattern-decisions.mjs';
 import './refresh-efficiency.mjs';
 import './avatar-camera-ui.mjs';
@@ -114,6 +115,8 @@ if(MAP_SOURCE.includes('<maya-owner-crm>'))throw Error('Retired Owner tools must
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
 const AD_REPORTING_SOURCE=readFileSync(join(ROOT,'docs/server/ad-reporting.mjs'),'utf8');
+ok('Ads reports exact missing setup in Admin and public readiness without values',AD_REPORTING_SOURCE.includes('adSetupStatus') && SERVER_SOURCE.includes('out.adSetup=adSetupStatus(process.env)') && MAP_SOURCE.includes('setup.missingLabels.join'));
+ok('Visible scrollbar paint is governed only by the shared runtime',!INDEX_SOURCE.includes('scrollbar-width: thin') && !BACKEND_SOURCE.includes('scrollbar-color: rgba') && readFileSync(join(ROOT,'aesthetics/ui/presentation-runtime.js'),'utf8').includes(':where(html,body,body *){scrollbar-width:auto}'));
 ok('Google direct setup uses OAuth without retired developer-token configuration',AD_REPORTING_SOURCE.includes("const missing=['id','secret','refresh','customer']") && !SERVER_SOURCE.includes('GOOGLE_ADS_DEVELOPER_TOKEN') && !AD_REPORTING_SOURCE.includes("'developer-token'"));
 const fabricClientSource=readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8');
 ok('Fabric results survive garment returns and empty refreshes within the sealed project',fabricClientSource.includes('const resultCache=new Map()') && fabricClientSource.includes('resultCache.clear()') && fabricClientSource.includes('Previously loaded fabrics are kept.') && fabricClientSource.includes('storeGroups:[...activeStores]'));

@@ -1,3 +1,5 @@
+October 31 — Owner requires code-only Ads diagnosis and forbids Chrome access. Unify all visible scrollbars under the sole Aesthetic Control scrollbar settings; remove mixed native/page themes while preserving hidden navigation. Local code now reports safe missing configuration/authorization categories and public readiness booleans without keys. Actual provider setup remains owner-managed.
+
 October 31 setup follow-up — Owner reports direct Ads are not configured and asks to finish setup. Verify deployed commit, request fresh MAYA Chrome access and Ads-key readiness, and guide owner-entered credentials. Fix obsolete Google developer-token requirement; current API uses OAuth and Cloud-project access. No keys accepted in chat, production changes or automatic Push.
 
 October 31 — Direct connections only (supersedes Windsor setup)

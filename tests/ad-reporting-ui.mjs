@@ -45,8 +45,9 @@ try{
  if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-ads-changed.png')});
  savedDesign={};await page.evaluate(()=>MayaTypographyControls.apply(MayaTypographyControls.defaults));
  if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-ads-default.png')});
- marketing={...marketing,chatgptAds:{connected:false,why:'ChatGPT Ads direct reporting could not be loaded.'},adCombined:combineDirectAds({})};
- await page.evaluate(()=>loadMkt());assert.match(await page.locator('#ads-connection-status').innerText(),/could not be loaded/);assert.ok(!await page.locator('#ad-chart polyline').count());
+ marketing={...marketing,adSetup:{chatgpt:{configured:false,missingLabels:['Advertiser API key','Ads account ID']}},chatgptAds:{connected:false,why:'ChatGPT Ads direct reporting could not be loaded.'},adCombined:combineDirectAds({})};
+ await page.evaluate(()=>loadMkt());assert.match(await page.locator('#ads-connection-status').innerText(),/Missing Advertiser API key, Ads account ID/);assert.ok(!await page.locator('#ad-chart polyline').count());
+ for(const changed of [false,true]){await page.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed)Object.assign(d.type.P1,{font:'cormorant',size:18});MayaTypographyControls.apply(d);},changed);for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});const copy=await page.locator('#ads-connection-status').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return {size:s.fontSize,font:s.fontFamily,right:r.right,left:r.left,overflow:e.scrollWidth>e.clientWidth+1};});assert.equal(copy.size,changed?'18px':'12px');assert.ok(copy.left>=0&&copy.right<=width+1&&!copy.overflow,'Missing-configuration copy follows shared P1 and fits '+width);}}
  assert.equal(errors.length,0,errors.join('\n'));
  console.log('Direct Ads UI passed: ChatGPT-only data, duplicate names, current/inactive/zero states, D/W/M, missing connections and saved Table/P1 controls at six widths. Fake providers only.');
 }finally{await browser.close();}

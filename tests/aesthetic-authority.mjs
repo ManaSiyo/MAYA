@@ -112,3 +112,6 @@ await import('./avatar-camera-ui.mjs?authority');
 
 // Direct Ads reuse the existing shared Table/P1/Glass authority.
 await import('./ad-reporting-ui.mjs?authority');
+
+// Native scrollbar precedence and real gutter/Save behavior across page consumers.
+await import('./scrollbar-authority-ui.mjs?authority');

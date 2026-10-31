@@ -97,3 +97,22 @@ admin-ui-contract, admin-command, exact release checks, integrated regression an
 smoke. Final aesthetic-authority reexecutes the direct Ads UI fixture with changed
 saved Table/P1 settings at six widths. Push remains owner-controlled; verify the
 exact Hosting/API commit after deployment, then authenticated provider reporting.
+
+
+## Code-only diagnosis without Chrome
+
+The public /api/healthz configured.googleAds, metaAds and chatgptAds fields are
+boolean presence checks only, not provider availability tests. An older release
+without these fields has unknown readiness; do not turn absent fields into false.
+No account IDs, missing-setting details or credential values are public. The
+Admin-only /api/admin/marketing adSetup object names fixed missing settings and
+human labels without values, and the existing P1 connection note displays them.
+Its response is no-store. Do not collect keys through the website or chat.
+
+Google errors distinguish expired/revoked OAuth, Cloud-project production access,
+account permission and missing Ads scope from an unconfigured preflight. Unknown
+provider exception text is normalized to a fixed code before responding; it must
+never echo a token, secret, raw request or provider body. Authorization errors do
+not become zero campaign totals. A key in chat or a connected Ads Manager plugin
+does not install settings into MAYA's separate Cloud Run process. Owner handles
+credential entry. Public read-only HTTP verification requires no owner Chrome.

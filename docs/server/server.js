@@ -1,4 +1,4 @@
-import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds} from './ad-reporting.mjs';
+import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds,adSetupStatus} from './ad-reporting.mjs';
 // ═══════════════════════════════════════════════════════════════════════════
 // MAYA — Cloud Run API service (replaces the three Vercel functions)
 //
@@ -148,11 +148,14 @@ app.use((req, res, next) => {
 // the submission store was unreachable. It now reports what is configured and,
 // on /api/healthz/deep, whether the store really answers.
 function _healthz(_req, res) {
+  res.setHeader('Cache-Control','no-store');
+  const ads=adSetupStatus(process.env);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({
     ok: true, service: 'maya-api', commit: BUILD_COMMIT, ts: new Date().toISOString(),
     configured: {
       openai: !!process.env.OPENAI_API_KEY,
+      googleAds:ads.google.configured,metaAds:ads.meta.configured,chatgptAds:ads.chatgpt.configured,
       // v13.27: submissions live in MAYA's own bucket now. `drive` is kept as
       // a mirror for one version so an old cached page still reads something.
       submissions: !!SUBMISSIONS_BUCKET,
@@ -2880,6 +2883,8 @@ app.get('/api/admin/marketing', async (req, res) => {
   const [meta, gads, chatgpt, wixSite, leads] = await Promise.all([
     metaInsights(), googleAdsInsights(), chatgptAdsInsights(), wixInsights(), loadLeadFeed()]);
   Object.assign(out,{wixSite,meta,googleAds:gads,chatgptAds:chatgpt,leads});
+  out.adSetup=adSetupStatus(process.env);
+  res.set('Cache-Control','no-store');
   out.adCombined=combineDirectAds({google:gads,meta,chatgpt});
   const sources=Object.values(out.adCombined.sources);
   const spend7=sources.reduce((sum,source)=>sum+Number(source.spend||0),0);

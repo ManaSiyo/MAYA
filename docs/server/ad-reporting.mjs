@@ -1,3 +1,21 @@
+// Configuration diagnostics contain presence and fixed setting names only.
+const adSettings={google:['GOOGLE_ADS_CLIENT_ID','GOOGLE_ADS_CLIENT_SECRET','GOOGLE_ADS_REFRESH_TOKEN','GOOGLE_ADS_CUSTOMER_ID'],meta:['META_ADS_TOKEN','META_AD_ACCOUNT_ID'],chatgpt:['OPENAI_ADS_API_KEY','OPENAI_ADS_ACCOUNT_ID']};
+const labels={'GOOGLE_ADS_CLIENT_ID':'OAuth client ID','GOOGLE_ADS_CLIENT_SECRET':'OAuth client secret','GOOGLE_ADS_REFRESH_TOKEN':'OAuth refresh token','GOOGLE_ADS_CUSTOMER_ID':'Ads account ID','META_ADS_TOKEN':'Ads access token','META_AD_ACCOUNT_ID':'Ads account ID','OPENAI_ADS_API_KEY':'Advertiser API key','OPENAI_ADS_ACCOUNT_ID':'Ads account ID'};
+export function adSetupStatus(env={}){
+ return Object.fromEntries(Object.entries(adSettings).map(([provider,names])=>{const missing=names.filter(name=>!String(env[name]||'').trim());return [provider,{configured:!missing.length,missing,missingLabels:missing.map(name=>labels[name])}];}));
+}
+const safeAdCode=code=>['not_configured','account_mismatch','authorization','oauth_expired','project_access','account_access','scope','provider_error','incomplete_report','invalid_report','invalid_metric','invalid_account'].includes(code)?code:'provider_error';
+const googleFailure=(raw='provider_error')=>{const code=safeAdCode(raw);return {connected:false,code,why:({authorization:'Google Ads authorization was rejected. Check its OAuth connection.',oauth_expired:'Google Ads OAuth authorization expired or was revoked. Reconnect the Ads account.',project_access:'Google Ads API needs production access in the OAuth client’s Google Cloud project.',account_access:'The Google Ads OAuth identity cannot access the configured Ads account.',scope:'The Google Ads OAuth grant is missing the Ads permission.'})[code]||'Google Ads reporting could not be loaded. Check the existing server connection.'};};
+async function googleErrorCode(response,oauth=false){
+ const data=await response.json().catch(()=>({}));
+ if(oauth&&data.error==='invalid_grant')return 'oauth_expired';
+ const errors=(data.error?.details||[]).flatMap(d=>Array.isArray(d.errors)?d.errors:[]);
+ const codes=errors.flatMap(e=>Object.values(e.errorCode||{}));
+ if(codes.includes('CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION'))return 'project_access';
+ if(codes.some(c=>['USER_PERMISSION_DENIED','CUSTOMER_NOT_ENABLED','INVALID_LOGIN_CUSTOMER_ID_SERVING_CUSTOMER_ID_COMBINATION'].includes(c)))return 'account_access';
+ if(data.error?.details?.some(d=>d.reason==='ACCESS_TOKEN_SCOPE_INSUFFICIENT'))return 'scope';
+ return response.status===401||response.status===403?'authorization':'provider_error';
+}
 // Read-only Google Ads reporting. Uses only the owner's existing server config.
 export function createGoogleAdsReader({config,fetchImpl=fetch,now=Date.now}){
  return async function googleAdsInsights(){
@@ -6,14 +24,14 @@ export function createGoogleAdsReader({config,fetchImpl=fetch,now=Date.now}){
   const signal=AbortSignal.timeout(18000);
   try{
    const tr=await fetchImpl('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:config.id,client_secret:config.secret,refresh_token:config.refresh,grant_type:'refresh_token'}),signal});
-   if(!tr.ok)throw Error('Google Ads authorization could not be refreshed.');
+   if(!tr.ok)throw Error(await googleErrorCode(tr,true));
    const token=await tr.json();if(!token.access_token)throw Error('Google Ads authorization is unavailable.');
    const headers={Authorization:'Bearer '+token.access_token,'Content-Type':'application/json',...(config.login?{'login-customer-id':config.login}:{})};
    const query='SELECT campaign.id, campaign.name, campaign.status, customer.currency_code, customer.time_zone, segments.date, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions FROM campaign WHERE segments.date DURING LAST_30_DAYS';
    const rows=[];let pageToken='';
    for(let page=0;page<10;page++){
     const r=await fetchImpl('https://googleads.googleapis.com/v26/customers/'+config.customer+'/googleAds:search',{method:'POST',headers,body:JSON.stringify({query,...(pageToken?{pageToken}:{})}),signal});
-    if(!r.ok)throw Error('Google Ads report could not be loaded ('+r.status+').');
+    if(!r.ok)throw Error(await googleErrorCode(r));
     const data=await r.json();if(!Array.isArray(data.results)&&data.results!==undefined)throw Error('Google Ads returned an invalid report.');rows.push(...(data.results||[]));pageToken=data.nextPageToken||'';if(!pageToken)break;
    }
    if(pageToken)throw Error('Google Ads report exceeded its page limit; totals are unavailable.');
@@ -24,7 +42,7 @@ export function createGoogleAdsReader({config,fetchImpl=fetch,now=Date.now}){
    const d7={spend:0,impressions:0,clicks:0,linkClicks:0,conversions:0};
    for(const row of campaignDaily)if(row.date>=from7&&row.date<today)for(const key of Object.keys(d7))d7[key]+=row[key];
    return {connected:true,customer:config.customer,currency,timeZone,d7,campaignDaily,coverage:campaignDaily.length?'reported':'no_rows'};
-  }catch{return {connected:false,why:'Google Ads reporting could not be loaded. Check the existing server connection.'};}
+  }catch(e){return googleFailure(e?.message);}
  };
 }
 
@@ -35,7 +53,7 @@ const measures=['spend','impressions','clicks','linkClicks'];
 const number=value=>{if(value==null||value==='')throw Error('invalid_metric');const n=Number(value);if(!Number.isFinite(n)||n<0)throw Error('invalid_metric');return n;};
 const totals=rows=>Object.fromEntries(measures.map(key=>[key,rows.reduce((sum,row)=>sum+Number(row[key]||0),0)]));
 const week=(rows,today)=>totals(rows.filter(r=>r.date>=shiftDay(today,-7)&&r.date<today));
-const unavailable=(provider,code)=>({connected:false,code,why:code==='not_configured'?provider+' direct reporting is not configured.':code==='account_mismatch'?provider+' reporting account does not match the configured account.':provider+' direct reporting could not be loaded. Check the server connection.'});
+const unavailable=(provider,raw)=>{const code=safeAdCode(raw);return {connected:false,code,why:code==='not_configured'?provider+' direct reporting is not configured.':code==='account_mismatch'?provider+' reporting account does not match the configured account.':code==='authorization'?provider+' authorization was rejected. Check the direct server connection.':provider+' direct reporting could not be loaded. Check the server connection.'};};
 
 // Credentials stay in Authorization. Never follow provider-supplied URLs/cursors as URLs.
 async function readJson(fetchImpl,url,headers,signal){
@@ -77,7 +95,7 @@ export function createChatGPTAdsReader({config,fetchImpl=fetch,now=Date.now}){
    const campaignDaily=rows.map(r=>{if(!r.campaign_id)throw Error('invalid_report');const c=byId.get(r.campaign_id);return {source:'chatgpt',campaignId:r.campaign_id,campaign:c?.name||r.campaign_name||'Unnamed campaign',status:c?.status||r.campaign_status||'',...normalize(r)};});
    const series=daily.map(normalize);
    return {connected:true,account:account.id,currency:account.currency_code,timeZone:account.timezone,today,d7:week(series,today),series,campaignDaily,campaigns:inventory.map(c=>({source:'chatgpt',campaignId:c.id,campaign:c.name,status:c.status,...totals([])}))};
-  }catch(e){return unavailable('ChatGPT Ads',e.message);}
+  }catch(e){return unavailable('ChatGPT Ads',e?.message);}
  };
 }
 
@@ -115,7 +133,7 @@ export function createMetaAdsReader({config,fetchImpl=fetch,now=Date.now}){
    // Reach/frequency come from provider aggregates, never a daily sum.
    const aggregate=rows=>({...normalize(rows[0]||{}),reach:number(rows[0]?.reach||0),frequency:number(rows[0]?.frequency||0)});
    return {connected:true,account:config.account,currency:account.currency,timeZone:account.timezone_name,today,d7:aggregate(w),d30:aggregate(m),campaignDaily,campaigns:campaigns.map(c=>({source:'meta',campaignId:c.id,campaign:c.name,status:c.effective_status,...totals([])}))};
-  }catch(e){return unavailable('Meta',e.message);}
+  }catch(e){return unavailable('Meta',e?.message);}
  };
 }
 

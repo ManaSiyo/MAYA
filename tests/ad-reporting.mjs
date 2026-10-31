@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds} from '../docs/server/ad-reporting.mjs';
+import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds,adSetupStatus} from '../docs/server/ad-reporting.mjs';
 const config={id:'fixture-id',secret:'fixture-secret',refresh:'fixture-refresh',customer:'123',login:'456'};
 const row=(id,date,cost)=>({campaign:{id,name:'Campaign '+id,status:'PAUSED'},customer:{currencyCode:'USD',timeZone:'America/Los_Angeles'},segments:{date},metrics:{costMicros:String(cost),clicks:'2',impressions:'10',conversions:'1'}});
 let calls=0;
@@ -81,3 +81,20 @@ let failedReads=0;const failedCache=cachedAdReader(async()=>{failedReads++;retur
 
 const missingGoogle=await createGoogleAdsReader({config:{customer:'123'},fetchImpl:()=>{throw Error('Missing OAuth must not fetch');}})();assert.equal(missingGoogle.code,'not_configured');assert.deepEqual(missingGoogle.missing,['id','secret','refresh']);assert.ok(!missingGoogle.missing.includes('dev'));
 const noManager=await createGoogleAdsReader({config:{...config,login:''},fetchImpl:async(url,options)=>{if(url.includes('oauth2'))return Response.json({access_token:'fixture'});assert.ok(!('login-customer-id' in options.headers));assert.ok(!('developer-token' in options.headers));return Response.json({results:[row('A','2026-10-29',1000000)]});}})();assert.equal(noManager.connected,true,'Direct account access needs no manager account or retired developer token');
+
+// Runtime configuration is discoverable without browser access or disclosing values.
+const modelOnly=adSetupStatus({OPENAI_API_KEY:'model-key-not-an-ads-key'});assert.equal(modelOnly.chatgpt.configured,false);assert.deepEqual(modelOnly.chatgpt.missing,['OPENAI_ADS_API_KEY','OPENAI_ADS_ACCOUNT_ID']);
+const privateValue='never-echo-this-credential';const adsEnv={GOOGLE_ADS_CLIENT_ID:privateValue,GOOGLE_ADS_CLIENT_SECRET:privateValue,GOOGLE_ADS_REFRESH_TOKEN:privateValue,GOOGLE_ADS_CUSTOMER_ID:'123',META_ADS_TOKEN:privateValue,META_AD_ACCOUNT_ID:'456',OPENAI_ADS_API_KEY:privateValue,OPENAI_ADS_ACCOUNT_ID:'adacct_fixture'};
+const readiness=adSetupStatus(adsEnv);assert.ok(Object.values(readiness).every(s=>s.configured));assert.ok(!JSON.stringify(readiness).includes(privateValue));assert.equal(adSetupStatus({...adsEnv,OPENAI_ADS_ACCOUNT_ID:' '}).chatgpt.configured,false);
+const healthStart=server.indexOf('function _healthz('),healthEnd=server.indexOf('// v13.0:',healthStart);assert.ok(healthStart>0&&healthEnd>healthStart);let publicHealth;
+new Function('adSetupStatus','process','BUILD_COMMIT','SUBMISSIONS_BUCKET',server.slice(healthStart,healthEnd)+';return _healthz;')(adSetupStatus,{env:adsEnv},'fixture-build','fixture-bucket')({}, {setHeader(){},json(value){publicHealth=value;}});
+assert.equal(publicHealth.configured.googleAds,true);assert.equal(publicHealth.configured.chatgptAds,true);assert.equal(publicHealth.configured.metaAds,true);assert.ok(!JSON.stringify(publicHealth).includes(privateValue));assert.ok(!JSON.stringify(publicHealth).includes('missingLabels'),'Public readiness never exposes detailed private setup metadata');
+for(const [error,expected] of [[{error:'invalid_grant'},'oauth_expired'],[{error:{details:[{errors:[{errorCode:{authorizationError:'CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION'}}]}]}},'project_access'],[{error:{details:[{errors:[{errorCode:{authorizationError:'USER_PERMISSION_DENIED'}}]}]}},'account_access'],[{error:{details:[{reason:'ACCESS_TOKEN_SCOPE_INSUFFICIENT'}]}},'scope']]){
+ const result=await createGoogleAdsReader({config,fetchImpl:async url=>url.includes('oauth2')&&expected!=='oauth_expired'?Response.json({access_token:'fixture'}):Response.json(error,{status:403})})();assert.equal(result.code,expected);
+}
+for(const reader of [createGoogleAdsReader({config,fetchImpl:async()=>{throw Error(privateValue);}}),createChatGPTAdsReader({config:adsConfig,fetchImpl:async()=>{throw Error(privateValue);}}),createMetaAdsReader({config:{token:'fake',account:'123'},fetchImpl:async()=>{throw Error(privateValue);}})]){
+ const failure=await reader();assert.equal(failure.code,'provider_error');assert.ok(!JSON.stringify(failure).includes(privateValue),'Raw errors and secrets never become diagnostic codes');
+}
+console.log('Ads diagnostics: server-only presence, model/Ads key separation, public booleans, private missing labels and safe authorization/project/account/scope errors passed.');
+
+for(const reader of [createGoogleAdsReader({config,fetchImpl:async()=>{throw null;}}),createChatGPTAdsReader({config:adsConfig,fetchImpl:async()=>{throw null;}}),createMetaAdsReader({config:{token:'fake',account:'123'},fetchImpl:async()=>{throw null;}})])assert.equal((await reader()).code,'provider_error','Non-Error provider failures also settle safely');

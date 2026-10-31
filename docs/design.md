@@ -613,3 +613,13 @@ range/metric pills and P1 connection note. ChatGPT is an additional data series,
 not a new visual family. No local material/typography controls were introduced.
 The final authority reexecutes provider-only/connection/error cases with different
 saved Table/P1 settings at phone, tablet and desktop widths.
+
+
+October 31 scrollbar consistency: remove every local visible scrollbar palette
+and thin-width override. The shared Scrollbars preview/runtime owns all paint,
+geometry, hover-independent material and idle behavior. In WebKit painting mode,
+nonhidden native width stays auto so native thin scrollbars cannot replace saved
+thumb/track styles. Firefox keeps the native thin/auto fallback. Zero-specificity
+shared defaults preserve explicit hidden navigation/canvas rules; visible content
+markers retain their override. Existing high-contrast behavior stays intact.
+The diagnostic connection copy remains P1; no new component or editor exists.

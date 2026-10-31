@@ -26,6 +26,12 @@ status colors/weights with usage links, icon color/stroke and all Admin section 
 Pills size from content plus saved X/Y padding; H4 covers names, H5 dates and P3 captions.
 Owner SMS understands all/status-filtered lead lists and counts with durable MORE pages.
 
+All visible scrollbar paint/geometry comes from the shared runtime; page CSS may
+only hide intentional navigation tracks. Runtime v2 removes native-width/theme
+conflicts. Tests measure actual gutter and Save propagation across served pages.
+Public health reports Ads configuration presence only; private Admin diagnostics
+name missing settings and safe provider errors without credentials.
+
 Current drawer/scrollbar/segment controls: every hamburger uses the MAYA drawer
 material, with its own shared Edit/Restore preview. Scrollbars default to 4px,
 half-length painted handles and idle hiding. Brief and Fabrics keep one viewport.

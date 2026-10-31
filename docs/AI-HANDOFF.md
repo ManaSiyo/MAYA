@@ -1,114 +1,104 @@
 # Current handoff - October 31, 2026
 
-## Setup follow-up - current work
+## Current owner request / boundary
 
-Owner reports Ads "not configured" and requests completing direct setup. Public
-release.json, Admin build stamp and API health all report
-7232f508944c4510a9696ec39bef361f09b27f7d (published October 31 21:43:36 UTC).
-The missing-configuration state is on the new direct build, not an older release.
-Owner declined Chrome access for this setup and says a key was supplied last
-night. No Chrome access is authorized. Key source (Ads Manager versus Platform)
-and presence of OPENAI_ADS_API_KEY / OPENAI_ADS_ACCOUNT_ID in Cloud Run were
-requested without values; those answers are pending. The pasted key was not
-installed or used. Only the owner handles credential entry. No production
-configuration or live Ads report has been accessed in this follow-up.
+Fromsa requires code-based Ads diagnosis without any access to his Chrome. He
+also reports mixed gray/white scrollbars and wants all visible scrollbars governed
+only by Aesthetic Control. Do not ask to use Chrome again for this task. Owner-only
+credential entry and no automatic Push remain in force. No keys from chat were
+used or installed. No microphone, paid fabric search, private provider report,
+credential value or browser profile was accessed. No campaigns, accounts or
+production environment settings changed. Public HTTP reads covered release,
+health and saved scrollbar settings only.
 
-Found an actual adapter/setup bug while checking current Google documentation:
-Google retired developer tokens September 9, but the reader still required dev
-and sent the old header. Remove that preflight requirement/header and the unused
-GADS env read. Keep OAuth/client secret/refresh/customer requirements and optional
-manager login ID. Missing OAuth config now returns safe field names and a
-not_configured code to authenticated Admin diagnostics, without values. Fixtures
-assert no token required/sent, no manager needed for direct account access, and
-missing OAuth fails before fetching. Node 20/24 focused tests, all exact functional release gates, complete integrated
-regression and smoke pass. Final standalone Aesthetic Control passed last. A separate local commit is
-prepared; owner retains Push and credential setup. Owner controls Push.
-No new visible UI; existing shared authority remains required.
+Started clean at 5a46e07, one local commit above origin/maya-v2 7232f50. Public
+release.json and API health still report 7232f508944c4510a9696ec39bef361f09b27f7d
+(published October 31 21:43:36 UTC). Google’s retired developer-token correction
+in 5a46e07 has not reached production. Do not call the new scrollbar or diagnostic
+work live before owner Push and exact release/API/asset verification.
 
-Next: owner Push for the Google correction; obtain the pending key-source and
-Cloud Run setting-presence answers, then guide owner-entered secrets and Cloud
-project access without any Chrome control. The direct Ads Manager connector
-confirmed the sole accessible account is Mana Siyo INC; its account Settings
-link was obtained without Chrome. No account configuration or keys changed. No credentials should be pasted into chat. Do not restore Windsor.
+## Scrollbar cause / repair
 
-## Previous verified direct reporting change
+Reproduced on the actual frontend styles with an isolated fake-provider renderer:
+.fabric-pick-grid computed scrollbar-width:thin, overriding the shared WebKit
+thumb rendering even while pseudo-element styles appeared to have the right
+color. The new fixture fails the old code with thin != auto. It also measures
+the actual rendered gutter, rather than treating pseudo-style values as proof.
 
-### Owner request / release boundary
+Removed old page-specific thumb/track/hover palettes and visible thin-width
+rules from frontend/index.html, backend/backend.html and maya-canon.css. Kept
+intentional scrollbar-width:none/display:none navigation rules. Shared
+presentation-runtime.js owns the low-specificity native-width defaults: thin/auto
+in Firefox, auto in browsers using the shared WebKit painting. Page-level hidden
+rules can still win; explicitly visible fields/content retain their shared
+behavior. Operation Room's broad hidden rule has explicit specificity so its
+existing hidden canvas/navigation behavior survives. Shared scrollbar buttons
+have no separate native gray/white paint. No observer, custom drag surface, new
+style family or second Scrollbars editor was added.
 
-Fromsa retired Windsor and requires direct connections only for campaign reports.
-The working branch was clean and synchronized at ac048354edb2826ce6e4bccde398dfd92ebabe1e.
-Its Hosting release marker and API health commit were observed matching after the
-owner's Push earlier October 31. Prior WR independence, fabric responsiveness,
-Glass-only controls and Studio removal remain intact. This task does not Push.
+Every served page/gallery references presentation-runtime.js?v=2, retaining the
+existing exact no-cache Hosting rule. Saved colors, width, corners, length,
+track, idle hiding and high-contrast handling remain in the one active preview.
+Typography usage locations were regenerated after removing CSS lines.
 
-No owner Chrome, microphone, paid fabric search, production credentials or
-environment settings were accessed. No advertising campaign, goal, audience,
-ad, spending limit, budget or provider account was changed. A previously pasted
-key was not used or stored; owner must manage its revocation. Live fabric/voice
-acceptance remains stopped at the owner's request.
+New tests/scrollbar-authority-ui.mjs checks absence of competing themes in active
+sources, actual native/pseudo precedence and four-pixel gutter, two-axis saved
+paint, keyboard movement, hidden frontend navigation, authenticated cross-page
+Save propagation and six widths. It verifies shared styles on frontend, Admin,
+Brief, Operations and WR. The existing input-controls fixture continues to check
+idle/active states, changed saved settings, controls, forced colors and native
+behavior. Default/changed fixture inspection uses isolated Chromium, not any
+owner Chrome. Both default-paint and blue/green saved scrollbar screenshots were visually
+inspected. Public /api/design reports the same version2 four-pixel, 50% length,
+800ms idle, gray-thumb/transparent-track defaults used in the baseline; no live
+design was saved or changed.
 
-## Direct reporting change
+## Ads findings / safe diagnostics
 
-- docs/server/ad-reporting.mjs owns read-only Google, Meta and ChatGPT reports.
-  Google retains its existing owner configuration and v26 GAQL campaign report.
-  Meta uses its existing token/account and direct account metadata, independent
-  seven/thirty-day reach/frequency aggregates, daily campaigns and current states.
-  ChatGPT follows the official OpenAI Advertiser API contract checked October 31:
-  /v1/ad_account, /v1/campaigns and /v1/ad_account/insights at api.ads.openai.com.
-- ChatGPT requires owner-installed OPENAI_ADS_API_KEY and OPENAI_ADS_ACCOUNT_ID;
-  the model OPENAI_API_KEY is not reused. Account identity is verified first.
-  Meta identity also verifies its configured account. No credentials installed.
-  Missing/failed reporting stays visible; raw provider bodies and keys stay out
-  of responses. Provider pagination is bounded and partial reports fail closed.
-  Returned next URLs are never followed with credentials.
-- Removed Windsor's runtime calls, fallback, environment-key read and MCP
-  configuration field. Updated Maya's architecture description. Retired external
-  account/grant/secret cleanup remains owner-managed. No external setup changed.
-- Marketing and command snapshots share each provider's in-flight read and short
-  server-memory cache (60s success / 10s failure). Sources fail independently.
-  USD is combined only with USD; other/unknown currencies are explicit exclusions.
-- Combined data uses thirty completed calendar days and provider account timezone
-  reporting. A missing current-day report is unavailable, rather than yesterday
-  mislabeled as today. Google/Meta/ChatGPT feed Admin and Maya's snapshot together.
-- Campaign table identity includes provider plus ID, so identical names do not
-  merge. Current inventory preserves active/paused/inactive/zero-delivery objects.
-  Known inactive states cannot become "delivering" from old impressions.
-  ChatGPT is included in the existing chart, legend, ticker and totals. Account
-  daily CPC preserves provider values; table CPC labels its spend/click calculation.
-  No conversion count is relabeled as a lead count.
+The deployed "not configured" message is a preflight condition, before any
+provider request. It establishes missing server configuration, not a paused
+campaign or rejected API key. ChatGPT requires its own Advertiser API key and
+pinned Ads account ID; the model OPENAI_API_KEY and the chat's Ads Manager
+connection do not install those settings into Cloud Run. The previously supplied
+key was never installed or used. Exact deployed setting presence cannot be read
+from the older public health response; do not guess which variable is absent.
+No authenticated Cloud Run CLI/session is available here, and Chrome is forbidden.
 
-## Shared aesthetics / tests
+adSetupStatus in docs/server/ad-reporting.mjs returns only presence, fixed field
+names and fixed human labels. Existing Admin marketing exposes detailed missing
+setup under its authentication and no-store response. Public health adds only
+three boolean flags (googleAds/metaAds/chatgptAds), never labels, IDs or values.
+This allows future readiness checks through HTTP code without an owner's browser;
+readiness is not proof of working provider authorization or campaign delivery.
 
-The existing Table, chart/legend, P1 note and Glass controls govern all reporting.
-No new editor/material family or page CSS authority. Role usage was regenerated.
-The new ad-reporting-ui fixture checks ChatGPT-only reports, duplicate names,
-zero/paused/archived states, D/W/M, connection failures and different valid saved
-Table/P1 settings at six phone/tablet/desktop widths. It runs through the existing
-admin-ui-contract release gate, app-regression and final aesthetic-authority.
+Admin's existing shared P1 connection note now names missing settings. Actual
+provider authorization failures stay separate: Google OAuth expired/revoked,
+Cloud-project production approval, missing account access and missing Ads scope
+have safe categories. All readers normalize unknown error codes; raw exception
+text/provider payloads cannot echo a secret via a diagnostic code. No paid retry,
+new credential endpoint or automatic account/budget/environment mutation.
 
-Server fixtures exercise exact provider URL/headers/fields, pagination/caps,
-identity mismatch, missing/auth/empty states, currency isolation, separate Meta
-link clicks/aggregate reach, cached concurrent reads and current-day unavailability.
-The lead-feed-latency test extracted code using a retired Windsor-adjacent comment;
-it now uses the explicit Marketing route boundary and asserts that boundary. All
-lead assertions are retained. Historical literal Windsor assertions were replaced
-with direct reader/connection contracts; no functional gate was removed.
+The direct Ads Manager connector confirmed the sole accessible account is Mana
+Siyo INC and supplied its account Settings link, without Chrome. Previous setup
+questions about key source and presence were not answered. Do not repeat Chrome
+requests; finish independent code work and retain the owner-only secret step.
 
-Validation: focused ad-reporting passes on release Node 20.20.2 and local Node 24.
-All exact functional/syntax release gates pass, as do the complete integrated
-app-regression and server smoke. Focused admin-ui-contract, pill consistency,
-admin-command and lead-feed-latency pass. Direct Ads UI verifies an actual
-Admin-authenticated design Save from a separate Aesthetic Control page, then
-computed live styles at six widths. Default/changed Ads screenshots were visually
-inspected. Final standalone shared Aesthetic Control passed last before commit.
-These are fake providers/synthetic accounts; they do not prove live API access.
+## Validation / exact next step
 
-## Exact next steps / limitations
+Focused Ads diagnostics pass on release Node 20.20.2 and local Node 24. The real
+scrollbar regression passes after reproducing the old failure. Input-controls
+and the expanded direct Ads UI missing-state check pass with default/changed
+shared styles across six widths. All providers/accounts/images are fake fixtures.
+All exact functional release gates, complete integrated app-regression and smoke
+passed. Final standalone Aesthetic Control passed last before the new local commit. The new
+scrollbar fixture runs in admin-ui-contract, app-regression and final authority.
 
-Functional verification, visual review and final standalone aesthetic-authority
-are complete and passed. Prepare the verified local commit without amend or Push. docs/COMMIT-REVIEW.txt records the final prepared change and validation.
-Owner handles direct provider credentials per docs/DIRECT-AD-REPORTING.md. A local
-fixture does not establish live API-key health, account access, ad delivery or
-conversion completeness. After owner Push, verify Cloud Build, Hosting/page/API
-commit and authenticated direct reporting before claiming this release is live.
-Fresh per-session permission is required for future owner Chrome access.
+Verification and final authority are complete. Prepare the local commit without
+amend or Push; COMMIT-REVIEW records the reviewed change. Owner Push publishes this commit plus 5a46e07. Then verify Hosting/page/API
+commit and presentation-runtime v2 bytes/cache policy through code; public Ads
+readiness and authenticated Admin diagnostics can distinguish remaining setup.
+Only owner enters a valid Ads Manager key/Google OAuth configuration into the
+server. No current code fixture establishes live provider credentials or delivery.
+
+Preserve prior WR independent data, fabric verified-card continuity/Node20 GC
+retention, Glass-only controls, Studio removal and all account/project safeguards.

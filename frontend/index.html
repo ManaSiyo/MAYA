@@ -317,34 +317,7 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* v11.24: global scrollbar theme, the default white/chunky bar (notably in
-     the hamburger drawer) was out of place. Thin, dark, translucent, matches
-     the glass family. Firefox via scrollbar-width/color; WebKit via ::-webkit. */
-  /* v11.25: thin + dark, blends into the cosmic background. No track fill. */
-  * { scrollbar-width: thin; scrollbar-color: rgba(150,175,225,0.28) transparent; }
-  *::-webkit-scrollbar { width: 5px; height: 5px; }
-  *::-webkit-scrollbar-track { background: transparent; }
-  *::-webkit-scrollbar-thumb {
-    background: rgba(150,175,225,0.28);
-    border-radius: 100px;
-  }
-  *::-webkit-scrollbar-thumb:hover { background: rgba(180,205,255,0.45); }
-  *::-webkit-scrollbar-corner { background: transparent; }
-  /* belt-and-suspenders for the drawers (some WebKit builds ignore the * rule
-     on overflow containers): force the same thin dark thumb. */
-  #notes-drawer, #notes-drawer *, #fabrics-drawer, #fabrics-drawer *,
-  #pinterest-drawer, #pinterest-drawer * {
-    scrollbar-width: thin; scrollbar-color: rgba(150,175,225,0.28) transparent;
-  }
-  #notes-drawer::-webkit-scrollbar, #notes-drawer *::-webkit-scrollbar,
-  #fabrics-drawer::-webkit-scrollbar, #fabrics-drawer *::-webkit-scrollbar { width: 5px; height: 5px; }
-  #notes-drawer::-webkit-scrollbar-thumb, #notes-drawer *::-webkit-scrollbar-thumb,
-  #fabrics-drawer::-webkit-scrollbar-thumb, #fabrics-drawer *::-webkit-scrollbar-thumb {
-    background: rgba(150,175,225,0.28); border-radius: 100px;
-  }
-  #notes-drawer::-webkit-scrollbar-track, #notes-drawer *::-webkit-scrollbar-track,
-  #fabrics-drawer::-webkit-scrollbar-track, #fabrics-drawer *::-webkit-scrollbar-track { background: transparent; }
-
+  /* Aesthetic Control owns all visible scrollbar paint and geometry. */
   /* v11.24: GPU compositing hints so animated surfaces (cards, glow pulses,
      drawer slide) run on their own layer = smooth at the display's full refresh
      rate (60Hz, or 120Hz on ProMotion) with no stutter. */
@@ -1235,8 +1208,6 @@
   .section-constraint     { background: rgba(140,180,230,0.85); }
   .section-aesthetic      { background: rgba(196,181,253,0.9); }
 
-
-
   /* listening ring */
   #listening-ring { display: none; position: absolute; inset: 0; pointer-events: none; z-index: 50; }
   #listening-ring.active { display: block; }
@@ -1506,14 +1477,9 @@
     max-height: calc(3 * 24px + 2 * 4px + 4px);
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.22) transparent;
+
   }
-  #viewer-refs::-webkit-scrollbar { width: 6px; }
-  #viewer-refs::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.18); border-radius: 100px;
-  }
-  #viewer-refs::-webkit-scrollbar-track { background: transparent; }
+
   /* v10: viewer ref chip, canon glass pill. v11.10: one notch smaller. */
   .viewer-ref-chip {
     background: transparent;
@@ -2419,9 +2385,6 @@
     display: flex; flex-direction: column; gap: 16px;
     padding: 4px 2px;
   }
-  #notes-drawer #avatar-body::-webkit-scrollbar { width: 6px; }
-  #notes-drawer #avatar-body::-webkit-scrollbar-track { background: transparent; }
-  #notes-drawer #avatar-body::-webkit-scrollbar-thumb { background: rgba(200,220,255,0.22); border-radius: 3px; }
 
   /* v9.2: face-thumb used by the Avatar sub-menu face upload row. */
   .face-thumb {
@@ -3163,18 +3126,6 @@
     animation: maya-pulse 1.6s ease-in-out infinite;
   }
 
-  /* v5.4: pretty scrollbar inside fabric-pick grids (replaces the chunky
-     default macOS scrollbar). Affects Chrome/Edge/Safari via -webkit-. */
-  .fabric-pick-grid::-webkit-scrollbar { width: 6px; }
-  .fabric-pick-grid::-webkit-scrollbar-track { background: transparent; }
-  .fabric-pick-grid::-webkit-scrollbar-thumb {
-    background: rgba(200,220,255,0.22);
-    border-radius: 3px;
-  }
-  .fabric-pick-grid::-webkit-scrollbar-thumb:hover { background: rgba(200,220,255,0.45); }
-  /* Firefox */
-  .fabric-pick-grid { scrollbar-width: thin; scrollbar-color: rgba(200,220,255,0.25) transparent; }
-
   /* (v5.4 Clean/Clear hover dropdown removed in v5.5, replaced by the
      hamburger drawer's action row.) */
 
@@ -3303,11 +3254,8 @@
     overflow-y: hidden;
     padding: 60px 80px;
     scroll-snap-type: x mandatory;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.22) transparent;
+
   }
-  #favorites-scroller::-webkit-scrollbar { height: 8px; }
-  #favorites-scroller::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 4px; }
 
   /* ───────── v13.3: THE COMMUNITY WALL ─────────
      Screen 0. Same glass language as favorites, one size smaller, and it
@@ -4194,7 +4142,7 @@
   gtag('config', 'G-ETTJ6PXEMM');
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/presentation-runtime.js?v=1"></script>
+<script src="/aesthetics/ui/presentation-runtime.js?v=2"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
 </head>

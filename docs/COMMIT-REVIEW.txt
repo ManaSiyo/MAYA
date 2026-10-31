@@ -1,22 +1,28 @@
-Title: [Codex] Remove retired Google Ads setup requirement
+Title: [Codex] Unify scrollbars and diagnose Ads setup safely
 
-Google retired developer tokens September 9, 2026. The direct reader still
-required one, falsely rejecting valid OAuth-only configuration before reporting.
-Remove the obsolete preflight/header and unused server environment read. Retain
-OAuth client ID/secret/refresh, customer ID, optional manager login, account-local
-reporting, pagination, direct-only providers and credential protections. Missing
-OAuth setup returns safe field names to authenticated Admin diagnostics.
+Old page-level native thin scrollbars could bypass Aesthetic Control's WebKit
+painting. Remove independent palettes/visible widths and make shared runtime v2
+own native fallback, thumb/track, geometry and buttons. Preserve intentional
+hidden navigation, Operations canvas behavior, idle hiding and forced colors.
+All served pages/gallery reference v2 under the existing no-cache policy.
 
-Add regression checks for token-free authenticated reads, missing OAuth failing
-before network access, no retired token header and optional manager login. Update
-owner setup to Google's Cloud-project production access and document where the
-separate ChatGPT Advertiser API key is created. No new visible UI.
+Add a regression that fails the old frontend precedence and measures the actual
+four-pixel gutter, shared two-axis rendering, keyboard scrolling, private fake
+Save propagation and six widths across served pages. Keep input-control checks
+and integrate the new fixture into existing release and final authority gates.
 
-Validation: Node 20/24 provider tests pass. All exact functional release checks,
-complete integrated regression and smoke pass. Final standalone Aesthetic Control
-passed last before commit.
-Public Hosting/Admin/API all match already-pushed 7232f50; this patch is local.
-Owner declined Chrome and says a key was supplied last night. No Chrome,
-credentials, provider accounts, production environment or campaigns were changed.
-Key source and Cloud Run setting presence are pending owner answers; actual
-reporting setup is not claimed complete. Owner retains Push and secret entry.
+Diagnose Ads via code/HTTP: public health exposes only three presence booleans;
+Admin-only, no-store marketing reports fixed missing names/labels in the existing
+P1 note. Separate missing setup from OAuth expiry, project approval, account access
+and scope failures. Normalize exception codes so raw provider text cannot leak a
+key. No credential collection, private config values, account changes or paid retry.
+
+Validation: diagnostics pass on Node20/24. All exact functional release gates,
+complete integrated regression and smoke pass, including scrollbar gutter/Save
+checks, input-controls and six-width missing-setting/error copy. Public saved
+scrollbar values match the default fixture, and default/changed paint screenshots
+were visually inspected. Final standalone Aesthetic Control passed last before
+commit. Frontend/Brief inline application scripts were verified unchanged. No new visual authority. No owner
+Chrome, live provider credentials, production environment changes or Push.
+Production still runs 7232f50; owner Push must include prior Google fix 5a46e07.
+Actual key setup/provider authorization remains owner-managed and unverified.
