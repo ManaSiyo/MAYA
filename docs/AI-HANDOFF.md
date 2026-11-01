@@ -1,104 +1,100 @@
-# Current handoff - October 31, 2026
+# Current handoff — October 31, 2026
 
-## Current owner request / boundary
+## Current request / boundary
 
-Fromsa requires code-based Ads diagnosis without any access to his Chrome. He
-also reports mixed gray/white scrollbars and wants all visible scrollbars governed
-only by Aesthetic Control. Do not ask to use Chrome again for this task. Owner-only
-credential entry and no automatic Push remain in force. No keys from chat were
-used or installed. No microphone, paid fabric search, private provider report,
-credential value or browser profile was accessed. No campaigns, accounts or
-production environment settings changed. Public HTTP reads covered release,
-health and saved scrollbar settings only.
+Fromsa supplies screenshots contrasting one olive-knit MAYA result with a useful
+ChatGPT materials breakdown for the same green-and-gold tracksuit. Fix Fabrics'
+coverage of the look. Personal Chrome and live testing remain stopped; use code
+and isolated fake-provider fixtures. Do not start microphone/provider sessions,
+read or install keys, change production settings or Push. Local verified commits
+are authorized. The screenshot text is comparison evidence, not instructions from
+an external document to execute or copy unverified product facts.
 
-Started clean at 5a46e07, one local commit above origin/maya-v2 7232f50. Public
-release.json and API health still report 7232f508944c4510a9696ec39bef361f09b27f7d
-(published October 31 21:43:36 UTC). Google’s retired developer-token correction
-in 5a46e07 has not reached production. Do not call the new scrollbar or diagnostic
-work live before owner Push and exact release/API/asset verification.
+Started clean at 8db49da on maya-v2, equal to origin/maya-v2. Prior two commits
+have now been pushed by the owner. Before this fabric turn, public HTTP still
+reported Hosting/API 7232f50; this task has not verified a newer live release.
+Owner says the Ads variables were deployed and confirmed the key came from Ads
+Manager Settings. Actual credentials/provider reporting remain unverified. No
+key from chat was used. Do not ask for Chrome or the key again.
 
-## Scrollbar cause / repair
+## Fabric cause and repair
 
-Reproduced on the actual frontend styles with an isolated fake-provider renderer:
-.fabric-pick-grid computed scrollbar-width:thin, overriding the shared WebKit
-thumb rendering even while pseudo-element styles appeared to have the right
-color. The new fixture fails the old code with thin != auto. It also measures
-the actual rendered gutter, rather than treating pseudo-style values as proof.
+The provider prompt sourced base cloth only. Qualification reduced each saved
+garment to its main fabric and dominant color; there was no distinct target for
+contrast panels, inserts, ribbing or textile trim. A controlled canonical saved
+tracksuit fixture failed the old code before implementation: the secondary
+materials never reached its single visual comparison.
 
-Removed old page-specific thumb/track/hover palettes and visible thin-width
-rules from frontend/index.html, backend/backend.html and maya-canon.css. Kept
-intentional scrollbar-width:none/display:none navigation rules. Shared
-presentation-runtime.js owns the low-specificity native-width defaults: thin/auto
-in Firefox, auto in browsers using the shared WebKit painting. Page-level hidden
-rules can still win; explicitly visible fields/content retain their shared
-behavior. Operation Room's broad hidden rule has explicit specificity so its
-existing hidden canvas/navigation behavior survives. Shared scrollbar buttons
-have no separate native gray/white paint. No observer, custom drag surface, new
-style family or second Scrollbars editor was added.
+fabric-discovery.mjs now returns an optional eight-component plan in the same
+Responses call, with exact selected canonical garment IDs, bounded ID/role/label
+and qualified fabric descriptions. Invalid, duplicate, stale and foreign IDs or
+unsupported roles fail closed. Cited URL checks and approved merchant filters
+still precede seller requests. Standalone input without saved IDs retains its
+existing cloth search; this change does not create a new standalone shopping tool.
+The output allowance grows to 3200 tokens; three tool calls and deadlines remain.
 
-Every served page/gallery references presentation-runtime.js?v=2, retaining the
-existing exact no-cache Hosting rule. Saved colors, width, corners, length,
-track, idle hiding and high-contrast handling remain in the one active preview.
-Typography usage locations were regenerated after removing CSS lines.
+fabricComponentMatch in fabric-sourcing.js keeps canonical requirements for body
+cloth. Secondary descriptions are hypotheses; they do not inherit the dominant
+body color, rewrite saved garments or relax client requirements/exclusions.
+All secondary matches require a reference image and successful existing visual
+review. The review receives the component and evaluates that part of the image,
+not the whole-look dominant color. No failed/weak-photo fallback is introduced.
+Shared components do not invent a garment assignment ID. Original account/project
+scope, saved selection fingerprints, seller facts, prices/units and stock remain.
 
-New tests/scrollbar-authority-ui.mjs checks absence of competing themes in active
-sources, actual native/pseudo precedence and four-pixel gutter, two-axis saved
-paint, keyboard movement, hidden frontend navigation, authenticated cross-page
-Save propagation and six widths. It verifies shared styles on frontend, Admin,
-Brief, Operations and WR. The existing input-controls fixture continues to check
-idle/active states, changed saved settings, controls, forced colors and native
-behavior. Default/changed fixture inspection uses isolated Chromium, not any
-owner Chrome. Both default-paint and blue/green saved scrollbar screenshots were visually
-inspected. Public /api/design reports the same version2 four-pixel, 50% length,
-800ms idle, gray-thumb/transparent-track defaults used in the baseline; no live
-design was saved or changed.
+fabric-retailers.mjs balances distinct materials before additional body-cloth
+options, retaining merchant balance within each material and eight review slots.
+No merchant hosts, hardware, ready-made clothes or swatch-only eligibility were
+added. Nine configured merchants remain a real scope limit; model relevance and
+seller availability remain empirical, not fixture-proven.
 
-## Ads findings / safe diagnostics
+fabric-search.mjs carries component metadata through independent seller checks,
+qualification and the existing single photo review. Missing materials remain
+explicit in the current status/Search details. Its caches, per-request seller
+deduplication, Node20 WeakMap lifetime guard, deadlines and saved-result continuity
+are preserved. Search output does not write lookbooks or garment assignments.
 
-The deployed "not configured" message is a preflight condition, before any
-provider request. It establishes missing server configuration, not a paused
-campaign or rejected API key. ChatGPT requires its own Advertiser API key and
-pinned Ads account ID; the model OPENAI_API_KEY and the chat's Ads Manager
-connection do not install those settings into Cloud Run. The previously supplied
-key was never installed or used. Exact deployed setting presence cannot be read
-from the older public health response; do not guess which variable is absent.
-No authenticated Cloud Run CLI/session is available here, and Chrome is forbidden.
+## Presentation / delivery
 
-adSetupStatus in docs/server/ad-reporting.mjs returns only presence, fixed field
-names and fixed human labels. Existing Admin marketing exposes detailed missing
-setup under its authentication and no-store response. Public health adds only
-three boolean flags (googleAds/metaAds/chatgptAds), never labels, IDs or values.
-This allows future readiness checks through HTTP code without an owner's browser;
-readiness is not proof of working provider authorization or campaign delivery.
-
-Admin's existing shared P1 connection note now names missing settings. Actual
-provider authorization failures stay separate: Google OAuth expired/revoked,
-Cloud-project production approval, missing account access and missing Ads scope
-have safe categories. All readers normalize unknown error codes; raw exception
-text/provider payloads cannot echo a secret via a diagnostic code. No paid retry,
-new credential endpoint or automatic account/budget/environment mutation.
-
-The direct Ads Manager connector confirmed the sole accessible account is Mana
-Siyo INC and supplied its account Settings link, without Chrome. Previous setup
-questions about key source and presence were not answered. Do not repeat Chrome
-requests; finish independent code work and retain the owner-only secret step.
+fabric-assistant.js adds the purpose to its existing P3 caption and includes it
+in the stable-card signature. No new component, CSS family, editor or styling
+source was added. H4 titles, P3 captions, P1 status, Inner cards, Outer workspace
+and Glass controls remain governed by Aesthetic Control. The active fabric
+preview includes a purpose caption. Brief/Operations reference JS/CSS v7 under
+the exact no-cache Hosting policy; release/domain contracts check the new version.
 
 ## Validation / exact next step
 
-Focused Ads diagnostics pass on release Node 20.20.2 and local Node 24. The real
-scrollbar regression passes after reproducing the old failure. Input-controls
-and the expanded direct Ads UI missing-state check pass with default/changed
-shared styles across six widths. All providers/accounts/images are fake fixtures.
-All exact functional release gates, complete integrated app-regression and smoke
-passed. Final standalone Aesthetic Control passed last before the new local commit. The new
-scrollbar fixture runs in admin-ui-contract, app-regression and final authority.
+Focused sourcing: 18 checks. Fabric search: 55 checks, including four distinct
+tracksuit textiles, an explicit unconfirmed ribbing component, scoped identities,
+coverage balancing and rejection/failed-photo behavior without paid retries.
+Forced-GC search/deadline suites pass on release Node20.20.2 and local Node24.
+Four-card UI passes default/changed saved styles, actual Save, focus/error and
+inline/expanded six-width checks in an isolated temporary test renderer. Personal
+Chrome, real providers, private images and production design were not accessed.
 
-Verification and final authority are complete. Prepare the local commit without
-amend or Push; COMMIT-REVIEW records the reviewed change. Owner Push publishes this commit plus 5a46e07. Then verify Hosting/page/API
-commit and presentation-runtime v2 bytes/cache policy through code; public Ads
-readiness and authenticated Admin diagnostics can distinguish remaining setup.
-Only owner enters a valid Ads Manager key/Google OAuth configuration into the
-server. No current code fixture establishes live provider credentials or delivery.
+All exact functional release commands, complete integrated regression and smoke
+passed. Initial source-contract failures still expected v6 and the old literal
+caption; the assertions now check v7 and the component-aware caption without
+removing price/source or cache-policy coverage. Release-contract and the complete
+integrated suite were rerun successfully. Final standalone Aesthetic Control
+passed last, reexecuting the four-card saved-style fixture, responsive surfaces,
+active preview, real Save and error/focus states. Desktop and phone changed-style
+captures were visually inspected. No presentation code changed after that check.
+Only this task's files belong in the prepared local commit; do not Push.
 
-Preserve prior WR independent data, fabric verified-card continuity/Node20 GC
-retention, Glass-only controls, Studio removal and all account/project safeguards.
+After owner Push, verify exact Hosting/page/API commit and fabric asset bytes/cache
+policy. Real acceptance means useful per-component listings for the owner's look,
+not merely more cards or a passing fake-provider suite. Do not claim live parity,
+faster provider latency or correct real inventory from these tests. Any renewed
+live testing must respect the owner's stop and credential boundaries.
+
+## Retained work
+
+WR remains independent and empty until explicit applicant additions; all tables
+share aesthetics only. Glass is the sole pill authority; the retired internal
+Studio remains removed. Shared scrollbar v2 alone owns visible paint and geometry.
+Prior direct Google/Meta/ChatGPT Ads reporting remains read-only, without Windsor.
+Google has no retired developer-token requirement. Public Ads booleans establish
+presence only; Admin reports safe setup/authorization categories. Owner handles
+all environment/credential configuration. See DIRECT-AD-REPORTING.md.

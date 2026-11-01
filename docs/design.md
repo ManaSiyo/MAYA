@@ -623,3 +623,12 @@ thumb/track styles. Firefox keeps the native thin/auto fallback. Zero-specificit
 shared defaults preserve explicit hidden navigation/canvas rules; visible content
 markers retain their override. Existing high-contrast behavior stays intact.
 The diagnostic connection copy remains P1; no new component or editor exists.
+
+
+October 31 textile coverage: component purpose (body, panels/inserts, lining,
+ribbing or textile trim) appears inside the existing P3 fabric-card caption.
+Missing components use the existing P1 status/P3 Search details. The active fabric
+preview demonstrates the purpose in its caption. H4 names, Inner cards, Outer
+workspace, Glass controls and saved typography/materials remain unchanged. No new
+visual authority or component editor is introduced. Four-card default/changed
+saved-style fixtures cover inline/expanded views at six widths.

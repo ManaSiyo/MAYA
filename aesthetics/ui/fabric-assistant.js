@@ -264,7 +264,7 @@
   function inventory() {
     return (context.inhouse||[]).map(p=>({...p,url:p.url&&p.url!=='#'?p.url:(p.image||p.img||''),image:p.image||p.img||'',evidence:'atelier_inventory',price:'',unit:'',availability:'unknown',garment:p.garment||''})).filter(p=>p.image && p.url);
   }
-  const cardSignature=p=>JSON.stringify([view,p.url,p.image,p.title,p.price,p.unit,p.currency,p.garment,p.garmentId,p.merchant,p.evidence,saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''))]);
+  const cardSignature=p=>JSON.stringify([view,p.url,p.image,p.title,p.price,p.unit,p.currency,p.garment,p.garmentId,p.materialLabel,p.merchant,p.evidence,saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''))]);
   function card(p) {
     const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);
     const local=p.evidence==='atelier_inventory';
@@ -274,7 +274,7 @@
       const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');},{once:true});link.append(img);
     }
     const title=node('h3','fa-card-title',p.title);
-    const use=p.garment?'For '+p.garment:'';
+    const use=[p.garment?'For '+p.garment:'',p.materialLabel].filter(Boolean).join(' · ');
     const caption=node('p','fa-card-caption',[use,local?'':p.merchant,knownPrice].filter(Boolean).join(' · ')||(local?'Availability not recorded':'Delivery unconfirmed'));caption.dataset.mayaType='P3';
     link.append(title,caption);item.append(link);
     if(view==='saved'){

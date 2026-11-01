@@ -5,6 +5,7 @@ import {
   buildVisualRankingRequest,
   collectRetailerResults,
   fabricProductMatch,
+  fabricComponentMatch,
   isFabricProduct,
   fabricSeedQueries,
 } from '../docs/server/fabric-sourcing.js';
@@ -30,6 +31,26 @@ const products = [
 ];
 
 console.log('\nMAYA fabric sourcing test\n');
+
+test('contrast component matching preserves canonical garments, explicit exclusions and the visual gate',()=>{
+  const piece={id:'track',name:'Track jacket',fabric:'Green polyester tricot knit',fabric_spec:{weave:'tricot',fiber:'polyester'}};
+  const material={id:'gold',role:'panel',label:'Gold shoulder panels',fabric:'Gold satin',garmentIds:['track']};
+  const gold={title:'Gold Polyester Satin Fabric',description:'Polyester satin fabric sold by the yard.',image:'https://seller.example/gold.jpg',url:'https://seller.example/gold',evidence:'seller_listing',materialId:'gold'};
+  const input={automatic:true,image:garmentImage,pieces:[piece],allPieces:[piece],allowVisualOnly:true,visualColors:{track:['green']}};
+  const original=structuredClone(piece),match=fabricComponentMatch(gold,input,material);
+  assert.equal(match.garmentId,'track');assert.equal(match.materialLabel,'Gold shoulder panels');assert.deepEqual(piece,original);
+  for(const request of ['No polyester','Only cotton'])assert.equal(fabricComponentMatch(gold,{...input,automatic:false,request},material),null,'Client requirements override component hypotheses');
+  assert.equal(fabricComponentMatch({...gold,title:'Gold Satin Fabric',description:'Satin cloth sold by the yard.',composition:''},{...input,preferences:'No polyester'},material),null,'An unknown secondary fiber cannot establish a fiber exclusion');
+  assert.equal(fabricComponentMatch({...gold,title:'Blue Polyester Satin Fabric'},input,material),null,'Wrong known component color stays rejected');
+  assert.equal(fabricComponentMatch(gold,input,{...material,role:'body'}),null,'The component plan cannot replace canonical body requirements');
+  assert.equal(fabricComponentMatch(gold,{...input,image:''},material),null);
+  assert.equal(fabricComponentMatch(gold,{...input,allowVisualOnly:false},material),null);
+  assert.equal(fabricComponentMatch(gold,{...input,pieces:[{...piece,id:'another'}]},material),null,'No cross-garment attribution');
+  const built=buildVisualRankingRequest({garmentImage,traits:{garments:[piece],materials:[material]},products:[{...gold,...match}]});
+  assert.equal(built.candidates[0].materialRole,'panel');assert.equal(built.candidates[0].materialDescription,'Gold satin');
+  assert.match(built.requestBody.messages[0].content,/not against the whole outfit dominant color/);
+  assert.doesNotThrow(()=>buildVisualRankingRequest({garmentImage,traits:{materials:[null,{},'invalid']},products:[gold]}));
+});
 
 test('qualified saved weaves reach visual review without turning sheen into a weave requirement',()=>{
   const piece={id:'coat',name:'Tailcoat',fabric:'Green embroidered satin-sheen woven',fabric_spec:{weave:'smooth woven, possibly twill-like',sheen:'moderate satin sheen',texture:'smooth'}};

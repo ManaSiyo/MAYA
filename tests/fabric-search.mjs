@@ -21,6 +21,46 @@ function store(){
   const records=new Map([['submissions/project-A/submission.json',{buf:Buffer.from('{}'),generation:'1'}],['submissions/project-B/submission.json',{buf:Buffer.from('{}'),generation:'1'}],['submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({client:{name:'PRIVATE NAME'},fabric_preferences:'100% wool, no polyester'})),generation:'1'}]]);
   return {records,read:async key=>records.has(key)?{ok:true,...records.get(key)}:{ok:false,status:404},write:async(key,buf,type,generation)=>{assert.equal(type,'application/json');if(String(records.get(key)?.generation||'0')!==generation)throw Object.assign(Error('conflict'),{status:412});records.set(key,{buf,generation:String(Number(generation)+1)});}};
 }
+await test('a tracksuit sources separate body, panels, inserts and textile trim in one checked search',async()=>{
+  const s=store(),events=[],pieces=['Track jacket','Track pants'].map((name,i)=>({id:'track-'+i,name,fabric:'Green synthetic-looking knit, possibly polyester tricot',fabric_spec:{weave:'knit-like',texture:'smooth'}}));
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
+  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{"fabric_preferences":[]}'),generation:'1'});
+  const materials=[
+    {id:'body',role:'body',label:'Green body',fabric:'Green tricot knit',garmentIds:['track-0','track-1']},
+    {id:'gold',role:'panel',label:'Gold shoulder panels',fabric:'Gold satin',garmentIds:['track-0']},
+    {id:'ivory',role:'panel',label:'Ivory inserts',fabric:'Ivory knit',garmentIds:['track-0','track-1']},
+    {id:'trim',role:'trim',label:'Gold laurel textile trim',fabric:'Gold ivory jacquard trim',garmentIds:['track-0','track-1']},
+    {id:'rib',role:'ribbing',label:'Green cuffs and waistband',fabric:'Green rib knit',garmentIds:['track-0','track-1']},
+  ];
+  const listings=[['body','Forest Green Polyester Tricot Fabric','Smooth polyester tricot knit fabric, sold by the yard.'],['gold','Champagne Gold Satin Fabric','Polyester satin fabric sold by the yard.'],['ivory','Ivory Cotton Interlock Knit Fabric','Cotton interlock knit fabric sold by the yard.'],['trim','Gold Leaf Jacquard Textile Trim','Gold leaves woven on ivory cotton jacquard trim fabric, sold by the yard.']].map(([id,name,description])=>({id,name,description,url:'https://www.moodfabrics.com/products/'+id}));
+  const answer=response({materials,candidates:listings.map(p=>({url:p.url,materialId:p.id,reason:'For this part of the reference.'}))});
+  answer.output[0].action.sources=listings.map(p=>({url:p.url}));
+  let webCalls=0,rankCalls=0,visualOutcome='accept';
+  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
+    if(target.includes('openai.com')){webCalls++;assert.match(JSON.parse(options.body).instructions,/panels/i);return Response.json(answer);}
+    if(target.includes('/search/suggest.json'))return Response.json({resources:{results:{products:[]}}});
+    const p=listings.find(p=>p.url===target);assert.ok(p,'Only evidenced approved listings are fetched');
+    return new Response(seller({name:p.name,description:p.description,url:p.url,material:'',image:'https://seller.example/'+p.id+'.jpg'}));
+  },rank:async({products,traits})=>{rankCalls++;assert.ok(products.length<=8);assert.equal(traits.materials.length,5);assert.equal(products.find(p=>p.materialId==='gold').garmentId,'track-0');assert.equal(products.find(p=>p.materialId==='ivory').garmentId,undefined);if(visualOutcome==='error')throw Error('fake visual failure');return visualOutcome==='accept'?products:[];}});
+  await service.search(user,{submissionId:'project-A',automatic:true,image},event=>events.push(event));
+  assert.equal(webCalls,1);assert.equal(rankCalls,1);
+  assert.deepEqual(events.at(-1).products.map(p=>p.materialId).sort(),['body','gold','ivory','trim']);
+  assert.match(events.at(-1).searchDetails.stage,/Green cuffs and waistband/,'Missing components remain explicit instead of claiming the look is covered');
+  assert.equal(events.at(-1).products.find(p=>p.materialId==='gold').price,'69.99','Facts still come from the fetched seller, never the planner');
+  for(const outcome of ['reject','error']){visualOutcome=outcome;const beforeCalls=webCalls;await service.search(user,{submissionId:'project-A',automatic:true,image},event=>events.push(event));assert.deepEqual(events.at(-1).products,[],'Component hints never bypass failed or rejecting photo comparison');assert.equal(webCalls,beforeCalls+1,'No automatic paid retry');}
+});
+await test('component plans stay scoped and distinct textiles share the eight candidate slots',()=>{
+  const materials=['body','gold','ivory','trim'].map((id,i)=>({id,role:i?'panel':'body',label:id,fabric:i?'Gold satin':'Green knit',garmentIds:['track']}));
+  const candidates=Array.from({length:6},(_,i)=>({url:'https://www.moodfabrics.com/products/body-'+i,materialId:'body'})).concat(materials.slice(1).map(m=>({url:'https://www.moodfabrics.com/products/'+m.id,materialId:m.id})));
+  const answer=response({materials,candidates});answer.output[0].action.sources=candidates.map(c=>({url:c.url}));
+  const input={pieces:[{id:'track',name:'Track jacket'}]};
+  const parsed=readDiscovery(answer,input);assert.equal(parsed.candidates.length,8);assert.deepEqual(parsed.candidates.slice(0,4).map(c=>c.materialId),['body','gold','ivory','trim'],'Body alternatives cannot consume every slot');
+  const stale=readDiscovery(answer,{pieces:[{id:'different',name:'Track jacket'}]});assert.deepEqual(stale.materials,[]);assert.deepEqual(stale.candidates,[],'A matching name cannot override a stale/foreign garment ID');
+  const duplicate=response({materials:[materials[0],{...materials[0],fabric:'Red velvet'}],candidates:[candidates[0]]});duplicate.output[0].action.sources=[{url:candidates[0].url}];
+  assert.deepEqual(readDiscovery(duplicate,input).candidates,[],'Ambiguous component IDs fail closed');
+  const unsupported=response({materials:[{...materials[0],role:'zipper'}],candidates:[candidates[0]]});unsupported.output[0].action.sources=[{url:candidates[0].url}];
+  assert.deepEqual(readDiscovery(unsupported,input).candidates,[],'The fabric plan cannot turn hardware into a textile');
+});
 await test('full-look matching keeps a verified shared fabric without inventing a garment ID',async()=>{
   const s=store(),events=[];s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'jacket',name:'Jacket',fabric:'Crimson wool twill'},{id:'pants',name:'Pants',fabric:'Crimson wool twill'}]})),generation:'1'});
   let rankCalls=0;const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async target=>target.includes('openai.com')?Response.json(response()):target.includes('/search/suggest.json')?Response.json({resources:{results:{products:[]}}}):new Response(seller()),rank:async ({products})=>{rankCalls++;return products;}});

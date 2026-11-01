@@ -19,7 +19,7 @@ Direct ad reporting and owner-only setup: [DIRECT-AD-REPORTING.md](DIRECT-AD-REP
 
 Current screen, file and backend architecture: [ARCHITECTURE-MAP.md](ARCHITECTURE-MAP.md).
 
-Conversational fabric search and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).
+Conversational fabric search, scoped textile components and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).
 Messages → Begin texting accepts a typed number and optional saved name. Send is
 reviewed; phone actions are confirmed. Aesthetic Control also governs individual
 status colors/weights with usage links, icon color/stroke and all Admin section gaps.

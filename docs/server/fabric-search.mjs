@@ -1,7 +1,7 @@
 // Fabric discovery uses web evidence; seller facts come only from fetched listings.
 // No private image, request, conversation or lookbook is stored in a shared cache.
-import {isFabricProduct, isFabricPiece, fabricProductMatch, fabricSeedQueries} from './fabric-sourcing.js';
-import {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,merchantIdentity,requestedShops,balancedFabricCandidates} from './fabric-retailers.mjs';
+import {isFabricProduct, isFabricPiece, fabricProductMatch, fabricComponentMatch, fabricSeedQueries} from './fabric-sourcing.js';
+import {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,merchantIdentity,requestedShops,balancedFabricCandidates,balancedMaterialCandidates} from './fabric-retailers.mjs';
 import {webSearchBody,readDiscovery} from './fabric-discovery.mjs';
 export {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,requestedShops} from './fabric-retailers.mjs';
 export {webSearchBody,readDiscovery} from './fabric-discovery.mjs';
@@ -412,7 +412,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     const check=candidate=>{
       const key=merchantURL(candidate.url,true)?.url||candidate.url;
       if(!checks.has(key))checks.set(key,verify({url:candidate.url},signal));
-      return checks.get(key).then(product=>product?{...product,reason:candidate.reason||''}:null);
+      return checks.get(key).then(product=>product?{...product,reason:candidate.reason||'',...(candidate.materialId?{materialId:candidate.materialId}:{})}:null);
     };
     const quick = direct(input, signal, check).then(items => {
       if (items.length) send({ type: 'products', products:items, preliminary: true });
@@ -427,7 +427,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
         signal: webSignal, body: JSON.stringify(webSearchBody({...input,selectedReference}, model)),
       }),webSignal);
       if (!r.ok) throw fail('Web search is temporarily unavailable. Try again shortly.', 502);
-      discovery = readDiscovery(await untilAborted(r.json(),webSignal));
+      discovery = readDiscovery(await untilAborted(r.json(),webSignal),input);
       Object.assign(searchDetails,{query:discovery.query,observation:discovery.observation,webQueries:discovery.webQueries,stage:'Checking seller listings'});
       send({type:'context',searchDetails});
       send({type:'status',message:'Checking seller listings…'});
@@ -445,16 +445,17 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       // cannot replace explicit words or flow to another garment/account.
       const checked=checkedDiscovery.filter(result=>result.status==='fulfilled').map(result=>result.value);
       if(signal.aborted)return;
-      const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
-      products=balancedFabricCandidates([...discovered,...products]);
-      products=products.filter(product=>fabricProductMatch(product,{...input,pieces:product.garmentId?input.pieces.filter(piece=>piece.id===product.garmentId):input.pieces,allowVisualOnly:!!rank&&!!input.image}));
+      const qualify=product=>fabricComponentMatch(product,{...input,pieces:!product.materialId&&product.garmentId?input.pieces.filter(piece=>piece.id===product.garmentId):input.pieces,allowVisualOnly:!!rank&&!!input.image},discovery.materials.find(material=>material.id===product.materialId));
+      const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&qualify(product);return match?[{...product,...match}]:[];});
+      products=balancedMaterialCandidates([...discovered,...products]);
+      products=products.filter(qualify);
     }
     const eligibleCount=products.length;
     if(products.length&&input.image&&rank){
       send({type:'status',message:'Checking fabric photos against this look…'});
       const eligible=products;
       try{
-        const matches=await rank({garmentImage:selectedReference||input.image,traits:{...input.piece.fabric_spec,garmentId:input.piece.id,garment:input.piece.name,fabric:input.pieces.map(p=>p.name+': '+p.fabric).join('; '),garments:input.pieces,request:input.request,preferences:input.preferences,resolvedSearch:discovery?.query||'',referenceObservation:discovery?.observation||''},products:eligible,signal});
+        const matches=await rank({garmentImage:selectedReference||input.image,traits:{...input.piece.fabric_spec,garmentId:input.piece.id,garment:input.piece.name,fabric:input.pieces.map(p=>p.name+': '+p.fabric).join('; '),garments:input.pieces,materials:discovery?.materials||[],request:input.request,preferences:input.preferences,resolvedSearch:discovery?.query||'',referenceObservation:discovery?.observation||''},products:eligible,signal});
         if(signal.aborted)return;
         products=list(matches).flatMap(match=>{const source=eligible.find(p=>p.url===match.url);return source?[{...source,reason:text(match.reason,220)}]:[];});
       }catch(e){if(signal.aborted)return;products=[];warning='Fabric photo comparison was unavailable. Refresh to check these materials again.';}
@@ -463,9 +464,11 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     }
     if (products.length && firstAt === null) firstAt = now() - started;
     searchDetails.stage=products.length?'Verified matches':eligibleCount?'No visual matches confirmed':'No eligible seller listings confirmed';
+    const missing=(discovery?.materials||[]).filter(material=>!products.some(product=>product.materialId===material.id));
+    if(missing.length)searchDetails.stage+='; not confirmed: '+missing.map(material=>material.label).join(', ');
     send({ type: 'products', products, preliminary: false });
     send({ type: 'done', products, searchDetails, query: discovery?.query || input.request, observation: discovery?.observation || '', warning,
-      message: products.length ? (input.automatic?'Fabrics for this look. Seller availability may change.':'Refine these with another message.') : warning || 'No relevant fabric products were confirmed. Refresh or choose another store.',
+      message: (products.length ? (input.automatic?'Fabrics for this look. Seller availability may change.':'Refine these with another message.') : warning || 'No relevant fabric products were confirmed. Refresh or choose another store.')+(missing.length?' Still unconfirmed: '+missing.map(material=>material.label).join(', ')+'.':''),
       timings: { firstResultsMs: firstAt, totalMs: now() - started } });
     // Safe aggregate diagnostics only. No request, image, URL or account identifiers.
     return { count: products.length, firstResultsMs: firstAt, totalMs: now() - started };

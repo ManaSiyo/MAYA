@@ -72,3 +72,18 @@ export function balancedFabricCandidates(candidates,limit=8){
   for(const candidate of candidates){const id=merchantIdentity(candidate.url),shop=merchantURL(candidate.url,true)?.shop;if(!id||seen.has(id)||!shop)continue;seen.add(id);const group=shop.host;if(!groups.has(group))groups.set(group,[]);groups.get(group).push(candidate);}
   const out=[];for(let i=0;out.length<limit;i++){let added=false;for(const group of groups.values()){if(group[i]){out.push(group[i]);added=true;if(out.length===limit)break;}}if(!added)break;}return out;
 }
+
+// Cover the separate textiles before spending every bounded slot on body-cloth
+// alternatives. Within each material keep the existing merchant balance.
+export function balancedMaterialCandidates(candidates,limit=8){
+  if(!candidates.some(candidate=>candidate.materialId))return balancedFabricCandidates(candidates,limit);
+  const groups=new Map();
+  for(const candidate of candidates){const key=candidate.materialId||'base';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(candidate);}
+  const queues=[...groups.values()].map(group=>balancedFabricCandidates(group,limit)),out=[],seen=new Set();
+  for(let index=0;out.length<limit;index++){
+    let added=false;
+    for(const queue of queues){const candidate=queue[index];if(!candidate)continue;added=true;const id=merchantIdentity(candidate.url);if(seen.has(id))continue;seen.add(id);out.push(candidate);if(out.length===limit)break;}
+    if(!added)break;
+  }
+  return out;
+}

@@ -1,4 +1,47 @@
-# Conversational fabric sourcing — October 21, 2026
+# Conversational fabric sourcing — October 31, 2026
+
+## October 31 look-component coverage
+
+The same bounded discovery call can now propose up to eight textile components:
+body cloth, contrast panels/inserts, visible/requested lining, ribbing and textile
+trim. The prior base-only contract could not cover a multicolor tracksuit even
+when appropriate contrast fabrics existed. No hidden lining, quantity, exact fiber,
+price or availability is inferred as a fact. Hardware, tools, finished clothes,
+footwear and swatch-only listings remain excluded; the nine existing approved
+merchants and explicit store filters are unchanged.
+
+Each component binds to exact selected canonical garment IDs. Invalid, duplicate,
+foreign or stale component identities are rejected before any seller request.
+Candidates still require independently cited approved product URLs and seller
+photos/facts. A component cannot rewrite saved body requirements or client
+exclusions. Secondary fabric descriptions are visual hypotheses; they require the
+single successful photo comparison and never acquire a dominant body-color hint.
+A shared component can describe multiple garments without inventing an assignment
+ID. Actual garments and account/submission fingerprints remain unchanged.
+
+The eight discovery/review slots now balance textile purposes before adding more
+body-cloth alternatives, and retain merchant balance within a purpose. There is
+still one paid discovery, at most three search tool calls, one visual review and
+no automatic retry. The provider output allowance becomes 3200 tokens for the
+bounded plan plus listings; web/seller/route deadlines remain unchanged. Ranking
+compares gold panels against visible gold panels, not the green body, and rejects
+unsupported components and wrong visible shades. It does not establish exact
+composition or construction from a render.
+
+Existing H4/P3/Inner cards add the textile purpose to their existing caption.
+The existing status/Search details identifies components not confirmed; partial
+results never imply that the whole look is sourced. All material fields are
+memory-only search output, not new saved garment assignments or public caches.
+Shared assistant v7 bypasses prior asset references under the exact no-cache
+Hosting policy. No new style family, material editor or UI surface is added.
+
+Controlled tracksuit tests reproduce four separate textile matches and an
+unconfirmed ribbing component, verify failure/rejection of the sole photo review,
+and retain strict exclusions, scoped IDs and seller-only prices. Four-card UI
+fixtures exercise default/changed saved settings and six widths. These fixtures
+prove contracts, not model semantic quality or live seller availability. The
+owner's real-look comparison still needs post-deployment acceptance; live tests
+and personal Chrome remain stopped for this task.
 
 October 18 owner review: Sourceable exposes exactly five independent filters:
 **Local (Bay Area), Mood, Swatchon, Amazon, Others**. All start enabled. Local

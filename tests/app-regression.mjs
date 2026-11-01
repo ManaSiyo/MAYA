@@ -1215,7 +1215,7 @@ ok('Saved garment references and qualified traits drive seller-thumbnail ranking
 ok('Compact fabric cards show source-backed price units inline without hover metadata',
   FABRIC_UI_SOURCE.includes("const knownPrice=p.price&&p.unit?") &&
   !FABRIC_UI_SOURCE.includes('link.title=') &&
-  FABRIC_UI_SOURCE.includes("const use=p.garment?'For '+p.garment:''") &&
+  FABRIC_UI_SOURCE.includes("const use=[p.garment?'For '+p.garment:'',p.materialLabel]") &&
   FABRIC_UI_SOURCE.includes("[use,local?'':p.merchant,knownPrice]"));
 ok('Fabric ranking describes closest visual matches and never claims exact image-derived facts',
   FABRIC_SOURCE.includes('These are closest visual matches, never exact matches.') &&
@@ -2729,6 +2729,7 @@ ok('Saved dominant fabric color rejects opposite seller colors while explicit la
 ok('Bounded fabric seeds retain reptile/long-pile texture and discard known notions before seller verification',!process.exitCode);
 ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
+ok('A saved look sources scoped textile components, preserves constraints and shares one bounded visual review',!process.exitCode);
 ok('Saved knit/tricot and satin-sheen looks preserve seller evidence and explicit constraints through bounded visual review',!process.exitCode);
 await import('./fabric-search-gc.mjs');
 ok('Fabric deadlines survive Node garbage collection and retain parent cancellation',BUILD_SOURCE.includes('node tests/fabric-search-gc.mjs'));
@@ -2770,7 +2771,7 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=6'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=7'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));

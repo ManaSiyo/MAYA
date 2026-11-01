@@ -90,6 +90,8 @@ await import('./brief-workspace-ui.mjs?authority');
 // and default/changed shared P1 copy at phone and desktop widths.
 await import('./fabric-workflow-ui.mjs?authority');
 // Reexecutes the concise, explicitly opened Sourceable details and preview after real Save.
+// Includes four component-purpose captions, retained cards, actual Save and
+// default/changed shared materials and typography inline/expanded at six widths.
 await import('./fabric-search-ui.mjs?authority');
 await import('./operation-save-failures.mjs?authority');
 await import('./client-voice-ui.mjs?authority');

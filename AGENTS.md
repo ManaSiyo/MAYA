@@ -697,3 +697,15 @@ fixed missing setting names/labels, never values. Provider exception codes are
 allowlisted; do not reflect raw error strings. Configuration presence does not
 prove provider authorization/delivery. Chrome access remains forbidden for this
 task; use code/HTTP and keep credential/environment entry owner-only.
+
+
+October 31 textile-component sourcing: fabric-discovery.mjs proposes bounded
+body/panel/lining/ribbing/textile-trim hypotheses tied to canonical selected IDs.
+Never let a component overwrite saved body requirements or explicit exclusions;
+secondary hints require the existing successful single visual review against that
+part of the look. Hardware and unapproved merchants remain excluded. Keep eight
+coverage-balanced candidates, three web tool calls, original photos/client words,
+Node20 abort lifetime guards and private result continuity. Purpose/missing copy
+uses existing P3 captions and P1 status, represented by the active fabric preview.
+Run sourcing/search/GC on Node20 and local Node, fabric UI/workflow, existing release
+gates and final aesthetic-authority. Synthetic coverage is not live relevance.
