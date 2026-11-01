@@ -9,21 +9,21 @@
     {id:'amazon',label:'Amazon',hosts:['amazon.com']},
     {id:'others',label:'Others',hosts:['blackbirdfabrics.com','thefabricstore.com','tessuti.com.au']},
   ];
-  let searchSeq=0, autoStarted=false, activeStores=new Set(storeGroups.map(group=>group.id)),filterTouched=false,submittedRequest='',lastSearchStores='',completedStatus='';
-  const storeKey=()=>[...activeStores].sort().join('|');
+  let searchSeq=0, autoStarted=false, searchMode='worldwide',activeStores=new Set(),filterTouched=false,submittedRequest='',lastSearchStores='',completedStatus='';
+  const storeKey=()=>searchMode==='worldwide'?'worldwide':'retailers|'+[...activeStores].sort().join('|');
   let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
   let bookSeq = 0, photoSeq = 0, projectEpoch=0, projectIdentity='', reads=new AbortController(),projectReads=new AbortController();
   let searchDetails=null,searchState='idle';
   const resultCache=new Map(),preparedPhotos=new Map();
-  const resultKey=()=>scope()+'|'+JSON.stringify([context.preferences||'',!!context.automatic]);
+  const resultKey=()=>scope()+'|'+JSON.stringify([context.preferences||'',!!context.automatic,storeKey()]);
   function rememberResults(){
     if(identity!==scope()||!account()||!context.submissionId||(!products.length&&searchState!=='complete'))return;
-    const key=resultKey();resultCache.delete(key);resultCache.set(key,{at:Date.now(),products:structuredClone(products),searchDetails:structuredClone(searchDetails),history:structuredClone(history),submittedRequest,lastSearchStores,completedStatus,stores:[...activeStores],filterTouched,image,originalImage,reference:context.referenceImage||'',view,inhouse:context.inhouse});
+    const key=resultKey();resultCache.delete(key);resultCache.set(key,{at:Date.now(),products:structuredClone(products),searchDetails:structuredClone(searchDetails),observation:els.observation.textContent,history:structuredClone(history),submittedRequest,lastSearchStores,completedStatus,searchState,stores:[...activeStores],filterTouched,image,originalImage,reference:context.referenceImage||'',view,inhouse:context.inhouse});
     if(resultCache.size>24)resultCache.delete(resultCache.keys().next().value);
   }
   function restoreResults(){
     const cached=resultCache.get(resultKey());if(!cached||cached.reference!==(context.referenceImage||'')||(!cached.products.length&&Date.now()-cached.at>30000))return false;
-    ({submittedRequest,lastSearchStores,completedStatus,filterTouched,image,originalImage,view}=cached);products=structuredClone(cached.products);searchDetails=structuredClone(cached.searchDetails);history=structuredClone(cached.history);activeStores=new Set(cached.stores);context.inhouse=cached.inhouse;searchState='complete';autoStarted=true;els.details.set(searchDetails);paintPhoto();status(completedStatus);return true;
+    ({submittedRequest,lastSearchStores,completedStatus,filterTouched,image,originalImage,view}=cached);products=structuredClone(cached.products);searchDetails=structuredClone(cached.searchDetails);history=structuredClone(cached.history);activeStores=new Set(cached.stores);context.inhouse=cached.inhouse;searchState=cached.searchState==='complete'?'complete':'interrupted';autoStarted=true;els.details.set(searchDetails);els.observation.textContent=cached.observation||searchDetails?.observation||'';paintPhoto();status(searchState==='complete'?completedStatus:'Search interrupted. Loaded suggestions are kept; Refresh to continue.');return true;
   }
   let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null;
   const token = () => localStorage.getItem('maya_admin_tok') || localStorage.getItem('maya_google_token') || '';
@@ -64,7 +64,7 @@
   function action(label, fn) { const b = node('button','pill maya-pill',label); b.type = 'button'; b.addEventListener('click',fn); return b; }
   function status(message) { els.status.textContent = message || ''; }
   function reset() {
-    epoch++;photoSeq++;searchSeq++;autoStarted=false;activeStores=new Set(storeGroups.map(group=>group.id));filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
+    epoch++;photoSeq++;searchSeq++;autoStarted=false;searchMode='worldwide';activeStores=new Set();filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
     const nextProject=projectScope();if(nextProject!==projectIdentity){resultCache.clear();preparedPhotos.clear();bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
     controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
     searchDetails=null;searchState='idle';els?.details.set(null);
@@ -87,7 +87,7 @@
   }
   function close() {
     rememberResults();
-    if(busy)autoStarted=false;
+    if(busy)autoStarted=products.length>0;
     controller?.abort();recognition?.stop();searchSeq++;busy=false;
     if(searchState==='searching')searchState='interrupted';
     if(!workspace)return;
@@ -106,21 +106,13 @@
     const sub=node('p','fa-context');
     const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');tabs.dataset.mayaControl='segmented';
     const inhouse=action('In House',()=>{view='inhouse';paint();});
-    const search=action('Sourceable',()=>{view='search';paint();});
+    const search=action('Sourceable',()=>chooseSearch('worldwide'));
     const saved=action('Favorites',async()=>{view='saved';paint();await loadBook();});
     const fresh=action('New search',()=>open({...context,forceReset:true}));
     for(const button of [inhouse,search,saved])button.dataset.mayaSegment='';
-    const filter=icon('Filter stores','M4 5h16M7 12h10M10 19h4',()=>{storeWrap.hidden=!storeWrap.hidden;filter.setAttribute('aria-expanded',String(!storeWrap.hidden));if(!storeWrap.hidden)storeButtons[0].focus();});filter.setAttribute('aria-expanded','false');
-    const storeWrap=node('div','fa-store-wrap');storeWrap.hidden=true;storeWrap.setAttribute('role','group');storeWrap.setAttribute('aria-label','Fabric stores');
-    const storeButtons=storeGroups.map(group=>{const button=action(group.label,()=>{
-      activeStores.has(group.id)?activeStores.delete(group.id):activeStores.add(group.id);filterTouched=true;
-      // Filtering is free. Refresh is the explicit new provider request; cancel
-      // an obsolete stream so it cannot overwrite the changed scope or its hint.
-      if(busy){controller?.abort();searchSeq++;busy=false;searchState='interrupted';autoStarted=false;els.send.disabled=false;els.stop.hidden=true;lastSearchStores='';}
-      paint();
-      if(searchDetails){searchDetails={...searchDetails,stage:'Store filter changed; Refresh to search this selection'};els.details.set(searchDetails);}
-      status(!activeStores.size?'Choose at least one store group.':submittedRequest&&lastSearchStores!==storeKey()?'Refresh to search these stores.':completedStatus);
-    });button.classList.add('fa-store-filter');button.dataset.mayaSegment='';button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
+    const filter=icon('Search specific shops','M4 5h16M7 12h10M10 19h4',()=>{storeWrap.hidden=!storeWrap.hidden;filter.setAttribute('aria-expanded',String(!storeWrap.hidden));if(!storeWrap.hidden)storeButtons[0].focus();});filter.setAttribute('aria-expanded','false');
+    const storeWrap=node('div','fa-store-wrap');storeWrap.hidden=true;storeWrap.setAttribute('role','group');storeWrap.setAttribute('aria-label','Optional separate retailer searches');
+    const storeButtons=storeGroups.map(group=>{const button=action(group.label,()=>chooseSearch('retailers',group.id));button.classList.add('fa-store-filter');button.dataset.mayaSegment='';button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
     tabs.append(inhouse,search,saved,filter,fresh);
     const body=node('div','fa-body');body.dataset.mayaScrollbar='visible';body.tabIndex=0;body.setAttribute('aria-label','Fabric results');
     const transcript=node('div','fa-transcript');transcript.setAttribute('aria-label','Your requests');
@@ -129,7 +121,7 @@
     const photo=node('div','fa-photo');photo.hidden=true;
     const preview=node('img');preview.alt='Original look reference';photo.append(preview,action('Remove photo',()=>replaceReference('')));
     const label=node('label','fa-input-label','Describe the fabric');label.htmlFor='fabric-request';
-    const input=node('textarea');input.id='fabric-request';input.rows=2;input.maxLength=1200;input.dataset.mayaControl='field';input.placeholder='A matte burgundy wool, preferably local…';
+    const input=node('textarea');input.id='fabric-request';input.rows=2;input.maxLength=1200;input.dataset.mayaControl='field';input.placeholder='Find the fabrics for this look…';
     const row=node('div','fa-actions'),file=node('input');file.type='file';file.accept='image/jpeg,image/png,image/webp';file.hidden=true;
     const upload=action('Add photo',()=>file.click());file.addEventListener('change',()=>attach(file.files?.[0]));
     const mic=action('Dictate',dictate);mic.hidden=!(window.SpeechRecognition||window.webkitSpeechRecognition);
@@ -181,6 +173,7 @@
   }
   function replaceReference(value){
     resultCache.delete(resultKey());controller?.abort();searchSeq++;busy=false;autoStarted=false;
+    searchMode='worldwide';activeStores=new Set();
     image=value;originalImage=value;context.referenceImage=value;products=[];history=[];submittedRequest='';lastSearchStores='';completedStatus='';searchDetails=null;searchState='idle';
     els.details.set(null);els.send.disabled=false;els.stop.hidden=true;paintPhoto();paint();
   }
@@ -272,7 +265,7 @@
     const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
     if(p.image && /^(?:https:\/\/|\/aesthetics\/fabrics\/|data:image\/)/.test(p.image)){
       const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');},{once:true});link.append(img);
-    }
+    }else if(p.evidence==='web_suggestion'){const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.append(unavailable);}
     const title=node('h3','fa-card-title',p.title);
     const use=[p.garment?'For '+p.garment:'',p.materialLabel].filter(Boolean).join(' · ');
     const caption=node('p','fa-card-caption',[use,local?'':p.merchant,knownPrice].filter(Boolean).join(' · ')||(local?'Availability not recorded':'Delivery unconfirmed'));caption.dataset.mayaType='P3';
@@ -288,18 +281,28 @@
     els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=!!context.automatic;els.sub.hidden=!!context.automatic;
     els.details.setEnabled(view==='search');
     els.filter.hidden=view!=='search';if(view!=='search'){els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');}
-    for(const button of els.storeButtons)button.setAttribute('aria-pressed',String(activeStores.has(button.dataset.storeGroup)));
+    for(const button of els.storeButtons){button.setAttribute('aria-pressed',String(activeStores.has(button.dataset.storeGroup)));button.disabled=searchState==='preparing';}
     const candidates=view==='saved'?book.items:view==='inhouse'?inventory():products;
     const allowed=new Set(storeGroups.filter(group=>activeStores.has(group.id)).flatMap(group=>group.hosts));
-    const items=candidates.filter(p=>view!=='search'||(()=>{try{return allowed.has(new URL(p.url).hostname.replace(/^www\./,''));}catch{return false;}})());
+    const items=candidates.filter(p=>view!=='search'||searchMode==='worldwide'||(()=>{try{return allowed.has(new URL(p.url).hostname.replace(/^www\./,''));}catch{return false;}})());
     // Retained cards keep their actual image/link nodes through Refresh and
     // appended results. Rebuilding the grid made loaded photographs flicker.
     const existing=new Map([...els.results.children].filter(el=>el._fabricURL).map(el=>[el._fabricURL,el]));
     const cards=items.map(product=>{const old=existing.get(product.url);return old?._fabricSignature===cardSignature(product)?old:card(product);});
     const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child))child.remove();
     cards.forEach((el,index)=>{if(els.results.children[index]!==el)els.results.insertBefore(el,els.results.children[index]||null);});
-    if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':searchState==='preparing'?'Preparing the saved reference…':busy?'Results will appear after seller and photo checks.':searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No relevant fabric products confirmed yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
-    els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
+    if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':searchState==='preparing'?'Preparing the saved reference…':busy?searchMode==='worldwide'?'Looking at this image and searching worldwide…':'Checking the selected retailers…':searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
+    els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||(searchMode==='retailers'&&!!context.automatic);
+  }
+  async function chooseSearch(mode,group){
+    if(mode===searchMode&&(mode==='worldwide'||activeStores.has(group))){view='search';paint();return;}
+    if(searchState==='preparing')return;
+    const previousRequest=submittedRequest,previousHistory=history;
+    rememberResults();controller?.abort();searchSeq++;busy=false;
+    searchMode=mode;activeStores=new Set(group?[group]:[]);filterTouched=mode==='retailers';
+    products=[];history=[];submittedRequest='';lastSearchStores='';completedStatus='';searchDetails=null;searchState='idle';els.details.set(null);els.observation.textContent='';
+    const restored=restoreResults();view='search';autoStarted=true;paint();
+    if(!restored){submittedRequest=previousRequest;history=previousHistory;await run(true,true);}
   }
   async function refreshView(){
     // Retry only failed photographs on explicit Refresh; healthy loaded images stay mounted.
@@ -315,7 +318,7 @@
     if(force)controller?.abort();
     if (!account()) { reset(); paint(); return status('Sign in to Admin to search fabrics.'); }
     if (identity!==scope()) { reset(); identity=scope(); paint(); return status('Account changed. Start a new search.'); }
-    if(!activeStores.size)return status('Choose at least one store group.');
+    if(searchMode==='retailers'&&!activeStores.size)return status('Choose a retailer search.');
     const request=context.automatic?'Find fabrics for this saved look.':filterOnly?submittedRequest:els.input.value.trim()||(force?submittedRequest:'');
     if (!request && !image) return status('Describe a fabric or add a photo.');
     recognition?.stop();
@@ -331,10 +334,10 @@
     const line=node('p','fa-request',submitted); els.transcript.append(line);
     while(els.transcript.children.length>6)els.transcript.firstElementChild.remove();
     if(!filterOnly)els.input.value='';
-    let finished=false;
+    let finished=false,published=[];
     try {
       const r=await waitForSignal(fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal,
-        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,storeGroups:[...activeStores],history})}),signal);
+        body:JSON.stringify({mode:searchMode,submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(searchMode==='retailers'?{storeGroups:[...activeStores]}:{}),history})}),signal);
       if(!r.ok){const data=await waitForSignal(r.json().catch(()=>({})),signal);throw Error(data.error || 'Fabric search failed. Try again.');}
       const reader=r.body.getReader(), decoder=new TextDecoder();let buffer='';
       const accept=raw=>{
@@ -343,6 +346,8 @@
         if(event.type==='error')throw Error(event.message);
         if(event.searchDetails){searchDetails=event.searchDetails;els.details.set(searchDetails);}
         if(event.type==='status')status(event.message);
+        if(event.type==='interpretation'){els.observation.textContent=event.observation||'';paint();}
+        if(event.type==='products'&&event.incremental&&!event.preliminary){published=Array.isArray(event.products)?event.products:[];products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-48);paint();rememberResults();}
         if(event.type==='products' && event.preliminary)status('Retailer candidates. Photo comparison pending…');
         if(event.type==='done'){
           const confirmed=Array.isArray(event.products)?event.products:[];
@@ -358,7 +363,7 @@
       } finally { void reader.cancel().catch(()=>{}); }
       if(!finished)throw Error('Search ended early. You can retry your request.');
     } catch(e) {
-      if(valid()){ searchState='interrupted';products=retained;autoStarted=false;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}if(!filterOnly&&!els.input.value)els.input.value=request; }
+      if(valid()){ searchState='interrupted';products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()];autoStarted=products.length>0;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}rememberResults();if(!filterOnly&&!els.input.value)els.input.value=request; }
     } finally { if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;paint();} }
   }
   async function open(next={}) {
@@ -371,7 +376,7 @@
     if(next.silent&&!changed){context={...previousContext,...next};return;}
     if(changed){reset();identity=nextIdentity;}
     else {context.referenceImage=context.referenceImage||previousContext.referenceImage;context.preferences=context.preferences||previousContext.preferences;}
-    if(next.forceReset){resultCache.delete(resultKey());preparedPhotos.delete(next.referenceImage);}
+    if(next.forceReset){for(const key of resultCache.keys())if(key.startsWith(scope()+'|'))resultCache.delete(key);preparedPhotos.delete(next.referenceImage);}
     const restored=changed&&!next.forceReset&&restoreResults();
     const stamp=epoch,preparationSequence=searchSeq;
     if(next.host instanceof HTMLElement){collapse();host=next.host;host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';}

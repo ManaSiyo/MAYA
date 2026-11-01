@@ -1,438 +1,147 @@
-# Conversational fabric sourcing — October 31, 2026
+# Fabrics — worldwide main search and separate optional retailers
 
-## October 31 look-component coverage
+## Owner's current intent
 
-The same bounded discovery call can now propose up to eight textile components:
-body cloth, contrast panels/inserts, visible/requested lining, ribbing and textile
-trim. The prior base-only contract could not cover a multicolor tracksuit even
-when appropriate contrast fabrics existed. No hidden lining, quantity, exact fiber,
-price or availability is inferred as a fact. Hardware, tools, finished clothes,
-footwear and swatch-only listings remain excluded; the nine existing approved
-merchants and explicit store filters are unchanged.
+The main Sourceable experience is image → understand the separate textiles →
+search worldwide → show useful source-linked suggestions promptly. Local and
+named shops are optional searches the owner may explicitly choose later. They
+have no default priority, domain restriction, feed work or waiting time in the
+main path. This supersedes older all-five-selected filter and universal inventory-
+verification requirements. It is an image-led sourcing assistant, not a default
+nine-merchant inventory matcher.
 
-Each component binds to exact selected canonical garment IDs. Invalid, duplicate,
-foreign or stale component identities are rejected before any seller request.
-Candidates still require independently cited approved product URLs and seller
-photos/facts. A component cannot rewrite saved body requirements or client
-exclusions. Secondary fabric descriptions are visual hypotheses; they require the
-single successful photo comparison and never acquire a dominant body-color hint.
-A shared component can describe multiple garments without inventing an assignment
-ID. Actual garments and account/submission fingerprints remain unchanged.
+## Main path
 
-The eight discovery/review slots now balance textile purposes before adding more
-body-cloth alternatives, and retain merchant balance within a purpose. There is
-still one paid discovery, at most three search tool calls, one visual review and
-no automatic retry. The provider output allowance becomes 3200 tokens for the
-bounded plan plus listings; web/seller/route deadlines remain unchanged. Ranking
-compares gold panels against visible gold panels, not the green body, and rejects
-unsupported components and wrong visible shades. It does not establish exact
-composition or construction from a render.
+`docs/server/fabric-worldwide.mjs` owns one Responses request using the existing
+configured text/vision model and OpenAI key. It receives the original image,
+canonical selected crop when available, bounded saved garment metadata, client
+fabric preferences and refinements. Saved dissection guesses support image
+interpretation without rigidly excluding every alternative. Explicit client
+exclusions remain authoritative; known contradictions are rejected without another
+model call. Scope/account/submission checks happen before provider work. No piece
+generation or assignment writes occur on read or browsing.
 
-Existing H4/P3/Inner cards add the textile purpose to their existing caption.
-The existing status/Search details identifies components not confirmed; partial
-results never imply that the whole look is sourced. All material fields are
-memory-only search output, not new saved garment assignments or public caches.
-Shared assistant v7 bypasses prior asset references under the exact no-cache
-Hosting policy. No new style family, material editor or UI surface is added.
+The request uses web_search with text/image content, page-linked image results,
+source lists and streaming. It has no allowed_domains, preferred merchant list or
+local bias. Five search tool calls and 3200 output tokens bound the single request.
+There is no retailer keyword-feed fan-out, arbitrary seller fetch, or second paid
+photo-ranking request on this path. There is no automatic paid fallback/retry.
+The provider determines material queries and useful options from image plus words.
 
-Controlled tracksuit tests reproduce four separate textile matches and an
-unconfirmed ribbing component, verify failure/rejection of the sole photo review,
-and retain strict exclusions, scoped IDs and seller-only prices. Four-card UI
-fixtures exercise default/changed saved settings and six widths. These fixtures
-prove contracts, not model semantic quality or live seller availability. The
-owner's real-look comparison still needs post-deployment acceptance; live tests
-and personal Chrome remain stopped for this task.
+Model output consists of NDJSON interpretation and candidate records. The server
+accepts candidate links only when they appear in provider search sources or URL
+citations. Product photos come only from raw image_result image/thumbnail URLs
+whose source_website_url matches that product page. A model-supplied image URL is
+ignored. Missing photos leave a useful source link with the shared Photo unavailable
+fallback. Unsafe schemes, credentials, ports, private/local host forms and IP
+literal destinations are rejected. Crucially, this server never requests an
+arbitrary discovered host with or without credentials.
 
-October 18 owner review: Sourceable exposes exactly five independent filters:
-**Local (Bay Area), Mood, Swatchon, Amazon, Others**. All start enabled. Local
-contains only Britex (also recognized as “Brightex”), Stonemountain and Harts;
-Others contains the existing Blackbird, The Fabric Store and Tessuti sources.
-These are merchant groups, not a live pickup or stock promise. Filter changes
-only narrow the displayed results and cancel stale searches. **Refresh** explicitly
-searches the selected groups; filter clicks and expansion make no paid calls.
-An empty selection never falls back to an unrestricted search. Explicit filters
-replace earlier merchant-only constraints while retaining material refinements
-and any unsent draft. Favorites and In House are independent of Sourceable filters.
+These are **web-sourced suggestions**, not independently verified current seller
+inventory. Model output cannot set price, currency, unit, stock or composition
+fields; they stay unknown. A photo never proves exact fiber, GSM, stretch, quantity
+or delivery. Finished clothing, footwear, tools, patterns/hardware and swatch-only
+suggestions remain excluded. No generated replacement photo is used. A useful
+alternative should be described as uncertain, not turned into an exact match.
 
-Fabric cards no longer expose Save or Use. Existing private favorites and garment
-assignments remain readable; Favorites retains explicit Remove. Browsing never
-creates or changes assignments. Product links keep their real destinations and
-verified unit price when known, without long duplicate hover copy. View tabs use
-the shared segmented-control contract. The inline workspace fills the same host
-as the garment; small viewports scroll its content rather than enlarging that host.
-An authorized live crocodile-trouser search returned a relevant listing; a newer embellished-coat search returned no confirmed products before the October 21 repair. See AI-HANDOFF.md
-for the current release state.
+## Streaming and interruption
 
-From the Brief or Operation Room, choose Fabrics after a dissection has been
-saved successfully. The selected garment, original look and client preferences
-start the search automatically; Full view uses all saved garments. A failed or
-unacknowledged save does not unlock this workflow. Reading a saved dissection
-never generates missing garment images.
+The same request reads response.output_text.delta, response.output_item.done and
+response.completed events. Candidate records can arrive before source evidence;
+they are queued until grounded. Once grounded, an incremental products event
+publishes the existing cards before overall completion. Some provider responses
+may expose complete source/image data only at the end; those candidates wait for
+evidence rather than guessing it. JSON nonstream responses are also handled.
 
-Sourceable, In House and Favorites use the same inline viewer. Refresh reruns
-the current garment request; Filter stores restricts merchants. Expand enlarges
-that same DOM/view into an optional dialog and Escape/Collapse returns it intact,
-without another search. Cards have a larger photo and two concise caption rows.
-Stable saved garment IDs keep duplicate garment names distinct. Fresh dissections
-use UUIDs; legacy saved pieces without IDs retain compatible index-based reads.
-Refinements separate positive requirements, exclusions and the latest replacement; “no wool”
-never requests wool. Missing retailer images never become invented image URLs,
-and a failed favorite thumbnail keeps its management actions. Cards
-show garment purpose and available seller facts, not duplicate inventory
-labels, match percentages or guessed delivery. Tools/notions and unrelated
-materials are rejected. No weak fallback is relabeled as a good match.
+SSE input is capped at 2 MiB, model text at 100k characters, pending candidate
+records at 24 and displayed suggestions at 12. Terminal completion releases the
+reader without waiting for EOF. Failed/incomplete/early-ended streams stay failures;
+already source-backed cards can remain visible and cached, without marking the
+search complete or automatically retrying. Provisional optional-retailer results
+are still hidden until their old checks finish.
 
-The separate bottom Fabrics button and Dictate/Find Fabric flow are retired.
-The shared assistant retains optional photo/text refinement for standalone
-programmatic access; saved-look mode uses its automatic context. Photo attachment
-never calls image generation. No purchase capability is added.
+Worldwide provider work has a 50-second deadline inside the existing 55-second
+route/60-second browser bounds. Parent cancellation settles even when fetch/read
+ignores abort. The Node20 WeakMap lifetime guard retains timeout sources; the
+forced-GC suite exercises both the world deadline and optional legacy deadlines.
+No request, image, search terms, source URL or account IDs are logged. Fixed numeric
+context/web/retailer/webSeller/visual/firstResult/total timings remain aggregate
+service diagnostics. Overlapping phases cannot be added together; browser
+preparation/upload, auth and cold start are outside these timings. World retailer
+and second-visual phases are zero.
 
-## Runtime
+## Explicit optional retailer searches
 
-Node 20 combined abort signals use a WeakMap lifetime guard so garbage collection
-cannot discard their timeout sources. Web discovery is capped at 20 seconds; route, feed and seller deadlines retain
-their existing budgets. tests/fabric-search-gc.mjs forces collection through all
-behavioral deadline fixtures in a bounded subprocess and is a release gate.
+The existing nine approved merchants and seller verification remain available
+only when `mode: retailers` is explicitly requested. Browser buttons run one
+separate group search on a click: Local (Britex/Brightex, Stonemountain, Harts),
+Mood, Swatchon, Amazon, Others (Blackbird, The Fabric Store, Tessuti). Opening the
+choices makes no provider call. Clicking an already-loaded group reuses its own
+results; Refresh explicitly reruns it. Returning to Sourceable restores worldwide
+results, without another main call. Store groups never filter the global grid.
 
-Saved dominant fabric_hex contributes only a clearly chromatic color-family hint
-when saved words do not already name a color. Ambiguous hues/neutrals stay with
-visual comparison; explicit latest color instructions override the hint. Seller
-facts with an opposite known color fail qualification even if an AI likes the
-texture. Validated discovery color families are scoped to canonical garment IDs;
-ambiguous repeats are omitted, and legacy garments without hex can use these
-qualified hints. Requalify initial retailer candidates after discovery. Ranking receives the resolved search and qualified reference observation
-alongside the selected crop, and rejects a visibly wrong dominant color. No exact
-fiber, shade, stock or price is inferred from the image. Bounded public seeds keep
-crocodile/snakeskin/long-pile vocabulary from the base cloth, never secondary trim
-or private prose. Known notions are filtered before the three-item feed budget;
-missing feed metadata still reaches normal seller verification. Search begins
-across the allowed merchant scope rather than consuming all calls on local shops
-unless the owner actually selected that scope.
+`mode` defaults to worldwide. Old client storeGroups/stores fields cannot silently
+restrict that default. Retailer mode retains validated nonempty groups, current
+scope overriding earlier shop-only restrictions, approved HTTPS/product URL policy,
+revalidated redirects, source-backed seller pictures and seller-only price/unit/
+stock. Swatches and out-of-stock products remain excluded. Optional variant facts
+have 1.2 seconds within an 8-second listing budget. Retailer feed/web work overlaps;
+eight balanced seller/visual slots, one bounded photo comparison and collection/
+direct identity dedup remain. Explicit alias reads preserve literal URLs and
+selected variants remain separate. No production credentials/config changed.
 
-- `aesthetics/ui/fabric-assistant.{js,css}` is shared by both served screens.
-- `docs/server/fabric-search.mjs` owns `/api/admin/fabrics/search` (NDJSON),
-  `/api/admin/fabrics/lookbook` (GET/POST), seller parsing and storage.
-- Search requires Admin authentication and the existing account rate limit.
-  It uses the existing OpenAI server key and `MODEL_TERRA || TEXT_MODEL`; no new
-  credentials or environment setup was performed. A bounded Responses API request
-  uses web_search, at most three tool calls, original photo plus words, and six
-  prior refinements. At most eight source-verified products enter one visual
-  comparison against the selected saved garment crop (the full original photo
-  remains discovery context). This uses the existing fabric.visual_rank route,
-  capped at one attempt and eight seconds; there is no automatic paid fallback.
-  Weak, invalid or failed comparisons return an explicit empty result, not
-  unrelated alternatives. Missing or inaccessible retailer images can prevent
-  comparison; the UI reports that limit rather than claiming a match.
-- Requests contain bounded garment metadata instead of nested piece images,
-  patterns or meshes. The integrated large-piece fixture sends 6,000 bytes rather
-  than more than 5.6 MB; the server obtains canonical saved pieces/crops itself.
-  Original reference photo and structured client preferences remain separate
-  inputs. In House inventory loads independently, so reference or lookbook failure
-  does not prevent available inventory photos from appearing.
-- Britex, Stonemountain, Harts, Amazon, Mood, Swatchon, Blackbird, The Fabric Store and
-  Tessuti are the allowed discovery domains. Amazon is web discovery, NOT a
-  Creators API integration or a promise of exhaustive Amazon inventory.
-- A bounded material-vocabulary Shopify pass runs alongside web discovery for
-  saved looks and initial text requests (at most two seeds across the five eligible Shopify stores).
-  Up to three feed products per query are eligible for balanced selection; at
-  most eight distinct seller listings are verified concurrently.
-  It never sends client names or free-form private prose to retailer feeds.
-  Early retailer candidates remain hidden while photo comparison is pending;
-  only completed matches appear as cards. Empty later web discovery cannot
-  erase eligible direct candidates. Refinements bypass seeds rather than replay
-  stale literal terms. The browser search stream has a 60-second read deadline. Seller redirects and
-  optional variant facts share one eight-second verification budget, with a
-  shorter 1.2-second cap on optional price/unit enrichment; the route
-  terminates at 55 seconds even if private reads or a provider never settle.
-  Preparation, active search, interruption and completed no-match are distinct
-  states. A terminal done event completes without waiting for EOF; interrupted
-  streams discard provisional candidates and explicit Refresh can retry. Late
-  reference completion after leaving Fabrics never starts a hidden search; queued
-  native dialog-close events cannot abort an already reopened search. No
-  automatic paid retry is introduced.
-- Sourceable's explicitly opened Search details shows the search and status
-  concisely. Hovering the result area never opens the panel. Discovery still
-  receives the original words, garment traits and qualified observations.
-  The actual presenter is also an active Aesthetic Control preview using H4/P3,
-  Inner material and Glass; no separate presentation settings are introduced.
-- When differently named garments share the same saved base-fabric description
-  and identical scoped constraints, a tied full-look match can be shown for both
-  after normal seller and photo checks, without assigning either garment ID.
-  Different descriptions, constraints or ambiguous duplicate names stay separate.
-- fabric-retailers.mjs owns public merchant policy, fabric-discovery.mjs owns
-  the fabric-only Responses contract; low reasoning effort is confined to that
-  request for supported GPT-5/6 models. Both original photo and selected crop
-  inform discovery; base cloth is distinguished from applied embellishments.
-  domain-boundaries is a release gate; see MODULE-BOUNDARIES.md for limits.
-- Only product URLs present in web source evidence become web candidates.
-  Server reads are restricted to exact approved merchant hosts, HTTPS, bounded
-  response sizes and revalidated redirects. Source links are preserved on cards.
-- Seller JSON-LD/metadata supplies title, photo, description and availability.
-  AI-supplied prices/composition/stock are not accepted. Prices need both currency
-  and a selling unit. Multiple offers never default to the cheapest offer.
-  Shopify variants distinguish swatches from yardage; a known unit on the seller
-  page is required. Out-of-stock and swatch-only listings are excluded.
-- A blocked seller page yields a clearly labeled search link with unknown facts.
-  Missing prices, units and stock remain explicit. A photo interpretation is
-  separate from the seller description. No exact composition/GSM/stretch is
-  inferred as a fact from a photograph. Local pickup and delivery are not guessed.
-- Public parsed listings alone cache for five minutes. No private conversation,
-  image, preference or search phrase enters a shared catalog/cache. Failed reads
-  are not cached. Existing legacy catalog objects are not deleted or migrated.
+## UI, continuity and sealed data
 
-## Sealed lookbook and production handoff
+`aesthetics/ui/fabric-assistant.js` is shared by Brief and Operations. Main defaults
+to worldwide with no shops selected. The existing optional shop icon opens their
+buttons; Sourceable returns to global. In House and Favorites remain independent.
+Worldwide, each selected group, garment metadata, preferences and reference have
+separate bounded in-memory result contexts for the current account/submission.
+Switching scope never mixes their results. Actual account/project changes clear
+private state; nothing private enters localStorage or a shared public catalog.
+Explicit new search clears prior mode caches for that garment; new references
+return to worldwide. Same-account token renewal retains state and drafts.
 
-Historical Save/Use records and the compatible authenticated API persist under
-`private/fabrics/<encoded authenticated Google sub>/<submissionId>/lookbook.json`.
-Submission existence is checked using its marker; Admin access to submissions
-follows the existing atelier authorization. Lookbooks remain separate even when
-two authorized admins can open the same client submission. Browser Storage rules
-do not expose these private objects. Generation preconditions prevent another
-window from overwriting a newer selection. A book holds at most 100 fabrics.
+Confirmed/source-backed card and image nodes remain mounted during Refresh when
+unchanged. Failed/empty refreshes keep existing cards. Prepared photos remain a
+two-reference project-bound cache; the result cache holds 24 contexts. Recent
+empty completion is reusable for 30 seconds. Partial cached searches retain their
+interrupted state and need explicit Refresh to continue, never an automatic retry.
+These are memory caches, not promises of permanent saved search history.
 
-The current browser serializes explicit Remove actions for each account/submission.
-A reviewed removal keeps its identity if the user selects another garment before it runs.
-Same-account token renewal preserves work; account/submission changes cancel
-unsent actions and reject late UI updates. Writes have a 15-second deadline.
-An unconfirmed response invalidates the cached generation and reloads the book;
-it never automatically repeats the uncertain write. A failure retains retryable controls. The retained API still verifies a new seller
-listing before its first Save/Use; this is compatibility, not a newly exposed card action.
+The material breakdown is visible in the existing P1 observation region. Names
+use H4, purpose/source captions P3, cards Inner and controls Glass. Active Aesthetic
+Control previews the same P1 interpretation and existing card/pill families. No new
+style family/editor was introduced. Default/saved styling, actual Save, six widths,
+focus/error and inline/expanded behavior remain mandatory checks. JS/CSS references
+are v8 under their exact no-cache Hosting rules. New runtime module ships in Docker.
 
-selectedByGarment maps saved garment IDs to product URLs. A private, stored-only
-selectedGarmentFingerprints map binds each selection to its saved garment
-metadata; it is not returned by the API. Changed garments or reused legacy IDs
-cannot silently inherit another material. Legacy selections are inferred only
-when unambiguous, without migration writes during reads. Removing a fabric clears
-every assignment to it. Fresh dissection IDs do not reuse array positions. Brief
-rejects a dissection above 25 MiB by UTF-8 byte size and keeps the full generated
-draft, including patterns, rather than claiming a save after dropping output.
+Private legacy books remain at
+private/fabrics/<encoded authenticated Google sub>/<submissionId>/lookbook.json.
+Their generation-checked Save/Use compatibility API and explicit Remove are
+unchanged. Browser cards have no Save/Use controls. Historical garment assignments
+remain fingerprint-bound and feed the actual selected Operations garment; browsing
+worldwide suggestions never creates or changes one. Do not delete migration or
+legacy records. Original photos/words and canonical saved IDs remain intact.
 
-The Brief embeds Operation Room below it and also retains the standalone route.
-A same-origin, exact-source, account/submission/revision-bound bridge carries only
-acknowledged saved pieces. Operations prepares the actual selected garment and
-full saved piece list. Lookbook hydration survives a picker change while its
-first read is pending; the selection label and pattern context use that garment's
-assignment. Opening Fabrics loads the same account/submission lookbook. An existing saved selection supplies its seller description to the existing grounded pattern prompt. This is
-material context, not proof of sewability, fit, shrinkage or laser readiness.
-Programmatic standalone searches work without a submission; private lookbook operations require one.
-In-house inventory uses the same shared cards; its source URLs remain traceable. Old browser favorites are not
-silently imported into a client's private lookbook.
+## Verification / honest limits
 
-The superseded Brief sourcing implementation lost 589 unreachable JavaScript
-lines. Its removal does not retire local-folder/legacy migration support, active
-CSS, the shared viewer or saved dissection loading.
+Run fabric-sourcing, fabric-search and fabric-search-gc on release Node20 and local
+Node; new tests/fabric-worldwide.mjs is imported by the existing search gate and
+its forced-GC child. Run fabric-search-ui, fabric-workflow-ui, existing routing,
+container/domain/release contracts, full regression/smoke and final standalone
+Aesthetic Control last. Fixtures cover unapproved-but-public global merchants,
+one main call, no feed/rank work, source-only images/facts, canonical context,
+progress before completion, private URL rejection, interruption, both deadline
+sources, explicit separate shop calls and scope restoration without paid retries.
 
-Switching account or submission clears conversation, photo and results; stale
-search/save/load responses cannot paint into the next context. Nothing private
-is written into localStorage. The server uses `store:false` for Responses calls;
-this is not a claim of zero provider retention. Logging contains result counts
-and durations only. Client upload is resized to 1200 px, up to 3 MB on the server.
+This implements the requested public API workflow; it does not copy ChatGPT's
+private prompts, backend or hosting. Exact live speed, OpenAI account entitlement,
+search quality and retailer availability remain empirical. No paid live test or
+owner Chrome access was resumed. After owner Push, verify exact release/API/asset
+identity, then compare the same look and constraints for first useful result,
+coverage and factual accuracy. Do not claim a fake-provider test proves parity.
 
-## Verification and owner evaluation
-
-Run `node tests/fabric-search.mjs`, `node tests/fabric-search-ui.mjs`,
-`node tests/fabric-workflow-ui.mjs`, `node tests/brief-operation-races.mjs`, the
-existing fabric/AI routing suites, container-contract, app-regression and smoke.
-The fabric suites and brief-workspace-ui are mandatory Cloud Build gates. UI tests use isolated Chromium and fake services,
-covering saved-look automatic search, selected/whole garment context, same-view
-inline/expanded tabs, exact five filters with free toggles/explicit Refresh,
-empty groups and stale streams, image+text refinement, historical saved selection
-across screens, failures, stale accounts/submissions, default/changed shared styles
-and six viewport sizes. tests/brief-workspace-ui.mjs checks the saved-only bridge. Real page parser checks used public
-Britex, Stonemountain and Swatchon listings, not private client inputs or paid model calls.
-
-The workflow fixture uses deferred responses and realistically large nested
-piece data. It seeds historical favorites through the real local service and checks
-request bytes, independent inventory, Remove followed by a garment switch, serial
-writes, generation conflicts, failure/retry, same-account
-renewal, account/project cancellation and selection persistence across reloads.
-These gaps were missed by small images, immediate acknowledgements and a fixture
-with only one global selected URL. Server fixtures cover private selection maps,
-changed garment fingerprints, seller re-verification and legacy compatibility.
-These are behavior checks, not live product-quality evidence. Finish all functional
-checks before Aesthetic Control authority; current helper-copy edits reuse existing
-roles/settings and introduce no new presentation authority.
-
-Before calling the live result quality equivalent to ChatGPT, run the same ten
-owner-approved cases through each after deployment:
-
-| Case | Input | Check |
-|---|---|---|
-| 1 | Description: matte burgundy wool twill | Color, weave and composition |
-| 2 | Description: lightweight ivory silk, no polyester | Hard material constraint |
-| 3 | Description: local coating for a jacket | Britex/Stonemountain relevance |
-| 4 | Description: printed cotton from Amazon | Real product links; unknowns honest |
-| 5 | Swatch photo alone | Qualified visual description and close texture |
-| 6 | Garment render alone | No invented fiber/GSM; useful alternatives |
-| 7 | Photo + "less shiny than this" | Words override pictured sheen |
-| 8 | Photo + "only Britex" | Named merchant restriction |
-| 9 | "Cheaper" then "less shiny" | Refinements preserve original intent |
-| 10 | Rare fabric, no available matches | No invented inventory or swatch price |
-
-Record first-useful-result time, total time, useful options among the first five,
-number of user actions, and factual errors. The server reports firstResultsMs and
-totalMs, not a promised latency. Automated fixtures prove behavior, not live
-search relevance, live OpenAI entitlement, microphone behavior or ChatGPT parity.
-The requested real private fur/green-pants demonstration still needs fresh,
-specific permission before accessing an owner's Chrome window/profile. Neither a
-passing fixture nor an exact public release check completes that acceptance.
-
-October 18 Swatchon evidence: the official [catalog](https://www.swatchon.com/fabric)
-links current `/fabric/QL-061078` product pages; legacy
-[`/wholesale-fabric/14620`](https://swatchon.com/wholesale-fabric/14620) remains
-recognized. [How Swatchon works](https://www.swatchon.com/help/articles/how-swatchon-works)
-distinguishes swatches, sample yardage and wholesale quantity pricing. The checked
-[Enzyme Cotton Twill listing](https://www.swatchon.com/fabric/QL-061078) exposes an
-AggregateOffer range and omits JSON-LD photos. The parser leaves that range/unit
-and unconfirmed stock blank; a seller-authored thumbnail naming the exact SKU can
-supply the photo, but the generic site logo cannot. No private endpoint or supplier
-API is guessed, and no shipping/availability is inferred from an operator address.
-Local merchant locations were rechecked on [Britex](https://britexfabrics.com/),
-[Stonemountain](https://stonemountainfabric.com/) and [Harts](https://hartsfabric.com/).
-
-Sources checked: [OpenAI web search](https://developers.openai.com/api/docs/guides/tools-web-search),
-[Britex swatches](https://britexfabrics.com/pages/swatch),
-[Stonemountain FAQ](https://stonemountainfabric.com/faq/),
-[Amazon Creators API](https://affiliate-program.amazon.com/creatorsapi/docs/en-us/introduction).
-
-Lifecycle/persistence references checked in this audit:
-[MDN AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
-[MDN Page Visibility](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API),
-[Cloud Storage request preconditions](https://docs.cloud.google.com/storage/docs/request-preconditions).
-Aborting a client request does not prove the server rolled back a write. Hidden
-page scheduling can be throttled; use identity checks and generation preconditions
-with explicit reconciliation rather than relying on timer order or blind retries.
-
-October 17 dissection save audit: /api/admin/subfile exposes X-Maya-Generation
-and mutable JSON uses private,no-store. /api/admin/savepieces requires the reviewed
-generation, returns the acknowledged generation, rejects stale writes with 409 and
-missing review with 428. Brief pins raw-dissection lineage; never rebase a retained
-draft automatically, publish an unacknowledged snapshot or remove generated
-patterns to fit the 25 MiB UTF-8 limit. Legacy saved files remain readable; old
-open clients must reload before saving. Run admin-storage, brief-operation-races
-and brief-workspace-ui with the existing release and final aesthetic gates.
-
-October 21 inventory payload audit: the eight source JPGs total 23,769,818 bytes;
-the existing thumbnail JPGs total 835,190 bytes (96.49% less). Catalog v2 declares
-thumbnail paths. The shared assistant displays these photographs, keeps each
-original as the card link and retains that link if a preview fails. Legacy catalog
-items without a thumbnail retain their original image behavior. Metadata uses a
-versioned fetch and exact no-cache Hosting rule so an old week-cached manifest
-cannot hide this repair; photograph caching stays unchanged. This is a transfer
-reduction, not a measured live AI latency or matching-quality claim.
-
-October 21 real-retailer follow-up: brocade and jacquard are recognized textile
-constructions in both eligibility and matching constraints. Their omission could
-reject actual source-backed listings before visual review. Unknown seller price
-or unit stays unknown; unrelated weaves/tools remain excluded.
-
-October 21 live criteria follow-up: the saved base cloth and applied trims are not
-one required compound fabric. Matching strips secondary clauses for qualification
-only; original descriptions, client words and fingerprints remain intact. In
-saved-look mode, unscoped whole-look directions do not override the selected
-base cloth. Explicit/named requirements, blends/percentages and exclusions remain
-strict. Unknown inferred traits may only proceed to the single visual comparison;
-failed/missing comparison never confirms them. Search details include original
-client preferences and store scope. Material seeds include a bounded broader
-query, with balanced stores and grounded web candidates before supplements.
-
-October 26: A reviewed Sourceable listing remains visible with “Photo unavailable”
-and its source link if the browser cannot load its seller image. This does not
-allow listings without a source-backed image through server verification, or
-guarantee a seller match. Store filters use the shared selected Glass pill state.
-
-The browser independently observes the existing 60-second search abort while
-waiting for response headers and streamed reads, including transports that do not
-reject promptly on cancellation. This is recovery, not proof of faster matching.
-
-October 26 search latency: after checking the submission marker, saved preferences
-and the canonical dissection are read concurrently. No provider starts before
-both are validated. The existing web, feed and seller deadlines are enforced even
-when a transport ignores abort; a late result cannot initiate a redirect or
-replace completed output. Verified direct results still pass the one bounded
-visual review. This reduces avoidable waits in the reproduced fixtures, but does
-not establish the cause or measured duration of the live stalled search.
-
-October 29 qualification repair: a generic knit is not a jersey-only requirement.
-Tricot, interlock and ponte belong to the knit family; an explicit jersey or tricot
-request still requires that subtype. Saved spec fields apply in their own dimension:
-fiber to composition, weave to construction, texture/sheen to appearance. Satin
-sheen/finish is not itself a satin-weave mandate. Qualified saved weave alternatives
-may reach the existing single photo comparison, but cannot be confirmed when that
-comparison is unavailable or fails. Definite construction and client constraints
-remain strict; saved words and seller facts are never rewritten. Local fixtures
-cover reported tracksuit/tailcoat descriptions; live result quality is unverified.
-
-## October 30 continuity repair
-
-Confirmed results are kept in a bounded (24-context) in-memory cache for the
-current account/submission. Returning to identical garment metadata, reference
-and preferences restores results without discovery, photo preparation or another
-visual comparison. A changed material/reference context starts fresh. Actual
-account/project changes clear the cache; nothing private goes into browser
-persistent storage or the public catalog. Refresh retains confirmed products
-while checking for more and keeps them on empty/error responses. New conversational
-requirements start a separate result set; preliminary events remain unpublished.
-
-All five selected store groups are sent explicitly on initial requests. Direct
-seed discovery covers the five existing Shopify merchants with up to two queries
-each. Cited candidates and verified seeds are balanced by merchant host before
-the eight-item cap so local shops cannot fill every review slot first. Provider
-web output is bounded to sixteen cited candidates, reduced to eight for seller
-and the existing single visual review. These changes preserve source-backed
-URLs, seller-only facts, original photos/client words and strict exclusions;
-they do not guarantee that a selected merchant has a matching eligible listing.
-
-## October 31 critical-path repair
-
-Seller checks for web-discovered listings start as soon as discovery completes,
-while keyword feeds and their seller checks may still be pending. Exact duplicate
-listing requests share one check only within the same search; candidate reasons
-and garment matching remain separate. This removes the previous serial barrier
-without increasing paid attempts or weakening qualification. Already rejected
-swatches/out-of-stock/non-fabric listings skip optional metadata. Missing optional
-Shopify metadata times out after 1.2 seconds within the original eight-second
-listing budget; unknown price/unit/stock facts remain unknown. The original
-photo, canonical crop, material exclusions and one visual comparison remain.
-
-Refresh preserves actual healthy card/image nodes, preventing a loaded grid from
-blanking or reloading thumbnails. Explicit Refresh retries missing photos only.
-A completed empty result is reusable for 30 seconds on a garment return, while
-explicit Refresh still searches. At most two prepared reference photos are reused
-inside the current account/submission; explicit reset/new input invalidates the
-relevant preparation and account/project changes clear every private cache.
-Server firstResultsMs measures completion of qualification, including saved-context
-reads, rather than the earlier hidden preliminary-candidate event. Fake gated
-transports prove overlap/deduplication and optional deadlines; a 4x CPU browser
-fixture proves photo reuse and stable nodes. They do not prove live seller matches
-or paid-provider latency. Live acceptance remains stopped until requested again.
-
-
-## October 31 ready-retailer overlap
-
-A merchant's first selected candidate starts verification when its own feeds
-settle instead of waiting for every other merchant's feed. The first slot is
-already guaranteed by the existing round-robin policy, so the final selection
-reuses that exact request-local check. A merchant-count guard preserves the
-eight-slot bound if policy grows. Returned feed links must belong to that merchant.
-Five eligible feed merchants, eight unique seller reads, source/variant guards,
-qualified component matching and the one photo review remain unchanged.
-
-The deferred unrelated-feed regression fails before this repair. A controlled
-three-run Node20 A/B with a 300ms unrelated feed, 400ms seller and 20ms photo pass
-reduced median first-useful-result time from 732ms to 430ms. Both versions return
-the same verified listing with one seller read and one visual call. This 41%
-fixture reduction is not a live speed measurement or a ChatGPT parity claim.
-
-The existing authenticated NDJSON timings and aggregate server diagnostics now
-include contextMs, webMs, retailerMs, webSellerMs and visualMs, alongside
-firstResultsMs and totalMs. They are fixed numeric fields only, with no client
-words, images, URLs or identities. Phases overlap; do not sum them. Service timing
-excludes browser preparation/upload, auth and Cloud Run cold start. No new UI,
-endpoint, automatic paid retry or production configuration setting is introduced.
-
-Concurrent web/feed collection and direct Shopify aliases now share the same
-request-local listing identity check. The returned product keeps its actual fetched
-source URL; explicit alias reads keep their literal path and selected variants
-remain separate. The bounded-slot fixture includes alias duplicates so early work
-cannot turn eight planned reads into nine. Nothing private enters shared caches.
+Official API contracts read for this implementation:
+- https://developers.openai.com/api/docs/guides/tools-web-search
+- https://developers.openai.com/api/docs/guides/streaming-responses

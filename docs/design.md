@@ -1,3 +1,11 @@
+<!-- Active owner clarification: Sourceable is worldwide by default. Local/Mood/
+Swatchon/Amazon/Others are separate explicit searches, not selected default filters.
+This supersedes older filter behavior below. P1 interpretation is visible for main
+search, with H4/P3/Inner source-backed suggestion cards and the existing Glass
+controls. Active fabric preview includes P1 interpretation; no new visual authority.
+World/retailer caches are separate. Unknown photos retain the existing P3 fallback.
+-->
+
 <!-- October 30 owner review supersedes earlier pill/Studio layouts: Glass is the sole pill material, including Edit. Regular has no active editor/runtime authority. The internal Studio preview is removed. Historical notes are retained only when compatible with this rule. -->
 
 # Aesthetic Control — MAYA design standard

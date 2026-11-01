@@ -16,7 +16,7 @@ COPY proxy-policy.mjs ./
 COPY admin-command.mjs ./
 COPY fabric-sourcing.js ./
 COPY fabric-search.mjs ./
-COPY fabric-retailers.mjs fabric-discovery.mjs ./
+COPY fabric-retailers.mjs fabric-discovery.mjs fabric-worldwide.mjs ./
 COPY ai-router.js ./
 COPY design-config.mjs ./
 COPY maya-mcp.mjs ./

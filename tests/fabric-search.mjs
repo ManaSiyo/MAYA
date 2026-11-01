@@ -2,7 +2,12 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { FABRIC_SHOPS, FABRIC_STORE_GROUPS, merchantURL, normalizeFabricRequest, requestedShops, webSearchBody, readDiscovery, parseListing, applyShopifyVariant, createFabricSearch, mountFabricSearch } from '../docs/server/fabric-search.mjs';
+import { FABRIC_SHOPS, FABRIC_STORE_GROUPS, merchantURL, normalizeFabricRequest as normalizeRequest, requestedShops, webSearchBody, readDiscovery, parseListing, applyShopifyVariant, createFabricSearch as createSearch, mountFabricSearch } from '../docs/server/fabric-search.mjs';
+
+// These legacy seller/visual/storage contracts now belong to the explicit
+// optional retailer path. Worldwide default behavior is exercised separately.
+const normalizeFabricRequest=body=>normalizeRequest({mode:'retailers',...body});
+function createFabricSearch(options){const service=createSearch(options);return {...service,search:(user,body,...rest)=>service.search(user,{mode:'retailers',...body},...rest)};}
 
 const user={sub:'owner-A',email:'owner@example.test'}, second={sub:'owner-B',email:'other@example.test'};
 const url='https://britexfabrics.com/products/crimson-wool';
@@ -748,4 +753,5 @@ await test('optional variant metadata has a short deadline without dropping vali
 
   }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);}
 });
+await import('./fabric-worldwide.mjs');
 console.log(`Fabric search: ${count} behavioral checks passed.`);

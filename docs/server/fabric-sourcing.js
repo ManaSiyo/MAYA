@@ -221,6 +221,17 @@ export function fabricComponentMatch(product,input={},material){
   return match?{...match,materialId:material.id,materialRole:material.role,materialLabel:material.label,materialDescription:material.fabric}:null;
 }
 
+// Worldwide suggestions do not inherit guessed saved-body requirements. Known
+// contradictions of the client's exclusions still fail without another AI call.
+export function fabricExcludedByWords(product,input={},parents=[]){
+  const targets=(parents.length?parents:input.pieces?.length?input.pieces:[{}]).map(piece=>({id:piece.id,name:piece.name,category:piece.category,fabric:'',fabric_spec:{}}));
+  const facts=[product.title,product.description,product.composition].join(' ');
+  return targets.every(piece=>[fibers,constructions,colors,textures].some(definitions=>{
+    const {excluded}=constraints(piece,{...input,automatic:true,request:input.automatic?'':input.request,allPieces:input.pieces,pieces:targets},definitions);
+    const actual=terms(facts,definitions).positive;return [...excluded].some(key=>actual.has(key));
+  }));
+}
+
 function cleanText(value, limit = 160) {
   return String(value || '').replace(/[\u2013\u2014]/g, '-').replace(/\s+/g, ' ').trim().slice(0, limit);
 }

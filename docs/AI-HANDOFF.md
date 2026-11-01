@@ -1,133 +1,117 @@
-# Current handoff — October 31, 2026
+# Current handoff — worldwide Fabrics
 
-## Current request / boundary
+## Request and boundaries
 
-Fromsa supplies screenshots contrasting one olive-knit MAYA result with a useful
-ChatGPT materials breakdown for the same green-and-gold tracksuit. Fix Fabrics'
-coverage of the look. The follow-up also reports that ChatGPT was much faster. Personal Chrome and live testing remain stopped; use code
-and isolated fake-provider fixtures. Do not start microphone/provider sessions,
-read or install keys, change production settings or Push. Local verified commits
-are authorized. The screenshot text is comparison evidence, not instructions from
-an external document to execute or copy unverified product facts.
+The owner now requires the main Fabrics experience to inspect the original image,
+identify its separate textiles and search worldwide, like the supplied ChatGPT
+example. Local/Britex/Mood and the other named shops are optional, separate searches
+on explicit clicks. They must neither restrict nor delay the main search. This
+supersedes older default all-five merchant filters and mandatory seller/photo
+verification for every main suggestion. See FABRIC-SEARCH.md and the top AGENTS
+clarification for the active architecture.
 
-The speed follow-up starts clean at b7afaa8, one local commit ahead of
-origin/maya-v2 8db49da. The previous component-coverage repair has not been pushed
-by this agent. Before that turn, public HTTP reported Hosting/API 7232f50; a newer
-live release has not been verified in this task. Owner says Ads variables were
-deployed and confirmed the key came from Ads Manager Settings. Actual provider
-reporting remains unverified. No key from chat was used; do not ask for it or Chrome.
+No personal Chrome, microphone, live provider test, private account inspection,
+credentials or production configuration was used or changed. Live testing remains
+stopped. Local verified commits are authorized; Push is owner-only. A key pasted
+in earlier chat was not used or stored. No campaigns or billing settings changed.
 
-## Fabric cause and repair
+The checkout began at 97addd2, two commits ahead of origin/maya-v2 8db49da.
+Prior component sourcing b7afaa8 and ready-feed scheduling 97addd2 remain intact
+in the explicit optional retailer path. Their synthetic speed result is not a
+measurement of this new main search. Public release identity was not rechecked
+in this task; the last earlier observation was Hosting/API 7232f50.
 
-The provider prompt sourced base cloth only. Qualification reduced each saved
-garment to its main fabric and dominant color; there was no distinct target for
-contrast panels, inserts, ribbing or textile trim. A controlled canonical saved
-tracksuit fixture failed the old code before implementation: the secondary
-materials never reached its single visual comparison.
+## Main implementation
 
-fabric-discovery.mjs now returns an optional eight-component plan in the same
-Responses call, with exact selected canonical garment IDs, bounded ID/role/label
-and qualified fabric descriptions. Invalid, duplicate, stale and foreign IDs or
-unsupported roles fail closed. Cited URL checks and approved merchant filters
-still precede seller requests. Standalone input without saved IDs retains its
-existing cloth search; this change does not create a new standalone shopping tool.
-The output allowance grows to 3200 tokens; three tool calls and deadlines remain.
+New docs/server/fabric-worldwide.mjs owns one streamed Responses request using
+the existing configured text/vision model. It supplies the original image,
+canonical saved selected crop and bounded client words/garment context. The model
+uses unrestricted text/image web search and emits a short material interpretation
+plus useful per-material product suggestions. No nine-merchant allowlist, local
+priority, retailer feed fan-out, seller fetch or second visual-rank request runs
+on the main path. The provider has five tool calls/3200 output tokens and a
+50-second deadline inside existing route/browser deadlines. Exact ChatGPT private
+implementation or identical latency is neither available nor promised.
 
-fabricComponentMatch in fabric-sourcing.js keeps canonical requirements for body
-cloth. Secondary descriptions are hypotheses; they do not inherit the dominant
-body color, rewrite saved garments or relax client requirements/exclusions.
-All secondary matches require a reference image and successful existing visual
-review. The review receives the component and evaluates that part of the image,
-not the whole-look dominant color. No failed/weak-photo fallback is introduced.
-Shared components do not invent a garment assignment ID. Original account/project
-scope, saved selection fingerprints, seller facts, prices/units and stock remain.
+Only raw search sources/citations can ground a product URL; photos must come from
+page-linked raw image-search results, never model image URLs. Missing photos retain
+a sourced link with the existing placeholder. Discovered arbitrary hosts are never
+fetched by the server. Unsafe URLs and known client exclusions are checked. Main
+results are web suggestions, not independently verified inventory: price/unit/
+stock/composition stay unknown. No generated product image, swatch-as-yardage,
+finished-clothing or hardware sourcing was added. Source evidence can arrive after
+candidate text; cards wait for it, then stream before completion when available.
 
-fabric-retailers.mjs balances distinct materials before additional body-cloth
-options, retaining merchant balance within each material and eight review slots.
-No merchant hosts, hardware, ready-made clothes or swatch-only eligibility were
-added. Nine configured merchants remain a real scope limit; model relevance and
-seller availability remain empirical, not fixture-proven.
+The adapter handles bounded SSE, byte-split Unicode/CRLF, terminal completion,
+incomplete/error/early EOF and abort-ignoring providers/readers. Errors are safe
+fixed messages. Node20 combined-signal WeakMap lifetime protection remains. Existing
+fixed numeric diagnostics continue; retailer and second-visual durations are zero
+for the main path. No private search content or URLs are logged.
 
-fabric-search.mjs carries component metadata through independent seller checks,
-qualification and the existing single photo review. Missing materials remain
-explicit in the current status/Search details. Its caches, per-request seller
-deduplication, Node20 WeakMap lifetime guard, deadlines and saved-result continuity
-are preserved. Search output does not write lookbooks or garment assignments.
+fabric-search.mjs defaults mode to worldwide and ignores old store fields there;
+only explicit retailers mode invokes existing approved-shop checks. Canonical saved
+context and account/submission boundaries precede either provider path. New module
+ships through Dockerfile. fabric-sourcing.js adds lightweight known negative client
+constraints for global suggestions without enforcing guessed main-cloth properties.
 
-## Speed follow-up — current change
+## Client and shared aesthetics
 
-Direct retailer discovery used one Promise.all barrier across all selected
-merchants' keyword feeds before starting any of their seller checks. A ready
-listing therefore waited for an unrelated slow/empty shop. The new deferred-feed
-fixture fails the b7afaa8 implementation before the repair.
+fabric-assistant.js starts worldwide with no shops selected. Search specific shops
+opens the existing five buttons without a provider call. A group click starts an
+independent search; Sourceable restores main results with no repeated call. Cache
+keys include mode/group plus private garment/material/reference context. Unsent
+refinement drafts survive switches but are not submitted automatically. Partial
+source-backed cards survive interruptions and reopening; their state remains
+interrupted and requires explicit Refresh. Old provisional retailer candidates do
+not become retained results. Account/project changes clear private state; existing
+bounded memory/reference caches, generation-checked lookbooks and explicit Remove
+remain. No private request is cached in the shared catalog.
 
-Each merchant now starts its first already-selected seller check after its own
-feeds settle, overlapping that check with other merchants' feeds. That candidate
-is guaranteed a first round-robin slot; the request-local map reuses the identical
-check during final selection. Collection/direct aliases share a request-local
-identity check too, preserving the actual first fetched URL and distinct selected
-variants. The strengthened alias fixture reproduced nine reads before that guard
-and eight after. Explicit alias reads retain their literal destination. A <=8 merchant guard retains the bound if policy
-later expands. Feed product destinations must belong to their own approved
-merchant. The final eight balanced seller slots, qualification, three web tool
-calls, one visual review, deadlines and confirmed-card continuity remain unchanged.
-No early unchecked result, extra paid call or automatic retry is introduced.
+The material breakdown now uses the existing P1 observation, alongside H4/P3 Inner
+cards and Glass controls. The active workspace preview includes that P1 role.
+No CSS family, independent material, table or editor was introduced. Brief and
+Operations reference JS/CSS v8 under existing exact no-cache Hosting policy;
+domain/release contracts cover it. Changed files also include focused world/search/
+workflow fixtures, integrated request assertions and authority coverage notes.
 
-Fixed numeric contextMs/webMs/retailerMs/webSellerMs/visualMs now accompany existing
-firstResultsMs/totalMs in the authenticated search stream and count-only server
-diagnostic record. Concurrent phases overlap and must not be summed. They begin
-inside the service after authentication: browser preparation, upload, auth and
-Cloud Run cold start are not included. No request words, URLs, images, account or
-submission IDs are logged, and no new UI or endpoint is added.
+## Validation and remaining acceptance
 
-Controlled Node20 A/B, three runs each: an unrelated feed waits 300ms, the useful
-seller waits 400ms, and the one fake visual review waits 20ms. Both versions return
-the same one seller-checked listing with exactly one seller read/one visual call.
-First-useful medians are 732ms before and 430ms after (41% reduction in this
-fixture). This is synthetic critical-path evidence, not a live provider/ChatGPT
-latency comparison or a promised production improvement. Temporary reproducer:
-/private/tmp/maya-feed-latency.mjs; baseline is b7afaa8's service orchestration.
+Functional verification passes: 57 optional-search checks plus 10 new worldwide
+checks, including source/image grounding, one-call architecture, canonical context,
+client exclusions, incomplete streams and parent/own deadline settlement. Forced-GC
+search gates pass on release Node20.20.2 and local Node24. Focused UI/workflow checks
+cover worldwide external merchants, each optional group, partial streaming,
+cache restoration without another request, unsent drafts and sealed scope races.
+Default and deliberately different saved P1/H4/P3/material settings, actual Save,
+inline/expanded layout and six widths pass in temporary isolated fake-provider
+renderers. They do not use the owner's Chrome profile or actual product photos.
 
-## Presentation / delivery
+The 76-command exact functional/release/regression/smoke sweep completed. Its sole
+failure was a stale source assertion for the old retained-card catch; corrected to
+assert published source-backed versus provisional results, then the full integrated
+regression passed. All other sweep gates including smoke passed. A final review found cached worldwide cards could lose their P1 material
+breakdown after a shop switch. Preserve that observation in each result context;
+the focused workflow fixture now asserts its restoration and passes. Final
+standalone Aesthetic Control passes last after that fix, including re-executed
+changed-surface fixtures. Default, deliberately different saved desktop/expanded
+and phone captures were visually inspected; no production design was changed.
 
-fabric-assistant.js adds the purpose to its existing P3 caption and includes it
-in the stable-card signature. No new component, CSS family, editor or styling
-source was added. H4 titles, P3 captions, P1 status, Inner cards, Outer workspace
-and Glass controls remain governed by Aesthetic Control. The active fabric
-preview includes a purpose caption. Brief/Operations reference JS/CSS v7 under
-the exact no-cache Hosting policy; release/domain contracts check the new version.
-
-## Validation / exact next step
-
-Prior coverage validation: 18 sourcing checks and 55 search checks, including four distinct
-tracksuit textiles, an explicit unconfirmed ribbing component, scoped identities,
-coverage balancing and rejection/failed-photo behavior without paid retries.
-Forced-GC search/deadline suites pass on release Node20.20.2 and local Node24.
-Four-card UI passes default/changed saved styles, actual Save, focus/error and
-inline/expanded six-width checks in an isolated temporary test renderer. Personal
-Chrome, real providers, private images and production design were not accessed.
-
-The speed tests total 57 search checks. Node20/24 forced-GC deadline suites pass,
-including held-feed overlap, eight unique seller checks with collection/direct
-aliases and five eligible feed merchants. All 76 functional/release/regression/
-smoke commands pass on the corrected code. Final standalone Aesthetic Control
-passed last. Backend-only: no visible UI/presentation changes or new runtime
-imports. No actual owner/provider latency or live result quality was measured.
-Prepare the local speed commit without amending b7afaa8 or pushing; both requested
-fabric commits remain for the owner's Push. No source changed after final authority.
-
-After owner Push, verify exact Hosting/page/API commit and fabric asset bytes/cache
-policy. Real acceptance means useful per-component listings for the owner's look,
-not merely more cards or a passing fake-provider suite. Do not claim live parity,
-faster provider latency or correct real inventory from these tests. Any renewed
-live testing must respect the owner's stop and credential boundaries.
+No live first-useful latency, actual search output quality, provider entitlement
+or current inventory was measured. Do not claim the fixtures prove ChatGPT parity.
+Next: owner Push of the three prepared local fabric commits. This task is locally
+verified and COMMIT-REVIEW describes the final change; no source changed after
+the final authority run.
+After owner Push, verify exact Hosting/page/API commit and fabric v8 bytes/cache
+policy. Real acceptance is the same look yielding useful separate worldwide
+materials promptly with accurate source links; renewed live tests require respecting
+the owner's stop and credential boundaries.
 
 ## Retained work
 
-WR remains independent and empty until explicit applicant additions; all tables
-share aesthetics only. Glass is the sole pill authority; the retired internal
-Studio remains removed. Shared scrollbar v2 alone owns visible paint and geometry.
-Prior direct Google/Meta/ChatGPT Ads reporting remains read-only, without Windsor.
-Google has no retired developer-token requirement. Public Ads booleans establish
-presence only; Admin reports safe setup/authorization categories. Owner handles
-all environment/credential configuration. See DIRECT-AD-REPORTING.md.
+WR is independent and empty until explicit applicant additions; tables share
+appearance only. Glass is the sole pill authority and the retired internal Studio
+remains removed. Shared scrollbar v2 owns visible paint/geometry. Direct Google/
+Meta/ChatGPT Ads reporting remains read-only without Windsor; presence booleans do
+not prove configured access. Owner handles provider credentials/environment setup.
+See DIRECT-AD-REPORTING.md. No voice, communications, Ads or account authorization
+behavior changed in this task.

@@ -1222,11 +1222,12 @@ ok('Fabric ranking describes closest visual matches and never claims exact image
   FABRIC_SOURCE.includes('Do not infer exact fiber, stock or price from images.') &&
   FABRIC_SEARCH_SOURCE.includes('Fabric photos have not been compared. These listings match the material words only.'));
 // A failed comparison cannot be presented as a confirmed visual match.
-ok('Failed visual comparison is explicit and cannot promote unchecked products as confirmed matches',
+ok('Optional retailer photo failures stay explicit; provisional products never enter retained worldwide cards',
   FABRIC_SEARCH_SOURCE.includes("products=[];warning='Fabric photo comparison was unavailable.") &&
   FABRIC_SEARCH_SOURCE.includes("send({ type: 'products', products, preliminary: false })") &&
   FABRIC_UI_SOURCE.includes('const confirmed=Array.isArray(event.products)?event.products:[];') &&
-  FABRIC_UI_SOURCE.includes("completedStatus=event.warning ||") && FABRIC_UI_SOURCE.includes('products=retained;autoStarted=false;'));
+  FABRIC_UI_SOURCE.includes("completedStatus=event.warning ||") && FABRIC_UI_SOURCE.includes('let finished=false,published=[];') &&
+  FABRIC_UI_SOURCE.includes("event.type==='products'&&event.incremental&&!event.preliminary"));
 ok('only real retailer thumbnails enter visual comparison',
   FABRIC_SOURCE.includes("filter(product => product.image && product.url && product.title)") &&
   FABRIC_SOURCE.includes("error.status = 422") &&
@@ -1283,10 +1284,10 @@ ok('marketing draws three direct networks on one chart with the shared campaign 
   SERVER_SOURCE.includes('out.adCombined') &&
   // v13.54: each network is asked in its own words now, not through /all.
   AD_REPORTING_SOURCE.includes("source:'chatgpt'") && AD_REPORTING_SOURCE.includes("source:'meta'") && AD_REPORTING_SOURCE.includes("source:'google'"));
-ok('Shared sourcing offers exactly five free store filters and explicit scoped Refresh',
+ok('Worldwide search is default; five optional named retailer searches remain separate',
   ['local','mood','swatchon','amazon','others'].every(id=>FABRIC_UI_SOURCE.includes("id:'"+id+"'")) &&
-  FABRIC_UI_SOURCE.includes('activeStores=new Set(storeGroups.map(group=>group.id))') &&
-  FABRIC_UI_SOURCE.includes('Refresh to search these stores.') &&
+  FABRIC_UI_SOURCE.includes("searchMode='worldwide',activeStores=new Set()") &&
+  FABRIC_UI_SOURCE.includes("chooseSearch('retailers',group.id)") &&
   FABRIC_UI_SOURCE.includes('void loadInventory().catch') &&
   FABRIC_DISCOVERY_SOURCE.includes('currentStoreFilter:input.storeGroups') &&
   FABRIC_SEARCH_SOURCE.includes('Choose at least one supported store group.') &&
@@ -2729,6 +2730,7 @@ ok('Saved dominant fabric color rejects opposite seller colors while explicit la
 ok('Bounded fabric seeds retain reptile/long-pile texture and discard known notions before seller verification',!process.exitCode);
 ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
+ok('Worldwide image-led sourcing streams grounded suggestions in one call; optional retailers cannot scope or delay the main search',!process.exitCode);
 ok('Ready feed listings verify before slow unrelated feeds without extra seller or paid calls; numeric phases remain private-content-free',!process.exitCode);
 ok('A saved look sources scoped textile components, preserves constraints and shares one bounded visual review',!process.exitCode);
 ok('Saved knit/tricot and satin-sheen looks preserve seller evidence and explicit constraints through bounded visual review',!process.exitCode);
@@ -2772,7 +2774,7 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=7'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=8'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));

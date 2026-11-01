@@ -79,7 +79,7 @@ try{
  assert.equal(await page.evaluate(()=>fixtureBitmapCount),preparedCount,'Unchanged project photo is not decoded again for another garment');await page.evaluate(()=>window.createImageBitmap=fixtureBitmap);
  const beforeReturn=searches.length;
  await open({piece:pieces[0]});await card(fur).waitFor();assert.equal(searches.length,beforeReturn,'Garment return restores verified results without search');assert.equal(await card(leather).count(),0,'Garment results do not cross contexts');
- assert.deepEqual(searches.at(-1).storeGroups,['local','mood','swatchon','amazon','others'],'All visible selected stores reach the server');
+ assert.equal(searches.at(-1).mode,'worldwide');assert.equal(searches.at(-1).storeGroups,undefined,'Default main search has no retailer restriction');
  await page.evaluate(()=>window.retainedFabricCard=document.querySelector('.fa-product'));
  holdSearch=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await waitUntil(()=>!!releaseSearch);await card(fur).waitFor();
  assert.equal(await page.evaluate(()=>retainedFabricCard===document.querySelector('.fa-product')),true,'Refresh keeps the actual loaded photo/card node');
@@ -345,7 +345,7 @@ try{
  },{reference,pieces});
  await page.getByText('Search timed out. Refresh to retry.',{exact:true}).waitFor();await page.evaluate(()=>errorBodySearch);
  // A stalled read-only search has its own deadline and never resends itself.
- await page.evaluate(({reference,pieces})=>{const nativeTimeout=AbortSignal.timeout;AbortSignal.timeout=ms=>ms===60000?nativeTimeout.call(AbortSignal,150):nativeTimeout.call(AbortSignal,ms);const nativeFetch=window.fetch;window.fabricTimeoutAttempts=0;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){fabricTimeoutAttempts++;return new Promise(()=>{});}return nativeFetch(url,options);};window.timeoutSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});},{reference,pieces});
+ await page.evaluate(({reference,pieces})=>{const nativeTimeout=AbortSignal.timeout;AbortSignal.timeout=ms=>ms===60000?nativeTimeout.call(AbortSignal,150):nativeTimeout.call(AbortSignal,ms);const nativeFetch=window.fetch;window.fixtureTimeoutNativeFetch=nativeFetch;window.fixtureTimeoutNativeTimeout=nativeTimeout;window.fabricTimeoutAttempts=0;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){fabricTimeoutAttempts++;return new Promise(()=>{});}return nativeFetch(url,options);};window.timeoutSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});},{reference,pieces});
  await page.getByText('Search timed out. Refresh to retry.',{exact:true}).waitFor();
  assert.equal(await page.evaluate(()=>fabricTimeoutAttempts),1);assert.match(await page.locator('.fa-empty').textContent(),/not completed/i,'Timeout is distinguished from a completed no-match search');assert.equal(await page.locator('.fa-composer button[type=submit]').isDisabled(),false);
  // Loading/error copy uses the existing P1 authority under both saved and default designs.
@@ -359,6 +359,30 @@ try{
    if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-fabric-interrupted-'+mode+'-'+width+'.png'});
   }
  }
+ // Main-worldwide cards publish before done and remain independent of optional shops.
+ const globalProduct={...fur,url:'https://global-shop.example.net/textiles/green-knit',title:'Global green knit fabric',evidence:'web_suggestion',materialLabel:'Green body knit'};
+ const beforeSeparate=searches.length;
+ await page.evaluate(({reference,pieces,product})=>{
+  window.fetch=window.fixtureTimeoutNativeFetch;AbortSignal.timeout=window.fixtureTimeoutNativeTimeout;
+  const nativeFetch=window.fetch;
+  window.fetch=(url,options)=>{if(!String(url).endsWith('/fabrics/search'))return nativeFetch(url,options);window.fetch=nativeFetch;window.streamingSearchMode=JSON.parse(options.body).mode;
+   return Promise.resolve(new Response(new ReadableStream({start(controller){
+    controller.enqueue(new TextEncoder().encode(JSON.stringify({type:'interpretation',observation:'Green body knit and gold shoulder panels.'})+'\n'+JSON.stringify({type:'products',preliminary:false,incremental:true,products:[product]})+'\n'));
+   }}),{headers:{'Content-Type':'application/x-ndjson'}}));
+  };
+  window.earlyWorldSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces,product:globalProduct});
+ await card(globalProduct).waitFor();assert.equal(await page.evaluate(()=>streamingSearchMode),'worldwide');
+ assert.equal(await page.locator('.fa-observation').isVisible(),true);assert.match(await page.locator('.fa-observation').textContent(),/gold shoulder panels/);
+ await page.getByRole('button',{name:'Search specific shops',exact:true}).click();
+ await page.locator('[data-store-group=local]').click();await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
+ assert.equal(searches.at(-1).mode,'retailers');assert.deepEqual(searches.at(-1).storeGroups,['local']);
+ await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();await card(globalProduct).waitFor();
+ assert.equal(searches.length,beforeSeparate+1,'Returning from Local does not repeat the worldwide request');
+ assert.match(await page.locator('.fa-observation').textContent(),/gold shoulder panels/,'Restored cards retain their source interpretation');
+ assert.match(await page.locator('.fa-status').textContent(),/Search interrupted/,'Partial results do not claim completed inventory');
+ await page.evaluate(()=>MayaFabricAssistant.close());await open({piece:pieces[0]});await card(globalProduct).waitFor();
+ assert.equal(searches.length,beforeSeparate+1,'Reopening partial worldwide results cannot cause an automatic paid retry');
  assert.deepEqual(errors,[]);
  console.log('Fabric workflow: bounded metadata ('+bytes+' bytes), independent inventory, queued/CAS historical-favorite removals, retry, per-garment material/prompt/reload, renewal and submission cancellation passed. Synthetic records only.');
 }finally{for(const route of catalogRoutes)await route.abort().catch(()=>{});releaseAck?.();releaseBook?.();await browser.close();}

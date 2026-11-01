@@ -35,8 +35,9 @@ name missing settings and safe provider errors without credentials.
 Current drawer/scrollbar/segment controls: every hamburger uses the MAYA drawer
 material, with its own shared Edit/Restore preview. Scrollbars default to 4px,
 half-length painted handles and idle hiding. Brief and Fabrics keep one viewport.
-Fabric filters: Local (Bay Area), Mood, Swatchon, Amazon, Others; filter toggles
-do not call paid search. Refresh searches explicitly. Card Save/Use is removed;
+Sourceable defaults to worldwide image-led web search. Local (Bay Area), Mood,
+Swatchon, Amazon and Others are separate optional searches started by an explicit
+shop-button click; they never filter or delay worldwide results. Card Save/Use is removed;
 historical Favorites remain readable/removable.
 
 Tables share Aesthetic Control settings across MAYA; their records remain separate.

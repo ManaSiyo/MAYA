@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import {resolve,dirname,relative} from 'node:path';
 const root=resolve(new URL('../',import.meta.url).pathname),server=resolve(root,'docs/server');
-const fabric=['fabric-search.mjs','fabric-discovery.mjs','fabric-retailers.mjs','fabric-sourcing.js'];
+const fabric=['fabric-search.mjs','fabric-discovery.mjs','fabric-retailers.mjs','fabric-sourcing.js','fabric-worldwide.mjs'];
 const allowed=new Set([...fabric,'model-config.mjs']);
 const modules=readdirSync(server).filter(name=>/\.(?:mjs|js)$/.test(name));
 const read=name=>readFileSync(resolve(server,name),'utf8');
@@ -21,7 +21,7 @@ assert.ok(!/app\.use\s*\(/.test(routeSource),'Fabric mounting may not install ap
 for(const route of routeSource.matchAll(/app\.(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)/g))assert.ok(route[1].startsWith('/api/admin/fabrics/'),route[1]);
 for(const page of ['frontend/index.html','backend/status.html'])assert.doesNotMatch(readFileSync(resolve(root,page),'utf8'),/\/(?:fabric-assistant|fabric-search-details)\.(?:js|css)/,page+' must not load fabric assets');
 for(const page of ['backend/backend.html','backend/operations.html']){
- const source=readFileSync(resolve(root,page),'utf8');assert.match(source,/fabric-search-details\.js\?v=1/);assert.match(source,/fabric-assistant\.js\?v=7/);
+ const source=readFileSync(resolve(root,page),'utf8');assert.match(source,/fabric-search-details\.js\?v=1/);assert.match(source,/fabric-assistant\.js\?v=8/);
 }
 for(const file of ['aesthetics/ui/fabric-assistant.js','aesthetics/ui/fabric-search-details.js'])assert.doesNotMatch(readFileSync(resolve(root,file),'utf8'),/\/api\/(?:messages|sms|phone|outbound|wix)|localStorage\.setItem|document\.documentElement\.style/,file+' must not mutate another department or shared private storage');
 const css=readFileSync(resolve(root,'aesthetics/ui/fabric-assistant.css'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'');

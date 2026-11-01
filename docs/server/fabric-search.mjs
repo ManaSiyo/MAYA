@@ -3,6 +3,7 @@
 import {isFabricProduct, isFabricPiece, fabricProductMatch, fabricComponentMatch, fabricSeedQueries} from './fabric-sourcing.js';
 import {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,merchantIdentity,requestedShops,balancedFabricCandidates,balancedMaterialCandidates} from './fabric-retailers.mjs';
 import {webSearchBody,readDiscovery} from './fabric-discovery.mjs';
+import {searchWorldwide} from './fabric-worldwide.mjs';
 export {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,requestedShops} from './fabric-retailers.mjs';
 export {webSearchBody,readDiscovery} from './fabric-discovery.mjs';
 import {createHash} from 'node:crypto';
@@ -66,6 +67,8 @@ function garmentFingerprint(piece) {
 }
 
 export function normalizeFabricRequest(body = {}) {
+  const mode=body.mode??'worldwide';
+  if(!['worldwide','retailers'].includes(mode))throw fail('Choose worldwide or a separate retailer search.');
   const submissionId = text(body.submissionId, 121);
   if (submissionId && !SUBMISSION.test(submissionId)) throw fail('Choose a valid submission.');
   const request = text(body.request, 1200);
@@ -74,11 +77,11 @@ export function normalizeFabricRequest(body = {}) {
   if (!request && !image && !body.automatic) throw fail('Describe a fabric or add a photo.');
   const history = list(body.history).slice(-6).map(h => ({ request: text(h.request, 1200), query: text(h.query, 180) }));
   const piece = body.piece || {};
-  const storeGroups=body.storeGroups;
+  const storeGroups=mode==='retailers'?body.storeGroups:undefined;
   if(storeGroups!==undefined&&(!Array.isArray(storeGroups)||!storeGroups.length||storeGroups.some(id=>!FABRIC_STORE_GROUPS.some(group=>group.id===id))))throw fail('Choose at least one supported store group.');
-  const stores=list(body.stores).map(host=>FABRIC_SHOPS.find(shop=>typeof host==='string'&&shop.host.replace(/^www\./,'')===host.replace(/^www\./,''))?.host);
+  const stores=list(mode==='retailers'?body.stores:[]).map(host=>FABRIC_SHOPS.find(shop=>typeof host==='string'&&shop.host.replace(/^www\./,'')===host.replace(/^www\./,''))?.host);
   if(stores.some(host=>!host))throw fail('Choose a supported fabric store.');
-  return { submissionId, request, image, history, preferences:fabricPreferences({fabric_preferences:body.preferences}),automatic:body.automatic===true,
+  return { mode,submissionId, request, image, history, preferences:fabricPreferences({fabric_preferences:body.preferences}),automatic:body.automatic===true,
     ...(storeGroups?{storeGroups:[...new Set(storeGroups)]}:{}),stores:[...new Set(stores)],piece:garmentPiece(piece),
     pieces:list(body.pieces).filter(isFabricPiece).slice(0,12).map(garmentPiece) };
 }
@@ -413,6 +416,10 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     }
     signal.throwIfAborted();
     phases.contextMs=elapsed(started);
+    if(input.mode==='worldwide'){
+      const webSignal=combineSignals([signal,AbortSignal.timeout(50000)]);
+      return searchWorldwide({input:{...input,selectedReference},model,apiKey:apiKey(),fetchImpl,emit,signal:webSignal,wait:promise=>untilAborted(promise,webSignal),now,started,contextMs:phases.contextMs});
+    }
     let firstAt = null; let products = [];
     const send = event => { if (!signal.aborted) emit(event); };
     const searchDetails={preferences:input.preferences,garments:input.pieces.map(p=>({name:p.name,fabric:p.fabric,traits:p.fabric_spec})),

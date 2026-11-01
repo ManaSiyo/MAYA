@@ -89,7 +89,8 @@ await import('./brief-workspace-ui.mjs?authority');
 // missing-photo retry, plus multiple reviewed results and pending visual review,
 // and default/changed shared P1 copy at phone and desktop widths.
 await import('./fabric-workflow-ui.mjs?authority');
-// Reexecutes the concise, explicitly opened Sourceable details and preview after real Save.
+// Reexecutes worldwide/optional-shop controls, visible P1 interpretation, partial
+// streamed cards and the active preview after real Save at six widths.
 // Includes four component-purpose captions, retained cards, actual Save and
 // default/changed shared materials and typography inline/expanded at six widths.
 await import('./fabric-search-ui.mjs?authority');

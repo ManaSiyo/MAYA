@@ -1,3 +1,24 @@
+# Active owner clarification — worldwide Fabrics
+
+This clarification supersedes older default-five-filter/local-first and mandatory
+seller/second-photo-pass notes for the MAIN Sourceable search. Main is worldwide
+image-led OpenAI web/text/image search, without retailer domain filters, keyword
+feeds or a second ranking call. Named-shop/Local buttons are separate explicit
+searches; their results never replace or constrain worldwide results.
+
+World suggestions require provider source/citation URLs. Images must come from
+page-linked web_search_call image results, never model-invented URLs. Unknown
+price/unit/composition/stock stays unknown; label suggestions, not verified seller
+inventory. Never fetch arbitrary discovered sites on the server. The optional
+retailer path retains approved fetch hosts, seller/variant facts and the visual
+review. Preserve canonical saved context, client exclusions, sealed accounts,
+private lookbooks, streaming cancellation and retained results. Partial sourced
+cards may remain visible, without pretending a failed stream completed or retrying
+automatically. New runtime module is fabric-worldwide.mjs; package it in Docker.
+Run worldwide/legacy fabric search and forced-GC gates on Node20 and local Node,
+UI/workflow, the exact release gates, then final Aesthetic Control. Do not claim
+ChatGPT's private implementation or identical live speed has been reproduced.
+
 # MAYA assistant instructions
 
 Fabric combined abort signals must retain their timeout/parent sources on Node 20.

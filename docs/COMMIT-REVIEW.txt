@@ -1,28 +1,34 @@
-Title: [Codex] Overlap ready retailer checks with slow fabric feeds
+Title: [Codex] Make worldwide image-led sourcing the main Fabrics search
 
-A ready fabric listing waited for every other retailer keyword feed before its
-seller check could start. Start each merchant's guaranteed first balanced slot
-when that merchant's feeds settle, and reuse the identical request-local check
-when final selection runs. Share collection/direct listing identities across
-concurrent web/feed checks without rewriting actual source URLs or merging
-distinct selected variants. Preserve eight unique seller checks, store diversity,
-component qualification, original photo/client words, one visual review and all
-Node20 abort/deadline behavior. Feed links stay on their own approved merchant.
+Main Fabrics was a restricted inventory pipeline: named shops, keyword feeds,
+seller checks and a second visual pass constrained and delayed every request.
+Default to one streamed image/text/image-web-search request using the existing
+configured model. Inspect original photo/canonical crop and client words, identify
+separate textiles and publish source-backed worldwide suggestions promptly.
+No merchant priority, feed work or second paid review runs on the main path.
 
-Add fixed numeric phase durations to existing authenticated search timings and
-aggregate logs. No private words, URLs, images or account/submission IDs are logged;
-overlapping phases are not additive and exclude browser/auth/cold-start delays.
-No visible UI, credentials, paid live calls, Chrome access, production changes or
-Push. Prior component-coverage commit b7afaa8 also remains pending owner Push.
+Local and named-shop buttons now start separate explicit searches with independent
+cached results. Returning to Sourceable restores the global result without another
+call. Preserve private scope, unsent drafts and streamed cards on interruption;
+mark incomplete work accurately and require explicit Refresh instead of paid retry.
 
-Validation: 57 search checks and forced-GC suites pass on Node20/24. Held-feed and
-alias fixtures fail the previous scheduling/dedup behavior; corrected selection
-uses eight seller reads, five feed merchants and one photo review. All 76 exact
-functional/release/regression/smoke commands pass. Final standalone shared
-Aesthetic Control passed last; this change adds no visible UI or new imports.
+Product URLs require provider search/citation evidence and photos require page-
+linked raw image results. Never fetch arbitrary discovered hosts server-side or
+turn model prose into seller price, stock, composition or yardage facts. Preserve
+known client exclusions, canonical saved context, Node20 deadline lifetime guards
+and all private lookbook/assignment boundaries. Package the new runtime in Docker.
+Use existing P1/H4/P3/Inner/Glass controls and active preview; update shared assets
+to v8 and keep exact no-cache delivery. No new CSS family/editor.
 
-A three-run controlled slow-feed fixture returns the same verified product with
-one seller read/one visual call: median first-useful result 732ms before, 430ms
-after. This 41% fixture reduction is not measured production speed or ChatGPT
-parity. Owner Push, exact deployed verification and real timing/quality acceptance
-remain next. Chrome, live provider tests and production credentials stay untouched.
+Validation: 57 existing optional-search plus 10 worldwide checks; Node20/24 forced-
+GC/deadline gates; focused streaming/scope/optional-group/draft UI and six-width
+actual Save/default/changed-setting checks. Exact functional/release/smoke sweep
+passed except one stale integrated source assertion, corrected and full integrated
+regression rerun passed. The final interpretation-cache restoration regression passes; standalone
+Aesthetic Control passes last after it. Default and changed saved captures were
+visually reviewed. No presentation source changed afterward.
+
+No personal Chrome, credentials, environment changes, paid live provider tests or
+Push. Real latency, result quality and identical ChatGPT behavior remain unverified.
+Prior two local fabric commits remain pending owner Push with this change. After
+Push verify exact Hosting/API/assets and perform owner-authorized real acceptance.
