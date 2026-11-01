@@ -502,7 +502,9 @@ await test('collection and direct Shopify aliases produce one ranked card withou
   },rank:async({products})=>{ranks++;assert.equal(products.length,1,'Retailer and web aliases consume one visual slot');return products;}});
   await service.search(user,{request:'crimson wool',image},e=>events.push(e));
   assert.equal(ranks,1);assert.equal(events.at(-1).products.length,1);
-  assert.ok([url,alias].includes(events.at(-1).products[0].url));assert.ok(seen.includes(alias),'Identity normalization must preserve actual fetch/source destinations');
+  assert.equal(seen.length,1,'Concurrent web/feed aliases share one actual seller read');
+  assert.ok([url,alias].includes(events.at(-1).products[0].url));assert.ok(seen.includes(events.at(-1).products[0].url),'The returned source is an actual fetched destination, never a rewritten URL');
+  await service.verify({url:alias});assert.ok(seen.includes(alias),'An explicit alias read must preserve its literal fetch/source destination');
   const answer=response({candidates:[{url:alias},{url},{url:url+'?variant=2'}]});answer.output[0].action.sources.push({url:alias},{url:url+'?variant=2'});
   assert.deepEqual(readDiscovery(answer).candidates.map(p=>p.url),[alias,url+'?variant=2'],'Aliases deduplicate while distinct selected variants remain distinct');
 });
@@ -690,6 +692,40 @@ await test('web seller checks start while keyword feeds are still pending and sh
     assert.equal(sellerCalls,1,'The same listing is fetched once across discovery and direct seeds');
     releaseSeller();await pending;assert.equal(ranks,1);assert.equal(webCalls,1);assert.equal(events.at(-1).products.length,1);assert.ok(events.at(-1).timings.firstResultsMs<=events.at(-1).timings.totalMs,'Timings reflect completed checks');
   }finally{releaseFeeds();releaseSeller();await pending;}
+});
+await test('a ready retailer starts seller checks before an unrelated slow feed settles',async()=>{
+  let releaseFeeds,releaseSeller,sellerCalls=0,rankCalls=0;
+  const feeds=new Promise(resolve=>releaseFeeds=resolve),sellerGate=new Promise(resolve=>releaseSeller=resolve);
+  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
+    if(target.includes('openai.com'))return Response.json(response({candidates:[]}));
+    if(target.includes('suggest.json')){
+      if(target.includes('moodfabrics.com'))await feeds;
+      return Response.json({resources:{results:{products:target.includes('britexfabrics.com')?[{url,title:'Crimson wool fabric'}]:[]}}});
+    }
+    sellerCalls++;await sellerGate;return new Response(seller());
+  },rank:async({products})=>{rankCalls++;return products;}});
+  const events=[],pending=service.search(user,{request:'crimson wool',image},event=>events.push(event));
+  try{
+    for(let i=0;i<30&&!sellerCalls;i++)await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(sellerCalls,1,'A slow unrelated feed must not postpone the ready listing verification');
+    assert.equal(events.some(event=>event.type==='done'),false,'No unchecked early results');
+    releaseSeller();releaseFeeds();const stats=await pending;
+    assert.equal(sellerCalls,1,'Final selection reuses the same seller check');assert.equal(rankCalls,1);assert.deepEqual(events.at(-1).products.map(p=>p.url),[url]);
+    assert.deepEqual(Object.keys(stats).sort(),['contextMs','count','firstResultsMs','retailerMs','totalMs','visualMs','webMs','webSellerMs'].sort(),'Logs contain only fixed aggregate timing names and counts');
+    for(const key of ['contextMs','webMs','retailerMs','webSellerMs','visualMs']){assert.ok(Number.isFinite(stats[key])&&stats[key]>=0);assert.equal(events.at(-1).timings[key],stats[key]);}
+  }finally{releaseSeller();releaseFeeds();await pending;}
+});
+await test('early retailer checks stay within the same eight balanced seller slots',async()=>{
+  const visits=[],events=[];
+  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
+    if(target.includes('openai.com'))return Response.json(response({candidates:[]}));
+    if(target.includes('suggest.json')){const u=new URL(target),q=u.searchParams.get('q');return Response.json({resources:{results:{products:Array.from({length:3},(_,i)=>({url:u.hostname==='britexfabrics.com'&&i===0?(q.includes('twill')?'/collections/cloth/products/shared-red-wool':'/products/shared-red-wool'):'/products/'+encodeURIComponent(q)+'-'+i,title:'Crimson wool fabric'}))}}});}
+    visits.push(target);return new Response(seller({url:target}));
+  },rank:async({products})=>products});
+  await service.search(user,{request:'red wool twill',piece:{fabric:'Red wool twill'},image},event=>events.push(event));
+  assert.equal(visits.length,8,'Early work cannot add seller requests beyond the selected eight');
+  assert.equal(new Set(visits).size,8);assert.equal(events.at(-1).products.length,8);
+  assert.equal(new Set(events.at(-1).products.map(p=>new URL(p.url).hostname)).size,5,'All five eligible feed merchants retain their slots');
 });
 await test('optional variant metadata has a short deadline without dropping valid seller listings',async()=>{
   const nativeTimeout=AbortSignal.timeout,keepAlive=setInterval(()=>{},1000);let variantSignal;

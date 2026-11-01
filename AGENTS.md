@@ -709,3 +709,11 @@ Node20 abort lifetime guards and private result continuity. Purpose/missing copy
 uses existing P3 captions and P1 status, represented by the active fabric preview.
 Run sourcing/search/GC on Node20 and local Node, fabric UI/workflow, existing release
 gates and final aesthetic-authority. Synthetic coverage is not live relevance.
+
+October 31 fabric latency: ready merchants may start only their guaranteed first
+balanced seller check before unrelated feeds settle; reuse that check at final
+selection and keep eight unique slots. Fixed context/web/retailer/web-seller/visual
+phase timings contain no private context and overlap; never sum them or call them
+browser/cold-start/live-provider latency. Run the held-feed/bounded-slot fixtures
+and Node20/local forced-GC gates; backend-only work adds no visible UI and still
+finishes with shared Aesthetic Control.

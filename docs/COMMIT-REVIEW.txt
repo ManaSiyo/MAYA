@@ -1,26 +1,28 @@
-Title: [Codex] Source separate textiles for saved looks
+Title: [Codex] Overlap ready retailer checks with slow fabric feeds
 
-A saved multicolor look could return only base cloth because discovery,
-qualification and ranking had no separate target for contrast panels, inserts,
-ribbing or textile trim. Add a bounded garment-scoped component plan to the same
-discovery call, retain source-backed seller checks and canonical body constraints,
-and compare secondary candidates against their stated component in the one visual
-review. Reject invalid/stale/foreign IDs, keep exclusions strict, balance eight
-slots by textile purpose and report components not confirmed.
+A ready fabric listing waited for every other retailer keyword feed before its
+seller check could start. Start each merchant's guaranteed first balanced slot
+when that merchant's feeds settle, and reuse the identical request-local check
+when final selection runs. Share collection/direct listing identities across
+concurrent web/feed checks without rewriting actual source URLs or merging
+distinct selected variants. Preserve eight unique seller checks, store diversity,
+component qualification, original photo/client words, one visual review and all
+Node20 abort/deadline behavior. Feed links stay on their own approved merchant.
 
-Use the existing P3 card caption for purpose and existing status/Search details
-for partial coverage; update the active preview, stable-card signature and v7
-shared asset references without a new style authority. Preserve project isolation,
-confirmed result continuity, seller-only facts, approved merchants, no hardware,
-swatch guards and Node20 abort/GC behavior. No owner Chrome, live provider calls,
-private credential access, production configuration changes or Push.
+Add fixed numeric phase durations to existing authenticated search timings and
+aggregate logs. No private words, URLs, images or account/submission IDs are logged;
+overlapping phases are not additive and exclude browser/auth/cold-start delays.
+No visible UI, credentials, paid live calls, Chrome access, production changes or
+Push. Prior component-coverage commit b7afaa8 also remains pending owner Push.
 
-Validation: 18 sourcing checks and 55 search checks, with the forced-GC deadline
-suite on release Node20.20.2 and local Node24. All exact functional release gates,
-full integrated regression and smoke pass after updating stale caption/v6 source
-contracts. Final standalone Aesthetic Control passed last, including actual Save,
-four component-purpose cards, partial-coverage status, focus/error and changed
-shared settings inline/expanded at six widths. Desktop/phone captures inspected.
-Actual production inventory relevance, provider latency and ChatGPT-equivalent
-coverage remain unverified. Owner Push, exact deployed asset/API checks and real
-look acceptance remain next; live tests are still stopped.
+Validation: 57 search checks and forced-GC suites pass on Node20/24. Held-feed and
+alias fixtures fail the previous scheduling/dedup behavior; corrected selection
+uses eight seller reads, five feed merchants and one photo review. All 76 exact
+functional/release/regression/smoke commands pass. Final standalone shared
+Aesthetic Control passed last; this change adds no visible UI or new imports.
+
+A three-run controlled slow-feed fixture returns the same verified product with
+one seller read/one visual call: median first-useful result 732ms before, 430ms
+after. This 41% fixture reduction is not measured production speed or ChatGPT
+parity. Owner Push, exact deployed verification and real timing/quality acceptance
+remain next. Chrome, live provider tests and production credentials stay untouched.

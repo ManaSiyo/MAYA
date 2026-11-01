@@ -406,3 +406,33 @@ reads, rather than the earlier hidden preliminary-candidate event. Fake gated
 transports prove overlap/deduplication and optional deadlines; a 4x CPU browser
 fixture proves photo reuse and stable nodes. They do not prove live seller matches
 or paid-provider latency. Live acceptance remains stopped until requested again.
+
+
+## October 31 ready-retailer overlap
+
+A merchant's first selected candidate starts verification when its own feeds
+settle instead of waiting for every other merchant's feed. The first slot is
+already guaranteed by the existing round-robin policy, so the final selection
+reuses that exact request-local check. A merchant-count guard preserves the
+eight-slot bound if policy grows. Returned feed links must belong to that merchant.
+Five eligible feed merchants, eight unique seller reads, source/variant guards,
+qualified component matching and the one photo review remain unchanged.
+
+The deferred unrelated-feed regression fails before this repair. A controlled
+three-run Node20 A/B with a 300ms unrelated feed, 400ms seller and 20ms photo pass
+reduced median first-useful-result time from 732ms to 430ms. Both versions return
+the same verified listing with one seller read and one visual call. This 41%
+fixture reduction is not a live speed measurement or a ChatGPT parity claim.
+
+The existing authenticated NDJSON timings and aggregate server diagnostics now
+include contextMs, webMs, retailerMs, webSellerMs and visualMs, alongside
+firstResultsMs and totalMs. They are fixed numeric fields only, with no client
+words, images, URLs or identities. Phases overlap; do not sum them. Service timing
+excludes browser preparation/upload, auth and Cloud Run cold start. No new UI,
+endpoint, automatic paid retry or production configuration setting is introduced.
+
+Concurrent web/feed collection and direct Shopify aliases now share the same
+request-local listing identity check. The returned product keeps its actual fetched
+source URL; explicit alias reads keep their literal path and selected variants
+remain separate. The bounded-slot fixture includes alias duplicates so early work
+cannot turn eight planned reads into nine. Nothing private enters shared caches.

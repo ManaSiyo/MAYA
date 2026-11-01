@@ -2729,6 +2729,7 @@ ok('Saved dominant fabric color rejects opposite seller colors while explicit la
 ok('Bounded fabric seeds retain reptile/long-pile texture and discard known notions before seller verification',!process.exitCode);
 ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
+ok('Ready feed listings verify before slow unrelated feeds without extra seller or paid calls; numeric phases remain private-content-free',!process.exitCode);
 ok('A saved look sources scoped textile components, preserves constraints and shares one bounded visual review',!process.exitCode);
 ok('Saved knit/tricot and satin-sheen looks preserve seller evidence and explicit constraints through bounded visual review',!process.exitCode);
 await import('./fabric-search-gc.mjs');

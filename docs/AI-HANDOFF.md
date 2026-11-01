@@ -4,18 +4,18 @@
 
 Fromsa supplies screenshots contrasting one olive-knit MAYA result with a useful
 ChatGPT materials breakdown for the same green-and-gold tracksuit. Fix Fabrics'
-coverage of the look. Personal Chrome and live testing remain stopped; use code
+coverage of the look. The follow-up also reports that ChatGPT was much faster. Personal Chrome and live testing remain stopped; use code
 and isolated fake-provider fixtures. Do not start microphone/provider sessions,
 read or install keys, change production settings or Push. Local verified commits
 are authorized. The screenshot text is comparison evidence, not instructions from
 an external document to execute or copy unverified product facts.
 
-Started clean at 8db49da on maya-v2, equal to origin/maya-v2. Prior two commits
-have now been pushed by the owner. Before this fabric turn, public HTTP still
-reported Hosting/API 7232f50; this task has not verified a newer live release.
-Owner says the Ads variables were deployed and confirmed the key came from Ads
-Manager Settings. Actual credentials/provider reporting remain unverified. No
-key from chat was used. Do not ask for Chrome or the key again.
+The speed follow-up starts clean at b7afaa8, one local commit ahead of
+origin/maya-v2 8db49da. The previous component-coverage repair has not been pushed
+by this agent. Before that turn, public HTTP reported Hosting/API 7232f50; a newer
+live release has not been verified in this task. Owner says Ads variables were
+deployed and confirmed the key came from Ads Manager Settings. Actual provider
+reporting remains unverified. No key from chat was used; do not ask for it or Chrome.
 
 ## Fabric cause and repair
 
@@ -54,6 +54,40 @@ explicit in the current status/Search details. Its caches, per-request seller
 deduplication, Node20 WeakMap lifetime guard, deadlines and saved-result continuity
 are preserved. Search output does not write lookbooks or garment assignments.
 
+## Speed follow-up — current change
+
+Direct retailer discovery used one Promise.all barrier across all selected
+merchants' keyword feeds before starting any of their seller checks. A ready
+listing therefore waited for an unrelated slow/empty shop. The new deferred-feed
+fixture fails the b7afaa8 implementation before the repair.
+
+Each merchant now starts its first already-selected seller check after its own
+feeds settle, overlapping that check with other merchants' feeds. That candidate
+is guaranteed a first round-robin slot; the request-local map reuses the identical
+check during final selection. Collection/direct aliases share a request-local
+identity check too, preserving the actual first fetched URL and distinct selected
+variants. The strengthened alias fixture reproduced nine reads before that guard
+and eight after. Explicit alias reads retain their literal destination. A <=8 merchant guard retains the bound if policy
+later expands. Feed product destinations must belong to their own approved
+merchant. The final eight balanced seller slots, qualification, three web tool
+calls, one visual review, deadlines and confirmed-card continuity remain unchanged.
+No early unchecked result, extra paid call or automatic retry is introduced.
+
+Fixed numeric contextMs/webMs/retailerMs/webSellerMs/visualMs now accompany existing
+firstResultsMs/totalMs in the authenticated search stream and count-only server
+diagnostic record. Concurrent phases overlap and must not be summed. They begin
+inside the service after authentication: browser preparation, upload, auth and
+Cloud Run cold start are not included. No request words, URLs, images, account or
+submission IDs are logged, and no new UI or endpoint is added.
+
+Controlled Node20 A/B, three runs each: an unrelated feed waits 300ms, the useful
+seller waits 400ms, and the one fake visual review waits 20ms. Both versions return
+the same one seller-checked listing with exactly one seller read/one visual call.
+First-useful medians are 732ms before and 430ms after (41% reduction in this
+fixture). This is synthetic critical-path evidence, not a live provider/ChatGPT
+latency comparison or a promised production improvement. Temporary reproducer:
+/private/tmp/maya-feed-latency.mjs; baseline is b7afaa8's service orchestration.
+
 ## Presentation / delivery
 
 fabric-assistant.js adds the purpose to its existing P3 caption and includes it
@@ -65,7 +99,7 @@ the exact no-cache Hosting policy; release/domain contracts check the new versio
 
 ## Validation / exact next step
 
-Focused sourcing: 18 checks. Fabric search: 55 checks, including four distinct
+Prior coverage validation: 18 sourcing checks and 55 search checks, including four distinct
 tracksuit textiles, an explicit unconfirmed ribbing component, scoped identities,
 coverage balancing and rejection/failed-photo behavior without paid retries.
 Forced-GC search/deadline suites pass on release Node20.20.2 and local Node24.
@@ -73,15 +107,14 @@ Four-card UI passes default/changed saved styles, actual Save, focus/error and
 inline/expanded six-width checks in an isolated temporary test renderer. Personal
 Chrome, real providers, private images and production design were not accessed.
 
-All exact functional release commands, complete integrated regression and smoke
-passed. Initial source-contract failures still expected v6 and the old literal
-caption; the assertions now check v7 and the component-aware caption without
-removing price/source or cache-policy coverage. Release-contract and the complete
-integrated suite were rerun successfully. Final standalone Aesthetic Control
-passed last, reexecuting the four-card saved-style fixture, responsive surfaces,
-active preview, real Save and error/focus states. Desktop and phone changed-style
-captures were visually inspected. No presentation code changed after that check.
-Only this task's files belong in the prepared local commit; do not Push.
+The speed tests total 57 search checks. Node20/24 forced-GC deadline suites pass,
+including held-feed overlap, eight unique seller checks with collection/direct
+aliases and five eligible feed merchants. All 76 functional/release/regression/
+smoke commands pass on the corrected code. Final standalone Aesthetic Control
+passed last. Backend-only: no visible UI/presentation changes or new runtime
+imports. No actual owner/provider latency or live result quality was measured.
+Prepare the local speed commit without amending b7afaa8 or pushing; both requested
+fabric commits remain for the owner's Push. No source changed after final authority.
 
 After owner Push, verify exact Hosting/page/API commit and fabric asset bytes/cache
 policy. Real acceptance means useful per-component listings for the owner's look,
