@@ -32,29 +32,30 @@ Respond as newline-delimited JSON, one complete object per line, without markdow
 
 export async function searchWorldwide({input,model,apiKey,fetchImpl,emit,signal,wait,now,started,contextMs=0}){
   if(!apiKey)throw fail('Worldwide fabric search is unavailable. Check the configured search service.');
-  const sources=new Set(),images=new Map(),pending=[],products=new Map(),records=new Set();
+  const sources=new Set(),images=new Map(),excludedURLs=new Set(),pending=[],products=new Map(),parentsByURL=new Map(),records=new Set();
   let observation='',query='',firstAt=null,completed=false,modelBuffer='',wireBuffer='',bytes=0;
   const elapsed=()=>Math.max(0,now()-started);
   const send=event=>{if(!signal.aborted)emit(event);};
   const details=()=>({query:query||'Worldwide fabrics for this look',observation,stage:completed?'Worldwide suggestions':'Searching the worldwide web'});
-  function publish(){
-    let changed=false;
+  function publish(removedUrls=[],updated=false){
+    let changed=updated||removedUrls.length>0;
     for(const candidate of pending){
-      const url=sourceURL(candidate.url);if(!url||!sources.has(url)||products.has(url)||products.size>=12)continue;
+      const url=sourceURL(candidate.url);if(!url||excludedURLs.has(url)||!sources.has(url)||products.has(url)||products.size>=12)continue;
       const title=text(candidate.title,180),material=text(candidate.material,80),reason=text(candidate.reason,220);
       if(!isFabricProduct({title,description:reason})||/\b(?:swatches?|samples?)\b/i.test(title+' '+new URL(url).pathname))continue;
       const ids=[...new Set(list(candidate.garmentIds))],pieces=list(input.pieces);
       if(ids.some(id=>typeof id!=='string'||!id||!pieces.some(piece=>piece.id===id)))continue;
       const parents=pieces.filter(piece=>ids.includes(piece.id));
       const photo=images.get(url);
-      if(fabricExcludedByWords({title,description:photo?.caption||''},input,parents))continue;
+      if(fabricExcludedByWords({title,description:photo?.caption||''},input,parents)){excludedURLs.add(url);continue;}
+      parentsByURL.set(url,parents);
       products.set(url,{url,title,description:photo?.caption||'',reason,materialLabel:material,
         garment:text(parents.map(piece=>piece.name).join(' & '),80),...(parents.length===1?{garmentId:parents[0].id}:{}),
         image:photo?.image||'',merchant:new URL(url).hostname.replace(/^www\./,''),
         evidence:'web_suggestion',price:'',unit:'',currency:'',composition:'',availability:'unknown'});
       if(firstAt===null)firstAt=elapsed();changed=true;
     }
-    if(changed)send({type:'products',preliminary:false,incremental:true,products:[...products.values()]});
+    if(changed)send({type:'products',preliminary:false,incremental:true,products:[...products.values()],...(removedUrls.length?{removedUrls}:{})});
   }
   function evidence(item){
     if(!item||typeof item!=='object')return;
@@ -67,8 +68,16 @@ export async function searchWorldwide({input,model,apiKey,fetchImpl,emit,signal,
     for(const part of list(item.content))for(const annotation of list(part.annotations)){const url=sourceURL(annotation.url);if(url)sources.add(url);}
     // Evidence may arrive after the candidate text. Update only source-backed
     // photographs; an arbitrary model-supplied image is never used.
-    let changed=false;for(const [url,product]of products){const photo=images.get(url);if(photo&&!product.image){product.image=photo.image;product.description=photo.caption;changed=true;}}
-    publish();if(changed)send({type:'products',preliminary:false,incremental:true,products:[...products.values()]});
+    let changed=false;const removedUrls=[];
+    for(const [url,product]of products){
+      const photo=images.get(url);if(!photo)continue;
+      // Later evidence overrides retention when it reveals a known client exclusion.
+      if(fabricExcludedByWords({title:product.title,description:photo.caption},input,parentsByURL.get(url)||[])){
+        excludedURLs.add(url);products.delete(url);parentsByURL.delete(url);removedUrls.push(url);continue;
+      }
+      if(!product.image){product.image=photo.image;product.description=photo.caption;changed=true;}
+    }
+    publish(removedUrls,changed);
   }
   function record(line){
     const raw=line.trim();if(!raw||raw.startsWith('```')||records.has(raw))return;

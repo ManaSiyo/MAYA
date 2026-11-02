@@ -1,34 +1,27 @@
-Title: [Codex] Make worldwide image-led sourcing the main Fabrics search
+Title: [Codex] Retract fabric suggestions contradicted by late evidence
 
-Main Fabrics was a restricted inventory pipeline: named shops, keyword feeds,
-seller checks and a second visual pass constrained and delayed every request.
-Default to one streamed image/text/image-web-search request using the existing
-configured model. Inspect original photo/canonical crop and client words, identify
-separate textiles and publish source-backed worldwide suggestions promptly.
-No merchant priority, feed work or second paid review runs on the main path.
+A worldwide fabric card could appear before its source image caption arrived.
+If later evidence identified a client-excluded material, the card stayed visible;
+retention on stream failure and a prior private garment cache could restore it.
+Requalify late captions against each product's canonical garment context and emit
+explicit URL retractions. Remove them from published/retained cards and evict the
+prior cache before preserving remaining results. Keep request-local exclusion
+tombstones when final output replays earlier source items. Keep other loaded results intact.
 
-Local and named-shop buttons now start separate explicit searches with independent
-cached results. Returning to Sourceable restores the global result without another
-call. Preserve private scope, unsent drafts and streamed cards on interruption;
-mark incomplete work accurately and require explicit Refresh instead of paid retry.
+New server and UI fixtures fail the previous behavior, then cover retraction,
+subsequent stream failure and garment-cache round trips. No extra model/seller
+call, automatic retry, private catalog caching or credential/environment change.
+Brief/Operation Room use shared assets v9 with exact no-cache rules. Existing
+P1/H4/P3/Inner/Glass authority remains; no new visual setting or CSS family.
 
-Product URLs require provider search/citation evidence and photos require page-
-linked raw image results. Never fetch arbitrary discovered hosts server-side or
-turn model prose into seller price, stock, composition or yardage facts. Preserve
-known client exclusions, canonical saved context, Node20 deadline lifetime guards
-and all private lookbook/assignment boundaries. Package the new runtime in Docker.
-Use existing P1/H4/P3/Inner/Glass controls and active preview; update shared assets
-to v8 and keep exact no-cache delivery. No new CSS family/editor.
+Public HTTP verification proves the main worldwide rewrite 8c2586a is deployed:
+release/App/Admin/API stamps match; Brief/Operations and v8 asset bytes match the
+checkout with no-cache. It does not test paid provider output or ChatGPT parity.
+No personal Chrome or live search was used. This correction needs a later owner
+Push and exact deployed verification; do not Push automatically.
 
-Validation: 57 existing optional-search plus 10 worldwide checks; Node20/24 forced-
-GC/deadline gates; focused streaming/scope/optional-group/draft UI and six-width
-actual Save/default/changed-setting checks. Exact functional/release/smoke sweep
-passed except one stale integrated source assertion, corrected and full integrated
-regression rerun passed. The final interpretation-cache restoration regression passes; standalone
-Aesthetic Control passes last after it. Default and changed saved captures were
-visually reviewed. No presentation source changed afterward.
-
-No personal Chrome, credentials, environment changes, paid live provider tests or
-Push. Real latency, result quality and identical ChatGPT behavior remain unverified.
-Prior two local fabric commits remain pending owner Push with this change. After
-Push verify exact Hosting/API/assets and perform owner-authorized real acceptance.
+Validation: 11 worldwide checks and focused removal/failure/private-cache/replayed-
+evidence fixtures pass. All 76 exact functional/release/regression/smoke commands
+pass; Node20/24 forced-GC/deadline gates pass. Final standalone shared Aesthetic
+Control passes last, with default/changed saved styles and visual inspection at
+responsive widths. No runtime source changed afterward.

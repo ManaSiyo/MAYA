@@ -2742,6 +2742,7 @@ ok('Fabric policy, provider imports, routes, styles and served assets stay separ
 // Fabric geometry resolves the current card atomically across independent lookbook repaints.
 await import('./fabric-search-ui.mjs');
 await import('./fabric-workflow-ui.mjs');
+ok('Late source contradictions remove retained and cached fabric cards even after interrupted searches',!process.exitCode);
 ok('Fabrics distinguishes preparation, interrupted searches and true empty results; terminal streams finish without EOF',true);
 await import('./operation-save-failures.mjs');
 ok('Operation storage failures retain reviewed drafts and current measurement prompts within account/submission/garment scope',
@@ -2774,7 +2775,7 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=8'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=9'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));

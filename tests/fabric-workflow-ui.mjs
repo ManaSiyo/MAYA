@@ -383,6 +383,22 @@ try{
  assert.match(await page.locator('.fa-status').textContent(),/Search interrupted/,'Partial results do not claim completed inventory');
  await page.evaluate(()=>MayaFabricAssistant.close());await open({piece:pieces[0]});await card(globalProduct).waitFor();
  assert.equal(searches.length,beforeSeparate+1,'Reopening partial worldwide results cannot cause an automatic paid retry');
+ // A later source contradiction overrides retention, even if the stream then fails.
+ await page.evaluate(product=>{
+  const nativeFetch=window.fetch;
+  window.fetch=(url,options)=>{if(!String(url).endsWith('/fabrics/search'))return nativeFetch(url,options);window.fetch=nativeFetch;
+   const records=[{type:'products',incremental:true,preliminary:false,products:[],removedUrls:[product.url]},{type:'error',message:'Fixture late source failure.'}];
+   return Promise.resolve(new Response(records.map(record=>JSON.stringify(record)).join('\n')+'\n',{headers:{'Content-Type':'application/x-ndjson'}}));
+  };
+ },globalProduct);
+ await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
+ await page.getByText('Fixture late source failure.',{exact:true}).waitFor();
+ assert.equal(await card(globalProduct).count(),0,'Retracted material cannot return from retained cards after stream failure');
+ await page.evaluate(async({reference,pieces})=>{
+  await MayaFabricAssistant.prepare({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[1],automatic:true});
+  await MayaFabricAssistant.prepare({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true});
+ },{reference,pieces});
+ assert.equal(await card(globalProduct).count(),0,'A removed material cannot be restored from the private garment cache');
  assert.deepEqual(errors,[]);
  console.log('Fabric workflow: bounded metadata ('+bytes+' bytes), independent inventory, queued/CAS historical-favorite removals, retry, per-garment material/prompt/reload, renewal and submission cancellation passed. Synthetic records only.');
 }finally{for(const route of catalogRoutes)await route.abort().catch(()=>{});releaseAck?.();releaseBook?.();await browser.close();}

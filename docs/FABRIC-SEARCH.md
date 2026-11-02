@@ -57,7 +57,13 @@ SSE input is capped at 2 MiB, model text at 100k characters, pending candidate
 records at 24 and displayed suggestions at 12. Terminal completion releases the
 reader without waiting for EOF. Failed/incomplete/early-ended streams stay failures;
 already source-backed cards can remain visible and cached, without marking the
-search complete or automatically retrying. Provisional optional-retailer results
+search complete or automatically retrying. If later source captions reveal a known
+client exclusion, an incremental removedUrls list retracts those products. The
+client removes them from current and retained cards and evicts the prior garment
+cache before remembering any remaining results. A later error must not resurrect
+them. Request-local exclusions also survive replayed earlier source items in the
+provider completion. This exception preserves useful unknown suggestions while known conflicting
+materials cannot hide behind retention. Provisional optional-retailer results
 are still hidden until their old checks finish.
 
 Worldwide provider work has a 50-second deadline inside the existing 55-second
@@ -114,7 +120,7 @@ use H4, purpose/source captions P3, cards Inner and controls Glass. Active Aesth
 Control previews the same P1 interpretation and existing card/pill families. No new
 style family/editor was introduced. Default/saved styling, actual Save, six widths,
 focus/error and inline/expanded behavior remain mandatory checks. JS/CSS references
-are v8 under their exact no-cache Hosting rules. New runtime module ships in Docker.
+are v9 under their exact no-cache Hosting rules. New runtime module ships in Docker.
 
 Private legacy books remain at
 private/fabrics/<encoded authenticated Google sub>/<submissionId>/lookbook.json.

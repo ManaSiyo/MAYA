@@ -325,7 +325,7 @@
     const stamp=epoch, sequence=++searchSeq; controller=new AbortController(); const active=controller;
     const signal=AbortSignal.any([active.signal,AbortSignal.timeout(60000)]);
     const valid=()=>current(stamp)&&sequence===searchSeq;
-    const retained=(context.automatic||filterOnly||request===submittedRequest)?products:[];
+    let retained=(context.automatic||filterOnly||request===submittedRequest)?products:[];
     if(!retained.length)resultCache.delete(resultKey());
     busy=true;searchState='searching';completedStatus=''; els.send.disabled=true; els.stop.hidden=false; view='search'; els.saveStatus.textContent='';
     products=retained;if(!retained.length){searchDetails=null;els.details.set(null);}paint();status(retained.length?'Checking for more fabrics…':'Searching fabric shops…');
@@ -347,7 +347,12 @@
         if(event.searchDetails){searchDetails=event.searchDetails;els.details.set(searchDetails);}
         if(event.type==='status')status(event.message);
         if(event.type==='interpretation'){els.observation.textContent=event.observation||'';paint();}
-        if(event.type==='products'&&event.incremental&&!event.preliminary){published=Array.isArray(event.products)?event.products:[];products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-48);paint();rememberResults();}
+        if(event.type==='products'&&event.incremental&&!event.preliminary){
+          const removed=new Set(Array.isArray(event.removedUrls)?event.removedUrls:[]);
+          if(removed.size){retained=retained.filter(p=>!removed.has(p.url));resultCache.delete(resultKey());}
+          published=(Array.isArray(event.products)?event.products:[]).filter(p=>!removed.has(p.url));
+          products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-48);paint();rememberResults();
+        }
         if(event.type==='products' && event.preliminary)status('Retailer candidates. Photo comparison pending…');
         if(event.type==='done'){
           const confirmed=Array.isArray(event.products)?event.products:[];

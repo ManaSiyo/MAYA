@@ -14,7 +14,10 @@ retailer path retains approved fetch hosts, seller/variant facts and the visual
 review. Preserve canonical saved context, client exclusions, sealed accounts,
 private lookbooks, streaming cancellation and retained results. Partial sourced
 cards may remain visible, without pretending a failed stream completed or retrying
-automatically. New runtime module is fabric-worldwide.mjs; package it in Docker.
+automatically. Later source evidence that reveals a known client exclusion must
+retract that URL from streamed results, retained cards and the private garment
+cache, including after a subsequent stream failure. New runtime module is
+fabric-worldwide.mjs; package it in Docker.
 Run worldwide/legacy fabric search and forced-GC gates on Node20 and local Node,
 UI/workflow, the exact release gates, then final Aesthetic Control. Do not claim
 ChatGPT's private implementation or identical live speed has been reproduced.

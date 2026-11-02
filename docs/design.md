@@ -1,3 +1,9 @@
+November 1 verification: existing H4/P3/Inner fabric cards are removed when later
+source evidence reveals a known client exclusion. Healthy loaded results still
+remain through refresh/failure; explicitly retracted results cannot return from
+retention or the private garment cache. No new role, material, CSS family or
+editor is introduced. Shared authority and six-width tests remain the final gate.
+
 <!-- Active owner clarification: Sourceable is worldwide by default. Local/Mood/
 Swatchon/Amazon/Others are separate explicit searches, not selected default filters.
 This supersedes older filter behavior below. P1 interpretation is visible for main

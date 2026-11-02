@@ -88,6 +88,7 @@ await import('./brief-workspace-ui.mjs?authority');
 // Includes retained image nodes, prepared-photo/empty-context reuse and explicit
 // missing-photo retry, plus multiple reviewed results and pending visual review,
 // and default/changed shared P1 copy at phone and desktop widths.
+// Re-execute late-source retractions across retained cards and private garment caches.
 await import('./fabric-workflow-ui.mjs?authority');
 // Reexecutes worldwide/optional-shop controls, visible P1 interpretation, partial
 // streamed cards and the active preview after real Save at six widths.

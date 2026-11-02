@@ -57,6 +57,23 @@ await test('known client exclusions remain strict without imposing saved-body gu
   const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([interpretation,{...candidate,title:'Green polyester tricot fabric'}])]})});
   await service.search(user,{request:'green fabric',preferences:'No polyester',image},event=>events.push(event));assert.deepEqual(events.at(-1).products,[]);
 });
+await test('late source evidence retracts an initially unknown client-excluded material',async()=>{
+  let controller;const events=[];
+  const stream=new ReadableStream({start(value){controller=value;}});
+  const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(stream,{headers:{'Content-Type':'text/event-stream'}})});
+  const task=service.search(user,{request:'green knit',preferences:'No polyester',image},event=>events.push(event));
+  const push=event=>controller.enqueue(new TextEncoder().encode('data: '+JSON.stringify(event)+'\n\n'));
+  push({type:'response.output_item.done',item:{...evidence,results:[]}});
+  push({type:'response.output_text.delta',delta:JSON.stringify(candidate)+'\n'});
+  for(let i=0;i<50&&!events.some(event=>event.incremental);i++)await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(events.find(event=>event.incremental)?.products[0]?.url,url,'Unknown fiber may initially be a qualified suggestion');
+  push({type:'response.output_item.done',item:{...evidence,results:[{...evidence.results[0],caption:'Green polyester tricot fabric'}]}});
+  push({type:'response.completed',response:{status:'completed',output:[evidence,content([candidate])]}});
+  await task;
+  const removal=events.find(event=>event.removedUrls?.includes(url));
+  assert.ok(removal,'Later known client contradiction must retract the existing card');
+  assert.deepEqual(removal.products,[]);assert.deepEqual(events.at(-1).products,[]);
+});
 await test('SSE handles CRLF and Unicode split across every byte without inventing a photo',async()=>{
   const product={...candidate,title:'Green crêpe fabric'};
   const events=[{type:'response.output_item.done',item:evidence},{type:'response.output_text.delta',delta:JSON.stringify(interpretation)+'\n'+JSON.stringify(product)+'\n'},{type:'response.completed',response:{status:'completed',output:[]}}];
