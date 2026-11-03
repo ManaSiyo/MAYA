@@ -670,3 +670,23 @@ font changes and unequal Glass X/Y padding. Ordinary text/icon capsules retain
 their content-plus-padding geometry. Shape changes introduce no new material or
 independent editor. Phone drawer headers reserve hamburger space, wrap their
 tabs and keep the H2 title on its own row without an overlapping main brand.
+
+
+## November 3 — fabric photographs and two-row links
+
+The shared Brief/Operations Fabrics view fills available width and height with
+real source fabric photos, cropped with object-fit:cover. Auto-fit collapses empty
+columns, including when only three results are available. Photo cards precede compact missing-photo links even when results are retained
+across Refresh. Each source link has exactly two visible rows: H4 name and P3 merchant/known-unit price. Full garment,
+material and qualified reason remain accessible in the link name. P1 interpretation
+is one clipped row; its full text is in explicit Search details. A genuinely
+unavailable photo leaves a compact source link, never a large blank swatch.
+
+The bounded shared results scroll area keeps the first desktop photo row and its
+two text rows visible. Healthy photos remain mounted during Refresh and appended
+evidence; explicit later wrong-color evidence revokes the photograph. Source-backed
+image alternatives are bounded to four attempts in the same img; no generated
+picture, independent proxy or automatic search retry is introduced. The existing
+sole active Fabric preview demonstrates the same H4/P3/Inner/Glass geometry and
+saved settings. Default/materially changed saved styles, actual Save, six widths,
+sparse/populated/empty/error and inline/expanded states remain required.

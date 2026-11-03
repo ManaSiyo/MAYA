@@ -94,6 +94,7 @@ steps:
         node tests/admin-state-races.mjs
         node tests/message-races.mjs
         node tests/fabric-search-ui.mjs
+        node tests/fabric-images-ui.mjs
         node tests/fabric-workflow-ui.mjs
         node tests/operation-save-failures.mjs
         node tests/operation-controls.mjs

@@ -1,27 +1,25 @@
-Title: [Codex] Keep Admin notifications private and align shared controls
+Title: [Codex] Prioritize color and fabric photos in sourcing
 
-Operational connection/setup notes were exposed beneath dashboard data and in
-the ticker. Feature requests used a different typography role from its peers,
-and the shared pill runtime overrode D/W/M circle dimensions.
+Fabrics dropped source photos behind short written recommendations, discarded
+photos after one failed thumbnail, and wasted space on empty grid tracks and
+multiline captions. Search dominant-color apparel fabric before detailed motifs;
+retain qualified source-linked photo alternatives without inventing garment IDs
+or seller facts. Preserve canonical context, explicit exclusions, source/variant
+identity and later-evidence retractions.
 
-Move fixed operational notifications into an account-private retained drawer
-history, with Current status and diagnostic Logs collapsed beside Messages.
-Use verified Admin subjects, fixed source/code states, a 200-entry bound,
-generation CAS, no-store routes and session-safe UI updates. Keep reviewed
-action feedback and active voice controls in context. Only fresh provider reads
-can record recovery; local presentation rerenders cannot clear an outage.
+Try at most four source-backed image URLs, retain healthy photos and revoke
+photographs later identified as the wrong color. Exhausted photos stay compact
+source links, after photo cards even through retained-result Refresh. Fill the
+shared responsive grid with photos and exactly two H4/P3
+text rows; keep full interpretation in Search details. The sole active Fabric
+preview and saved Inner/Glass/typography settings remain authoritative.
 
-Give all seven main headings H3 and add an opt-in shared circular Glass variant
-plus active Pills preview. Preserve saved material/P3 and ordinary capsules.
-Repair phone drawer header paint and crowded short-screen message scrolling.
-Regenerate typography usage and retain strict account/send/approval safeguards.
+Validation: all 79 required functional/release/regression/smoke command results
+pass. Node20/24 source/image/late-color/forced-GC regressions pass. Negative
+fixtures reproduce the shortlist, missing-image and inline-caption failures.
+Default/saved styles, real Save and six responsive widths are checked; standalone
+Aesthetic Control is the final pre-commit gate. Synthetic providers only.
 
-Validation: clean pinned npm ci; all 78 functional/release/regression/smoke
-commands pass on Node20, including integrated Aesthetic Control. New storage/UI
-and Ads checks also pass on Node24. The standalone Aesthetic Control command is
-the final pre-commit gate, with default/saved computed styles, real Save,
-visual review and six responsive widths. Synthetic providers only.
-
-Local work only. No personal Chrome, production credential/environment changes,
-campaign mutations or live provider tests. Owner retains Push and deployed
-verification.
+Local work only: no paid provider requests, personal Chrome, secret/environment
+access or deployment. Owner Push and a same-look production quality/timing check
+remain. No Google/ChatGPT parity or current seller-stock claim.

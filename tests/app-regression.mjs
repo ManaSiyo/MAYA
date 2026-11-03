@@ -1175,13 +1175,13 @@ ok('the inline fabric results fit a usable shared viewport without stretching th
   BACKEND_SOURCE.includes('grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr)') &&
   BACKEND_SOURCE.includes('width:100%; height:70dvh; max-height:70dvh; min-width:0; min-height:0;') &&
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid') &&
-  readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('.fa-body{flex:1;min-height:0;overflow-y:auto;') &&
-  readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr))'));
+  readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('flex:1;min-height:0;overflow-y:auto;') &&
+  readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))'));
 ok('Sourceable carries the original reference and client words without tinting seller photos',
   BACKEND_SOURCE.includes('referenceImage:saved.referenceImage') &&
   BACKEND_SOURCE.includes("preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences)") &&
   FABRIC_UI_SOURCE.includes('context.referenceImage=reference; image=originalImage=reference') &&
-  FABRIC_UI_SOURCE.includes('img.src=p.image') && !FABRIC_UI_SOURCE.includes('_tintSwatch'));
+  FABRIC_UI_SOURCE.includes('mountProductPhoto(item,link,p)') && FABRIC_UI_SOURCE.includes('img.src=source') && !FABRIC_UI_SOURCE.includes('_tintSwatch'));
 // ── v13.49: the model that sees the picture names the color ────────────────
 ok('Dissection color metadata reaches shared sourcing as a qualified visual observation',
   BACKEND_SOURCE.includes('"fabric_hex"') && BACKEND_SOURCE.includes('use null for unknown facts') &&
@@ -1216,7 +1216,7 @@ ok('Compact fabric cards show source-backed price units inline without hover met
   FABRIC_UI_SOURCE.includes("const knownPrice=p.price&&p.unit?") &&
   !FABRIC_UI_SOURCE.includes('link.title=') &&
   FABRIC_UI_SOURCE.includes("const use=[p.garment?'For '+p.garment:'',p.materialLabel]") &&
-  FABRIC_UI_SOURCE.includes("[use,local?'':p.merchant,knownPrice]"));
+  FABRIC_UI_SOURCE.includes("[knownPrice,source].filter(Boolean).join(' · ')") && FABRIC_UI_SOURCE.includes("link.setAttribute('aria-label',[p.title,use,source,knownPrice,p.reason]"));
 ok('Fabric ranking describes closest visual matches and never claims exact image-derived facts',
   FABRIC_SOURCE.includes('These are closest visual matches, never exact matches.') &&
   FABRIC_SOURCE.includes('Do not infer exact fiber, stock or price from images.') &&
@@ -1336,7 +1336,7 @@ ok('Nano Banana visualizes traits inside our own cloud, admin only, labeled',
   /visualize-fabric', requireAuthHeader[\s\S]{0,200}requireAdmin/.test(SERVER_SOURCE));
 ok('Active fabric results never substitute generated swatches for seller or atelier photographs',
   FABRIC_UI_SOURCE.includes("evidence:'atelier_inventory',price:'',unit:'',availability:'unknown'") &&
-  FABRIC_UI_SOURCE.includes('img.src=p.image') && !FABRIC_UI_SOURCE.includes('/api/visualize-fabric') &&
+  FABRIC_UI_SOURCE.includes('mountProductPhoto(item,link,p)') && FABRIC_UI_SOURCE.includes('img.src=source') && !FABRIC_UI_SOURCE.includes('/api/visualize-fabric') &&
   !BACKEND_SOURCE.includes('function visualizeFabricCard(') &&
   FABRIC_SEARCH_SOURCE.includes("!verified.image||!isFabricProduct(verified)"));
 // ── v13.54: marketing tells the truth and counts what matters ──────────────
@@ -1560,7 +1560,7 @@ ok('v13.87: server can update or delete any lead, Wix via override/tombstone',
   MAP_SOURCE.includes("name==='delete_lead'"));
 
 ok('Shared fabric photo failures retain reviewed seller links and saved/in-house records',
-  FABRIC_UI_SOURCE.includes("img.addEventListener('error',()=>{img.remove();") &&
+  FABRIC_UI_SOURCE.includes("img.addEventListener('error',()=>{if(img!==photo||!item.isConnected)return;loading=false;next();") && FABRIC_UI_SOURCE.includes("item.classList.add('has-missing-photo')") &&
   FABRIC_UI_SOURCE.includes("'Photo unavailable'") &&
   !FABRIC_UI_SOURCE.includes("item.remove();if(!els.results.querySelector('.fa-product'))") &&
   !BACKEND_SOURCE.includes('live.concat(staticCards)'));
@@ -1803,7 +1803,7 @@ ok('Lead Station header says Status, submissions are "Submissions", fabric spec 
 // ── v13.88 ──
 ok('Fabric prices retain seller currency and units; unknown delivery never becomes an estimated date',
   FABRIC_UI_SOURCE.includes('`${p.price} ${p.currency} / ${p.unit}`') &&
-  FABRIC_UI_SOURCE.includes("'Delivery unconfirmed'") &&
+  !FABRIC_UI_SOURCE.includes('p.delivery') && !FABRIC_UI_SOURCE.includes('p.arrival') &&
   FABRIC_SEARCH_SOURCE.includes('Currency comes from seller structured data') &&
   !BACKEND_SOURCE.includes('function _priceUSD(') && !FABRIC_UI_SOURCE.includes('_FX_USD'));
 ok('v13.88: the community wall centers every line',
@@ -2741,6 +2741,7 @@ await import('./domain-boundaries.mjs');
 ok('Fabric policy, provider imports, routes, styles and served assets stay separate from communications and CRM',true);
 // Fabric geometry resolves the current card atomically across independent lookbook repaints.
 await import('./fabric-search-ui.mjs');
+await import('./fabric-images-ui.mjs');
 await import('./fabric-workflow-ui.mjs');
 ok('Late source contradictions remove retained and cached fabric cards even after interrupted searches',!process.exitCode);
 ok('Fabrics distinguishes preparation, interrupted searches and true empty results; terminal streams finish without EOF',true);
@@ -2775,7 +2776,7 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=9'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=10'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));
@@ -2819,6 +2820,8 @@ await import('./admin-notifications.mjs');
 await import('./admin-notifications-ui.mjs');
 ok('Admin stores fixed account-bound notifications in the drawer, keeps Logs collapsed and aligns all seven H3 dashboard headings',true);
 ok('Shared D/W/M circular controls preserve Glass material under saved typography and asymmetric padding',MAP_SOURCE.includes('data-maya-shape="circle"'));
+ok('Fabric suggestions keep dominant-color photographs, recover source-backed images and fill the existing shared grid',
+  BUILD_SOURCE.includes('node tests/fabric-images-ui.mjs') && readFileSync(join(ROOT,'docs/server/fabric-worldwide.mjs'),'utf8').includes('isColorFabricPhoto') && readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('auto-fit'));
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

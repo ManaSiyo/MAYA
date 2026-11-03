@@ -1,7 +1,7 @@
 // Worldwide main search: fake OpenAI evidence only; no external seller traffic.
 import assert from 'node:assert/strict';
 import {createFabricSearch,normalizeFabricRequest} from '../docs/server/fabric-search.mjs';
-import {sourceURL,worldwideSearchBody} from '../docs/server/fabric-worldwide.mjs';
+import {sourceURL,worldwideSearchBody,isColorFabricPhoto} from '../docs/server/fabric-worldwide.mjs';
 const image='data:image/png;base64,iVBORw0KGgo=',url='https://global-textiles.example.net/item/forest-tricot';
 const candidate={type:'candidate',url,title:'Forest green tricot fabric',material:'Green jacket and pants body',reason:'A possible smooth knit for the green body.',price:'1.00',image:'https://invented.example/fake.jpg'};
 const interpretation={type:'interpretation',observation:'Green body knit, gold panels and ivory inserts; exact fiber is uncertain.',query:'green tracksuit textiles'};
@@ -14,6 +14,8 @@ await test('default is unfiltered image/text search, optional legacy groups cann
   const input=normalizeFabricRequest({request:'Find fabrics for this look',image,storeGroups:['local'],stores:['evil.invalid']});
   assert.equal(input.mode,'worldwide');assert.equal(input.storeGroups,undefined);assert.deepEqual(input.stores,[]);
   const body=worldwideSearchBody(input,'gpt-6-luna');assert.equal(body.stream,true);assert.equal(body.store,false);
+  assert.equal(body.max_tool_calls,5);assert.equal(body.max_output_tokens,6000);assert.equal(body.tools[0].image_settings.max_results,32);
+  assert.match(body.instructions,/dominant color/);assert.match(body.instructions,/Solid color body-cloth alternatives are useful/);
   assert.equal(body.tools[0].filters,undefined);assert.deepEqual(body.tools[0].search_content_types,['text','image']);
   assert.ok(body.include.includes('web_search_call.results'));assert.equal(body.input[0].content[1].image_url,image);
   assert.throws(()=>normalizeFabricRequest({request:'wool',mode:'unknown'}));
@@ -34,7 +36,7 @@ await test('one call streams a global product before completion, with tool-backe
   push({type:'response.output_item.done',item:evidence});push({type:'response.output_text.delta',delta:JSON.stringify(interpretation)+'\n'+JSON.stringify(candidate)+'\n'});
   for(let i=0;i<50&&!events.some(event=>event.incremental);i++)await new Promise(resolve=>setImmediate(resolve));
   const early=events.find(event=>event.incremental);assert.ok(early,'Useful source-backed products arrive before response.completed');assert.equal(events.some(e=>e.type==='done'),false);
-  assert.equal(early.products[0].url,url);assert.equal(early.products[0].image,evidence.results[0].thumbnail_url);
+  assert.equal(early.products[0].url,url);assert.equal(early.products[0].image,evidence.results[0].image_url);
   for(const field of ['price','unit','currency','composition'])assert.equal(early.products[0][field],'');assert.equal(early.products[0].availability,'unknown');
   assert.equal(early.products[0].evidence,'web_suggestion');
   push({type:'response.completed',response:{status:'completed',output:[evidence,content([interpretation,candidate])]}});
@@ -105,4 +107,95 @@ await test('saved context is canonical before the single worldwide call starts',
   }});
   await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'jacket',name:'forged'},image},event=>events.push(event));assert.equal(calls,1);assert.equal(events.at(-1).products[0].garmentId,'jacket');
 });
+
+await test('three written recommendations retain fourteen useful color-led product photographs',async()=>{
+  const photos=Array.from({length:14},(_,i)=>({type:'image_result',source_website_url:`https://cloth.example/products/green-twill-${i}`,image_url:`https://photos.example/green-${i}.jpg`,thumbnail_url:`https://photos.example/thumb-${i}.jpg`,caption:`Forest green cotton twill apparel fabric by the yard ${i}`}));
+  const unsafe=[['upholstery','Green upholstery fabric by the yard'],['shirt','Green shirt made of premium fabric size M'],['pattern','Green sewing pattern for apparel fabric'],['orange','Orange fabric by the yard with green variants'],['sample','Green cotton apparel fabric sample'],['blog','Green apparel fabric by the yard']].map(([id,caption])=>({...photos[0],source_website_url:'https://cloth.example/'+(id==='blog'?'blog/green-fabric':'products/'+id),caption}));
+  const written=photos.slice(0,3).map(p=>({...candidate,url:p.source_website_url,title:p.caption}));
+  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{type:'web_search_call',action:{queries:['forest green suiting fabric','hunter green cotton twill by the yard']},results:[...photos,...unsafe]},content([{...interpretation,colorFamily:'green'},...written])]})});
+  await service.search(user,{request:'green apparel fabric',image},e=>events.push(e));
+  const done=events.at(-1);assert.equal(done.products.length,14,'Search photographs are not discarded behind the written shortlist');
+  assert.ok(done.products.every(p=>p.image&&p.imageCandidates.length===2));assert.equal(done.products[0].image,photos[0].image_url);
+  assert.ok(done.products.slice(3).every(p=>!p.garmentId&&!p.garment&&p.reason.includes('Approximate')),'Raw photo suggestions invent no garment identity or exact suitability');
+  assert.deepEqual(done.searchDetails.webQueries,['forest green suiting fabric','hunter green cotton twill by the yard']);
+  for(const field of ['price','unit','currency','composition'])assert.ok(done.products.every(p=>p[field]===''));
+});
+await test('unknown colors and non-yardage/editorial/variant mentions cannot auto-add photographs',()=>{
+  const photo={url:'https://cloth.example/products/green',caption:'Green cotton apparel fabric by the yard',imageCandidates:['https://photos.example/green.jpg']};
+  assert.equal(isColorFabricPhoto(photo,'green'),true);
+  for(const family of ['unknown','chartreuse','GREEN',null])assert.equal(isColorFabricPhoto(photo,family),false);
+  for(const caption of ['Green shirt made of cotton fabric','Green fabric inspiration','Red apparel fabric by the yard, also green','Green upholstery fabric by the yard','Green fabric by the yard available in other colors','Green fabric by the yard available in blue and red','Green sewing pattern for dressmaking','Green fabric swatch','Green craft fabric by the yard'])assert.equal(isColorFabricPhoto({...photo,caption},'green'),false,caption);
+  for(const path of ['collections/green','category/green','search/green','blog/green','guides/green'])assert.equal(isColorFabricPhoto({...photo,url:'https://cloth.example/'+path},'green'),false,path);
+});
+await test('image association tolerates only trailing slash spelling and keeps variants and hosts separate',async()=>{
+  for(const [source,hasPhoto]of [[url+'/',true],[url+'?variant=red',false],[url.replace('global-textiles.','www.global-textiles.'),false]]){
+    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:[{...evidence.results[0],source_website_url:source}]},content([candidate])]})});
+    await service.search(user,{request:'fabric',image},e=>events.push(e));assert.equal(!!events.at(-1).products[0].image,hasPhoto,source);
+  }
+  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([candidate,{...candidate,url:url+'/'}])]})});
+  await service.search(user,{request:'fabric',image},e=>events.push(e));assert.equal(events.at(-1).products.length,1,'Slash aliases are not duplicate products');
+});
+await test('photo suggestions displace photo-less links at the bounded display limit',async()=>{
+  const links=Array.from({length:24},(_,i)=>({...candidate,url:`https://cloth.example/products/link-${i}`}));
+  const photos=Array.from({length:30},(_,i)=>({...evidence.results[0],source_website_url:`https://cloth.example/products/photo-${i}`,caption:`Green suiting fabric by the yard ${i}`}));
+  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{type:'web_search_call',action:{sources:links.map(({url})=>({url}))},results:photos},content([{...interpretation,colorFamily:'green'},...links])]})});
+  await service.search(user,{request:'green fabric',preferences:'No polyester',image},e=>events.push(e));
+  assert.equal(events.at(-1).products.length,24);assert.ok(events.at(-1).products.every(p=>p.image));
+  assert.ok(events.some(e=>e.removedUrls?.length),'Earlier link-only cards are removed from retained client results when photo results take their slots');
+});
+await test('extra photographs still respect client exclusions and need a resolved color',async()=>{
+  for(const colorFamily of ['green','unknown']){
+    const photos=[{...evidence.results[0],caption:'Green polyester suiting fabric by the yard'}];
+    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:photos},content([{...interpretation,colorFamily}])]})});
+    await service.search(user,{request:'green fabric',preferences:'No polyester',image},e=>events.push(e));assert.deepEqual(events.at(-1).products,[]);
+  }
+});
+await test('automatic worldwide keeps explicit refinements while using canonical saved garments',async()=>{
+  let sent;const piece={id:'coat',name:'Hooded tailcoat',fabric:'Dense ornate brocade with embroidery'};
+  const service=createFabricSearch({apiKey:()=> 'fake',read:async path=>({ok:true,buf:Buffer.from(JSON.stringify(path.endsWith('pieces.json')?{pieces:[piece]}:{}))}),fetchImpl:async(_,options)=>{sent=JSON.parse(JSON.parse(options.body).input[0].content[0].text);return Response.json({status:'completed',output:[]});}});
+  await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'coat',name:'forged'},request:'Main green color, solid cloth is fine; no polyester',history:[{request:'less shiny'}],image},()=>{});
+  assert.equal(sent.request,'Main green color, solid cloth is fine; no polyester');assert.equal(sent.selectedGarment.name,'Hooded tailcoat');assert.equal(sent.earlierRequests[0].request,'less shiny');
+});
+
+
+await test('same-page variant photos cannot mix known colors in raw or modeled fallback URLs',async()=>{
+  const green={...evidence.results[0],caption:'Green cotton apparel fabric by the yard'},orange={...evidence.results[0],image_url:'https://photos.example/orange.jpg',thumbnail_url:'https://photos.example/orange-thumb.jpg',caption:'Orange cotton apparel fabric by the yard'};
+  for(const modeled of [false,true])for(const results of [[green,orange],[orange,green]]){
+    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results},content([{...interpretation,colorFamily:'green'},...(modeled?[candidate]:[])])]})});
+    await service.search(user,{request:'green fabric',image},e=>events.push(e));
+    if(!modeled)assert.deepEqual(events.at(-1).products,[],'Ambiguous same-page color evidence is not an automatic addition');
+    else {assert.deepEqual(events.at(-1).products[0].imageCandidates,[green.image_url,green.thumbnail_url],'Only explicitly green source images can back this green card');assert.deepEqual(events.at(-1).products[0].rejectedImageURLs,[orange.image_url,orange.thumbnail_url],'Previously mounted photos can be explicitly revoked by later color evidence');}
+  }
+});
+await test('fifth and later source captions cannot hide a known material exclusion',async()=>{
+  const photos=Array.from({length:6},(_,i)=>({...evidence.results[0],caption:i===4?'Green polyester apparel fabric by the yard':'Green cotton apparel fabric by the yard '+i}));
+  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:photos},content([{...interpretation,colorFamily:'green'},candidate])]})});
+  await service.search(user,{request:'green fabric',preferences:'No polyester',image},e=>events.push(e));assert.deepEqual(events.at(-1).products,[]);
+});
+
+
+await test('uncolored model titles can still use page-linked fabric photos without a guessed color',async()=>{
+  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([{...candidate,title:'Cotton tricot fabric'}])]})});
+  await service.search(user,{request:'fabric',image},e=>events.push(e));assert.equal(events.at(-1).products[0].image,evidence.results[0].image_url);
+});
+
+
+await test('automatic worldwide refinements enforce exclusions from actual client request words',async()=>{
+  const piece={id:'coat',name:'Green coat',fabric:'Green cloth'},events=[];
+  const service=createFabricSearch({apiKey:()=> 'fake',read:async path=>({ok:true,buf:Buffer.from(JSON.stringify(path.endsWith('pieces.json')?{pieces:[piece]}:{}))}),fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:[{...evidence.results[0],caption:'Green polyester suiting fabric by the yard'}]},content([{...interpretation,colorFamily:'green'},candidate])]})});
+  await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'coat'},request:'Green body cloth, no polyester',image},e=>events.push(e));assert.deepEqual(events.at(-1).products,[]);
+});
+
+
+await test('late color interpretation revokes an earlier uncolored-title photo with known different color',async()=>{
+  const source={...evidence,results:[{...evidence.results[0],caption:'Orange cotton apparel fabric by the yard'}]};
+  const records=[{...candidate,title:'Cotton apparel fabric'}, {...interpretation,colorFamily:'green'}];
+  const frames=[{type:'response.output_item.done',item:source},...records.map(record=>({type:'response.output_text.delta',delta:JSON.stringify(record)+'\n'})),{type:'response.completed',response:{status:'completed',output:[]}}];
+  const stream=new ReadableStream({start(controller){for(const event of frames)controller.enqueue(new TextEncoder().encode('data: '+JSON.stringify(event)+'\n\n'));controller.close();}}),events=[];
+  const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(stream,{headers:{'Content-Type':'text/event-stream'}})});
+  await service.search(user,{request:'fabric',image},event=>events.push(structuredClone(event)));
+  assert.ok(events.some(e=>e.products?.[0]?.image),'An early source-backed image may precede interpretation');
+  assert.equal(events.at(-1).products[0].image,'');assert.deepEqual(events.at(-1).products[0].rejectedImageURLs,[source.results[0].image_url,source.results[0].thumbnail_url]);
+});
+
 console.log('Worldwide fabric: '+count+' global/default/evidence/stream/cancellation checks passed.');

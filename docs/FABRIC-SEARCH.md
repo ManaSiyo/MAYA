@@ -2,8 +2,10 @@
 
 ## Owner's current intent
 
-The main Sourceable experience is image → understand the separate textiles →
-search worldwide → show useful source-linked suggestions promptly. Local and
+The main Sourceable experience is image → identify the dominant body-cloth color and apparel use →
+search broadly worldwide → show useful source-linked fabric photographs. Closer
+weave/motif and secondary textile options follow; bespoke embroidery is not a
+mandatory feature of the cloth. Local and
 named shops are optional searches the owner may explicitly choose later. They
 have no default priority, domain restriction, feed work or waiting time in the
 main path. This supersedes older all-five-selected filter and universal inventory-
@@ -23,17 +25,35 @@ generation or assignment writes occur on read or browsing.
 
 The request uses web_search with text/image content, page-linked image results,
 source lists and streaming. It has no allowed_domains, preferred merchant list or
-local bias. Five search tool calls and 3200 output tokens bound the single request.
+local bias. Five search tool calls, 6000 output tokens and up to 32 requested image results
+bound the single request. Counts are limits, not a promised result minimum.
 There is no retailer keyword-feed fan-out, arbitrary seller fetch, or second paid
 photo-ranking request on this path. There is no automatic paid fallback/retry.
-The provider determines material queries and useful options from image plus words.
+The provider starts with dominant color/shade plus apparel/body-cloth use and
+several plausible constructions, then considers closer motifs and other textiles.
+Automatic worldwide requests retain explicit request/history words instead of
+replacing them with verbose saved fabric guesses. Canonical garment metadata is
+sent separately. Latest request exclusions are explicitly checked alongside saved
+preferences/history. Actual bounded tool queries are available in private search
+details data for diagnostics; none are logged.
 
 Model output consists of NDJSON interpretation and candidate records. The server
 accepts candidate links only when they appear in provider search sources or URL
 citations. Product photos come only from raw image_result image/thumbnail URLs
-whose source_website_url matches that product page. A model-supplied image URL is
-ignored. Missing photos leave a useful source link with the shared Photo unavailable
-fallback. Unsafe schemes, credentials, ports, private/local host forms and IP
+whose source_website_url matches that product page. Tracking fields/fragments and
+a trailing slash spelling may normalize; distinct hosts and meaningful query/
+variant identities cannot be merged. Canonical photographs precede thumbnails;
+same-page images with known different primary colors are not fallback choices. A model-supplied image URL is
+ignored. After model candidates are read, useful raw image-result pages can
+broaden a short written shortlist. These need positive apparel/yardage evidence,
+a recognized primary color family and no known exclusion, editorial/category,
+decor/finished-garment or ambiguous multi-color variant evidence. They receive a
+qualified color-alternative reason and no guessed garment IDs or seller facts.
+Model candidates have priority within the photo pool. Photo-bearing cards take
+display slots ahead of links without photographs; browser order keeps photos ahead
+of retained or newly failed source links without replacing healthy DOM nodes; displaced links are removed
+from retained current results. Missing/exhausted photographs keep a compact
+two-row source link with the shared Photo unavailable fallback. Unsafe schemes, credentials, ports, private/local host forms and IP
 literal destinations are rejected. Crucially, this server never requests an
 arbitrary discovered host with or without credentials.
 
@@ -54,7 +74,9 @@ may expose complete source/image data only at the end; those candidates wait for
 evidence rather than guessing it. JSON nonstream responses are also handled.
 
 SSE input is capped at 2 MiB, model text at 100k characters, pending candidate
-records at 24 and displayed suggestions at 12. Terminal completion releases the
+model records at 48, combined model/photo candidates at 96 and displayed
+suggestions at 24 per response. The existing browser retains at most 48 unique
+results across explicit refreshes. These are bounds, not an artificial minimum. Terminal completion releases the
 reader without waiting for EOF. Failed/incomplete/early-ended streams stay failures;
 already source-backed cards can remain visible and cached, without marking the
 search complete or automatically retrying. If later source captions reveal a known
@@ -63,7 +85,9 @@ client removes them from current and retained cards and evicts the prior garment
 cache before remembering any remaining results. A later error must not resurrect
 them. Request-local exclusions also survive replayed earlier source items in the
 provider completion. This exception preserves useful unknown suggestions while known conflicting
-materials cannot hide behind retention. Provisional optional-retailer results
+materials cannot hide behind retention. Exclusion captions are retained
+independently of the four displayed image URL candidates; fifth/later evidence
+cannot be discarded by the fallback limit. Provisional optional-retailer results
 are still hidden until their old checks finish.
 
 Worldwide provider work has a 50-second deadline inside the existing 55-second
@@ -115,12 +139,23 @@ empty completion is reusable for 30 seconds. Partial cached searches retain thei
 interrupted state and need explicit Refresh to continue, never an automatic retry.
 These are memory caches, not promises of permanent saved search history.
 
-The material breakdown is visible in the existing P1 observation region. Names
-use H4, purpose/source captions P3, cards Inner and controls Glass. Active Aesthetic
+The existing P1 observation region is one clipped row; Search details contains
+the full qualified interpretation. Every card has exactly two visible text rows:
+H4 name and P3 source/known-unit price. Full garment/material/reason context is in
+the accessible source link name. Photos use a responsive auto-fit grid, crop with
+object-fit:cover and fill available rows; three results do not reserve a fourth
+empty column. Cards use Inner and controls Glass. On image failure the same img
+tries at most four validated source-backed URLs once each, with no referrer or
+provider retry. Detached old-account cards cannot start fallback work. Healthy
+image/card nodes survive additional evidence and Refresh; explicit source-backed
+wrong-color revocations override retention, including loaded/loading photos and
+late callbacks. Explicit Refresh can retry exhausted photographs. The bounded
+results scroll area keeps first-row desktop titles/sources visible and avoids
+nested outer scrolling at all six tested widths. Active Aesthetic
 Control previews the same P1 interpretation and existing card/pill families. No new
 style family/editor was introduced. Default/saved styling, actual Save, six widths,
 focus/error and inline/expanded behavior remain mandatory checks. JS/CSS references
-are v9 under their exact no-cache Hosting rules. New runtime module ships in Docker.
+are v10 and Search details v2 under their exact no-cache Hosting rules. New runtime module ships in Docker.
 
 Private legacy books remain at
 private/fabrics/<encoded authenticated Google sub>/<submissionId>/lookbook.json.
@@ -134,9 +169,14 @@ legacy records. Original photos/words and canonical saved IDs remain intact.
 
 Run fabric-sourcing, fabric-search and fabric-search-gc on release Node20 and local
 Node; new tests/fabric-worldwide.mjs is imported by the existing search gate and
-its forced-GC child. Run fabric-search-ui, fabric-workflow-ui, existing routing,
+its forced-GC child. Run fabric-search-ui, fabric-images-ui, fabric-workflow-ui, existing routing,
 container/domain/release contracts, full regression/smoke and final standalone
-Aesthetic Control last. Fixtures cover unapproved-but-public global merchants,
+Aesthetic Control last. The November 3 negative fixtures reproduced a three-record answer dropping
+fourteen usable source photos, a failed thumbnail discarding a valid canonical
+image, multiline captions and a phantom empty column. New tests cover these,
+same-page mixed-color fallbacks, fifth-caption exclusions, photo-first display
+limits, explicit refinements and unknown-color/decor/product rejection. Fixtures
+also cover unapproved-but-public global merchants,
 one main call, no feed/rank work, source-only images/facts, canonical context,
 progress before completion, private URL rejection, interruption, both deadline
 sources, explicit separate shop calls and scope restoration without paid retries.

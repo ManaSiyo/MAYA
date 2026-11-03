@@ -12,7 +12,7 @@ const worldProduct={...product,url:'https://world-fabrics.example.net/fabric/cri
 const reference='data:image/png;base64,'+png.toString('base64');
 const pieces=[{name:'Crimson coat',fabric:'Crimson wool twill',fabric_spec:{fiber:'wool',weave:'twill'},_image:reference},{name:'White shirt',fabric:'White cotton poplin',_image:reference},{name:'Black leather boots',category:'footwear',fabric:'Black leather',_image:reference}];
 let savedDesign={};const designWrites=[];
-const requests=[],bookWrites=[],books=new Map(),inventoryImages=[];let componentMode=false,longPreferences=false,delayed=null,delayNext=false,failNext=false,failInventoryPreview=false,legacyCatalog=false;
+const requests=[],bookWrites=[],books=new Map(),inventoryImages=[];let layoutMode=false,componentMode=false,longPreferences=false,delayed=null,delayNext=false,failNext=false,failInventoryPreview=false,legacyCatalog=false;
 const catalog=JSON.parse(readFileSync(root+'/aesthetics/fabrics/fabrics.json','utf8'));
 let originalBytes=0,previewBytes=0;for(const item of catalog.items){assert.match(item.thumbnail,/^thumbs\/[^\\/]+\.jpg$/);originalBytes+=statSync(root+'/aesthetics/fabrics/'+item.fileName).size;previewBytes+=statSync(root+'/aesthetics/fabrics/'+item.thumbnail).size;}assert.ok(previewBytes<originalBytes,'Existing thumbnail files reduce the actual inventory payload');
 const jwt=(sub,lifetime=3600)=>'test.'+Buffer.from(JSON.stringify({sub,exp:Math.floor(Date.now()/1000)+lifetime})).toString('base64url')+'.test';
@@ -36,7 +36,7 @@ await page.route('**/*',async route=>{
     requests.push(body);
     if(failNext){failNext=false;return route.fulfill({status:503,json:{error:'Search temporarily unavailable.'}});}
     const resultProduct=body.mode==='worldwide'?worldProduct:{...product,url:groups.find(g=>body.storeGroups?.includes(g[0]))?.[2]||product.url};
-    const fixtureProducts=componentMode?['Body fabric','Contrast shoulder panels','Ivory inserts','Woven textile trim'].map((materialLabel,i)=>({...resultProduct,url:resultProduct.url+(i?'-component-'+i:''),title:i?materialLabel+' fabric':resultProduct.title,garment:body.piece?.name||'Crimson coat',materialId:'material-'+i,materialLabel})):[{...resultProduct,garment:body.piece?.name||'Crimson coat'},...(body.storeGroups?.length===1?[{...product,url:groups.find(g=>g[0]!==body.storeGroups[0])[2],title:'Wrong merchant fixture'}]:[])];
+    const fixtureProducts=layoutMode?Array.from({length:3},(_,i)=>({...resultProduct,url:resultProduct.url+'-photo-'+i,title:'Forest green cloth '+(i+1)+' with a deliberately long product name for line-budget coverage',image:'/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',garment:'Hooded tailcoat and matching slim trousers in a full-length tailored silhouette',materialLabel:'Possible matching body cloth with surface details and a detailed uncertain alternative construction',reason:'A color-first green fabric alternative; exact fiber is unconfirmed.'})):componentMode?['Body fabric','Contrast shoulder panels','Ivory inserts','Woven textile trim'].map((materialLabel,i)=>({...resultProduct,url:resultProduct.url+(i?'-component-'+i:''),title:i?materialLabel+' fabric':resultProduct.title,garment:body.piece?.name||'Crimson coat',materialId:'material-'+i,materialLabel})):[{...resultProduct,garment:body.piece?.name||'Crimson coat'},...(body.storeGroups?.length===1?[{...product,url:groups.find(g=>g[0]!==body.storeGroups[0])[2],title:'Wrong merchant fixture'}]:[])];
     const searchDetails={preferences:JSON.stringify(longPreferences?['Wool','Detailed reference direction. '.repeat(200),'No polyester']:['Wool','No polyester']),garments:[{name:body.piece?.name||'Crimson coat',fabric:'Burgundy wool twill',traits:{texture:'matte'}}],retailerQueries:['red wool twill'],webQueries:['burgundy matte wool fabric'],query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',stores:['Britex Fabrics'],stage:componentMode?'Verified matches; not confirmed: green cuffs and waistband':'Verified matches'};
     const complete=()=>route.fulfill({contentType:'application/x-ndjson',body:[{type:'context',searchDetails},{type:'products',products:fixtureProducts,preliminary:true},{type:'done',products:fixtureProducts,searchDetails,query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',message:componentMode?'Fabrics for this look. Seller availability may change. Still unconfirmed: green cuffs and waistband.':'Refine these with another message.'}].map(v=>JSON.stringify(v)).join('\n')+'\n'});
     if(delayNext){delayNext=false;delayed=complete;return;}
@@ -80,22 +80,42 @@ try{
   assert.equal(await page.locator('#fabric-assistant-dialog').getAttribute('open'),null,'Brief opens its internal window');
   assert.equal(await page.locator('.fa-composer').isVisible(),false,'Saved look recommendations do not ask for Dictate or Find fabric');
   const automatic=requests.find(r=>r.automatic);assert.ok(automatic);assert.equal(automatic.submissionId,'project-A');assert.equal(automatic.piece.name,undefined);assert.equal(automatic.pieces.length,3);assert.match(automatic.image,/^data:image\/jpeg/);assert.equal(automatic.preferences,'100% wool, no polyester');
-  assert.equal(await page.locator('.fa-card-title').count(),1);assert.match(await page.locator('.fa-card-caption').textContent(),/For Crimson coat/);
+  assert.equal(await page.locator('.fa-card-title').count(),1);assert.match(await page.locator('.fa-product-link').getAttribute('aria-label'),/For Crimson coat/);
   // Independent lookbook hydration may replace a card after a locator resolves.
   // Query the connected card and read both bounds in the same browser task.
   const cardBounds=await page.evaluate(()=>{const card=document.querySelector('.fa-product');if(!card?.isConnected||!card.parentElement)throw Error('Missing connected fabric card');return {card:card.getBoundingClientRect().width,container:card.parentElement.getBoundingClientRect().width};});
-  assert.ok(cardBounds.card>0&&cardBounds.card<cardBounds.container*.75,'A single result does not stretch across the whole desktop panel');
+  assert.ok(cardBounds.card>=cardBounds.container-3,'A single photo uses the available desktop panel width');
   assert.equal(await page.locator('.fa-product-link').getAttribute('href'),worldProduct.url);assert.equal(await page.locator('.fa-product-link').getAttribute('target'),'_blank');
   assert.doesNotMatch(await page.locator('.fa-results').textContent(),/arrives|in.stock|35%|selling unit|San Francisco/i,'Only two concise caption rows, without guessed facts or match percent');
   assert.equal(await page.locator('.fa-card-actions').count(),0,'Sourceable cards have no Save or Use controls');
   assert.equal(await page.locator('.fa-product [title]').count(),0,'Cards do not repeat verbose hover copy');
   assert.doesNotMatch(await page.locator('.fa-card-caption').textContent(),/69.99/,'Worldwide suggestions do not invent seller prices');
   assert.equal(automatic.mode,'worldwide');assert.equal(automatic.storeGroups,undefined);
+  // Real long provider fields must stay inside two visible text rows. Three
+  // photo cards fill the row rather than reserve a phantom fourth column.
+  const checkPhotoFirst=async(label)=>{
+    await page.locator('.fa-product-image').first().evaluate(image=>image.decode());
+    const geometry=await page.locator('.fa-results').evaluate(grid=>{
+      const box=grid.getBoundingClientRect(),cards=[...grid.querySelectorAll('.fa-product')];
+      return {viewportWidth:innerWidth,bodyBottom:document.querySelector('.fa-body').getBoundingClientRect().bottom,outerScroll:document.querySelector('.fa-body').scrollHeight>document.querySelector('.fa-body').clientHeight+1,left:box.left,right:box.right,first:Math.min(...cards.map(card=>card.getBoundingClientRect().left)),last:Math.max(...cards.map(card=>card.getBoundingClientRect().right)),cards:cards.map(card=>{const title=card.querySelector('.fa-card-title'),caption=card.querySelector('.fa-card-caption'),image=card.querySelector('.fa-product-image'),link=card.querySelector('.fa-product-link'),line=el=>{const s=getComputedStyle(el);return {height:el.getBoundingClientRect().height,line:parseFloat(s.lineHeight)||parseFloat(s.fontSize)*1.5};};return {top:card.getBoundingClientRect().top,captionBottom:caption.getBoundingClientRect().bottom,title:line(title),caption:line(caption),photo:image?.getBoundingClientRect().height||0,height:link.getBoundingClientRect().height};})};
+    });
+    for(const card of geometry.cards){assert.ok(card.title.height<=card.title.line+1,label+' product name is one line');assert.ok(card.caption.height<=card.caption.line+1,label+' source caption is one line');assert.ok(card.photo>=card.height*.65,label+' photograph dominates its card');}
+    assert.ok(Math.abs(geometry.left-geometry.first)<3&&Math.abs(geometry.right-geometry.last)<3,label+' cards use the full available result row');
+    if(label.includes('inline')){if(geometry.viewportWidth>=1024){const firstRowTop=Math.min(...geometry.cards.map(card=>card.top));for(const card of geometry.cards.filter(card=>card.top<firstRowTop+2))assert.ok(card.captionBottom<=geometry.bodyBottom+1,label+' first-row captions stay visible in the desktop results viewport');}assert.equal(geometry.outerScroll,false,label+' does not nest an extra outer scrollbar');}
+  };
+  const resetFixture=()=>page.evaluate(({reference,pieces})=>MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,preferences:'100% wool, no polyester',host:document.getElementById('brief-fabrics'),automatic:true,forceReset:true}),{reference,pieces});
+  layoutMode=true;await resetFixture();await page.waitForFunction(()=>document.querySelectorAll('.fa-product').length===3);
+  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});await checkPhotoFirst('Sparse inline default '+width);}
+  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-fabric-photo-first-inline-default.png'});
+  await page.locator('.fa-toolbar').getByRole('button',{name:'Expand',exact:true}).click();
+  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});await checkPhotoFirst('Sparse expanded default '+width);}
+  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-fabric-photo-first-default.png'});
+  await page.locator('.fa-toolbar').getByRole('button',{name:'Collapse',exact:true}).click();layoutMode=false;await resetFixture();await page.waitForFunction(()=>document.querySelectorAll('.fa-product').length===1);
   const details=page.locator('#fabric-assistant .fa-search-details'),detailsTrigger=page.getByRole('button',{name:'Search details',exact:true});
   const checkDetails=async(saved=false)=>{
     const before=requests.length,wasExpanded=await page.locator('#fabric-assistant-dialog').getAttribute('open');
     await page.locator('.fa-body').hover();assert.equal(await details.isVisible(),false,'Empty results area does not open details');await detailsTrigger.click();await details.waitFor({state:'visible'});
-    assert.match(await details.textContent(),/Looking for:/);assert.doesNotMatch(await details.textContent(),/Retailer queries|Web queries|Saved description/,'Search details are concise');
+    assert.match(await details.textContent(),/Looking for:/);assert.match(await details.textContent(),/Reference interpretation:/,'Full interpretation is available in Search details');assert.doesNotMatch(await details.textContent(),/Retailer queries|Web queries|Saved description/,'Search details are concise');
     const style=await details.evaluate(e=>{const s=getComputedStyle(e.querySelector('[data-maya-panel=inner]')),r=e.getBoundingClientRect(),p=getComputedStyle(e.querySelector('p'));return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:innerWidth,height:innerHeight,paddingX:s.paddingLeft,paddingY:s.paddingTop,bg:s.backgroundColor,size:p.fontSize,font:p.fontFamily,overflow:e.scrollWidth<=e.clientWidth+1};});
     assert.ok(style.x>=0&&style.y>=0&&style.right<=style.width+1&&style.bottom<=style.height+1,'Details stay in the viewport');assert.ok(style.overflow);assert.equal(await detailsTrigger.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Hover details never cover their own activation target');
     if(saved)assert.deepEqual([style.paddingX,style.paddingY,style.bg,style.size],['12px','10px','rgba(35, 76, 125, 0.7)','14px']);
@@ -118,11 +138,12 @@ try{
   assert.ok(await page.locator('.fa-product-image').evaluateAll(es=>es.every(e=>e.getAttribute('src').startsWith('/aesthetics/fabrics/thumbs/'))),'Inventory cards display the existing thumbnails');
   assert.equal(await page.locator('.fa-product-link').first().getAttribute('href'),'/aesthetics/fabrics/Burgundy%20Lace.JPG','Opening a swatch retains the original full-resolution photo');
   assert.ok(!inventoryImages.some(path=>!path.includes('/thumbs/')),'Browsing inventory never downloads full-size originals');
-  legacyCatalog=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
+  const refreshInventory=async()=>{const loaded=page.waitForResponse(response=>new URL(response.url()).pathname==='/aesthetics/fabrics/fabrics.json');await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await (await loaded).finished();await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();await page.locator('.fa-tabs').getByRole('button',{name:'In House',exact:true}).click();};
+  legacyCatalog=true;await refreshInventory();
   await page.waitForFunction(()=>document.querySelector('.fa-product-image')?.getAttribute('src')==='/aesthetics/fabrics/Burgundy%20Lace.JPG');
   assert.equal(await page.locator('.fa-product').count(),8,'Older catalogs without thumbnail metadata remain usable');
   legacyCatalog=false;
-  failInventoryPreview=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
+  failInventoryPreview=true;await refreshInventory();
   const missing=page.locator('.fa-product').filter({has:page.getByText('Burgundy Lace',{exact:true})});await missing.getByText('Photo unavailable',{exact:true}).waitFor();
   assert.equal(await missing.locator('a').getAttribute('href'),'/aesthetics/fabrics/Burgundy%20Lace.JPG','A failed preview keeps the original photo reachable');assert.equal(await page.locator('.fa-product').count(),8);assert.equal(await missing.locator('.fa-image-unavailable').evaluate(e=>getComputedStyle(e).fontSize),'10px','Missing inventory photos keep the shared P3 default');failInventoryPreview=false;
 
@@ -144,7 +165,10 @@ try{
   await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-store-group=local]')).borderTopColor!==getComputedStyle(document.querySelector('[data-store-group=mood]')).borderTopColor);
   assert.notEqual(await page.locator('[data-store-group=local]').evaluate(e=>getComputedStyle(e).borderTopColor),await page.locator('[data-store-group=mood]').evaluate(e=>getComputedStyle(e).borderTopColor),'Selected stores use a shared white rim');
   for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});await checkDetails();assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'default inline view fits '+width);assert.ok((await page.locator('.fa-body').boundingBox()).height>=100,'Default inline results usable '+width);const field=await page.locator('.fa-store-filter').first().boundingBox();assert.ok(field.width>80,'default inline filter remains usable '+width+' '+JSON.stringify(field));}
-  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-fabrics-inline-default.png'});
+  await page.setViewportSize({width:1440,height:1000});
+  const firstInlineCaption=await page.evaluate(()=>{const body=document.querySelector('.fa-body').getBoundingClientRect(),caption=document.querySelector('.fa-card-caption').getBoundingClientRect();return {bodyBottom:body.bottom,captionBottom:caption.bottom};});
+  assert.ok(firstInlineCaption.captionBottom<=firstInlineCaption.bodyBottom+1,'The first inline photograph leaves its source caption visible in the results viewport: '+JSON.stringify(firstInlineCaption));
+  await page.screenshot({path:'/private/tmp/maya-fabrics-inline-default.png'});
   await page.locator('.fa-toolbar').getByRole('button',{name:'Expand',exact:true}).click();await page.locator('#fabric-assistant-dialog[open]').waitFor();
   const searchesBeforeResize=requests.length;
   for(const[width,height]of [[320,568],[390,844],[768,1024],[1024,768],[1440,900],[1920,1080]]){
@@ -180,7 +204,7 @@ try{
     await page.setViewportSize({width,height:900});
     assert.equal(await page.locator('.fa-observation').isVisible(),true,'Main interpretation visible by default '+width);
     assert.equal((await readStyle('.fa-observation')).size,12);
-    assert.ok(await page.locator('.fa-observation').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Default worldwide interpretation wraps '+width);
+    assert.ok(await page.locator('.fa-observation').evaluate(el=>{const s=getComputedStyle(el);return el.getBoundingClientRect().height<=(parseFloat(s.lineHeight)||parseFloat(s.fontSize)*1.5)+1;}),'Default worldwide interpretation uses one line '+width);
     assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Default worldwide controls fit '+width);
   }
   await page.setViewportSize({width:1440,height:900});await page.screenshot({path:'/private/tmp/maya-worldwide-default.png'});
@@ -200,9 +224,10 @@ try{
       assert.equal((await readStyle('[data-store-group=mood]')).background,'rgba(3, 15, 29, 0.65)',mode+' unselected filter keeps Glass material '+width);
       assert.deepEqual([pill.paddingX,pill.paddingY,pill.blur],[18,9,'blur(7px) saturate(1.2)'],mode+' glass material '+width);
       assert.equal(outer.blur,'blur(9px) saturate(1.3)');assert.equal(inner.blur,'blur(12px) saturate(1.1)');assert.equal(pill.background,'rgba(3, 15, 29, 0.65)');assert.match((await readStyle('.fa-card-title')).font,/Cormorant/);assert.equal((await readStyle('.fa-card-title')).weight,'450');assert.equal(await page.locator('.fa-store-wrap').evaluate(el=>getComputedStyle(el).gap),'12px');assert.equal(await page.locator('#fabric-assistant').evaluate(el=>getComputedStyle(el).gap),'18px');
-      assert.ok(await page.locator('.fa-card-caption').first().evaluate(el=>el.scrollWidth<=el.clientWidth+1&&el.scrollHeight<=el.clientHeight+1),'Seller facts wrap without losing the unit '+width);
+      assert.ok(await page.locator('.fa-card-caption').first().evaluate(el=>{const s=getComputedStyle(el);return el.getBoundingClientRect().height<=(parseFloat(s.lineHeight)||parseFloat(s.fontSize)*1.5)+1;}),'Source stays in one visible row '+width);
       assert.equal(await page.locator('.fa-card-caption').count(),4,'All material purposes survive Save and expansion '+width);
-      for(const caption of await page.locator('.fa-card-caption').all())assert.ok(await caption.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Component caption fits '+width);
+      for(const caption of await page.locator('.fa-card-caption').all())assert.ok(await caption.evaluate(el=>{const s=getComputedStyle(el);return el.getBoundingClientRect().height<=(parseFloat(s.lineHeight)||parseFloat(s.fontSize)*1.5)+1;}),'Component caption stays one line '+width);
+      await checkPhotoFirst(mode+' saved '+width);
       assert.equal(glyph.color,'rgb(170, 18, 52)');assert.equal(glyph.stroke,'3px');assert.ok(glyph.width>8&&glyph.height>8);
       assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),mode+' saved design fits '+width);
       if(mode==='expanded'&&width<=390)assert.ok((await page.locator('.fa-product-image').first().boundingBox()).width>180,'Saved phone fabric photos remain large');
@@ -213,6 +238,13 @@ try{
   failNext=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.getByText('Search temporarily unavailable.',{exact:true}).waitFor();assert.equal((await readStyle('.fa-status')).size,16,'Failure stays governed');await page.screenshot({path:'/private/tmp/maya-fabrics-error-saved.png'});
   await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.locator('.fa-card-title').first().waitFor();await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/private/tmp/maya-fabrics-phone-saved.png'});
   await detailsTrigger.tap();await details.waitFor({state:'visible'});assert.equal(await details.evaluate(e=>document.activeElement===e),true,'Tap/activation focuses the scrollable search details');await page.screenshot({path:'/private/tmp/maya-fabric-details-saved-phone.png'});await page.keyboard.press('Escape');
+  // Sparse long-name cards also fill the same inline and expanded area after Save.
+  layoutMode=true;componentMode=false;await resetFixture();await page.waitForFunction(()=>document.querySelectorAll('.fa-product').length===3);
+  for(const mode of ['inline','expanded']){
+    if(mode==='expanded')await page.locator('.fa-toolbar').getByRole('button',{name:'Expand',exact:true}).click();
+    for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});await checkPhotoFirst('Sparse '+mode+' saved '+width);}
+  }
+  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-fabric-photo-first-saved.png'});await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/private/tmp/maya-fabric-photo-first-saved-phone.png'});layoutMode=false;
   // Generic standalone conversations remain available when no dissected-look mode is supplied.
   componentMode=false;
   await page.evaluate(({reference})=>window.MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,forceReset:true}),{reference});
@@ -245,8 +277,11 @@ try{
   const savedProductCard=page.locator('.fa-product').filter({hasText:'Crimson wool twill'});
   // A persistent provider-photo failure survives async lookbook repaint. A one-off
   // synthetic DOM error could be erased by the in-flight Favorites refresh.
-  for(const book of books.values())for(const item of book.items)if(item.url===product.url)item.image=product.image+'?fixture-unavailable=1';
-  await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
+  const healthyFavoriteURL=await savedProductCard.locator('img').getAttribute('src');
+  for(const book of books.values())for(const item of book.items)if(item.url===product.url)item.image=healthyFavoriteURL+'?fixture-unavailable=1';
+  const favoriteRefreshed=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/admin/fabrics/lookbook'&&response.request().method()==='GET');await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await (await favoriteRefreshed).finished();
+  assert.equal(await savedProductCard.locator('img').getAttribute('src'),healthyFavoriteURL,'A healthy mounted favorite photo survives new failing metadata');
+  await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();await openFavorites();
   await savedProductCard.getByText('Photo unavailable',{exact:true}).waitFor();
   assert.equal((await readStyle('.fa-image-unavailable')).size,14,'Unavailable-photo copy follows the changed saved P3 role');assert.equal((await readStyle('.fa-image-unavailable')).color,'rgb(170, 181, 196)');
   assert.ok(await savedProductCard.getByRole('button',{name:'Remove',exact:true}).isVisible(),'A broken favorite stays manageable');

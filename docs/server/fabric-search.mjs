@@ -411,8 +411,14 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
         if (!selected) throw fail('This garment is not in the saved dissection. Save it first.',409);
         input.piece=selected; input.pieces=[selected];selectedReference=savedImages.get(selected.id)||'';
       } else { input.piece={}; input.pieces=pieces.slice(0,12); }
-      input.request='Find apparel fabric for these saved garments: '+input.pieces.map(piece=>piece.name+': '+piece.fabric).join('; ');
-      input.history=[];
+      if(input.mode==='retailers'){
+        input.request='Find apparel fabric for these saved garments: '+input.pieces.map(piece=>piece.name+': '+piece.fabric).join('; ');
+        input.history=[];
+      }else{
+        // Canonical garment metadata is already sent separately. Do not turn
+        // saved fabric guesses into mandatory search terms or erase refinements.
+        input.request||='Find apparel fabric for the saved look, starting with its dominant body-cloth color.';
+      }
     }
     signal.throwIfAborted();
     phases.contextMs=elapsed(started);

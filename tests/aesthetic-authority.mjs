@@ -95,6 +95,7 @@ await import('./fabric-workflow-ui.mjs?authority');
 // Includes four component-purpose captions, retained cards, actual Save and
 // default/changed shared materials and typography inline/expanded at six widths.
 await import('./fabric-search-ui.mjs?authority');
+await import('./fabric-images-ui.mjs?authority');
 await import('./operation-save-failures.mjs?authority');
 await import('./client-voice-ui.mjs?authority');
 await import('./admin-voice-ui.mjs?authority');

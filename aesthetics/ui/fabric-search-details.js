@@ -25,6 +25,7 @@
    data=value;content.replaceChildren();trigger.disabled=!value;if(!value){close();return;}
    const heading=document.createElement('h3');heading.dataset.mayaType='H4';if(preview)heading.dataset.previewCategory='H4';heading.textContent='Fabric search';content.append(heading);
    line('Looking for',value.query||'Fabric for the selected look');
+   if(value.observation)line('Reference interpretation',value.observation);
    if(value.stage)line('Status',value.stage);
    if(panel.matches(':popover-open'))place();
   }};

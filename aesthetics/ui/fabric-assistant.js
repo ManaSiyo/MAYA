@@ -116,7 +116,7 @@
     tabs.append(inhouse,search,saved,filter,fresh);
     const body=node('div','fa-body');body.dataset.mayaScrollbar='visible';body.tabIndex=0;body.setAttribute('aria-label','Fabric results');
     const transcript=node('div','fa-transcript');transcript.setAttribute('aria-label','Your requests');
-    const observation=node('p','fa-observation'),results=node('div','fa-results'),saveStatus=node('p','fa-save-status');saveStatus.setAttribute('role','status');body.append(transcript,observation,results,saveStatus);
+    const observation=node('p','fa-observation'),results=node('div','fa-results'),saveStatus=node('p','fa-save-status');saveStatus.setAttribute('role','status');results.dataset.mayaScrollbar='visible';results.tabIndex=0;results.setAttribute('aria-label','Fabric suggestions');body.append(transcript,observation,results,saveStatus);
     const form=node('form','fa-composer');
     const photo=node('div','fa-photo');photo.hidden=true;
     const preview=node('img');preview.alt='Original look reference';photo.append(preview,action('Remove photo',()=>replaceReference('')));
@@ -257,18 +257,72 @@
   function inventory() {
     return (context.inhouse||[]).map(p=>({...p,url:p.url&&p.url!=='#'?p.url:(p.image||p.img||''),image:p.image||p.img||'',evidence:'atelier_inventory',price:'',unit:'',availability:'unknown',garment:p.garment||''})).filter(p=>p.image && p.url);
   }
-  const cardSignature=p=>JSON.stringify([view,p.url,p.image,p.title,p.price,p.unit,p.currency,p.garment,p.garmentId,p.materialLabel,p.merchant,p.evidence,saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''))]);
+  function photoCandidates(product) {
+    const values=[product.image,...(Array.isArray(product.imageCandidates)?product.imageCandidates:[])],urls=[];
+    for(const value of values){
+      if(typeof value!=='string'||!value||urls.includes(value))continue;
+      if(/^data:image\//.test(value)){urls.push(value);}
+      else try{
+        const url=new URL(value,location.href),host=url.hostname.toLowerCase().replace(/\.$/,'');
+        const local=value.startsWith('/aesthetics/fabrics/')&&url.origin===location.origin&&url.pathname.startsWith('/aesthetics/fabrics/');
+        if(local||(value.length<=4096&&url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&host.includes('.')&&!/^[\d.]+$|:|(?:^|\.)(?:localhost|local|internal|lan|home|onion)$/.test(host)))urls.push(value);
+      }catch(_){}
+      if(urls.length===4)break;
+    }
+    return urls;
+  }
+  let photoPaintQueued=false;
+  function queuePhotoPaint(item){
+    if(!item.isConnected||view!=='search'||searchMode!=='worldwide'||photoPaintQueued)return;
+    photoPaintQueued=true;const stamp=epoch;
+    queueMicrotask(()=>{photoPaintQueued=false;if(current(stamp)&&view==='search'&&searchMode==='worldwide')paint();});
+  }
+  function mountProductPhoto(item,link,product) {
+    const urls=[],attempted=new Set(),rejected=new Set();let img=null,loading=false,healthy=false,unavailable=null,promoteOnLoad=false;
+    const missing=()=>{
+      const wasMissing=item.classList.contains('has-missing-photo');
+      img?.remove();item.classList.add('has-missing-photo');item.classList.remove('has-photo');
+      if(!unavailable){unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);}
+      if(!wasMissing)queuePhotoPaint(item);
+    };
+    const next=()=>{
+      if(healthy||loading)return;
+      const source=urls.find(url=>!attempted.has(url)&&!rejected.has(url));
+      if(!source||attempted.size>=4){missing();return;}
+      if(!img){
+        img=node('img','fa-product-image');img.alt=product.title;img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
+        const photo=img;
+        img.addEventListener('load',()=>{if(img!==photo||!item.isConnected)return;loading=false;healthy=true;item.classList.remove('has-missing-photo');item.classList.add('has-photo');unavailable?.remove();unavailable=null;if(promoteOnLoad){promoteOnLoad=false;queuePhotoPaint(item);}});
+        img.addEventListener('error',()=>{if(img!==photo||!item.isConnected)return;loading=false;next();});
+      }
+      attempted.add(source);loading=true;promoteOnLoad=promoteOnLoad||item.classList.contains('has-missing-photo');unavailable?.remove();unavailable=null;item.classList.remove('has-missing-photo');
+      if(!img.isConnected)link.prepend(img);img.src=source;
+    };
+    item._fabricUpdateImages=updated=>{
+      for(const url of (Array.isArray(updated.rejectedImageURLs)?updated.rejectedImageURLs:[]))if(typeof url==='string')rejected.add(url);
+      for(let i=urls.length-1;i>=0;i--)if(rejected.has(urls[i]))urls.splice(i,1);
+      if(img&&rejected.has(img.getAttribute('src'))){
+        const revoked=img;img=null;loading=false;healthy=false;item.classList.remove('has-photo');revoked.remove();revoked.removeAttribute('src');
+      }
+      for(const url of photoCandidates(updated))if(!rejected.has(url)&&!urls.includes(url)&&urls.length<4)urls.push(url);
+      next();
+    };
+    item._fabricUpdateImages(product);
+  }
+  // Photo evidence can arrive late. It updates the mounted image without
+  // discarding a healthy photograph or restarting URLs that already failed.
+  const cardSignature=p=>JSON.stringify([view,p.url,p.title,p.price,p.unit,p.currency,p.garment,p.garmentId,p.materialLabel,p.merchant,p.evidence,saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''))]);
   function card(p) {
     const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);
     const local=p.evidence==='atelier_inventory';
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
     const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
-    if(p.image && /^(?:https:\/\/|\/aesthetics\/fabrics\/|data:image\/)/.test(p.image)){
-      const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');},{once:true});link.append(img);
-    }else if(p.evidence==='web_suggestion'){const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.append(unavailable);}
-    const title=node('h3','fa-card-title',p.title);
+    mountProductPhoto(item,link,p);
+    const title=node('h3','fa-card-title',p.title);title.dataset.mayaType='H4';
     const use=[p.garment?'For '+p.garment:'',p.materialLabel].filter(Boolean).join(' · ');
-    const caption=node('p','fa-card-caption',[use,local?'':p.merchant,knownPrice].filter(Boolean).join(' · ')||(local?'Availability not recorded':'Delivery unconfirmed'));caption.dataset.mayaType='P3';
+    const source=local?'Atelier inventory':p.merchant||'View fabric source';
+    const caption=node('p','fa-card-caption',[knownPrice,source].filter(Boolean).join(' · '));caption.dataset.mayaType='P3';
+    link.setAttribute('aria-label',[p.title,use,source,knownPrice,p.reason].filter(Boolean).join(' · '));
     link.append(title,caption);item.append(link);
     if(view==='saved'){
       const controls=node('div','fa-card-actions'),remove=action('Remove',()=>save(p,'remove',remove));
@@ -288,7 +342,13 @@
     // Retained cards keep their actual image/link nodes through Refresh and
     // appended results. Rebuilding the grid made loaded photographs flicker.
     const existing=new Map([...els.results.children].filter(el=>el._fabricURL).map(el=>[el._fabricURL,el]));
-    const cards=items.map(product=>{const old=existing.get(product.url);return old?._fabricSignature===cardSignature(product)?old:card(product);});
+    const cards=items.map(product=>{const old=existing.get(product.url);if(old?._fabricSignature===cardSignature(product)){old._fabricUpdateImages?.(product);return old;}return card(product);});
+    // Keep retained source-only cards after usable photos, even when they were
+    // inserted earlier in the stream or exhausted their image URLs later.
+    if(view==='search'&&searchMode==='worldwide'){
+      const missingPhoto=item=>Number(item.classList.contains('has-missing-photo')||!item.querySelector('.fa-product-image'));
+      cards.sort((a,b)=>missingPhoto(a)-missingPhoto(b));
+    }
     const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child))child.remove();
     cards.forEach((el,index)=>{if(els.results.children[index]!==el)els.results.insertBefore(el,els.results.children[index]||null);});
     if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':searchState==='preparing'?'Preparing the saved reference…':busy?searchMode==='worldwide'?'Looking at this image and searching worldwide…':'Checking the selected retailers…':searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));

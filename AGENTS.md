@@ -1,3 +1,24 @@
+# November 3 owner clarification — fabric photographs and dominant color
+
+Main Fabrics starts with the largest/selected garment body cloth's dominant color
+and apparel use, then adds closer weave/motif and secondary textile alternatives.
+Do not constrain the main search to fabric containing bespoke embellishments.
+Preserve explicit client exclusions and canonical account/submission/garment scope.
+One worldwide request may retain additional raw source-linked fabric photographs
+when caption evidence affirmatively identifies yardage/apparel use and the resolved
+primary color family. Reject ambiguous variants, decor/editorial/finished clothing;
+never infer a garment ID or seller facts for these approximate alternatives.
+Canonical photo then source-backed thumbnail fallbacks are bounded to four URLs,
+with no server fetch/proxy or automatic paid retry. Preserve healthy image nodes;
+explicit later source evidence can revoke a known wrong-color photograph.
+Photo cards stay before compact missing-photo links even across retained results
+and Refresh. Product links have two visible text rows total. Use the full photo grid width and
+available height; long P1 interpretation stays one line with its full text inside
+Search details. Existing H4/P3/Inner/Glass and sole active Fabric preview govern.
+Shared Fabric JS/CSS references are v10, Search details v2. New image UI regression
+is in release/app-regression/final authority. Run fabric gates on Node20/local,
+full release/regression/smoke and final standalone Aesthetic Control last.
+
 # Active owner clarification — worldwide Fabrics
 
 This clarification supersedes older default-five-filter/local-first and mandatory
