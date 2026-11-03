@@ -109,6 +109,9 @@ async function checkStyles(label){
   assert.ok(await page.locator('#drawer-logs').evaluate(element=>element.scrollWidth<=element.clientWidth+1),label+' notifications fit '+width);
   assert.ok(await page.locator('#adm-tabrow').evaluate(element=>element.scrollWidth<=element.clientWidth+1),label+' drawer header fits '+width);
   assert.equal(await page.locator('#adm-tabrow>button[role=tab]').count(),3,label+' retains all three tab controls '+width);
+  const tabOrder=await page.locator('#adm-tabrow>button[role=tab]').evaluateAll(elements=>elements.map(element=>{const r=element.getBoundingClientRect();return {name:element.getAttribute('aria-label'),left:r.left,top:r.top};}));
+  assert.deepEqual(tabOrder.map(tab=>tab.name),['Settings','Messages','Logs'],label+' accessible drawer order '+width);
+  assert.ok(tabOrder.every((tab,i)=>i===0||(tab.top>tabOrder[i-1].top+1||tab.left>tabOrder[i-1].left)),label+' visual drawer order matches reading order '+width);
   assert.equal(await page.locator('#voice-dock').isVisible(),true,label+' voice dock stays visible '+width);
   for(const id of ['adm-tab-messages','adm-tab-logs','adm-tab-systems','adm-tabtitle','voice-btn','maya-toggle']){
    assert.equal(await page.locator('#'+id).isVisible(),true,label+' '+id+' remains visible '+width);
@@ -124,10 +127,13 @@ async function checkStyles(label){
 try{
  await page.goto(origin+'/status.html');
  await page.waitForFunction(()=>typeof admTab==='function'&&window.MayaTypographyControls);
- assert.equal(await page.locator('#adm-tab-logs').getAttribute('aria-label'),'Notifications','The compatible logs tab presents Notifications');
+ assert.deepEqual(await page.locator('#adm-tabrow>button[role=tab]').evaluateAll(elements=>elements.map(element=>element.getAttribute('aria-label'))),['Settings','Messages','Logs'],'The drawer has the requested Settings, Messages, Logs reading order');
  assert.ok(await page.evaluate(()=>!!window.MayaAdminNotifications),'Notification history exposes its bounded session controller');
  await page.evaluate(()=>MayaTypographyControls.ready);
  await setOwner(ownerA);await openNotifications();
+ assert.equal(await page.locator('#adm-tabtitle').textContent(),'Logs','The Logs tab contains notification history and collapsed diagnostics');
+ await page.evaluate(()=>admTab('systems'));assert.equal(await page.locator('#adm-tabtitle').textContent(),'Settings');
+ await openNotifications();
  assert.equal(await page.locator('#drawer-logs').isVisible(),true);assert.equal(await page.locator('#admin-notification-list').isVisible(),true);
  assert.equal(await page.locator('#notifications-feedback').getAttribute('data-maya-type'),'P1');assert.equal(await page.locator('#notifications-feedback').getAttribute('role'),'status');
  for(const selector of ['#notification-current','#maya-logs-disclosure'])assert.equal(await page.locator(selector).evaluate(element=>element.open),false,selector+' starts collapsed');

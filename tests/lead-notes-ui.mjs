@@ -27,7 +27,10 @@ function safeNotificationBatch(body){
 // A wall-clock delay can sample the last few pixels of smooth scrolling in CI.
 const drawerSettled=()=>page.waitForFunction(()=>{const h=document.getElementById('adm-hscroll');return Math.abs(h.scrollLeft-(h.scrollWidth-h.clientWidth))<0.5;});
 page.on('pageerror',e=>errors.push(e.message));
-await page.addInitScript(()=>{window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
+// Google sign-in is intentionally blocked. Its real retry exhaustion can land
+// during this suite on slower CI; exercise that failure deterministically after
+// fixture auth instead of confusing it with a fabricated provider recovery.
+await page.addInitScript(()=>{const fixtureTimer=window.setTimeout;window.setTimeout=(fn,ms,...args)=>fixtureTimer(fn,window.fixtureFastGsi&&fn.name==='_gisBoot'?5:ms,...args);window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
 await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='maya.test')return route.abort();
  if(u.pathname.startsWith('/api/')){
   if(u.pathname==='/api/admin/notifications'){
@@ -46,7 +49,7 @@ await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.ur
 });
 try{
  await page.goto('https://maya.test/backend/status.html');await page.waitForFunction(()=>typeof paintLeads==='function'&&typeof editLatestLeadNote==='function');
- await page.evaluate(()=>{_idTok='fixture-owner';paintLeads({connected:true,list:[{id:'m_1',name:'Angela Example',phone:'+14155550101',createdAt:'2026-10-04T12:00:00Z',wrote:'Original note',stage:'new'}]});});
+ await page.evaluate(()=>{_idTok='fixture-owner';window.fixtureFastGsi=true;_gisBoot();paintLeads({connected:true,list:[{id:'m_1',name:'Angela Example',phone:'+14155550101',createdAt:'2026-10-04T12:00:00Z',wrote:'Original note',stage:'new'}]});});
  assert.deepEqual(await page.locator('#leads-table th').evaluateAll(es=>es.map(e=>(e.querySelector('.lead-heading>span')||e.childNodes[0]).textContent.trim())),['Full name','Contact','Status','Latest Notes']);
  assert.equal(await page.locator('#leads-table .category-badge').count(),0);
  assert.equal(await page.locator('[data-col="contact"]').last().textContent(),'+14155550101');
@@ -114,6 +117,14 @@ try{
   }
  }
  await gutterStyle.evaluate(e=>e.remove());
- assert.equal(notificationWrites.length,0,'Local note and filter renders do not report provider recovery without a fresh provider read');
+ // Wait for the actual blocked-sign-in failure, then drain the notification
+ // writer through its public load operation. No timing sleep or source/code
+ // validation is relaxed; unavailable is a genuine error, not recovery.
+ await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.evaluate(()=>MayaAdminNotifications.load());
+ const observations=notificationWrites.flatMap(write=>write.body.items);
+ assert.ok(observations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'A delayed blocked-sign-in failure is still recorded in Notifications');
+ assert.deepEqual(observations.filter(item=>item.source==='leads'&&item.code==='healthy'),[],'Local lead note and filter renders never invent a healthy Leads observation');
+ assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Local note and filter renders do not report any provider recovery without a fresh provider read');
  assert.deepEqual(errors,[]);console.log('Lead note Save/Cancel, outside-click discard, confirmed persistence, H4/H5, Contact and unsent Booking Link drafts passed at four widths.');
 }finally{await browser.close();}

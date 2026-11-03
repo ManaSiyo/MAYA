@@ -1,25 +1,23 @@
-Title: [Codex] Prioritize color and fabric photos in sourcing
+Title: [Codex] Align Admin sections and fix release notification check
 
-Fabrics dropped source photos behind short written recommendations, discarded
-photos after one failed thumbnail, and wasted space on empty grid tracks and
-multiline captions. Search dominant-color apparel fabric before detailed motifs;
-retain qualified source-linked photo alternatives without inventing garment IDs
-or seller facts. Preserve canonical context, explicit exclusions, source/variant
-identity and later-evidence retractions.
+Closed Insights, Recent changes and Feature requests had unequal gaps from
+legacy footer padding/margins. Use the existing Insights spacing for both closed
+boundaries, preserve open geometry and update its working preview. Present
+Settings, Messages, Logs in matching visual/reading order, retaining private
+notifications and compatible routing IDs. Version shared presentation runtime v3
+consistently across served pages.
 
-Try at most four source-backed image URLs, retain healthy photos and revoke
-photographs later identified as the wrong color. Exhausted photos stay compact
-source links, after photo cards even through retained-result Refresh. Fill the
-shared responsive grid with photos and exactly two H4/P3
-text rows; keep full interpretation in Search details. The sole active Fabric
-preview and saved Inner/Glass/typography settings remain authoritative.
+Cloud Build stopped before deployment because the lead-notes fixture counted a
+legitimate delayed blocked-sign-in warning as provider recovery. Exercise and
+require that real warning deterministically while still rejecting every invented
+healthy/connected observation. Production notification behavior is unchanged.
 
 Validation: all 79 required functional/release/regression/smoke command results
-pass. Node20/24 source/image/late-color/forced-GC regressions pass. Negative
-fixtures reproduce the shortlist, missing-image and inline-caption failures.
-Default/saved styles, real Save and six responsive widths are checked; standalone
-Aesthetic Control is the final pre-commit gate. Synthetic providers only.
+pass. Node20/24 reproduce and pass the corrected fixture. Default/saved six-width
+checks, real design Save/reload, open geometry and preview behavior pass. Actual
+public saved settings confirm existing H3 font parity and circular D/W/M locally.
+Standalone Aesthetic Control is the final pre-commit gate. Synthetic providers.
 
-Local work only: no paid provider requests, personal Chrome, secret/environment
-access or deployment. Owner Push and a same-look production quality/timing check
-remain. No Google/ChatGPT parity or current seller-stock claim.
+The public site remains at 41df1a5 pending owner deployment. No secrets, production
+settings, personal Chrome, paid provider calls, Push or build rerun. A successful
+Google Cloud Build and exact live release verification remain necessary.

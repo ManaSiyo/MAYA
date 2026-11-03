@@ -1,93 +1,82 @@
-# Current handoff — November 3 Fabrics diagnosis and photographs
+# Current handoff — November 3 Admin follow-up and blocked deployment
 
-## Owner request and boundaries
+## Request and boundaries
 
-The owner reports three photo-unavailable results for a dark green ornate coat,
-while broad color searches elsewhere find many more fabrics. Start with dominant
-color/apparel body cloth, then closer weave/motif. Show fabric photographs across
-most of the available view with at most two visible link text rows. Preserve the
-existing shared design. No Push, personal Chrome, credential/environment access
-or paid live provider test. Local verified commits remain authorized.
+Owner screenshots at 14:35/14:36 still show provider setup text above campaigns,
+rectangular D/W/M and Feature requests in a different font. They also request
+uniform closed Insights/Recent changes/Feature requests spacing and drawer order
+Settings, Messages, Logs. Continue code/fixture work without personal Chrome,
+secret/environment changes, live paid providers or Push. Local verified commits
+remain authorized. Do not rerun a Cloud Build that could deploy without permission.
 
-## Evidence and implementation
+## Why the earlier changes were invisible
 
-There was no four-result cap: old main limit was12. The prompt prioritized exact
-component coverage, only modeled candidate URLs became cards, and raw source
-photos could be dropped behind a three-record written shortlist. The browser
-discarded a failed thumbnail without trying the source's canonical image. Exact
-slash spelling could detach photos. Auto-fill/fixed columns reserved empty tracks,
-unbounded captions and long visible interpretation consumed the image space.
-Public HTTP checks found old live Fabric JS/CSS byte-for-byte identical to local;
-this is code behavior, not solely stale cache. Latest checked public release was
-41df1a542366a68514df13670dc008cc634fd05a. No private submission/provider trace read.
+Read-only public HTTP confirms release/status.html still 41df1a542366a68514df13670dc008cc634fd05a,
+published 2026-11-02T07:10:40Z. Live HTML has Feature requests H2, no circular-shape
+markers and no notification module. Both 05e170c and 3722ed0 are now at origin;
+the agent did not Push. The source already moves operational copy into the private
+drawer, aligns all seven headings to H3 and gives D/W/M the shared circle contract.
 
-docs/server/fabric-worldwide.mjs now asks for dominant-color apparel/body-cloth
-alternatives before bespoke motifs, with one request, five tools, 6000 output
-tokens, 32 requested images and 24 displayed suggestions (limits, no padded minimum).
-Model cards remain source grounded. Additional raw product photographs require
-affirmative yardage/apparel and primary-color evidence; ambiguous multi-color,
-decor/editorial/finished-clothing pages are rejected. These are approximate
-color alternatives with no inferred garment ID or seller price/composition/stock.
-Actual bounded tool queries are private response diagnostics, never logs.
+Using the public /api/design settings in isolated local Admin with actual loaded
+fonts confirms 26×26px circular D/W/M and identical H3/Jost 14px/350 headings at all
+six widths. Defaults give 44×44 circles and H3/Jost 16px/400. No saved settings were
+written live. The user screenshots match the older deployed page, not a current
+circle/font code regression. Source-backed proof/captures are in this chat's work/.
 
-Canonical source images precede thumbnails, with at most 4 source-backed URLs.
-Per-result color association prevents a green fallback from taking a known orange
-photo on the same page. Slash aliases dedup; hosts and meaningful variant queries
-remain separate. All caption exclusion evidence is independent of URL bounds;
-later contradictory evidence still retracts and tombstones current/retained cards.
-Photo cards take display slots before image-less links. Browser ordering also
-promotes photo cards ahead of retained text-only/failed links, preserving actual
-DOM/image identities; source failures cannot leave an empty first row above photos. Automatic world requests
-keep explicit request/history words and canonical saved metadata separately;
-their exclusions are checked even with automatic mode. Optional retailers retain
-their prior separate scope, verification and deadlines.
+GitHub check-runs reveal the real blocker; combined status alone showed Vercel
+success and omitted it. Latest Google Cloud Build failed the Test release contracts
+step on tests/lead-notes-ui.mjs117 before any deploy step. Build
+eb233605-ab80-4e12-be57-abc910478208, check-run 126245900730, commit 3722ed0,
+2026-11-03T22:23:39Z–22:30:09Z. Link:
+https://github.com/ManaSiyo/MAYA/runs/126245900730
+No Cloud credentials, personal browser or production mutation was used to read it.
 
-aesthetics/ui/fabric-assistant.js tries each of at most 4 validated source-backed
-URLs in the same img, retains healthy nodes and stops detached old-account fallback.
-Explicit wrong-color image revocations override healthy retention, and callbacks
-from a revoked photo cannot restore it. Late color interpretation requalifies
-already-streamed images, including when the candidate preceded interpretation.
-No automatic provider retry, server proxy/fetch or generated replacement is used.
-CSS auto-fits the available grid and fills photo rows. A 4:3 intrinsic image
-ratio and bounded, keyboard-scrollable results area prevent natural image size
-from hiding the first desktop title/source or forcing nested outer scrolling.
-Visible card text is H4
-title + P3 source/known-unit price. Full context remains in the accessible link
-name. P1 interpretation is one clipped row, full text in Search details. True
-photo failure keeps a compact genuine link. Existing active Fabric preview,
-Inner/Outer/Glass, saved typography and privacy scopes remain authoritative.
-Changed shared JS/CSS refs v10, Search details v2; exact Hosting no-cache remains.
+## Current changes
 
-## Verification and next step
+backend/status.html keeps compatible internal systems/logs IDs but presents
+Settings, Messages, Logs in matching DOM/CSS order and drawer titles. Notification
+history, collapsed Current status and diagnostic Logs remain inside the Logs tab;
+the Ads table has no provider setup paragraph. Private state/write safeguards are
+unchanged. tests/admin-notifications-ui covers names, titles, reading/painted order
+and existing privacy/account behavior across six widths and saved styles.
 
-Targeted negative tests reproduced the missing-photo/shortlist/layout failures.
-22 worldwide checks pass Node20 and local Node24, including mixed-color photo
-association, fifth-caption exclusion, explicit automatic refinements, image/URL
-provenance and photo-first 24 bound. New isolated-browser fabric-images-ui passes
-both runtimes and is integrated in release/app-regression/final authority.
-All 79 required functional/release/regression/smoke command results pass. The
-first full run caught the new inline-caption visibility assertion; after fixing
-intrinsic grid sizing, the affected UI/shared-gallery checks and full application
-regression pass. The final source/image revocation and late-color fixtures pass
-on Node20/24, including forced GC. Default/saved inline, expanded, phone and
-active-preview captures are inspected; photos dominate the available view and
-first-row desktop titles/sources remain visible.
+aesthetics/ui/presentation-runtime.js removes the legacy footer push-down only
+at adjacent closed lower-section boundaries. Both closed heading gaps use the
+existing sectionSpacing.insights value, including zero. A negative fixture showed
+64px and 14px; default now 16/16, saved 30/30 and 0/64 values also pass all six widths.
+Open section geometry is unchanged. The existing active spacing preview now has
+three working lower folds and an accurately named Insights/closed-sections control.
+No new design key/editor/family. Shared runtime refs across all served pages are v3.
 
-The final standalone tests/aesthetic-authority.mjs is the last pre-commit gate;
-it reexecutes the actual default/saved responsive surfaces and new image tests.
-No further implementation change is planned before the local commit. Owner Push
-remains the deployment step. After deployment verify release/API/assets
-and the same green look's useful source photos, breadth, latency and links. Fake
-provider tests do not establish live Google/ChatGPT parity or stock/suitability.
+tests/lead-notes-ui.mjs now deterministically exercises blocked Google sign-in
+after fixture auth. A delayed real submissions/unavailable notification made the
+old total-count-zero assertion fail on slow CI. It awaits actual retry exhaustion
+and drains the public notification writer, requires the real unavailable warning,
+and retains strict zero Leads healthy / all-source healthy-or-connected recovery
+assertions. Auth, fixed-code payload, bounded writes, note/send/account and layout
+checks remain. Production notification code is untouched. Node20/24 pass.
 
-## Previous completed work / Ads continuity
+## Verification / next step
 
-05e170c contains Admin Notifications beside Messages, collapsed Current status and
-Logs, private fixed-state history, seven H3 peers and shared circular D/W/M. Its
-78 full checks and final authority passed. It is now at origin/maya-v2; the agent
-did not Push. Last public check still showed 41df1a5, so deployment of that commit remains unconfirmed.
-Owner confirmed Google Explorer production access, consent In production, fresh
-adwords/offline authorization with dedicated Web client and privately deployed
-replacement credentials after screenshot exposure. Owner reports both Google and
-ChatGPT Ads visible. This authenticated outcome is owner-reported; public health
-only confirms configured presence. Meta remains unconfigured.
+Targeted drawer, Ads, pill, presentation, gallery and workspace authority checks
+pass. Actual public saved design was inspected at phone/desktop and six widths.
+Closed default/saved screenshots have matching fonts and uniform gaps. All 79
+required functional/release/regression/smoke command results pass. The bumped
+runtime reference also required updating its existing version contract; that
+specific check was rerun successfully. Actual gallery Save/reload propagates
+closed spacing to Admin at all six widths. The reproduced blocked-GIS fixture
+passes Node20/24 without allowing any invented recovery.
+Standalone tests/aesthetic-authority.mjs is the final pre-commit gate. Commit
+this verified work locally only. Owner Push must be followed by a successful Google Cloud Build and
+exact Hosting/Admin/API/asset verification; Vercel green alone is insufficient.
+Do not claim the live interface is fixed before that deployment succeeds.
+
+## Preserved continuity
+
+3722ed0 contains the color-first worldwide Fabric/photo corrections, source-backed
+fallbacks/revocations, photo-first retained cards and two text rows. Its full local
+checks passed; the Cloud Build failure above prevented deployment. All source,
+canonical-context, exclusion and private-cache safeguards remain.
+Owner reports Google and ChatGPT Ads visible after privately deployed replacement
+OAuth credentials; Explorer production access and consent In production were
+owner-confirmed. Meta remains unconfigured. No credential/configuration changes.

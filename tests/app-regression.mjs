@@ -2822,6 +2822,8 @@ ok('Admin stores fixed account-bound notifications in the drawer, keeps Logs col
 ok('Shared D/W/M circular controls preserve Glass material under saved typography and asymmetric padding',MAP_SOURCE.includes('data-maya-shape="circle"'));
 ok('Fabric suggestions keep dominant-color photographs, recover source-backed images and fill the existing shared grid',
   BUILD_SOURCE.includes('node tests/fabric-images-ui.mjs') && readFileSync(join(ROOT,'docs/server/fabric-worldwide.mjs'),'utf8').includes('isColorFabricPhoto') && readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('auto-fit'));
+ok('Admin lower closed sections share Insights spacing and the drawer reads Settings, Messages, Logs',
+  presentationRuntimeSource.includes('closedInsights') && MAP_SOURCE.includes('#adm-tab-systems{order:0}#adm-tab-messages{order:1}#adm-tab-logs{order:2}') && MAP_SOURCE.includes('aria-label="Settings" title="Settings"') && MAP_SOURCE.includes("t === 'logs' ? 'Logs'"));
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

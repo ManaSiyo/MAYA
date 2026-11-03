@@ -690,3 +690,21 @@ picture, independent proxy or automatic search retry is introduced. The existing
 sole active Fabric preview demonstrates the same H4/P3/Inner/Glass geometry and
 saved settings. Default/materially changed saved styles, actual Save, six widths,
 sparse/populated/empty/error and inline/expanded states remain required.
+
+
+## November 3 — closed Admin sections and drawer order
+
+The drawer reads Settings, Messages, Logs in both DOM and visual order. Internal
+systems/logs routing IDs remain unchanged. Logs contains notification history,
+collapsed Current status and diagnostic Logs. Provider setup/connection copy
+stays there, away from campaign data. The existing H2/P3/Glass/Drawer controls
+remain its presentation authority.
+
+Adjacent closed Insights, Recent changes and Feature requests have equal heading
+gaps, controlled by sectionSpacing.insights, including zero. The historical footer
+push-down/padding cannot override those closed boundaries. Open section spacing
+and heading-to-content settings remain unchanged. The existing spacing control
+and its active preview show three working lower folds; no new key/editor/style
+family is introduced. Shared presentation runtime asset is v3; save schema stays
+compatible. All seven Admin headings remain H3, including Feature requests, and
+actual D/W/M retain the existing shared circle shape under saved settings.

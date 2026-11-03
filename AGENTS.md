@@ -1,3 +1,22 @@
+# November 3 Admin review — deployment, lower folds and menu
+
+Admin drawer order and labels are Settings, Messages, Logs. Internal systems/logs
+IDs remain compatible. Logs contains private notifications and collapsed Current
+status/diagnostic Logs; provider setup text must not return above campaign data.
+Closed Insights, Recent changes and Feature requests share the existing Insights
+section spacing setting, including zero; open section geometry stays unchanged.
+The existing spacing preview demonstrates those three working folds. Shared
+presentation runtime references are v3; saved design schema is unchanged.
+
+At this review production still served 41df1a5, before 05e170c's notifications,
+H3/circular controls and 3722ed0's Fabric changes. Latest Cloud Build failed
+tests/lead-notes-ui.mjs before deployment: a legitimate delayed blocked-GIS
+submissions/unavailable notification was mistaken for provider recovery. Preserve
+the deterministic fixture and zero invented healthy/connected assertions; never
+silence real warnings or remove the release gate. Read-only public release/assets
+and GitHub check runs can diagnose this without personal Chrome or secrets.
+Owner Push/deployment and exact live release verification remain separate.
+
 # November 3 owner clarification — fabric photographs and dominant color
 
 Main Fabrics starts with the largest/selected garment body cloth's dominant color

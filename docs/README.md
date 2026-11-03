@@ -15,10 +15,13 @@ Backend/docs-only work records no visible UI impact and runs the shared gate.
 Unresolved mismatches block completion. See [AGENTS.md](../AGENTS.md) for the
 mandatory workflow and [design.md](design.md) for the sole presentation canon.
 
-Admin operational history lives in Notifications beside Messages. Current status
-and Logs are collapsed inside that drawer; fixed operational states are retained
+Admin drawer order is Settings, Messages, Logs. Operational notification history
+lives in Logs beside Messages, with Current status and diagnostics collapsed.
+Fixed operational states are retained
 privately per Admin account. Seven dashboard headings share H3, and D/W/M use the
-shared circular Glass variant and its active Pills preview.
+shared circular Glass variant and its active Pills preview. Adjacent closed
+Insights, Recent changes and Feature requests share the existing Insights spacing
+control and active spacing preview. Shared presentation runtime references are v3.
 
 Direct ad reporting and owner-only setup: [DIRECT-AD-REPORTING.md](DIRECT-AD-REPORTING.md). Windsor is retired; Google, Meta and ChatGPT Ads use their own reporting APIs.
 

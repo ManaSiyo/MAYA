@@ -223,7 +223,7 @@
           "class": "",
           "reason": "drawer",
           "role": "drawer",
-          "snippet": "<span id=\"adm-tabtitle\" data-maya-type=\"H2\">Systems</span>"
+          "snippet": "<span id=\"adm-tabtitle\" data-maya-type=\"H2\">Settings</span>"
         },
         {
           "page": "frontend/index.html",
@@ -5151,7 +5151,7 @@
           "class": "adm-tab on",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button class=\"adm-tab on\" id=\"adm-tab-systems\" onclick=\"admTab('systems')\" role=\"tab\" aria-selected=\"true\" aria-label=\"Systems\" title=\"Systems\"><svg viewBox=\"0"
+          "snippet": "<button class=\"adm-tab on\" id=\"adm-tab-systems\" onclick=\"admTab('systems')\" role=\"tab\" aria-selected=\"true\" aria-label=\"Settings\" title=\"Settings\"><svg viewBox="
         },
         {
           "page": "backend/status.html",
@@ -5171,7 +5171,7 @@
           "class": "adm-tab",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button class=\"adm-tab\" id=\"adm-tab-logs\" onclick=\"admTab('logs')\" role=\"tab\" aria-selected=\"false\" aria-label=\"Notifications\" title=\"Notifications\"><svg viewBo"
+          "snippet": "<button class=\"adm-tab\" id=\"adm-tab-logs\" onclick=\"admTab('logs')\" role=\"tab\" aria-selected=\"false\" aria-label=\"Logs\" title=\"Logs\"><svg viewBox=\"0 0 24 24\" fill"
         },
         {
           "page": "backend/status.html",
@@ -5521,7 +5521,7 @@
           "class": "maya-glass-button",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button data-maya-type=\"P3\" class=\"maya-glass-button\" onclick=\"admTab('systems')\">Back to Systems</button>"
+          "snippet": "<button data-maya-type=\"P3\" class=\"maya-glass-button\" onclick=\"admTab('systems')\">Back to Settings</button>"
         },
         {
           "page": "backend/status.html",
