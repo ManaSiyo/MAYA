@@ -40,6 +40,7 @@ import { createLeadAlerts, mountLeadAlertRoutes } from './lead-alerts.mjs';
 import { createBookingLinks } from './booking-link.mjs';
 import { jsonStore } from './crm-store.mjs';
 import { createWrStore } from './wr-store.mjs';
+import { createAdminNotificationStore } from './admin-notifications.mjs';
 import { createLeadStore, createLeadNoteStore } from './lead-store.mjs';
 import { BUILD_COMMIT } from './build-info.mjs';
 import crypto from 'node:crypto';
@@ -2116,6 +2117,22 @@ app.get('/api/pinterest/everywhere', requireAuthHeader, async (req, res) => {
     }
   }
   res.status(501).json({ error: 'not_available', partner: partnerNote || 'not tried', web: 'no key' });
+});
+
+// Admin notifications are fixed operational states, privately stored per verified Admin.
+const adminNotifications=createAdminNotificationStore({read:gcsGet,write:gcsPut});
+const privateAdminNotifications=(_req,res,next)=>{res.set('Cache-Control','private, no-store');next();};
+app.get('/api/admin/notifications',privateAdminNotifications,requireAuthHeader,async(req,res)=>{
+ res.set('Cache-Control','private, no-store');
+ let user;try{user=await requireAdmin(req);}catch(e){return res.status(e.status===401?401:403).json({error:'admin_required'});}
+ try{return res.json({ok:true,items:await adminNotifications.list(user.sub)});}
+ catch{return res.status(503).json({error:'notifications_unavailable'});}
+});
+app.post('/api/admin/notifications',privateAdminNotifications,requireAuthHeader,express.json({limit:'8kb'}),async(req,res)=>{
+ res.set('Cache-Control','private, no-store');
+ let user;try{user=await requireAdmin(req);}catch(e){return res.status(e.status===401?401:403).json({error:'admin_required'});}
+ try{return res.json({ok:true,items:await adminNotifications.record(user.sub,req.body)});}
+ catch(e){const status=e.status===400?400:e.status===409?409:503;return res.status(status).json({error:status===400?'invalid_notification':status===409?'notifications_busy':'notifications_unavailable'});}
 });
 
 // WR leads are private to the authenticated Admin account.

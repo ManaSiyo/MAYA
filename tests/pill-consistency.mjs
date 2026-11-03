@@ -54,7 +54,7 @@ async function measure(selector){
   const svg=el.querySelector('svg'),glyph=svg?.getBoundingClientRect();
   const before=getComputedStyle(el,'::before'),after=getComputedStyle(el,'::after');
   const flow=[...el.childNodes].flatMap(node=>{if(node.nodeType===Node.TEXT_NODE){if(!node.textContent.trim())return [];const range=document.createRange();range.selectNode(node);return [{width:range.getBoundingClientRect().width,height:parseFloat(s.lineHeight)}];}if(node.nodeType!==Node.ELEMENT_NODE)return [];const cs=getComputedStyle(node);return cs.display==='none'||['absolute','fixed'].includes(cs.position)?[]:[node.getBoundingClientRect()];});
-  return {width:r.width,height:r.height,x:r.x,right:r.right,paddingX:parseFloat(s.paddingLeft),paddingY:parseFloat(s.paddingTop),paddingRight:parseFloat(s.paddingRight),paddingBottom:parseFloat(s.paddingBottom),border:parseFloat(s.borderLeftWidth),borderTop:parseFloat(s.borderTopWidth),borderColor:s.borderColor,background:s.backgroundColor,shadow:s.boxShadow,blur:s.backdropFilter,image:s.backgroundImage,opacity:s.opacity,line:parseFloat(s.lineHeight),fontSize:parseFloat(s.fontSize),textWidth:tr.width,textHeight:tr.height,display:s.display,overflow:el.scrollWidth-el.clientWidth,flowHeight:Math.max(0,...flow.map(r=>r.height)),flowWidth:flow.reduce((n,r)=>n+r.width,0)+(parseFloat(s.columnGap)||0)*Math.max(0,flow.length-1),glyph:glyph?{width:glyph.width,height:glyph.height,left:glyph.left-r.left,top:glyph.top-r.top,right:r.right-glyph.right,bottom:r.bottom-glyph.bottom,stroke:getComputedStyle(svg).stroke,fill:getComputedStyle(svg).fill,path:svg.querySelector('path')?.getAttribute('d')}:null,before:{width:parseFloat(before.width)||0,content:before.content,position:before.position},after:{width:parseFloat(after.width)||0,height:parseFloat(after.height)||0,content:after.content,position:after.position},gap:parseFloat(s.columnGap)||0};
+  return {shape:el.dataset.mayaShape,radius:s.borderRadius,width:r.width,height:r.height,x:r.x,right:r.right,paddingX:parseFloat(s.paddingLeft),paddingY:parseFloat(s.paddingTop),paddingRight:parseFloat(s.paddingRight),paddingBottom:parseFloat(s.paddingBottom),border:parseFloat(s.borderLeftWidth),borderTop:parseFloat(s.borderTopWidth),borderColor:s.borderColor,background:s.backgroundColor,shadow:s.boxShadow,blur:s.backdropFilter,image:s.backgroundImage,opacity:s.opacity,line:parseFloat(s.lineHeight),fontSize:parseFloat(s.fontSize),textWidth:tr.width,textHeight:tr.height,display:s.display,overflow:el.scrollWidth-el.clientWidth,flowHeight:Math.max(0,...flow.map(r=>r.height)),flowWidth:flow.reduce((n,r)=>n+r.width,0)+(parseFloat(s.columnGap)||0)*Math.max(0,flow.length-1),glyph:glyph?{width:glyph.width,height:glyph.height,left:glyph.left-r.left,top:glyph.top-r.top,right:r.right-glyph.right,bottom:r.bottom-glyph.bottom,stroke:getComputedStyle(svg).stroke,fill:getComputedStyle(svg).fill,path:svg.querySelector('path')?.getAttribute('d')}:null,before:{width:parseFloat(before.width)||0,content:before.content,position:before.position},after:{width:parseFloat(after.width)||0,height:parseFloat(after.height)||0,content:after.content,position:after.position},gap:parseFloat(s.columnGap)||0};
  });
 }
 function geometry(box,label,x,y,{kind='text',disabled=false}={}){
@@ -63,26 +63,37 @@ function geometry(box,label,x,y,{kind='text',disabled=false}={}){
  check(box.paddingX===x&&box.paddingY===y,label+' uses saved X/Y padding',{actual:[box.paddingX,box.paddingY],expected:[x,y]});
  check(box.overflow<=1,label+' content fits its capsule',{overflow:box.overflow});
  const contentHeight=kind==='icon'?box.glyph?.height:kind==='mixed'?box.flowHeight:Math.max(box.line,kind==='edit'?box.after.height:0);
- if(Number.isFinite(contentHeight))check(Math.abs(box.height-contentHeight-y*2-box.borderTop*2)<1.1,label+' height is content + padding + border',{actual:box.height,expected:contentHeight+y*2+box.borderTop*2});
+ if(kind!=='circle'&&Number.isFinite(contentHeight))check(Math.abs(box.height-contentHeight-y*2-box.borderTop*2)<1.1,label+' height is content + padding + border',{actual:box.height,expected:contentHeight+y*2+box.borderTop*2});
  if(kind==='text'||kind==='edit'||kind==='icon'||kind==='mixed'){
   const contentWidth=kind==='icon'?box.glyph?.width:kind==='mixed'?box.flowWidth:box.textWidth+(kind==='edit'?box.after.width+box.gap:0);
   check(Math.abs(box.width-contentWidth-box.paddingX-box.paddingRight-box.border*2)<1.2,label+' width is content + padding + border',{actual:box.width,expected:contentWidth+box.paddingX+box.paddingRight+box.border*2});
+ }
+ if(kind==='circle'){
+  check(box.shape==='circle'&&box.radius==='50%',label+' opts into the shared round enclosure',{shape:box.shape,radius:box.radius});
+  check(Math.abs(box.width-box.height)<1,label+' remains circular under saved padding',{width:box.width,height:box.height});
+  const content=Math.max(box.line,box.flowWidth,box.flowHeight,box.glyph?.width||0,box.glyph?.height||0);
+  check(box.width>=content+Math.max(x,y)*2+box.border*2-1,label+' circle fits content and both saved padding axes',{width:box.width,content,x,y});
  }
  if(disabled)check(box.border===1&&box.shadow==='none'&&box.blur!=='none'&&Number(box.opacity)<=.5,label+' retains disabled glass material',{border:box.border,shadow:box.shadow,blur:box.blur,opacity:box.opacity});
  else check(box.border===1&&box.shadow!=='none'&&box.blur!=='none',label+' retains glass enclosure',{border:box.border,shadow:box.shadow,blur:box.blur});
  if(box.glyph){check(box.glyph.width>8&&box.glyph.height>8,label+' SVG glyph has a visible size',box.glyph);check(box.glyph.left>=x-.6&&box.glyph.right>=x-.6&&box.glyph.top>=y-.6&&box.glyph.bottom>=y-.6,label+' glyph stays inside padding',box.glyph);check(box.glyph.path&&box.glyph.stroke!=='none',label+' uses a stroked SVG glyph',box.glyph);}
 }
-const galleryTargets=[['.glass-pill-preview > .maya-pill','Gallery glass text','text'],['#save','Gallery Save','icon'],['.icon-row [aria-label="Save"]','Leftmost Save icon','icon']];
-const adminTargets=[['#head-tiles .tile.live','Admin live traffic','mixed'],['#range-chips [data-r="D"]','Admin D','text'],['#range-chips [data-r="W"]','Admin W','text'],['#range-chips [data-r="M"]','Admin M','text'],['#metric-chips [data-m="clicks"]','Admin chart clicks','text'],['#metric-chips [data-m="cpc"]','Admin chart cost','text'],['#leads-table .lead-status','Admin lead status','status']];
+const galleryTargets=[['.glass-pill-preview > .maya-pill','Gallery glass text','text'],['#save','Gallery Save','icon'],['.icon-row [aria-label="Save"]','Leftmost Save icon','icon'],...['D','W','M'].map((name,i)=>['#range-circle-preview button:nth-child('+(i+1)+')','Gallery '+name,'circle'])];
+const adminTargets=[['#head-tiles .tile.live','Admin live traffic','mixed'],['#range-chips [data-r="D"]','Admin D','circle'],['#range-chips [data-r="W"]','Admin W','circle'],['#range-chips [data-r="M"]','Admin M','circle'],['#metric-chips [data-m="clicks"]','Admin chart clicks','text'],['#metric-chips [data-m="cpc"]','Admin chart cost','text'],['#leads-table .lead-status','Admin lead status','status']];
 async function populateAdmin(){await page.evaluate(async()=>{_idTok='fixture-admin';await loadMkt();_paintHeadTiles({accounts:{total:10},live:1,ranges:{},wixSite:{}});});}
 async function adminChecks(label,x,y){
  await ready('/status.html');await populateAdmin();
  check((await page.locator('#campaigns-table .status-word').first().innerText()).toLowerCase().includes('paused'),label+' historical impressions do not relabel a paused campaign as delivering');
- check((await page.locator('#ad-combined-note').innerText()).includes('Available campaign reports appear in the table above.'),label+' empty chart does not imply a missing credential');
+ check(await page.locator('#drawer-logs #ads-connection-status').count()===1&&await page.locator('#adm-mkt #ads-connection-status').count()===0,label+' provider diagnostics live inside Notifications');
+ check(!await page.locator('#ads-connection-status').isVisible(),label+' provider diagnostics stay off the exposed dashboard');
+ await page.evaluate(()=>{toggleDrawer(true);admTab('logs');document.getElementById('notification-current').open=true;});
+ await page.locator('#ads-connection-status').waitFor({state:'visible'});
+ check((await page.locator('#ad-combined-note').textContent()).includes('Available campaign reports appear in the table above.'),label+' empty chart does not imply a missing credential');
  check(await page.locator('#ads-connection-status').evaluate(e=>e.textContent.includes('Google: direct reporting connected.')&&e.textContent.includes('ChatGPT: direct reporting unavailable.')),label+' unavailable Ads integration is explicit');
  check(await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontSize)===await page.locator('#drawer p[data-maya-type=P1]').first().evaluate(e=>getComputedStyle(e).fontSize),label+' Ads connection copy follows the shared P1 role');
  check(await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontSize)===(label==='saved'?'16px':'12px'),label+' Ads connection copy visibly follows saved P1 size');
  if(label==='saved')check((await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontFamily)).includes('Cormorant'),label+' Ads connection copy follows saved P1 font');
+ await page.evaluate(()=>toggleDrawer(false));
  const snapshots={};
  for(const width of widths){await page.setViewportSize({width,height:1000});for(const [selector,name,kind] of adminTargets){const box=await measure(selector);geometry(box,`${label} ${name} ${width}`,x,y,{kind});const selected=await page.locator(selector).first().getAttribute('aria-pressed')==='true';check(box.background===(label==='saved'?'rgba(3, 15, 29, 0.55)':'rgba(3, 15, 29, 0.18)')&&box.blur===(label==='saved'?'blur(9px) saturate(1.4)':'blur(22px) saturate(1.8)'),label+' '+name+' actual material '+width,{background:box.background,blur:box.blur});if(width===1440)snapshots[selector]=box;}
   check(await page.locator('#metric-chips').evaluate(e=>e.scrollWidth<=e.clientWidth+1),label+' Admin chart controls fit '+width);
@@ -95,6 +106,32 @@ async function adminChecks(label,x,y){
  for(const width of widths){await page.setViewportSize({width,height:1000});for(const selector of ['#msg-call','#msg-share'])geometry(await measure(selector),label+' '+selector+' '+width,x,y,{kind:'icon'});}
  check(!await page.locator('#msg-older').isVisible(),label+' no-archive thread keeps older action hidden');
  await page.evaluate(()=>toggleDrawer(false));return snapshots;
+}
+async function roundControlChecks(){
+ await page.evaluate(()=>{
+  const host=document.createElement('div');host.id='round-control-fixture';host.style.cssText='display:flex;gap:10px;align-items:center';
+  for(const [id,round]of [['round-icon-fixture',true],['capsule-icon-fixture',false]]){
+   const button=document.createElement('button');button.id=id;button.className='maya-icon-button';button.setAttribute('aria-label','Geometry fixture');
+   if(round)button.dataset.mayaShape='circle';
+   button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';host.append(button);
+  }
+  document.body.append(host);
+ });
+ for(const [x,y,size,font]of [[0,16,16,'cormorant'],[32,0,16,'jost'],[0,0,10,'jost']]){
+  await page.evaluate(({x,y,size,font})=>{const d=structuredClone(MayaTypographyControls.defaults);d.pillX=x;d.pillY=y;for(const role of ['P1','P2','P3'])d.type[role].size=size;d.type.P3.font=font;MayaTypographyControls.apply(d);},{x,y,size,font});
+  // Wait for actual saved-style propagation, including any authored transition,
+  // rather than sampling an intermediate rectangle or adding a fixed delay.
+  await page.waitForFunction(({x,y,size})=>[...document.querySelectorAll('#range-chips button')].every(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return parseFloat(s.paddingLeft)===x&&parseFloat(s.paddingTop)===y&&parseFloat(s.fontSize)===size&&Math.abs(r.width-r.height)<1;}),{x,y,size});
+  for(const width of widths){
+   await page.setViewportSize({width,height:1000});
+   const circles=[];
+   for(const selector of ['#range-chips [data-r="D"]','#range-chips [data-r="W"]','#range-chips [data-r="M"]','#round-icon-fixture']){const box=await measure(selector);geometry(box,`Round ${selector} ${font} ${x}/${y} ${width}`,x,y,{kind:'circle'});circles.push(box);}
+   check(Math.max(...circles.slice(0,3).map(b=>b.width))-Math.min(...circles.slice(0,3).map(b=>b.width))<1,'D/W/M share a diameter at '+width,{x,y,font});
+   const ordinary=await measure('#capsule-icon-fixture');geometry(ordinary,`Ordinary icon remains a capsule ${x}/${y} ${width}`,x,y,{kind:'icon'});
+   if(x!==y)check(Math.abs(ordinary.width-ordinary.height)>1,'Generic icon pill does not become round '+width,{x,y,width:ordinary.width,height:ordinary.height});
+  }
+ }
+ await page.locator('#round-control-fixture').evaluate(e=>e.remove());
 }
 async function galleryChecks(label,x,y){
  const snapshots={};
@@ -119,7 +156,7 @@ try{
  await page.locator('#tokens [data-field="paddingX"]').fill('22');await page.locator('#tokens [data-field="paddingY"]').fill('12');
  await page.keyboard.press('Escape');
  const galleryChanged=await galleryChecks('Edited',22,12);
- for(const [selector,before] of Object.entries(galleryDefault)){const after=galleryChanged[selector];check(Math.abs(after.width-before.width-16)<1.2,selector+' grows exactly with glass X padding',{before:before.width,after:after.width});check(Math.abs(after.height-before.height-12)<1.2,selector+' grows exactly with glass Y padding',{before:before.height,after:after.height});}
+ for(const [selector,before] of Object.entries(galleryDefault)){const after=galleryChanged[selector],circle=selector.startsWith('#range-circle-preview');check(Math.abs(after.width-before.width-16)<1.2,selector+' grows exactly with glass X padding',{before:before.width,after:after.width});check(Math.abs(after.height-before.height-(circle?16:12))<1.2,selector+' grows exactly with '+(circle?'round bounds':'glass Y padding'),{before:before.height,after:after.height});}
  const glass=await measure('#save');check(glass.background==='rgba(3, 15, 29, 0.55)'&&glass.blur==='blur(9px) saturate(1.4)','Glass preview uses edited material',glass);
  await page.setViewportSize({width:1440,height:1000});await page.locator('.finish-controls details.type-editor>summary').focus();check(await page.locator('.finish-controls details.type-editor>summary').evaluate(e=>getComputedStyle(e).outlineStyle)!=='none','Edit has visible keyboard focus');
  await page.locator('.finish-controls details.type-editor>summary').press('Enter');check(await page.locator('.finish-controls details.type-editor').evaluate(e=>e.open),'Keyboard opens Glass editor');
@@ -140,7 +177,8 @@ try{
  await page.reload();await page.locator('.finish-controls [data-field="fill"]').waitFor({state:'attached'});await galleryChecks('Reloaded',22,12);
  for(const [width,suffix] of [[1440,'desktop'],[390,'phone']]){await page.setViewportSize({width,height:1000});await page.locator('#buttons').evaluate(e=>e.scrollIntoView({block:'start'}));await page.screenshot({path:'/private/tmp/maya-pill-gallery-'+suffix+'.png'});}
  const adminSaved=await adminChecks('saved',22,12);
- for(const [selector,before] of Object.entries(adminDefault)){const after=adminSaved[selector],traffic=selector==='#head-tiles .tile.live',contentX=traffic?after.flowWidth-before.flowWidth:0,contentY=traffic?after.flowHeight-before.flowHeight:0;check(Math.abs(after.width-before.width-16-contentX)<1.2,selector+' live width follows saved X padding and actual content',{before:before.width,after:after.width,contentX});check(Math.abs(after.height-before.height-12-contentY)<1.2,selector+' live height follows saved Y padding and actual content',{before:before.height,after:after.height,contentY});}
+ for(const [selector,before] of Object.entries(adminDefault)){const after=adminSaved[selector],circle=selector.startsWith('#range-chips'),traffic=selector==='#head-tiles .tile.live',contentX=traffic?after.flowWidth-before.flowWidth:0,contentY=traffic?after.flowHeight-before.flowHeight:0;check(Math.abs(after.width-before.width-16-contentX)<1.2,selector+' live width follows saved X padding and actual content',{before:before.width,after:after.width,contentX});check(Math.abs(after.height-before.height-(circle?16:12)-contentY)<1.2,selector+' live height follows '+(circle?'round bounds':'saved Y padding')+' and actual content',{before:before.height,after:after.height,contentY});}
+ await roundControlChecks();
  // No saved dissection deliberately disables Fabrics. Its disabled shadow is
  // a separate state, not evidence that the enabled Glass material was lost.
  await ready('/backend.html');await page.evaluate(image=>renderDissection({card:{image}}),'data:image/png;base64,'+briefPhoto.toString('base64'));check(await page.locator('#brief-fabrics-button').isDisabled(),'Brief Fabrics is disabled before a saved dissection exists');
@@ -151,5 +189,5 @@ try{
  }
  check(pageErrors.length===0,'All representative pages have no page errors',pageErrors);
  assert.deepEqual(failures,[]);
- console.log('Pill consistency passed: content + padding geometry, unified Glass material, Save glyphs, Edit/focus/disabled/save failure/retry, authenticated save and reload, Admin/App/Brief/Operation Room and six widths.');
+ console.log('Pill consistency passed: content + padding geometry, explicit circles under unequal saved padding/type, unified Glass material, Save glyphs, Edit/focus/disabled/save failure/retry, authenticated save and reload, Admin/App/Brief/Operation Room and six widths.');
 }finally{if(heldSave)await heldSave.route.abort();await browser.close();}

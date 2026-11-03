@@ -6,7 +6,23 @@ import {validDesign} from '../docs/server/design-config.mjs';
 const root=resolve(new URL('..',import.meta.url).pathname);
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:900}}),page=await context.newPage();
-const errors=[],writes=[];let fail=false;
+const errors=[],writes=[],notificationWrites=[];let fail=false;
+const notificationAdSources=new Set(['google_ads','meta_ads','chatgpt_ads']);
+const notificationSources=new Set(['marketing','leads','analytics','submissions','callback_alerts','site','api','images','backup','briefing','features']);
+const notificationAdCodes=new Set(['connected','not_configured','oauth_expired','project_access','account_access','scope','authorization','account_mismatch','provider_error','incomplete_report','invalid_report','invalid_metric','invalid_account','currency_excluded']);
+const notificationCodes=new Set(['healthy','unavailable','needs_attention','not_configured']);
+function safeNotificationBatch(body){
+ assert.deepEqual(Object.keys(body).sort(),['items'],'Notification writes contain only the fixed-state batch');
+ assert.ok(Array.isArray(body.items)&&body.items.length>0&&body.items.length<=16,'Notification batch is bounded');
+ const seen=new Set();
+ for(const item of body.items){
+  assert.deepEqual(Object.keys(item).sort(),['code','source'],'Notifications contain no text, credentials, account IDs or recipient details');
+  assert.ok(notificationAdSources.has(item.source)||notificationSources.has(item.source),'Notification source is allowlisted');
+  assert.ok((notificationAdSources.has(item.source)?notificationAdCodes:notificationCodes).has(item.code),'Notification code is allowlisted for its source');
+  assert.ok(!seen.has(item.source),'Notification batch has one fixed state per source');seen.add(item.source);
+ }
+ assert.ok(JSON.stringify(body).length<=2048,'Fixed-state notification payload stays small');
+}
 // Compare content states after native drawer animation reaches its destination.
 // A wall-clock delay can sample the last few pixels of smooth scrolling in CI.
 const drawerSettled=()=>page.waitForFunction(()=>{const h=document.getElementById('adm-hscroll');return Math.abs(h.scrollLeft-(h.scrollWidth-h.clientWidth))<0.5;});
@@ -14,6 +30,12 @@ page.on('pageerror',e=>errors.push(e.message));
 await page.addInitScript(()=>{window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
 await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='maya.test')return route.abort();
  if(u.pathname.startsWith('/api/')){
+  if(u.pathname==='/api/admin/notifications'){
+   assert.ok(['GET','POST'].includes(req.method()),'Notification fixture permits only authenticated reads and fixed-state observations');
+   assert.equal(req.headers().authorization,'Bearer fixture-owner');
+   if(req.method()==='POST'){const body=req.postDataJSON();safeNotificationBatch(body);notificationWrites.push({path:u.pathname,method:req.method(),body});}
+   return route.fulfill({json:{ok:true,items:[]}});
+  }
   if(u.pathname==='/api/admin/messages/thread'&&u.searchParams.has('before'))return route.fulfill({json:{ok:true,messages:[{id:'older-one',dir:'in',kind:'sms',text:'Archived conversation',ts:'2026-09-01'}],hasMore:false}});
   if(u.pathname==='/api/admin/messages/suggest')return route.fulfill({json:{ok:true,eligible:true,stage:'first',text:'Hi Angela, would you like to discuss your green suit?'}});
   if(u.pathname==='/api/admin/text-automations'&&req.method()==='GET')return route.fulfill({json:{ok:true,settings:{first:{enabled:true,text:'Hi {name}',trigger:'new_lead',time:'10:00'},second:{enabled:false,text:'Hi {name}',trigger:'no_reply',time:'10:00',days:3}}}});
@@ -92,5 +114,6 @@ try{
   }
  }
  await gutterStyle.evaluate(e=>e.remove());
+ assert.equal(notificationWrites.length,0,'Local note and filter renders do not report provider recovery without a fresh provider read');
  assert.deepEqual(errors,[]);console.log('Lead note Save/Cancel, outside-click discard, confirmed persistence, H4/H5, Contact and unsent Booking Link drafts passed at four widths.');
 }finally{await browser.close();}

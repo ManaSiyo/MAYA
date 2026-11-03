@@ -9,7 +9,7 @@ RUN npm ci --omit=dev --ignore-scripts
 COPY server.js ad-reporting.mjs ./
 COPY build-info.mjs lead-store.mjs ./
 COPY model-config.mjs ./
-COPY crm-store.mjs crm-ai.mjs wr-store.mjs ./
+COPY crm-store.mjs crm-ai.mjs wr-store.mjs admin-notifications.mjs ./
 COPY owner-crm.mjs owner-conversation.mjs owner-sms-access.mjs message-archive.mjs ./
 COPY booking-link.mjs lead-alerts.mjs text-automations.mjs event-triggers.mjs ./
 COPY proxy-policy.mjs ./

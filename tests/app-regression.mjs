@@ -2815,6 +2815,10 @@ ok('Workspace previews expose active saved styling and actual label, field and d
 await import('./message-compose-ui.mjs');
 ok('SMS composer remains reachable above the voice dock with crowded previews and suggestions',true);
 ok('The reviewed send refresh settles before the independent STOP no-send proof',true);
+await import('./admin-notifications.mjs');
+await import('./admin-notifications-ui.mjs');
+ok('Admin stores fixed account-bound notifications in the drawer, keeps Logs collapsed and aligns all seven H3 dashboard headings',true);
+ok('Shared D/W/M circular controls preserve Glass material under saved typography and asymmetric padding',MAP_SOURCE.includes('data-maya-shape="circle"'));
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

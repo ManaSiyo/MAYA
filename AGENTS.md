@@ -741,3 +741,20 @@ phase timings contain no private context and overlap; never sum them or call the
 browser/cold-start/live-provider latency. Run the held-feed/bounded-slot fixtures
 and Node20/local forced-GC gates; backend-only work adds no visible UI and still
 finishes with shared Aesthetic Control.
+
+
+## November 3 Admin notifications and range controls
+
+Admin operational notices live in the private Notifications drawer beside
+Messages; Current status and Logs are collapsed disclosures. Keep form/send
+feedback with its reviewed action and preserve active voice controls. The bounded
+history uses docs/server/admin-notifications.mjs and
+aesthetics/ui/admin-notifications.js. Only fixed source/code states are stored,
+per verified Admin subject, with CAS and no browser persistence or raw provider
+text. Actual account changes clear pending/live history and stale continuations.
+Main dashboard headings all explicitly use H3; the drawer title remains H2.
+D/W/M opt into data-maya-shape="circle" in the shared pill runtime and active
+Pills preview. Saved Glass material/P3 and generic capsule geometry remain intact.
+Run admin-notifications, admin-notifications-ui, ad-reporting/UI, pill-consistency,
+presentation-consistency, admin/state/communications contracts and exact release
+gates, then final standalone aesthetic-authority last. No new UI authority.

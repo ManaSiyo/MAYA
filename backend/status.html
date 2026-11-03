@@ -156,6 +156,16 @@ try {
   #drawer-messages[hidden],#drawer-logs[hidden]{display:none}
   #drawer-logs{flex:1;min-height:0;overflow:auto;scrollbar-width:none;text-align:left}
   #drawer-logs::-webkit-scrollbar{display:none}
+
+  /* Layout only: shared H3/P1/P3, Glass, Inner and Scrollbars own presentation. */
+  .notification-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  #admin-notification-list{display:grid;gap:var(--maya-field-gap,10px);max-height:42vh;overflow:auto;min-width:0}
+  .admin-notification{min-width:0;overflow-wrap:anywhere}
+  .admin-notification p{margin:6px 0 0}
+  #notifications-feedback:empty,#notification-current [data-notification-status]:empty{display:none}
+  #notification-current [data-notification-status]{overflow-wrap:anywhere}
+  .admin-log-fold{margin-top:16px;min-width:0}
+  .admin-log-fold>summary{cursor:pointer;margin-bottom:10px}
   .maya-log{padding:12px 0;border-bottom:var(--maya-hairline) solid var(--line)}
   #drawer-logs > .note{font-size:13px;line-height:1.5;color:var(--dim)}
   .maya-log p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:var(--maya-text-body);line-height:1.5;margin:6px 0}
@@ -177,7 +187,8 @@ try {
   #msg-thread{flex:1;min-height:0;display:flex;flex-direction:column}
   #msg-thread[hidden]{display:none}
   #booking-pending{flex:0 1 auto;min-height:0;max-height:25%;overflow-y:auto}
-  #msg-content{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
+  /* Keep a usable conversation scroll target while pending/status regions shrink. */
+  #msg-content{flex:1;min-height:24px;overflow-y:auto;display:flex;flex-direction:column}
   #msg-content .msg-scroll{flex:1 0 80px}
   #msg-content #msg-idea{flex:none}
   #msg-status{flex:0 1 auto;min-height:0;max-height:20%;overflow-y:auto}
@@ -800,6 +811,10 @@ try {
   #drawer-systems{flex:1;min-height:0;overflow:auto;scrollbar-width:none}#drawer-systems[hidden]{display:none}
   #voice-dock{margin-top:8px;margin-bottom:0;padding-bottom:0}
   #drawer.logs #adm-tabtitle{text-align:center;padding-left:0}
+  /* Drawer controls own a row; the shared H2 title cannot crowd the tabs. */
+  #adm-tabrow{flex-wrap:wrap;row-gap:8px;padding-right:32px}
+  #adm-tabtitle{flex:0 0 100%;order:3;max-inline-size:100%;padding-left:8px;overflow-wrap:anywhere}
+  @media(max-width:640px){body.drawer-open #top-left-brand{visibility:hidden;pointer-events:none}}
   .msg-head{flex-wrap:wrap}.msg-who{flex-basis:calc(100% - 40px)}
   html body #msg-name{font:var(--maya-type-H3-weight) var(--maya-type-H3-size) var(--maya-type-H3-font)!important;color:var(--maya-type-H3-color)!important;text-transform:var(--maya-type-H3-case)!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:0!important}
   .msg-rename{opacity:0;pointer-events:none}.msg-name-edit:hover .msg-rename,.msg-name-edit:focus-within .msg-rename{opacity:1;pointer-events:auto}
@@ -832,6 +847,7 @@ try {
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
 <script src="/aesthetics/ui/voice-preparation.js?v=3"></script>
+<script src="/aesthetics/ui/admin-notifications.js?v=1"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -896,9 +912,29 @@ try {
        older checks expect them. -->
   <div id="adm-tabrow" role="tablist">
     <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
-    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle" data-maya-type="H2">Systems</span>
+    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Notifications" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle" data-maya-type="H2">Systems</span>
   </div>
-  <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Maya requests and saved aesthetic changes.</p><div id="maya-logs-list" aria-live="polite"></div>
+  <div id="drawer-logs" hidden>
+    <section id="admin-notifications" aria-label="Notifications">
+      <div class="notification-heading"><h3 data-maya-type="H3">Recent notifications</h3><button type="button" class="maya-glass-button" data-maya-type="P3" onclick="MayaAdminNotifications.load()">Refresh</button></div>
+      <p id="notifications-feedback" data-maya-type="P1" role="status" aria-live="polite"></p>
+      <div id="admin-notification-list" data-maya-scrollbar="visible" tabindex="0" role="region" aria-label="Saved notifications" aria-live="polite"></div>
+      <details id="notification-current" class="admin-log-fold"><summary data-maya-type="P3" data-maya-pill="glass">Current status</summary>
+      <div id="mkt-status" data-maya-type="P1" data-notification-status role="status" style="display:none"></div>
+      <div id="mkt-wix-note" data-maya-type="P1" data-notification-status class="note" style="display:none"></div>
+      <div id="leads-note" data-maya-type="P1" data-notification-status class="note" style="display:none"></div>
+      <div id="callback-alert-note" data-maya-type="P1" data-notification-status class="note" role="status" style="display:none"></div>
+      <p id="ads-connection-status" data-maya-type="P1" data-notification-status role="status"></p>
+      <div id="ad-combined-note" data-maya-type="P1" data-notification-status class="note" style="display:none;margin-top:10px"></div>
+      <div id="bl-note" data-maya-type="P1" data-notification-status class="note" style="display:none;margin-top:8px"></div>
+      <p id="features-notification-status" data-maya-type="P1" data-notification-status role="status"></p>
+      <p id="submissions-notification-status" data-maya-type="P1" data-notification-status role="status"></p>
+      <p id="traffic-note" data-maya-type="P1" data-notification-status role="status"></p>
+      <p id="marketing-warning-status" data-maya-type="P1" data-notification-status role="status"></p>
+      </details>
+    </section>
+    <details id="maya-logs-disclosure" class="admin-log-fold"><summary data-maya-type="P3" data-maya-pill="glass">Logs</summary>
+    <div class="msg-controls"><button type="button" class="maya-glass-button" data-maya-type="P3" onclick="loadMayaLogs()">Refresh logs</button></div><p data-maya-type="P1" class="note">Maya requests and saved aesthetic changes.</p><div id="maya-logs-list" aria-live="polite"></div>
   <div id="drawer-command" aria-live="polite" aria-label="Maya command line">
     <div class="maya-command-head">
       <span class="maya-command-title">Maya</span>
@@ -922,6 +958,7 @@ try {
     </div>
     <button id="maya-review-approvals" type="button" hidden onclick="document.getElementById('maya-confirmation').showModal()">Review approvals</button>
   </div>
+    </details>
 </div>
   <div id="drawer-messages" hidden>
     <button id="msg-begin" class="maya-glass-button" data-maya-type="P3" type="button" onclick="msgNewToggle()" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Begin texting</button>
@@ -1047,14 +1084,14 @@ try {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <h2 class="grp" id="submissions-heading" data-maya-section-heading>Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
+  <h2 data-maya-type="H3" class="grp" id="submissions-heading" data-maya-section-heading>Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
   <div id="subs-strip" data-maya-section-content style="display:none"></div>
   <div id="subs-note-inline" data-maya-section-content>Waiting for the one sign in at the top of the page.</div>
 
   <!-- v13.39: one row, five numbers, and nothing underneath. Users first,
        because that is the number that matters, then the site's own traffic. -->
   <details class="fold" data-maya-section id="users-fold" open>
-    <summary><h2 class="grp">Users and traffic <span class="traffic-legend">manasiyo.com <span style="margin:0 3px">|</span> <span class="lg-b">maya</span></span></h2></summary>
+    <summary><h2 data-maya-type="H3" class="grp">Users and traffic <span class="traffic-legend">manasiyo.com <span style="margin:0 3px">|</span> <span class="lg-b">maya</span></span></h2></summary>
     <div data-maya-section-content class="fold-body"><div id="head-tiles" class="tiles hidden"></div></div>
   </details>
 
@@ -1062,33 +1099,33 @@ try {
   <!-- v13.68: MIGRATED FROM MARKETING. Everything the Marketing page held now
        lives here under Users and traffic; Marketing stays until it is retired. -->
   <div id="adm-mkt">
-  <div id="mkt-status" role="status" style="display:none">Marketing data unlocks with Admin.</div>
+
   <span id="checked-at" style="display:none"></span>
 
   <!-- v13.72: the Manasiyo.com | MAYA visitor row was a duplicate of Users and
        traffic, which already pairs both windows; removed, per Fromsa. The Wix
        feed still paints into these hidden holders so paintSite stays happy. -->
   <div id="mkt-wix-tiles" class="tiles" style="display:none"></div>
-  <div id="mkt-wix-note" class="note" style="display:none"></div>
+
   <details class="fold" data-maya-section id="leads-fold" open>
-    <summary><h2 class="grp">Leads</h2></summary>
+    <summary><h2 data-maya-type="H3" class="grp">Leads</h2></summary>
 
     <div data-maya-section-content class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
-    <div id="leads-note" class="note" style="display:none"></div>
-    <div id="callback-alert-note" class="note" role="status" style="display:none"></div>
+
+
   </details>
 
   <details class="fold" data-maya-section id="ads-fold" open>
-  <summary><h2 class="grp">Ad campaigns</h2></summary>
+  <summary><h2 data-maya-type="H3" class="grp">Ad campaigns</h2></summary>
   <div class="metric-chips" id="ad-range-controls" data-maya-section-content style="margin:0 0 8px">
     <span id="range-word" hidden>last 7 days</span>
     <span style="margin-left:auto;display:inline-flex;gap:3px" id="range-chips">
-      <button class="range-chip" aria-pressed="false" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
-      <button class="range-chip on" aria-pressed="true" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
-      <button class="range-chip" aria-pressed="false" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
+      <button class="range-chip" data-maya-shape="circle" data-maya-type="P3" aria-pressed="false" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
+      <button class="range-chip on" data-maya-shape="circle" data-maya-type="P3" aria-pressed="true" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
+      <button class="range-chip" data-maya-shape="circle" data-maya-type="P3" aria-pressed="false" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
     </span>
   </div>
-  <p id="ads-connection-status" data-maya-type="P1" role="status"></p>
+
   <div class="panel" style="margin-bottom:12px"><table id="campaigns-table"><tbody></tbody></table></div>
   <div class="panel" id="ad-combined-panel">
     <div class="metric-chips" id="metric-chips">
@@ -1109,7 +1146,7 @@ try {
       <span data-maya-type="P3"><span class="dot" style="background:currentColor"></span>ChatGPT Ads</span>
       <span id="ad-yaxis-word" style="margin-left:auto"></span>
     </div>
-    <div id="ad-combined-note" class="note" style="display:none;margin-top:10px"></div>
+
   </div>
   </details>
 
@@ -1119,7 +1156,7 @@ try {
        Fromsa — one fold, the funnel and tiles up top, the traffic sources under
        a divider below. -->
   <details class="fold" data-maya-section id="bottom-fold" open>
-    <summary><h2 class="grp">Insights</h2></summary>
+    <summary><h2 data-maya-type="H3" class="grp">Insights</h2></summary>
     <div data-maya-section-content class="panel">
       <div id="bl-funnel" class="bl-funnel"></div>
       <div id="bl-tiles" class="bl-tiles"></div>
@@ -1128,13 +1165,13 @@ try {
            marketing painter still writes into it. -->
       <table id="sources-table" hidden><tbody></tbody></table>
     </div>
-    <div id="bl-note" class="note" style="display:none;margin-top:8px"></div>
+
   </details>
   </div>
 
   <div class="map-footer">
   <details class="fold" data-maya-section id="changes-fold" data-latest="2026-09-30a" data-version="14.40">
-  <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
+  <summary><h2 data-maya-type="H3" class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div data-maya-section-content class="fold-body changelog">
     <div class="release-stamp" id="release-stamp" hidden></div>
     <div class="chg"><b>Sep 30</b>Booking links now have a recipient and message preview before owner approval; call transcripts appear in Messages. Signup alert checks were added. Scheduled delivery and carrier receipt still need live verification.</div>
@@ -1294,7 +1331,7 @@ try {
   <!-- v14.03: Maya's history of everyone's requests. Who asked, then in a few
        words what they asked for, newest first. Read from her inbox. -->
   <details class="fold" data-maya-section id="features-fold">
-  <summary><h2 data-maya-type="H2" class="grp">Feature requests <span class="new-dot"></span></h2></summary>
+  <summary><h2 data-maya-type="H3" class="grp">Feature requests <span class="new-dot"></span></h2></summary>
   <div data-maya-section-content class="fold-body">
     <div id="features-list" class="fr-list"><div class="note">Waiting for the one sign in at the top of the page.</div></div>
   </div>
@@ -1326,6 +1363,7 @@ async function loadFeatureRequests(){
     if(!frR.ok) throw new Error(j.error||('http '+frR.status));
     const fb=fbR?await fbR.json().catch(()=>({})):{};
     if(sequence!==_featureSequence||!_adminContextCurrent(context))return;
+    _adminNotice('features','healthy');document.getElementById('features-notification-status').textContent='';
     const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const day=ts=>{ try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}).format(new Date(ts)); }catch(_){ return ''; } };
     const short=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>110?t.slice(0,107).replace(/\s\S*$/,'')+'\u2026':t; };
@@ -1350,7 +1388,7 @@ async function loadFeatureRequests(){
     if(f&&newest){ const latest=String(newest.id||newest.ts||''); let seen=''; try{ seen=localStorage.getItem('maya_features_seen')||''; }catch(_){}
       f.classList.toggle('unseen', seen!==latest);
       f.addEventListener('toggle',()=>{ if(f.open){ f.classList.remove('unseen'); try{ localStorage.setItem('maya_features_seen',latest); }catch(_){} } },{once:true}); }
-  }catch(e){ if(sequence!==_featureSequence||!_adminContextCurrent(context))return;host.innerHTML='<div class="note">Maya\'s inbox did not answer: '+String(e.message||e).replace(/[<>]/g,'')+'</div>'; }
+  }catch(e){if(sequence!==_featureSequence||!_adminContextCurrent(context))return;_adminNotice('features','unavailable');const note=document.getElementById('features-notification-status');note.textContent='Feature requests could not be loaded. Your existing requests remain unchanged.';note.style.display='';if(!host.querySelector('.fr-room'))host.innerHTML='<p data-maya-type="P1">No requests to display.</p>';}
 }
 async function markFeatureDone(btn){
   const rowEl=btn.closest('.fr'); const id=rowEl&&rowEl.getAttribute('data-fid'); if(!id||!_idTok) return;
@@ -1462,6 +1500,9 @@ function _adminSubject(token){
 }
 function _adminContext(){return {session:_adminSession,subject:_adminSubject(_idTok),token:_idTok};}
 function _adminContextCurrent(context){return !!context?.token&&!!_idTok&&context.session===_adminSession&&(context.token===_idTok||!!context.subject&&context.subject===_adminSubject(_idTok));}
+window.MayaAdminNotifications=createMayaAdminNotifications({context:_adminContext,current:_adminContextCurrent});
+function _adminNotice(source,code){MayaAdminNotifications.record([{source,code}]);}
+
 let _modelsLoading = false, _modelsAuth = null, _modelsChecked = 0;
 let _healthSeq = 0;
 async function _statusFetch(url, options, timeoutMs) {
@@ -1476,7 +1517,7 @@ async function _statusFetch(url, options, timeoutMs) {
 function probeImage(url){return new Promise(res=>{const i=new Image();const t=setTimeout(()=>res(false),4000);
   i.onload=()=>{clearTimeout(t);res(true)};i.onerror=()=>{clearTimeout(t);res(false)};i.src=url})}
 async function runChecks(){
-  const checkSeq = ++_healthSeq;
+  const checkSeq = ++_healthSeq,checkContext=_adminContext();
   ['d-site','d-api','d-assets','d-drive','d-backup'].forEach(id=>setDot(id,'wait'));
   { const _ca = document.getElementById('checked-at'); if (_ca) _ca.textContent = ''; }
   const assetChecks = Promise.all([
@@ -1526,6 +1567,7 @@ async function runChecks(){
   const [[site,assets,backup],health]=await Promise.all([assetChecks,healthCheck]);
   const {api,apiWhy,drive,driveWhy}=health;
   if (checkSeq !== _healthSeq) return;
+  if(_adminContextCurrent(checkContext))MayaAdminNotifications.record([{source:'site',code:site?'healthy':'unavailable'},{source:'api',code:api?'healthy':'unavailable'},{source:'images',code:assets?'healthy':'unavailable'},{source:'backup',code:backup?'healthy':'unavailable'}]);
   setDot('d-site',site?'ok':'bad');setDot('d-api',api?'ok':'bad');
   setDot('d-assets',assets?'ok':'bad');setDot('d-backup',backup?'ok':'bad');
   setDot('d-drive', drive===null?'wait':(drive?'ok':'bad'));
@@ -1546,9 +1588,8 @@ const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleuser
 // v13.42: the setup box under the numbers is gone. What it used to say goes
 // to the console, where whoever is wiring things up actually looks.
 function _note(html) {
-  try { console.log('[map]', String(html).replace(/<[^>]+>/g, ' ')); } catch (_) {}
-  const n = document.getElementById('traffic-note');
-  if (n) { n.classList.add('hidden'); }
+  const n=document.getElementById('traffic-note');if(n){n.textContent=String(html).replace(/<[^>]+>/g,' ');n.style.display='';}
+  _adminNotice('analytics','unavailable');
 }
 function _showSignin(show) {
   const p = document.getElementById('signin-panel');
@@ -1661,9 +1702,11 @@ function _expired(expectedToken) {
     _renderGsiBtn();
   }, 2500);
 }
-function _subsNote(html) {
-  const n = document.getElementById('subs-note-inline');
-  n.style.display = ''; n.innerHTML = html;
+function _subsNote(html,empty=false) {
+  const n=document.getElementById('subs-note-inline'),notice=document.getElementById('submissions-notification-status');
+  if(empty){n.style.display='';n.innerHTML=html;return;}
+  n.style.display='none';if(notice){notice.textContent=String(html).replace(/<[^>]+>/g,' ');notice.style.display='';}
+  _adminNotice('submissions','unavailable');
 }
 let _subsSeq = 0;
 async function loadSubmissions() {
@@ -1673,7 +1716,7 @@ async function loadSubmissions() {
     // v12.8: if submissions are already on screen, leave them there. A lapsed
     // token is being renewed in the background and wiping the strip made it
     // look as though the latest submission had vanished.
-    if (!strip || !strip.children.length) _subsNote('Waiting for the one sign in at the top of the page.');
+    if (!strip || !strip.children.length) _subsNote('Waiting for the one sign in at the top of the page.',true);
     return;
   }
   let r;
@@ -1707,6 +1750,7 @@ async function loadSubmissions() {
   if (requestSeq !== _subsSeq || !_adminContextCurrent(context)) return;
   window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
   window.MAYA_ADMIN_DATA.submissions = data;
+  _adminNotice('submissions','healthy');document.getElementById('submissions-notification-status').textContent='';
   document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const prettyName = n => { const m = String(n).match(/^(.*?)-\d{2}-\d{2}-\d{4}\s*$/); const r = (m ? m[1] : String(n)).trim();
@@ -1738,7 +1782,7 @@ async function loadSubmissions() {
   if (!visible.length) {
     strip.style.display = 'none';
     strip.dataset.sig = '';
-    _subsNote('No submissions yet, they appear here the moment one lands.');
+    _subsNote('No submissions yet, they appear here the moment one lands.',true);
     return;
   }
   document.getElementById('subs-note-inline').style.display = 'none';
@@ -1836,6 +1880,7 @@ async function loadTraffic() {
   if (requestSeq !== _trafficSeq || !_adminContextCurrent(context)) return;
   window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
   window.MAYA_ADMIN_DATA.traffic = d;
+  _adminNotice('analytics',d.ok===false?'unavailable':'healthy');if(d.ok!==false){document.getElementById('traffic-note').textContent='';}
   _paintHeadTiles(d);
   if(!tiles)return; // The current workspace uses the heading metrics; the legacy tile row is optional.
   if (!d.ok) {
@@ -2032,10 +2077,10 @@ async function loadMayaCommand(){
     if(sequence!==_mayaCommandSequence||!_adminContextCurrent(context))return null;
     if(r.status===401){ _expired(auth); return null; }
     if(!r.ok||!j.ok) throw new Error(j.error||('snapshot '+r.status));
-    window.MAYA_ADMIN_DATA.command=j; _mayaRenderCommand(j);
+    window.MAYA_ADMIN_DATA.command=j; _mayaRenderCommand(j);_adminNotice('briefing','healthy');
     mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
     return j;
-  }catch(e){ if(sequence===_mayaCommandSequence&&_adminContextCurrent(context))mayaCommandState('briefing unavailable','waiting'); return null; }
+  }catch(e){ if(sequence===_mayaCommandSequence&&_adminContextCurrent(context)){mayaCommandState('briefing unavailable','waiting');_adminNotice('briefing','unavailable');} return null; }
 }
 window.loadMayaCommand=loadMayaCommand;
 
@@ -2660,15 +2705,7 @@ function buildTicker(d) {
   if (!el) return;
   const sep = '<span class="tk-sep">&#183;</span>';
   const bits = [];
-  const compact = t => esc(String(t || '')
-    .replace(/cost per link click/ig, 'CPL')
-    .replace(/day over day/ig, 'vs yesterday')
-    .replace(/week over week/ig, 'vs last week')
-    .replace(/\b20\d\d-(\d\d)-(\d\d)\b/g, (m, mo, dd) => mo + '/' + dd));
-  if (_brief && _brief.ok && _brief.headline) bits.push(compact(_brief.headline));
-  for (const w of (d.warnings || [])) {
-    bits.push('<span class="tk-' + (w.severity === 'red' ? 'red' : 'amber') + '">' + compact(w.text) + '</span>');
-  }
+  const warning=document.getElementById('marketing-warning-status');if(warning){warning.textContent=[...(d.warnings||[]).map(w=>String(w.text||'')),_brief?.ok?_brief.headline:'',_brief?.ok?_brief.action:''].filter(Boolean).join(' ');warning.style.display=warning.textContent?'':'none';}
   const src=d.adCombined?.sources||{};
   const g = src.google_ads || {};
   const f = src.facebook || {};
@@ -2684,8 +2721,8 @@ function buildTicker(d) {
     bits.push('<span class="tk-green">' + n0(d.leads.d7) + ' lead' + (d.leads.d7 === 1 ? '' : 's') + ' this week, ' + n0(d.leads.d28) + ' this month</span>');
     if (d.costPerLead != null) bits.push('<span class="tk-amber">cost per lead ' + usd(d.costPerLead) + '</span>');
   }
-  if (_brief && _brief.ok && _brief.action) bits.push('<span class="tk-amber">next: ' + compact(_brief.action) + '</span>');
-  if (!bits.length) bits.push('quiet: nothing needs you today');
+
+  if (!bits.length) bits.push('No activity reported for this window.');
   const line = bits.join(sep) + sep;
   el.innerHTML = line + line;
   const chars = el.textContent.length / 2;
@@ -2720,9 +2757,8 @@ function paintLeads(l) {
   const focusedStatus = _leadFilterMenu?.contains(document.activeElement) ? document.activeElement.dataset.status : null;
   closeLeadFilter();
   if (!l.connected) {
-    tb.innerHTML = '<tr><td style="color:var(--dim)">Not connected. ' + esc(l.why || '') +
-      ' The Wix API key needs the Forms read permission.</td></tr>';
-    note.style.display = 'none';
+    tb.innerHTML = '<tr><td data-maya-type="P1">No lead data available.</td></tr>';
+    note.textContent=l.why||'Leads could not be loaded. Review the connection in Systems.';note.style.display='';
     return;
   }
   if (!(l.list || []).length) {
@@ -3213,8 +3249,8 @@ async function loadLeadAlertStatus(){
     for(const item of j.items||[])for(const channel of ['text','call'])if(['failed','uncertain','claimed'].includes(item[channel]))warnings.push((item.name||'Callback')+': '+channel+' '+item[channel]+(item[channel+'Error']?' ('+item[channel+'Error']+')':''));
     for(const item of j.items||[])for(const channel of ['text','call'])if(item[channel+'RecordingError'])warnings.push(item[channel+'RecordingError']);
     if(j.health?.lastError)warnings.push(j.health.lastError);
-    note.textContent=warnings.join(' ').slice(0,900);note.style.display=warnings.length?'block':'none';
-  }catch(e){if(auth===_idTok){note.textContent='Callback notifications: '+e.message;note.style.display='block';}}
+    note.textContent=warnings.join(' ').slice(0,900);note.style.display=warnings.length?'block':'none';_adminNotice('callback_alerts',warnings.length?'needs_attention':'healthy');
+  }catch(e){if(auth===_idTok){note.textContent='Callback notifications: '+e.message;note.style.display='block';_adminNotice('callback_alerts','unavailable');}}
   finally{_callbackStatusBusy=false;}
 }
 async function checkLeadAlerts(quiet=false){
@@ -3250,14 +3286,14 @@ let _msgTab = 'systems', _msgOpen = null, _msgTimer = null, _msgThreads = [];
 function admTab(t) {
   if (!['systems','messages','logs','automations'].includes(t)) return;
   _msgTab = t;
-  document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Logs' : t === 'automations' ? 'Automations' : 'Systems';
+  document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Notifications' : t === 'automations' ? 'Automations' : 'Systems';
   document.getElementById('drawer-automations').hidden = t !== 'automations';
   if(t==='automations')loadTextAutomations();
   document.getElementById('drawer-logs').hidden = t !== 'logs';
   document.getElementById('drawer-systems').hidden = t !== 'systems';
   document.getElementById('adm-tab-logs').classList.toggle('on', t === 'logs');
   document.getElementById('adm-tab-logs').setAttribute('aria-selected', String(t === 'logs'));
-  if (t === 'logs') loadMayaLogs();
+  if (t === 'logs') { MayaAdminNotifications.load(); if(document.getElementById('maya-logs-disclosure').open)loadMayaLogs(); }
   if (t === 'systems') { loadModelSnapshot(); }
   const d = document.getElementById('drawer');
   d.classList.toggle('msgs', t !== 'systems');
@@ -3294,7 +3330,7 @@ async function loadMayaLogs() {
     const auth=_idTok;
     const [r,designResponse] = await Promise.all([fetch('/api/admin/maya-features', {headers:{Authorization:'Bearer '+auth}}),fetch('/api/admin/design-history', {headers:{Authorization:'Bearer '+auth},cache:'no-store'})]);
     const [j,designLog]=await Promise.all([r.json(),designResponse.json()]);
-    if(auth!==_idTok)return;
+    if(!_adminContextCurrent(context))return;
     if(!designResponse.ok||!designLog.ok)throw Error('Saved aesthetic history could not be loaded.');
     j.items=[...(j.items||[]),...(designLog.items||[])];
     if (!r.ok || !j.ok) throw new Error('The feedback inbox could not be loaded.');
@@ -3302,6 +3338,7 @@ async function loadMayaLogs() {
       '<article class="maya-log"><small>' + esc(item.who || 'Maya') + ' · ' + esc(item.source || 'voice') + ' · ' + esc(_msgWhen(item.ts)) + ' · ' + (item.state==='saved' ? 'Saved' : item.done ? 'Shipped' : 'Open') + '</small><p>' + esc(item.text || '') + '</p></article>').join('') || '<p class="note">No feedback logged yet.</p>';
   } catch(e) { if(_adminContextCurrent(context))host.textContent = e.message; }
 }
+document.getElementById('maya-logs-disclosure').addEventListener('toggle',event=>{if(event.currentTarget.open&&_msgTab==='logs')loadMayaLogs();});
 function _msgWhen(ts) {
   if (!ts) return '';
   const d = new Date(ts), now = new Date();
@@ -3984,15 +4021,16 @@ async function loadMkt(){
   if(status)status.textContent='Refreshing Marketing';
   let r;
   try{r=await fetch('/api/admin/marketing?t='+Date.now(),{headers:{Authorization:'Bearer '+auth},cache:'no-store'});}
-  catch(_){if(current()&&status)status.textContent='Could not reach Marketing. Existing numbers remain on screen.';return;}
+  catch(_){if(current()&&status){status.textContent='Could not reach Marketing. Existing numbers remain on screen.';status.style.display='';_adminNotice('marketing','unavailable');}return;}
   if(!current())return;
   if(r.status===401||r.status===403){if(auth===_idTok)_expired(auth);return;}
-  if(!r.ok){if(status)status.textContent='Marketing data unavailable ('+r.status+'). Existing numbers remain on screen.';return;}
-  let d;try{d=await r.json();}catch(_){if(current()&&status)status.textContent='Marketing returned an unreadable response.';return;}
+  if(!r.ok){if(status){status.textContent='Marketing data unavailable ('+r.status+'). Existing numbers remain on screen.';status.style.display='';}_adminNotice('marketing','unavailable');return;}
+  let d;try{d=await r.json();}catch(_){if(current()&&status){status.textContent='Marketing returned an unreadable response.';status.style.display='';_adminNotice('marketing','unavailable');}return;}
   if(!current())return;
   window.MAYA_ADMIN_DATA=window.MAYA_ADMIN_DATA||{};window.MAYA_ADMIN_DATA.marketing=d;
   document.getElementById('adm-mkt').hidden=false;
   if(status)status.textContent='';
+  _adminNotice('marketing',d.warnings?.length?'needs_attention':'healthy');
   _paintMkt(d,true);
 }
 // v14.16: one paint path for fresh and cached data. The brief only runs on a
@@ -4005,10 +4043,15 @@ function _paintMkt(d, alsoBrief){
   if(adConnections){
     const reports=[['Google',d.googleAds],['Meta',d.meta],['ChatGPT',d.chatgptAds]];
     const why=(name,r)=>{const setup=d.adSetup?.[name.toLowerCase()];return setup?.missingLabels?.length?'Missing '+setup.missingLabels.join(', ')+'.':r?.why||'direct reporting unavailable.';};
+    adConnections.style.display='';
+    const allowed=new Set(['not_configured','oauth_expired','project_access','account_access','scope','authorization','account_mismatch','provider_error','incomplete_report','invalid_report','invalid_metric','invalid_account']);
+    MayaAdminNotifications.record(reports.map(([name,report])=>({source:name.toLowerCase()+'_ads',code:report?.connected?(d.adCombined?.excludedSources||[]).includes(name.toLowerCase())?'currency_excluded':'connected':allowed.has(report?.code)?report.code:d.adSetup?.[name.toLowerCase()]?.configured===false?'not_configured':'provider_error'})));
     adConnections.textContent=reports.map(([name,r])=>name+': '+(r?.connected?(d.adCombined?.excludedSources||[]).includes(name.toLowerCase())?'reported currency cannot be combined with USD.':'direct reporting connected.':why(name,r))).join(' ')+' Daily results use completed days in each ad account timezone.';
   }
   try{ paintAdCombined(); }catch(e){ console.warn('[mkt] ads',e); }
   try{ paintCampaigns(); }catch(e){ console.warn('[mkt] campaigns',e); }
+  const leadReport=d.leads||{};_adminNotice('leads',leadReport.connected?'healthy':'unavailable');
+  if(leadReport.connected){const note=document.getElementById('leads-note');note.textContent='';note.style.display='none';}
   try{ paintLeads(d.leads||{}); }catch(e){ console.warn('[mkt] leads',e); }
   try{ paintBottomLine(d); }catch(e){ console.warn('[mkt] bottomline',e); }
   try{ buildTicker(d); }catch(e){ console.warn('[mkt] ticker',e); }

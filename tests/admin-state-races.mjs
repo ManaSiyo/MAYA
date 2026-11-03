@@ -8,7 +8,23 @@ const a=token('owner-a',1),a2=token('owner-a',2),a3=token('owner-a',3),b=token('
 const leads=[{id:'lead-angela',name:'Angela Example',phone:'4155550101',email:'angela@example.test',quote:'200',note:'Reviewed note',stage:'new'},{id:'lead-bella',name:'Bella Example',phone:'+14155550102',quote:'300',note:'Other lead',stage:'new'},{id:'lead-no-phone',name:'No Phone',stage:'new'}];
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
-const errors=[],writes=[],requests=[],alerts=[],held=new Map(),pending=new Map();let feed=leads;
+const errors=[],writes=[],notificationWrites=[],requests=[],alerts=[],held=new Map(),pending=new Map();let feed=leads;
+const notificationAdSources=new Set(['google_ads','meta_ads','chatgpt_ads']);
+const notificationSources=new Set(['marketing','leads','analytics','submissions','callback_alerts','site','api','images','backup','briefing','features']);
+const notificationAdCodes=new Set(['connected','not_configured','oauth_expired','project_access','account_access','scope','authorization','account_mismatch','provider_error','incomplete_report','invalid_report','invalid_metric','invalid_account','currency_excluded']);
+const notificationCodes=new Set(['healthy','unavailable','needs_attention','not_configured']);
+function safeNotificationBatch(body){
+ assert.deepEqual(Object.keys(body).sort(),['items'],'Notification writes contain only the fixed-state batch');
+ assert.ok(Array.isArray(body.items)&&body.items.length>0&&body.items.length<=16,'Notification batch is bounded');
+ const seen=new Set();
+ for(const item of body.items){
+  assert.deepEqual(Object.keys(item).sort(),['code','source'],'Notifications contain no text, credentials, account IDs or recipient details');
+  assert.ok(notificationAdSources.has(item.source)||notificationSources.has(item.source),'Notification source is allowlisted');
+  assert.ok((notificationAdSources.has(item.source)?notificationAdCodes:notificationCodes).has(item.code),'Notification code is allowlisted for its source');
+  assert.ok(!seen.has(item.source),'Notification batch has one fixed state per source');seen.add(item.source);
+ }
+ assert.ok(JSON.stringify(body).length<=2048,'Fixed-state notification payload stays small');
+}
 page.on('pageerror',error=>errors.push(error.message));
 page.on('dialog',async dialog=>{alerts.push(dialog.message());await dialog.dismiss();});
 await page.addInitScript(()=>{
@@ -32,6 +48,12 @@ await page.route('**/*',async route=>{
  const req=route.request(),url=new URL(req.url());if(url.hostname!=='maya.test')return route.abort();
  if(url.pathname.startsWith('/api/')){
   requests.push({path:url.pathname,auth:req.headers().authorization});
+  if(url.pathname==='/api/admin/notifications'){
+   assert.ok(['GET','POST'].includes(req.method()),'Notification fixture permits only authenticated reads and fixed-state observations');
+   assert.ok([a,a2,a3,b].some(value=>req.headers().authorization==='Bearer '+value),'Notifications use only a verified fixture owner session');
+   if(req.method()==='POST'){const body=req.postDataJSON();safeNotificationBatch(body);notificationWrites.push({path:url.pathname,body,auth:req.headers().authorization});}
+   return route.fulfill({json:{ok:true,items:[]}});
+  }
   if(req.method()==='POST')writes.push({path:url.pathname,body:req.postDataJSON(),auth:req.headers().authorization});
   if(held.get(url.pathname)){held.set(url.pathname,held.get(url.pathname)-1);const list=pending.get(url.pathname)||[];list.push(route);pending.set(url.pathname,list);return;}
   if(url.pathname==='/api/admin/messages/suggest')return route.fulfill({json:{ok:true,eligible:false,reason:'No suggestion'}});
@@ -163,6 +185,7 @@ try{
  assert.equal(await page.evaluate(()=>legacyCell.dataset.orig),'Angela Example');
  // A late legacy success cannot mark a stale editor saved after an account change.
  hold('/api/admin/lead-update');await page.evaluate(()=>{legacyCell.className='';window.oldField=saveLeadField(legacyCell);});const oldField=await take('/api/admin/lead-update');await page.evaluate(b=>_adoptToken(b),b);await oldField.fulfill({json:{ok:true}});await page.evaluate(()=>oldField);assert.equal(await page.evaluate(()=>legacyCell.classList.contains('lead-saved')),false);assert.equal(await page.evaluate(()=>legacyCell.dataset.orig),'Angela Example');
+ assert.ok(notificationWrites.length>0,'Safe fixed-state observations are validated independently of reviewed owner mutations');
  assert.deepEqual(errors,[]);
  console.log('Admin state races passed: invoice identity/recovery/save-only retry, reviewed internal drafts, session renewal/isolation, durable approval retry, duplicate guards, stale Marketing and cancelled voice startup. Fake providers only.');
 }finally{await browser.close();}

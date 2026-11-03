@@ -119,3 +119,6 @@ await import('./ad-reporting-ui.mjs?authority');
 
 // Native scrollbar precedence and real gutter/Save behavior across page consumers.
 await import('./scrollbar-authority-ui.mjs?authority');
+
+// Private Admin status/history, shared heading roles and collapsed log disclosure.
+await import('./admin-notifications-ui.mjs?authority');

@@ -375,7 +375,7 @@ Both load before typography v24 and revalidate through Hosting. Final authority
 includes presentation-consistency and pill-consistency geometry fixtures.
 
 
-October 8 workspace controls: Feature requests use H2 section titles, P1 request
+October 8 workspace controls: Feature requests use H3 section titles, P1 request
 text, P3 owner/date and Inner rows. The later owner review retires Prompting
 Engine and Architecture dashboard UI and their previews; stored live rendering
 settings and client consumers remain. Aesthetic Control contains six active linked
@@ -646,3 +646,27 @@ preview demonstrates the purpose in its caption. H4 names, Inner cards, Outer
 workspace, Glass controls and saved typography/materials remain unchanged. No new
 visual authority or component editor is introduced. Four-card default/changed
 saved-style fixtures cover inline/expanded views at six widths.
+
+
+## November 3 — Admin notifications, headings and circular ranges
+
+All seven main Admin section headings explicitly use H3, including Feature
+requests. Drawer titles remain H2. The Notifications tab occupies the former
+Logs location beside Messages; Current status and Logs are native collapsed
+disclosures. Operational provider/setup details and marketing attention stay in
+that drawer. Reviewed form/send feedback and the active voice controls remain
+beside their actions. No client-facing notification surface is introduced.
+
+Notification rows use Inner, P1 text and P3 time; headings use H3 and disclosure/
+Refresh controls use Glass/P3. The saved Drawer and Scrollbars remain their sole
+material/geometry authority. Bounded history is private to the verified Admin
+account and stores fixed source/state codes, not provider bodies or private
+client text. Failed saves remain explicit inside Notifications; account changes
+clear live history, details and pending observations.
+
+D/W/M have an opt-in shared data-maya-shape="circle" contract in pill-runtime.js.
+The real controls and active Pills preview stay square/circular under saved P3
+font changes and unequal Glass X/Y padding. Ordinary text/icon capsules retain
+their content-plus-padding geometry. Shape changes introduce no new material or
+independent editor. Phone drawer headers reserve hamburger space, wrap their
+tabs and keep the H2 title on its own row without an overlapping main brand.

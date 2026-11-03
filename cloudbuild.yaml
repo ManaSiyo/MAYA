@@ -65,6 +65,8 @@ steps:
         node tests/text-automations.mjs
         node tests/canon-contract.mjs
         node tests/ad-reporting.mjs
+        node tests/admin-notifications.mjs
+        node tests/admin-notifications-ui.mjs
         node tests/ai-routing.mjs
         node tests/fabric-sourcing.mjs
         node tests/fabric-search.mjs

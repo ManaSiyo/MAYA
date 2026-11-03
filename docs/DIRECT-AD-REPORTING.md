@@ -107,7 +107,7 @@ without these fields has unknown readiness; do not turn absent fields into false
 No account IDs, missing-setting details or credential values are public. The
 Admin-only /api/admin/marketing adSetup object names fixed missing settings and
 human labels without values, and the existing P1 connection note displays them.
-Its response is no-store. Do not collect keys through the website or chat.
+Its response is no-store. Admin shows this connection detail inside Notifications → Current status, with fixed account-private history, rather than beneath the dashboard tables. Do not collect keys through the website or chat.
 
 Google errors distinguish expired/revoked OAuth, Cloud-project production access,
 account permission and missing Ads scope from an unconfigured preflight. Unknown

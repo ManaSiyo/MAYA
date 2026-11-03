@@ -1,27 +1,27 @@
-Title: [Codex] Retract fabric suggestions contradicted by late evidence
+Title: [Codex] Keep Admin notifications private and align shared controls
 
-A worldwide fabric card could appear before its source image caption arrived.
-If later evidence identified a client-excluded material, the card stayed visible;
-retention on stream failure and a prior private garment cache could restore it.
-Requalify late captions against each product's canonical garment context and emit
-explicit URL retractions. Remove them from published/retained cards and evict the
-prior cache before preserving remaining results. Keep request-local exclusion
-tombstones when final output replays earlier source items. Keep other loaded results intact.
+Operational connection/setup notes were exposed beneath dashboard data and in
+the ticker. Feature requests used a different typography role from its peers,
+and the shared pill runtime overrode D/W/M circle dimensions.
 
-New server and UI fixtures fail the previous behavior, then cover retraction,
-subsequent stream failure and garment-cache round trips. No extra model/seller
-call, automatic retry, private catalog caching or credential/environment change.
-Brief/Operation Room use shared assets v9 with exact no-cache rules. Existing
-P1/H4/P3/Inner/Glass authority remains; no new visual setting or CSS family.
+Move fixed operational notifications into an account-private retained drawer
+history, with Current status and diagnostic Logs collapsed beside Messages.
+Use verified Admin subjects, fixed source/code states, a 200-entry bound,
+generation CAS, no-store routes and session-safe UI updates. Keep reviewed
+action feedback and active voice controls in context. Only fresh provider reads
+can record recovery; local presentation rerenders cannot clear an outage.
 
-Public HTTP verification proves the main worldwide rewrite 8c2586a is deployed:
-release/App/Admin/API stamps match; Brief/Operations and v8 asset bytes match the
-checkout with no-cache. It does not test paid provider output or ChatGPT parity.
-No personal Chrome or live search was used. This correction needs a later owner
-Push and exact deployed verification; do not Push automatically.
+Give all seven main headings H3 and add an opt-in shared circular Glass variant
+plus active Pills preview. Preserve saved material/P3 and ordinary capsules.
+Repair phone drawer header paint and crowded short-screen message scrolling.
+Regenerate typography usage and retain strict account/send/approval safeguards.
 
-Validation: 11 worldwide checks and focused removal/failure/private-cache/replayed-
-evidence fixtures pass. All 76 exact functional/release/regression/smoke commands
-pass; Node20/24 forced-GC/deadline gates pass. Final standalone shared Aesthetic
-Control passes last, with default/changed saved styles and visual inspection at
-responsive widths. No runtime source changed afterward.
+Validation: clean pinned npm ci; all 78 functional/release/regression/smoke
+commands pass on Node20, including integrated Aesthetic Control. New storage/UI
+and Ads checks also pass on Node24. The standalone Aesthetic Control command is
+the final pre-commit gate, with default/saved computed styles, real Save,
+visual review and six responsive widths. Synthetic providers only.
+
+Local work only. No personal Chrome, production credential/environment changes,
+campaign mutations or live provider tests. Owner retains Push and deployed
+verification.

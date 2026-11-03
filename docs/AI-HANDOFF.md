@@ -1,95 +1,95 @@
-# Current handoff — November 1 worldwide Fabrics verification
+# Current handoff — November 3 Admin presentation and notifications
 
 ## Owner request and boundaries
 
-Verify logically whether the image-led worldwide Fabrics flow works in Brief and
-Operation Room, including the OpenAI connection. Personal Chrome and paid/live
-provider searches remain stopped. No microphone, credential/environment access,
-account mutations or Push. Local verified commits are authorized. No previously
-pasted key was used or stored.
+Move operational notifications into the existing drawer location used by Logs,
+make diagnostic Logs a dropdown beside the Messages flow, align the main Admin
+section fonts and make D/W/M circular. Check shared CSS across the active pages.
+The implemented layout uses a Notifications tab in the old Logs position;
+Messages remains its own tab, with Current status and Logs collapsed within
+Notifications. Form/send feedback and active voice controls stay beside their
+reviewed actions. No personal Chrome, microphone, credential/environment access,
+live provider tests or Push. Local verified commits remain authorized.
 
-## What is actually deployed
+## Deployment and Ads continuity
 
-At the start the checkout and origin/maya-v2 both point to 8c2586a, with no changes.
-Public tests/verify-live.mjs passed: release.json, App/Admin build stamps and API
-health all match 8c2586ac7461772002de37e9701a120ff957ea5b. OpenAI/storage presence
-booleans are true; they do not prove authorized model requests or result quality.
-Public Brief/Operation Room HTML bytes exactly equal the checkout, include fabric
-v8, and shared JS/CSS bytes match with no-cache delivery. Those two pages have no
-per-page build meta even locally; an initial stamp-only probe was corrected to
-exact byte comparison, not treated as a deployment failure.
+Read-only public HTTP checks during this chat confirm Hosting, Admin and API
+at 41df1a542366a68514df13670dc008cc634fd05a. API health is healthy and reports
+Google/ChatGPT configuration present, Meta absent. This includes the earlier
+worldwide fabric late-evidence correction; prior handoff claims that it was only
+local are superseded. Its provider result quality/latency remains unmeasured.
 
-The worldwide main rewrite is deployed. It receives the original image, canonical
-selected crop, saved client words and selected garment through the same shared
-assistant from Brief and Operation Room. Service branches to one streamed OpenAI
-Responses image/text/image-web-search request before optional feeds, seller reads
-or the second visual rank. No allowed-domain filter or selected shops applies to
-the main branch. Local/named-shop searches are explicit independent modes/caches.
-API fields and source-linked image-result shape were checked against current
-OpenAI Docs. Existing configured model is preserved; no deployment environment
-values were inspected. This verifies wiring/contract, not a paid production search.
-See FABRIC-SEARCH.md for the complete active architecture.
+Owner screenshots confirm Google Ads Explorer access in pro-maya and OAuth
+publishing In production. Owner created a dedicated Ads Web client in that
+project, granted adwords/offline authorization and privately deployed matching
+replacement credentials after screenshot exposure. Owner reports both Google
+and ChatGPT Ads now show in Admin. That authenticated outcome is owner-reported;
+the agent only checked public presence/health and did not retrieve/use secrets.
+Meta remains unconfigured. No production settings were changed by this code task.
 
-## New reproduced defect and local repair
+## Local implementation
 
-Late source evidence was not rechecked for a card already published without a
-photo. A later caption could identify client-excluded polyester and still leave
-that card visible. A new fake-provider server fixture fails the deployed code at
-missing retraction. A UI fixture also fails when a removal followed by a stream
-error restores the old retained card. Empty interrupted results could leave a
-previous private cache entry intact too.
+backend/status.html gives all seven main dashboard headings explicit H3 roles;
+Feature requests had explicitly used H2 while its peers inferred H3. Drawer
+titles remain H2. Provider connection/configuration notes, callback/marketing/
+traffic/submission errors and warning/AI attention text are in private Current
+status, instead of the exposed dashboard/ticker. Numeric metrics remain in the
+ticker. Empty data stays explicit without reflecting raw provider setup text.
 
-fabric-worldwide.mjs keeps each accepted URL's canonical parent garment context.
-Later raw source image captions re-run known client exclusions. Conflicting URLs
-are deleted and emitted in incremental removedUrls alongside the remaining cards.
-Request-local exclusion tombstones prevent an earlier source item replayed at
-completion from resurrecting the URL; the strengthened fixture reproduces this
-ordering too.
-No added provider call, seller fetch, retry, source URL relaxation or private shared
-cache. Unknown facts remain unknown; this corrects known contradictions only.
+aesthetics/ui/admin-notifications.js records only fixed source/code observations,
+loads bounded history and guards asynchronous work by actual Admin session.
+Actual account changes clear pending observations, history, current notes and
+old diagnostic log content. Failed reads/writes report failure within Notifications
+and retain current details; they do not claim persistence or create retry loops.
+docs/server/admin-notifications.mjs derives fixed text/severity and privately
+stores at most 200 state transitions/recoveries per verified Admin subject.
+Identical checks do not rewrite history. Generation CAS preserves concurrent
+updates; unreadable/invalid stores fail closed. GET/POST are Admin-only and
+private,no-store; no raw provider bodies, secrets, account IDs or client text are
+accepted. New module is packaged in Docker; its browser module revalidates.
 
-fabric-assistant.js removes explicit retractions from retained cards, uses the
-remaining published list and evicts its prior private mode/garment cache before
-remembering survivors. A subsequent stream error or focus switch cannot resurrect
-the material. Other loaded/source-backed cards retain their existing behavior.
-Brief/Operation Room references become v9 under the same exact no-cache rules;
-release/domain assertions follow. There is no new visible component, CSS family,
-material, role or editor: existing P1/H4/P3/Inner/Glass remain the authority.
+aesthetics/ui/pill-runtime.js has opt-in data-maya-shape="circle" for actual D/W/M
+and the active Gallery Pills preview. Material and P3 typography remain shared;
+ordinary capsules retain content-plus-padding sizing. Unequal saved padding and
+font changes preserve circular bounds. Shared CSS references across active pages
+were consistent; no competing style family was added.
 
-New world test covers initially unknown fiber, later source contradiction, removal
-and final empty results. UI covers removal followed by failure and silent garment
-round trips without restoring cached copies. app-regression records this request.
-AGENTS, design and FABRIC-SEARCH document the explicit retention exception.
+Responsive checks reproduced the main ADMIN brand/hamburger overlapping drawer
+tabs/title on phones. Header layout now reserves menu space and wraps its controls;
+the H2 title remains readable. The conversation retains a usable minimum scroll
+target on short screens; pending previews and delivery feedback keep their existing
+scroll behavior. Original send/STOP/voice-dock assertions remain intact.
+Leads health is observed only from a fresh provider snapshot: local filter, column
+or note repaints cannot claim recovery or clear an existing connection warning.
 
-## Verification and next step
+## Verification and exact next step
 
-Before repair, code-only reruns passed 18 sourcing checks and Node20/24 forced-GC
-search/deadline suites. The new negative server and UI fixtures failed the old
-behavior before implementation. After repair all 11 worldwide checks and the
-focused UI workflow pass, including private cache invalidation and replayed earlier
-source evidence. All 76 exact functional/release/regression/smoke commands pass.
-Forced-GC behavior/deadline gates pass on release Node20.20.2 and local Node24.
-Final standalone Aesthetic Control passes last, re-executing the changed workflow
-and shared default/saved styles at six widths. Default desktop and deliberately
-different saved expanded/phone captures were visually inspected. No new UI family
-or production design change; no runtime source changed after final authority.
-Prepare the local commit with COMMIT-REVIEW aligned, then leave Push to the owner.
+New negative fixtures reproduced the old non-circular bounds and absent private
+notification surface. Clean pinned npm ci completed with scripts disabled. All
+78 functional/release/regression/smoke commands pass on Node20.20.2, including
+the integrated Aesthetic Control checks. One fixture initially expected a
+notification from a local-only Leads repaint; its final assertion now requires
+zero provider-recovery writes, and that exact check was rerun successfully.
+Other notification-aware fixtures separately validate fixed-state POST bodies
+without relaxing original account/lead/send/approval mutation assertions.
 
-After local verification, leave the repair committed for owner Push. The main
-8c2586a flow is live; this late-evidence correction will be local until that Push
-and successful Cloud Build. Then verify exact release/API stamps and v9 asset
-bytes/cache policy. Do not claim a local repair is already deployed.
+Store/routes and notification UI also pass on local Node24.22.1; ad reporting
+passes on both Node majors. UI covers retained history, transitions, identical
+polling, storage failure, stale A-to-B reads/writes, private reset, real shared
+design Save and all seven H3 peers at 320/390/768/1024/1440/1920px. Circle stress
+includes unequal/zero/max X/Y padding, Jost/Cormorant, selected/focus state and
+ordinary capsule preservation. Responsive checks cover all three painted tabs,
+the title, hamburger, voice controls and crowded Messages at three heights.
+Default/saved Admin and circle captures were visually reviewed.
 
-Actual provider entitlement, real materials coverage, image relevance and first
-useful latency have not been exercised with a paid production request. Code tests
-and correct deployment identity cannot establish identical ChatGPT speed/quality.
-Respect the existing stop on live testing rather than silently resuming it.
+The standalone aesthetic-authority command is the final gate immediately before
+the local commit and re-executes the changed visible surfaces after these notes.
+No source/presentation change may follow that final check. Prepare the reviewed
+local commit with COMMIT-REVIEW aligned, then leave Push to the owner. The code
+changes in this handoff are local until that Push and successful Cloud Build.
 
-## Retained scope
-
-Private account/submission boundaries, canonical saved IDs/photos/words, Node20
-combined abort lifetime guard, 50/55/60-second bounds, optional approved retailer
-verification and generation-checked historical lookbooks remain intact. No missing
-pieces generate on read. Browsing does not create fabric assignments. Independent
-WR, sole Glass/table/scrollbar authority, retired Studio/Outbound, direct Ads and
-communications/voice configuration remain unchanged.
+After owner Push and successful Cloud Build, verify exact Hosting/API commits
+and authenticated Notifications in production. Synthetic tests cannot establish
+production history persistence or live provider delivery. Existing sealed account/
+project data, canonical fabric context, private lookbooks, retired workspaces,
+communications approvals, voice cancellation and shared aesthetic authority remain.

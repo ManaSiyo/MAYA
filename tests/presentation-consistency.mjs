@@ -7,7 +7,23 @@ import {extname,resolve} from 'node:path';
 const root=new URL('../',import.meta.url).pathname;
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
-const errors=[],writes=[];
+const errors=[],writes=[],notificationWrites=[];
+const notificationAdSources=new Set(['google_ads','meta_ads','chatgpt_ads']);
+const notificationSources=new Set(['marketing','leads','analytics','submissions','callback_alerts','site','api','images','backup','briefing','features']);
+const notificationAdCodes=new Set(['connected','not_configured','oauth_expired','project_access','account_access','scope','authorization','account_mismatch','provider_error','incomplete_report','invalid_report','invalid_metric','invalid_account','currency_excluded']);
+const notificationCodes=new Set(['healthy','unavailable','needs_attention','not_configured']);
+function safeNotificationBatch(body){
+ assert.deepEqual(Object.keys(body).sort(),['items'],'Notification writes contain only the fixed-state batch');
+ assert.ok(Array.isArray(body.items)&&body.items.length>0&&body.items.length<=16,'Notification batch is bounded');
+ const seen=new Set();
+ for(const item of body.items){
+  assert.deepEqual(Object.keys(item).sort(),['code','source'],'Notifications contain no text, credentials, account IDs or recipient details');
+  assert.ok(notificationAdSources.has(item.source)||notificationSources.has(item.source),'Notification source is allowlisted');
+  assert.ok((notificationAdSources.has(item.source)?notificationAdCodes:notificationCodes).has(item.code),'Notification code is allowlisted for its source');
+  assert.ok(!seen.has(item.source),'Notification batch has one fixed state per source');seen.add(item.source);
+ }
+ assert.ok(JSON.stringify(body).length<=2048,'Fixed-state notification payload stays small');
+}
 let submissions=[];
 const day=days=>new Date(Date.now()-days*86400000).toISOString().slice(0,10);
 const marketing={leads:{connected:true,list:['new','contacted','in_progress','booked','completed','canceled','closed','passed'].map((stage,i)=>({id:'style-'+i,name:stage,phone:'+141555501'+String(i).padStart(2,'0'),createdAt:'2026-10-07',stage,wrote:'Fixture'}))},adCombined:{campaignDaily:[{date:day(0),source:'google',campaign:'Current impressions',impressions:20,linkClicks:2,spend:2},{date:day(4),source:'meta',campaign:'Week impressions',impressions:30,linkClicks:3,spend:3},{date:day(15),source:'google',campaign:'Month impressions',impressions:40,linkClicks:4,spend:4},{date:day(0),source:'meta',campaign:'No impressions',impressions:0,linkClicks:0,spend:0}]}};
@@ -16,6 +32,12 @@ await page.addInitScript(()=>{window.setInterval=()=>0;});
 await page.route('**/*',async route=>{
  const req=route.request(),u=new URL(req.url());if(u.hostname!=='maya.test')return route.abort();
  if(u.pathname.startsWith('/api/')){
+  if(u.pathname==='/api/admin/notifications'){
+   assert.ok(['GET','POST'].includes(req.method()),'Notification fixture permits only authenticated reads and fixed-state observations');
+   assert.equal(req.headers().authorization,'Bearer fixture');
+   if(req.method()==='POST'){const body=req.postDataJSON();safeNotificationBatch(body);notificationWrites.push({path:u.pathname,method:req.method(),body});}
+   return route.fulfill({json:{ok:true,items:[]}});
+  }
   if(u.pathname==='/api/admin/marketing')return route.fulfill({json:marketing});
   if(u.pathname==='/api/admin/marketing-brief')return route.fulfill({json:{ok:true,headline:'Fixture summary'}});
   if(req.method()!=='GET')writes.push({path:u.pathname,method:req.method()});
@@ -110,6 +132,7 @@ try{
   await group.locator('.restore-editor').click();
   assert.equal(await group.locator('.status-pill').evaluate(e=>getComputedStyle(e).color),({delivering:colors.completed,pending:colors.booked,rejected:colors.canceled})[key],key+' restore returns saved preview');
  }
+ assert.ok(notificationWrites.length>0,'Expected fixed operational observations are validated separately from account mutations');
  assert.deepEqual(errors,[]);assert.deepEqual(writes,[],'Presentation verification must not perform account mutations');
  console.log('Presentation consistency passed: all seven Admin heading/content boundaries, empty/populated submissions, D/W/M, current and retained status colors, saved overrides and functional gallery previews.');
 }finally{await browser.close();}
