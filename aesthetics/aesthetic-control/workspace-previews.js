@@ -9,5 +9,11 @@ export function setupWorkspacePreviews({parent,render}){
  const interpretation=role('p','A velvet-like body cloth with contrasting inserts; fiber is unconfirmed.','P1');interpretation.className='fa-observation';fabrics.append(interpretation);
  const material=document.createElement('article');material.className='fa-product workspace-fabric-preview';material.dataset.mayaPanel='inner';const link=document.createElement('a');link.className='fa-product-link';link.href='/aesthetics/fabrics/Midnight%20Velvet.JPG';link.target='_blank';link.rel='noopener noreferrer';link.setAttribute('aria-label','Midnight Velvet · For the selected garment · Body fabric · Atelier inventory presentation sample');const image=document.createElement('img');image.src='/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg';image.alt='In-house Midnight Velvet presentation sample';image.className='fa-product-image';const productTitle=role('h4','Midnight Velvet','H4');productTitle.className='fa-card-title';const caption=role('p','Atelier inventory','P3');caption.className='fa-card-caption';link.append(image,productTitle,caption);material.append(link);fabrics.append(material);
  const details=window.MayaFabricSearchDetails.create({parent:fabrics,hoverTargets:[material],preview:true});details.set({preferences:JSON.stringify(['Wool','No polyester']),garments:[{name:'Preview coat',fabric:'Burgundy wool twill',traits:{texture:'matte'}}],retailerQueries:['red twill wool'],webQueries:['burgundy wool twill fabric'],query:'burgundy wool twill',observation:'Burgundy and twill-like; exact fiber cannot be confirmed visually.',stores:['Britex Fabrics'],stage:'Presentation sample; no search is sent'});fabrics.append(details.trigger);
+ const composer=document.createElement('div');composer.className='fa-composer';
+ const label=role('label','Find or refine fabrics','P3');label.htmlFor='fabric-preview-request';
+ const field=role('textarea','Darker green, less shiny','P1');field.id='fabric-preview-request';field.dataset.mayaControl='field';field.rows=1;
+ const actions=document.createElement('div');actions.className='fa-actions';
+ for(const text of ['Find fabric','Stop']){const button=role('button',text,'P3');button.type='button';button.className='pill maya-pill';actions.append(button);}
+ composer.append(label,field,actions);fabrics.append(composer);
  render();
 }

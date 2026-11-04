@@ -1,3 +1,22 @@
+# November 3 owner implementation — simple Fabrics relay
+
+Main Sourceable keeps one OpenAI Responses web/image request. Send the canonical
+selected dissected image first, original look as context, client words and a short
+sourcing task; saved speculative fabric descriptions do not become query demands.
+Show up to 12 distinct source websites per request, with photographs first. Useful
+qualified tool photos may stream before the model shortlist; later exclusions or
+ambiguous variant evidence retract them. Source-backed images/URLs, unknown seller
+facts, private canonical scope and no automatic paid retry remain mandatory.
+Saved-look Fabrics exposes the existing follow-up field and Stop; refinements must
+reach the provider verbatim and cannot retain conflicting old results. Refresh
+retains healthy photos, including when a later model title replaces a raw caption.
+Each eager image attempt has an eight-second deadline, at most four source-backed
+URLs. Missing links use compact rows even among photos. Shared H4/P1/P3, Inner,
+field and Glass controls and the sole active Fabric preview govern this UI.
+Fabric JS/CSS references are v11. Run Node20/local fabric/GC gates, UI/workflow,
+exact release checks, full regression/smoke and final Aesthetic Control last.
+No claim of ChatGPT private internals or identical live result quality/speed.
+
 # November 3 Admin review — deployment, lower folds and menu
 
 Admin drawer order and labels are Settings, Messages, Logs. Internal systems/logs
@@ -39,7 +58,7 @@ Photo cards stay before compact missing-photo links even across retained results
 and Refresh. Product links have two visible text rows total. Use the full photo grid width and
 available height; long P1 interpretation stays one line with its full text inside
 Search details. Existing H4/P3/Inner/Glass and sole active Fabric preview govern.
-Shared Fabric JS/CSS references are v10, Search details v2. New image UI regression
+Shared Fabric JS/CSS references are v11, Search details v2. New image UI regression
 is in release/app-regression/final authority. Run fabric gates on Node20/local,
 full release/regression/smoke and final standalone Aesthetic Control last.
 

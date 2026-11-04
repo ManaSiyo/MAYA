@@ -53,7 +53,7 @@ for(const asset of ['fabric-assistant.js','fabric-assistant.css','fabric-search-
 }
 for(const page of ['backend/backend.html','backend/operations.html']){
  const html=read(page);
- for(const ext of ['js','css'])assert.ok(html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=10'),page+' must load the current fabric asset version');
+ for(const ext of ['js','css'])assert.ok(html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=11'),page+' must load the current fabric asset version');
  assert.doesNotMatch(html,/fabric-assistant\.(?:js|css)\?v=3/);
 }
 console.log('Fabric asset URLs bypass retained v3 caches; shared fabric and voice runtime revalidate.');

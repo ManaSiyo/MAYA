@@ -47,10 +47,11 @@ try{
  assert.deepEqual(imageRequests,[product.image,product.imageCandidates[1]],'Each source-backed URL is attempted once');
  assert.equal(await page.locator('.fa-product-link[href="'+product.url+'"] .fa-image-unavailable').count(),0);
  await page.evaluate(()=>{window.originalFabricCard=document.querySelector('.fa-product');window.originalFabricImage=document.querySelector('.fa-product-image');});
- const richer={...product,image:'https://fabric-cdn.example/good-new-canonical.jpg',imageCandidates:['https://fabric-cdn.example/good-new-canonical.jpg','https://fabric-cdn.example/good-new-thumbnail.jpg']};
+ const richer={...product,title:'Forest green cloth selected by the assistant',reason:'A possible body cloth; verify fiber.',image:'https://fabric-cdn.example/good-new-canonical.jpg',imageCandidates:['https://fabric-cdn.example/good-new-canonical.jpg','https://fabric-cdn.example/good-new-thumbnail.jpg']};
  const beforeRicher=imageRequests.length;await publish([empty,richer]);
  assert.equal(await page.evaluate(()=>document.querySelector('.fa-product')===originalFabricCard&&document.querySelector('.fa-product-image')===originalFabricImage),true,'Late image evidence preserves the healthy card and actual loaded image node');
  assert.equal(await page.locator('.fa-product-image').getAttribute('src'),product.imageCandidates[1]);assert.equal(imageRequests.length,beforeRicher,'A healthy image is not reloaded when additional source URLs arrive');
+ assert.equal(await page.locator('.fa-product-link[href="'+product.url+'"] .fa-card-title').textContent(),richer.title,'The model can refine a raw photo caption without replacing its loaded image');
  // An earlier retained source may gain a pending photo, fail and recover.
  // Image events alone must reorder the same nodes without another search.
  holdImage='/held-late-empty.jpg';
@@ -108,8 +109,24 @@ try{
  assert.deepEqual(foreignRequests,[],'Unsafe/private/credential-bearing image URLs never enter browser requests');
  await done([richer,failed,unsafe]);
  await page.waitForFunction(()=>document.querySelector('.fa-status').textContent==='Source-backed fabric suggestions.');
+ // A never-settling image must fall back without waiting for a browser error.
+ await page.clock.install();holdImage='/held-timeout.jpg';
+ const stalled={...product,url:product.url+'-stalled',image:'https://fabric-cdn.example'+holdImage,imageCandidates:['https://fabric-cdn.example'+holdImage,'https://fabric-cdn.example/good-timeout-fallback.jpg']};
+ await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>fixtureStreams.length===3);
+ await publish([richer,stalled]);await page.locator('.fa-product-link[href="'+stalled.url+'"]').scrollIntoViewIfNeeded();
+ for(let i=0;i<100&&!heldImage;i++)await new Promise(resolve=>setTimeout(resolve,10));assert.ok(heldImage);
+ await page.clock.fastForward(8100);await loaded('.fa-product-link[href="'+stalled.url+'"] img');
+ assert.match(await page.locator('.fa-product-link[href="'+stalled.url+'"] img').getAttribute('src'),/good-timeout-fallback/);
+ const timedOut=heldImage;heldImage=null;holdImage='';await timedOut.fulfill({body:png,contentType:'image/png'}).catch(()=>{});
+ assert.match(await page.locator('.fa-product-link[href="'+stalled.url+'"] img').getAttribute('src'),/good-timeout-fallback/,'A late timed-out image cannot replace its fallback');
+ const missingLinks=Array.from({length:6},(_,i)=>({...empty,url:empty.url+'-'+i}));
+ await publish([richer,...missingLinks]);
+ const compact=await page.locator('.fa-results').evaluate(grid=>({height:grid.scrollHeight,rows:[...grid.querySelectorAll('.has-missing-photo')].map(card=>card.getBoundingClientRect().height)}));
+ assert.equal(compact.rows.length,6);assert.ok(compact.rows.every(height=>height<100),'Missing links use compact grid tracks alongside photographs');assert.ok(compact.height<1100,'Missing links do not each consume a photo-height grid track');
+ const stop=page.getByRole('button',{name:'Stop',exact:true});assert.equal(await stop.isVisible(),true,'Stop is available in automatic saved-look mode');await stop.click();
+ await page.getByText('Search stopped.',{exact:true}).waitFor();assert.equal(await stop.isVisible(),false);
  // A detached old card must not start another photograph after account reset.
- holdImage='/held-old-thumbnail.jpg';await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>fixtureStreams.length===3);
+ holdImage='/held-old-thumbnail.jpg';await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>fixtureStreams.length===4);
  const old={...product,url:product.url+'-old',title:'Previous account green fabric',image:'https://fabric-cdn.example'+holdImage,imageCandidates:['https://fabric-cdn.example'+holdImage,'https://fabric-cdn.example/good-old-fallback.jpg']};
  await publish([old]);const oldCard=page.locator('.fa-product-link[href="'+old.url+'"]');await oldCard.scrollIntoViewIfNeeded();
  for(let i=0;i<100&&!heldImage;i++)await new Promise(resolve=>setTimeout(resolve,10));assert.ok(heldImage,'The old owner photograph request was held');
@@ -117,7 +134,7 @@ try{
  const delayed=heldImage;heldImage=null;await delayed.fulfill({status:404,body:'Old owner missing photograph'});await page.waitForTimeout(80);
  assert.equal(await page.locator('.fa-product').count(),0,'Account reset clears private cards');
  assert.equal(imageRequests.some(value=>value.includes('good-old-fallback')),false,'A late old-owner failure cannot begin a fallback request in the next account');
- assert.equal(await page.evaluate(()=>fixtureSearches),3,'Only the initial request and two explicit Refresh actions performed searches');
+ assert.equal(await page.evaluate(()=>fixtureSearches),4,'Only the initial request and explicit Refresh actions performed searches');
  assert.deepEqual(errors,[]);
  console.log('Fabric photographs passed: source-backed fallback, four-attempt bound, compact exhausted links, healthy DOM retention, photo-first event ordering, explicit rejection, explicit-only retry, unsafe URL rejection and stale-account cancellation. Synthetic providers only.');
 }finally{if(heldImage)await heldImage.abort().catch(()=>{});await browser.close();}

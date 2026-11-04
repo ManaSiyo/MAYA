@@ -16,3 +16,10 @@
 /* Layout only: the shared Inner material and H4/P3 roles govern this panel. */
 .fa-search-details{border:0;padding:0;background:transparent;box-sizing:border-box;position:fixed;inset:auto;margin:0;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain;z-index:20;text-align:left}
 .fa-search-details h3,.fa-search-details p{margin:0 0 var(--maya-form-label-gap,6px);overflow-wrap:anywhere}.fa-search-details p:last-child{margin-bottom:0}.fa-search-details strong{font-weight:inherit}.fa-search-details-trigger{max-width:100%;align-self:flex-start}
+
+/* Mixed results give unavailable links content-sized rows below the photos. */
+.fa-results:has(.has-missing-photo){grid-auto-rows:max-content;align-content:start}.fa-results:has(.has-missing-photo) .fa-product:not(.has-missing-photo){height:320px}.fa-product.has-missing-photo{grid-column:1/-1}
+/* Saved pieces keep their reference and expose the same shared follow-up field. */
+.fabric-assistant.is-automatic .fa-photo{display:none}.fabric-assistant.is-automatic .fa-composer textarea{min-height:0;height:auto}.fabric-assistant.is-automatic .fa-input-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.fabric-assistant.is-automatic .fa-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}@media(max-width:600px){.fabric-assistant.is-automatic .fa-composer{grid-template-columns:1fr}}
+@media(max-width:600px){.fa-product:not(.has-missing-photo):has(.fa-card-actions){display:flex;flex-direction:column}.fa-product:not(.has-missing-photo):has(.fa-card-actions) .fa-product-link{flex:1 1 0;height:auto;min-height:0}.fa-card-actions{flex-shrink:0}}

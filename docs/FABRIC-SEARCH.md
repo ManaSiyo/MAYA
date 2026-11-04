@@ -15,10 +15,11 @@ nine-merchant inventory matcher.
 ## Main path
 
 `docs/server/fabric-worldwide.mjs` owns one Responses request using the existing
-configured text/vision model and OpenAI key. It receives the original image,
-canonical selected crop when available, bounded saved garment metadata, client
-fabric preferences and refinements. Saved dissection guesses support image
-interpretation without rigidly excluding every alternative. Explicit client
+configured text/vision model and OpenAI key. It receives the canonical selected dissected image first when available, the
+original look as context, the selected garment name, client fabric preferences
+and refinements. Canonical IDs and saved garment metadata stay on the server for
+scope and exclusions; speculative saved fabric descriptions are not sent as
+search requirements. The sourcing instruction is a short image-led request. Explicit client
 exclusions remain authoritative; known contradictions are rejected without another
 model call. Scope/account/submission checks happen before provider work. No piece
 generation or assignment writes occur on read or browsing.
@@ -37,19 +38,24 @@ sent separately. Latest request exclusions are explicitly checked alongside save
 preferences/history. Actual bounded tool queries are available in private search
 details data for diagnostics; none are logged.
 
-Model output consists of NDJSON interpretation and candidate records. The server
+Model output consists of small NDJSON interpretation and URL/title/reason records;
+the model need not reconstruct garment IDs, materials or seller records. The server
 accepts candidate links only when they appear in provider search sources or URL
 citations. Product photos come only from raw image_result image/thumbnail URLs
 whose source_website_url matches that product page. Tracking fields/fragments and
 a trailing slash spelling may normalize; distinct hosts and meaningful query/
 variant identities cannot be merged. Canonical photographs precede thumbnails;
 same-page images with known different primary colors are not fallback choices. A model-supplied image URL is
-ignored. After model candidates are read, useful raw image-result pages can
-broaden a short written shortlist. These need positive apparel/yardage evidence,
+ignored. Useful raw image-result pages can stream as soon as tool evidence and a resolved
+color are available, without waiting for model candidates or completion. These need positive apparel/yardage evidence,
 a recognized primary color family and no known exclusion, editorial/category,
 decor/finished-garment or ambiguous multi-color variant evidence. They receive a
 qualified color-alternative reason and no guessed garment IDs or seller facts.
-Model candidates have priority within the photo pool. Photo-bearing cards take
+Model candidates have priority within the photo pool. The viewer selects up to
+12 distinct website hosts (www aliases grouped), with at most one product per
+website in each response; it never pads a sparse result. Accent colors mentioned
+first do not automatically override the body color. Later conflicting variant
+evidence retracts automatic raw suggestions, including on an interrupted stream. Photo-bearing cards take
 display slots ahead of links without photographs; browser order keeps photos ahead
 of retained or newly failed source links without replacing healthy DOM nodes; displaced links are removed
 from retained current results. Missing/exhausted photographs keep a compact
@@ -74,8 +80,8 @@ may expose complete source/image data only at the end; those candidates wait for
 evidence rather than guessing it. JSON nonstream responses are also handled.
 
 SSE input is capped at 2 MiB, model text at 100k characters, pending candidate
-model records at 48, combined model/photo candidates at 96 and displayed
-suggestions at 24 per response. The existing browser retains at most 48 unique
+model records at 48, raw photo candidates at 48, combined model/photo candidates at 96 and displayed
+suggestions at 12 distinct websites per response. The existing browser retains at most 48 unique
 results across explicit refreshes. These are bounds, not an artificial minimum. Terminal completion releases the
 reader without waiting for EOF. Failed/incomplete/early-ended streams stay failures;
 already source-backed cards can remain visible and cached, without marking the
@@ -133,7 +139,12 @@ Explicit new search clears prior mode caches for that garment; new references
 return to worldwide. Same-account token renewal retains state and drafts.
 
 Confirmed/source-backed card and image nodes remain mounted during Refresh when
-unchanged. Failed/empty refreshes keep existing cards. Prepared photos remain a
+unchanged. A model title/reason arriving after a raw tool photo updates its text
+without replacing the healthy image. Saved-look searches expose the same shared
+follow-up field and Stop as manual searches. Typed refinements retain canonical
+saved-context validation and previous conversation, but start a fresh result set
+so old matches cannot contradict a new exclusion. Explicit Refresh retains the
+existing result set and latest submitted refinement. Failed/empty refreshes keep existing cards. Prepared photos remain a
 two-reference project-bound cache; the result cache holds 24 contexts. Recent
 empty completion is reusable for 30 seconds. Partial cached searches retain their
 interrupted state and need explicit Refresh to continue, never an automatic retry.
@@ -144,9 +155,11 @@ the full qualified interpretation. Every card has exactly two visible text rows:
 H4 name and P3 source/known-unit price. Full garment/material/reason context is in
 the accessible source link name. Photos use a responsive auto-fit grid, crop with
 object-fit:cover and fill available rows; three results do not reserve a fourth
-empty column. Cards use Inner and controls Glass. On image failure the same img
-tries at most four validated source-backed URLs once each, with no referrer or
-provider retry. Detached old-account cards cannot start fallback work. Healthy
+empty column. Cards use Inner and controls Glass. Eager browser image requests each have an eight-second deadline and
+try at most four validated source-backed URLs once each, with no referrer or
+provider retry. Timeout/revocation detaches the old image so late callbacks cannot
+replace a newer photograph. Removed cards cancel their image deadlines. Missing
+links use content-sized full-width rows even in a mixed photo grid. Detached old-account cards cannot start fallback work. Healthy
 image/card nodes survive additional evidence and Refresh; explicit source-backed
 wrong-color revocations override retention, including loaded/loading photos and
 late callbacks. Explicit Refresh can retry exhausted photographs. The bounded
@@ -155,7 +168,7 @@ nested outer scrolling at all six tested widths. Active Aesthetic
 Control previews the same P1 interpretation and existing card/pill families. No new
 style family/editor was introduced. Default/saved styling, actual Save, six widths,
 focus/error and inline/expanded behavior remain mandatory checks. JS/CSS references
-are v10 and Search details v2 under their exact no-cache Hosting rules. New runtime module ships in Docker.
+are v11 and Search details v2 under their exact no-cache Hosting rules. New runtime module ships in Docker.
 
 Private legacy books remain at
 private/fabrics/<encoded authenticated Google sub>/<submissionId>/lookbook.json.

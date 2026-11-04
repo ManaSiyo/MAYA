@@ -108,13 +108,13 @@ await test('saved context is canonical before the single worldwide call starts',
   await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'jacket',name:'forged'},image},event=>events.push(event));assert.equal(calls,1);assert.equal(events.at(-1).products[0].garmentId,'jacket');
 });
 
-await test('three written recommendations retain fourteen useful color-led product photographs',async()=>{
-  const photos=Array.from({length:14},(_,i)=>({type:'image_result',source_website_url:`https://cloth.example/products/green-twill-${i}`,image_url:`https://photos.example/green-${i}.jpg`,thumbnail_url:`https://photos.example/thumb-${i}.jpg`,caption:`Forest green cotton twill apparel fabric by the yard ${i}`}));
+await test('three written recommendations retain source photographs from up to twelve different websites',async()=>{
+  const photos=Array.from({length:14},(_,i)=>({type:'image_result',source_website_url:`https://cloth-${i}.example/products/green-twill-${i}`,image_url:`https://photos.example/green-${i}.jpg`,thumbnail_url:`https://photos.example/thumb-${i}.jpg`,caption:`Forest green cotton twill apparel fabric by the yard ${i}`}));
   const unsafe=[['upholstery','Green upholstery fabric by the yard'],['shirt','Green shirt made of premium fabric size M'],['pattern','Green sewing pattern for apparel fabric'],['orange','Orange fabric by the yard with green variants'],['sample','Green cotton apparel fabric sample'],['blog','Green apparel fabric by the yard']].map(([id,caption])=>({...photos[0],source_website_url:'https://cloth.example/'+(id==='blog'?'blog/green-fabric':'products/'+id),caption}));
   const written=photos.slice(0,3).map(p=>({...candidate,url:p.source_website_url,title:p.caption}));
   const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{type:'web_search_call',action:{queries:['forest green suiting fabric','hunter green cotton twill by the yard']},results:[...photos,...unsafe]},content([{...interpretation,colorFamily:'green'},...written])]})});
   await service.search(user,{request:'green apparel fabric',image},e=>events.push(e));
-  const done=events.at(-1);assert.equal(done.products.length,14,'Search photographs are not discarded behind the written shortlist');
+  const done=events.at(-1);assert.equal(done.products.length,12,'Search photographs fill the twelve-site viewer beyond the written shortlist');
   assert.ok(done.products.every(p=>p.image&&p.imageCandidates.length===2));assert.equal(done.products[0].image,photos[0].image_url);
   assert.ok(done.products.slice(3).every(p=>!p.garmentId&&!p.garment&&p.reason.includes('Approximate')),'Raw photo suggestions invent no garment identity or exact suitability');
   assert.deepEqual(done.searchDetails.webQueries,['forest green suiting fabric','hunter green cotton twill by the yard']);
@@ -136,11 +136,12 @@ await test('image association tolerates only trailing slash spelling and keeps v
   await service.search(user,{request:'fabric',image},e=>events.push(e));assert.equal(events.at(-1).products.length,1,'Slash aliases are not duplicate products');
 });
 await test('photo suggestions displace photo-less links at the bounded display limit',async()=>{
-  const links=Array.from({length:24},(_,i)=>({...candidate,url:`https://cloth.example/products/link-${i}`}));
-  const photos=Array.from({length:30},(_,i)=>({...evidence.results[0],source_website_url:`https://cloth.example/products/photo-${i}`,caption:`Green suiting fabric by the yard ${i}`}));
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{type:'web_search_call',action:{sources:links.map(({url})=>({url}))},results:photos},content([{...interpretation,colorFamily:'green'},...links])]})});
+  const links=Array.from({length:24},(_,i)=>({...candidate,url:`https://link-${i}.example/products/green`}));
+  const photos=Array.from({length:30},(_,i)=>({...evidence.results[0],source_website_url:`https://photo-${i}.example/products/green`,caption:`Green suiting fabric by the yard ${i}`}));
+  const frames=[{type:'response.output_item.done',item:{type:'web_search_call',action:{sources:links.map(({url})=>({url}))}}},{type:'response.output_text.delta',delta:[{...interpretation,colorFamily:'green'},...links].map(value=>JSON.stringify(value)).join('\n')+'\n'},{type:'response.output_item.done',item:{type:'web_search_call',results:photos}},{type:'response.completed',response:{status:'completed',output:[]}}];
+  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(frames.map(event=>'data: '+JSON.stringify(event)+'\n\n').join(''),{headers:{'Content-Type':'text/event-stream'}})});
   await service.search(user,{request:'green fabric',preferences:'No polyester',image},e=>events.push(e));
-  assert.equal(events.at(-1).products.length,24);assert.ok(events.at(-1).products.every(p=>p.image));
+  assert.equal(events.at(-1).products.length,12);assert.ok(events.at(-1).products.every(p=>p.image));
   assert.ok(events.some(e=>e.removedUrls?.length),'Earlier link-only cards are removed from retained client results when photo results take their slots');
 });
 await test('extra photographs still respect client exclusions and need a resolved color',async()=>{
@@ -196,6 +197,47 @@ await test('late color interpretation revokes an earlier uncolored-title photo w
   await service.search(user,{request:'fabric',image},event=>events.push(structuredClone(event)));
   assert.ok(events.some(e=>e.products?.[0]?.image),'An early source-backed image may precede interpretation');
   assert.equal(events.at(-1).products[0].image,'');assert.deepEqual(events.at(-1).products[0].rejectedImageURLs,[source.results[0].image_url,source.results[0].thumbnail_url]);
+});
+
+await test('selected dissected image leads a short request without saved fabric guesses',()=>{
+  const pieceImage='data:image/png;base64,cGllY2U=';
+  const body=worldwideSearchBody({request:'Darker green, no polyester',history:[{request:'Less shiny'}],preferences:'No polyester',image,selectedReference:pieceImage,piece:{name:'Coat',fabric:'Mandatory ornate brocade',fabric_spec:{weave:'brocade'}},pieces:[{name:'Coat',fabric:'Mandatory ornate brocade'}]},'gpt-6-luna');
+  const parts=body.input[0].content;
+  assert.equal(parts[1].image_url,pieceImage);assert.equal(parts.at(-1).image_url,image,'Original look remains available as context');
+  assert.doesNotMatch(JSON.stringify(parts),/Mandatory ornate brocade/);
+  assert.match(parts[0].text,/Darker green, no polyester/);assert.match(body.instructions,/up to 12 different websites/);
+  assert.ok(body.instructions.split(/\s+/).length<300,'The provider receives a concise sourcing task');
+});
+await test('tool photos stream before any written shortlist, accent-first captions survive, and late exclusions retract',async()=>{
+  let controller;const events=[];
+  const stream=new ReadableStream({start(value){controller=value;}});
+  const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(stream,{headers:{'Content-Type':'text/event-stream'}})});
+  const task=service.search(user,{request:'Green body fabric, no polyester',image},event=>events.push(structuredClone(event)));
+  const push=event=>controller.enqueue(new TextEncoder().encode('data: '+JSON.stringify(event)+'\n\n'));
+  push({type:'response.output_text.delta',delta:JSON.stringify({...interpretation,colorFamily:'green'})+'\n'});
+  const photo={...evidence.results[0],caption:'Black embroidery on forest green apparel fabric by the yard'};
+  push({type:'response.output_item.done',item:{...evidence,results:[photo]}});
+  for(let i=0;i<50&&!events.some(event=>event.products?.length);i++)await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(events.find(event=>event.products?.length)?.products[0].image,photo.image_url,'No model candidate or completion is needed for a qualified tool photograph');
+  assert.equal(events.some(event=>event.type==='done'),false);
+  push({type:'response.output_item.done',item:{...evidence,results:[{...photo,caption:'Forest green polyester apparel fabric by the yard'}]}});
+  push({type:'response.failed'});
+  await assert.rejects(task,/interrupted/);
+  assert.ok(events.some(event=>event.removedUrls?.includes(url)));assert.equal(events.filter(event=>event.products).at(-1).products.length,0);
+});
+await test('later ambiguous variant evidence retracts an early raw photograph before stream failure',async()=>{
+  const green={...evidence.results[0],caption:'Green suiting fabric by the yard'},orange={...green,image_url:'https://seller-images.example.net/orange.jpg',caption:'Orange suiting fabric by the yard'};
+  const frames=[{type:'response.output_text.delta',delta:JSON.stringify({...interpretation,colorFamily:'green'})+'\n'},{type:'response.output_item.done',item:{...evidence,results:[green]}},{type:'response.output_item.done',item:{...evidence,results:[orange]}},{type:'response.failed'}];
+  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(frames.map(event=>'data: '+JSON.stringify(event)+'\n\n').join(''),{headers:{'Content-Type':'text/event-stream'}})});
+  await assert.rejects(service.search(user,{request:'Green fabric',image},event=>events.push(structuredClone(event))),/interrupted/);
+  assert.ok(events.some(event=>event.products?.[0]?.image===green.image_url));assert.ok(events.some(event=>event.removedUrls?.includes(url)));assert.equal(events.filter(event=>event.products).at(-1).products.length,0);
+});
+await test('one merchant cannot crowd out twelve other source websites',async()=>{
+  const photos=Array.from({length:20},(_,i)=>({...evidence.results[0],source_website_url:'https://one-shop.example/products/green-'+i,caption:'Green suiting fabric by the yard'}));
+  for(let i=0;i<11;i++)photos.push({...photos[0],source_website_url:'https://shop-'+i+'.example/products/green'});
+  const out=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:photos},content([{...interpretation,colorFamily:'green'}])]})});
+  await service.search(user,{request:'Green fabric',image},event=>out.push(event));
+  const products=out.at(-1).products;assert.equal(products.length,12);assert.equal(new Set(products.map(p=>new URL(p.url).hostname)).size,12);
 });
 
 console.log('Worldwide fabric: '+count+' global/default/evidence/stream/cancellation checks passed.');

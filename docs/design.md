@@ -708,3 +708,16 @@ and its active preview show three working lower folds; no new key/editor/style
 family is introduced. Shared presentation runtime asset is v3; save schema stays
 compatible. All seven Admin headings remain H3, including Feature requests, and
 actual D/W/M retain the existing shared circle shape under saved settings.
+
+
+## November 3 — Fabrics follow-up and compact missing-photo rows
+
+Saved-look Sourceable exposes the existing P1 field and P3 Glass Find fabric/Stop
+controls. Desktop places the field and actions in one row; phones stack them.
+The existing sole Fabric preview includes the follow-up field and both actions;
+shared field material, typography, Glass padding, colors and focus remain the
+only authority. H4/P3 photo cards keep two text rows. Mixed grids give missing
+photo links full-width content-sized rows, below photos in worldwide results.
+Phone Favorites reserve space for the existing Remove action inside photo cards.
+No new saved key, editor, material or typography family is introduced. Final
+checks cover actual Save propagation and default/changed six-width geometry.

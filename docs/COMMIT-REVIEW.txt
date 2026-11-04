@@ -1,27 +1,29 @@
-Title: [Codex] Separate notification history from Admin fixture actions
+Title: [Codex] Simplify Fabrics into an image-led search conversation
 
-Cloud Build passed the earlier lead-notes/Fabric gates but stopped before deploy
-at Admin Systems' final authority import: a legitimate blocked-GIS warning saved
-to notification history was counted as an owner action. Audit all generic Admin
-write guards and fix the four affected fixtures through one strict test helper.
-Validate the exact authenticated notification endpoint and bounded fixed states;
-reject arbitrary/private fields and keep all other mutation/send/rule guards.
+Put the canonical selected dissected piece first in the existing single OpenAI
+web/image request. Replace verbose speculative fabric context with a short task,
+client preferences/history and the selected garment name. Stream qualified tool
+photos before the model shortlist; show up to twelve distinct website hosts.
+Retain source-backed URLs/photos, unknown seller facts, canonical private scope,
+explicit exclusions, variant separation and late retractions through failures.
+No new provider, second paid ranking stage or automatic retry.
 
-Force the real blocked-sign-in error and drain public history in each fixture.
-Retain zero invented recovery, allowing only the automation fixture's explicit
-successful feature read. Intercept Systems background polls to prevent a slower
-CI success response from overwriting the deliberate warning. Preserve every
-STOP, reviewed send, confirmation, draft, stale-account and responsive assertion.
-No production runtime, CSS or release gate changes.
+Expose saved-look follow-up and Stop. Relay actual refinements, clear incompatible
+old matches and preserve explicit Refresh results. Keep healthy photos through
+caption updates; bound each image URL to eight seconds and four attempts total.
+Use content-sized missing-link rows, reachable phone Favorites controls and the
+existing shared roles/materials. Extend the sole Fabric preview; load v11 assets.
 
-All 79 required functional/release/regression/smoke command results pass.
-The four corrected fixtures pass under Node20 and Node24 (the authority
-fixture also re-executes its imported surface checks). Shared privacy/payload
-contract negatives pass. Final standalone Aesthetic Control is the last
-pre-commit check; only commit once that run and its visual review pass.
+Validation: all 77 functional/syntax release commands, full app-regression and
+smoke pass. Worldwide (26), search (57), forced-GC and sourcing pass on Node20/24.
+Locked npm ci passed. Isolated UI/workflow and integrated shared authority pass;
+default/changed saved styles and six-width captures were inspected. Standalone
+Aesthetic Control is the final verification and must pass before this commit.
+New cases cover selected-image priority, short request, early raw photos,
+twelve-site breadth, late exclusions/ambiguous variants, actual follow-ups, Stop,
+timeout recovery, healthy caption updates and content-sized missing-photo rows.
 
-Hosting still serves 41df1a5 / Fabric v9; the previously pushed Fabric/Admin repairs
-remain unshipped. No Push, Cloud Build rerun, personal Chrome, live paid providers,
-credentials or environment changes. Successful owner deployment and exact live
-release/asset verification remain necessary; synthetic checks do not prove source
-relevance or real photographs on the owner's request.
+Local implementation only. No personal Chrome, paid live provider test, secret or
+production configuration access, Push or deployment. Prior research verified live
+cb1c0d2/Fabric v10; owner Push and exact v11 release verification plus real-image
+acceptance remain necessary. Public API behavior does not promise ChatGPT parity.

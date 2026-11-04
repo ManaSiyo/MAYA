@@ -78,7 +78,7 @@ try{
   await page.locator('#brief-fabrics #fabric-assistant').waitFor();
   await page.locator('.fa-card-title').filter({hasText:'Crimson wool twill'}).first().waitFor();
   assert.equal(await page.locator('#fabric-assistant-dialog').getAttribute('open'),null,'Brief opens its internal window');
-  assert.equal(await page.locator('.fa-composer').isVisible(),false,'Saved look recommendations do not ask for Dictate or Find fabric');
+  assert.equal(await page.locator('.fa-composer').isVisible(),true,'Saved look recommendations expose follow-up conversation');
   const automatic=requests.find(r=>r.automatic);assert.ok(automatic);assert.equal(automatic.submissionId,'project-A');assert.equal(automatic.piece.name,undefined);assert.equal(automatic.pieces.length,3);assert.match(automatic.image,/^data:image\/jpeg/);assert.equal(automatic.preferences,'100% wool, no polyester');
   assert.equal(await page.locator('.fa-card-title').count(),1);assert.match(await page.locator('.fa-product-link').getAttribute('aria-label'),/For Crimson coat/);
   // Independent lookbook hydration may replace a card after a locator resolves.
@@ -91,6 +91,12 @@ try{
   assert.equal(await page.locator('.fa-product [title]').count(),0,'Cards do not repeat verbose hover copy');
   assert.doesNotMatch(await page.locator('.fa-card-caption').textContent(),/69.99/,'Worldwide suggestions do not invent seller prices');
   assert.equal(automatic.mode,'worldwide');assert.equal(automatic.storeGroups,undefined);
+  const beforeRefine=requests.length;
+  await page.locator('#fabric-request').fill('Darker crimson, no polyester');await page.locator('#fabric-request').press('Enter');
+  await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
+  assert.equal(requests.length,beforeRefine+1);assert.equal(requests.at(-1).request,'Darker crimson, no polyester','Automatic saved-look mode relays the actual follow-up');
+  assert.equal(requests.at(-1).automatic,true,'Refining keeps canonical saved-garment validation');assert.equal(requests.at(-1).history[0].request,automatic.request);
+  assert.equal(requests.at(-1).submissionId,'project-A');
   // Real long provider fields must stay inside two visible text rows. Three
   // photo cards fill the row rather than reserve a phantom fourth column.
   const checkPhotoFirst=async(label)=>{
@@ -198,7 +204,8 @@ try{
   // Resolve and inspect the currently connected element in one browser task.
   const readStyle=selector=>page.evaluate(selector=>{const el=document.querySelector(selector);if(!el?.isConnected)throw Error('Missing connected style target: '+selector);const s=getComputedStyle(el),r=el.getBoundingClientRect();return {size:parseFloat(s.fontSize),weight:s.fontWeight,color:s.color,font:s.fontFamily,background:s.backgroundColor,paddingX:parseFloat(s.paddingLeft),paddingY:parseFloat(s.paddingTop),radius:parseFloat(s.borderRadius),blur:s.backdropFilter,stroke:s.strokeWidth,width:r.width,height:r.height};},selector);
   assert.equal(await page.locator('.fa-observation').isVisible(),true,'Worldwide shows its materials interpretation');
-  const defaults={interpretation:await readStyle('.fa-observation'),heading:await readStyle('.fa-header h2'),title:await readStyle('.fa-card-title'),caption:await readStyle('.fa-card-caption'),status:await readStyle('.fa-status'),outer:await readStyle('#fabric-assistant'),inner:await readStyle('.fa-product'),field:await readStyle('.fa-store-filter'),pill:await readStyle('.fa-toolbar button'),icon:await readStyle('.fa-toolbar button svg')};
+  const defaults={followup:await readStyle('#fabric-request'),send:await readStyle('.fa-composer button[type=submit]'),interpretation:await readStyle('.fa-observation'),heading:await readStyle('.fa-header h2'),title:await readStyle('.fa-card-title'),caption:await readStyle('.fa-card-caption'),status:await readStyle('.fa-status'),outer:await readStyle('#fabric-assistant'),inner:await readStyle('.fa-product'),field:await readStyle('.fa-store-filter'),pill:await readStyle('.fa-toolbar button'),icon:await readStyle('.fa-toolbar button svg')};
+  assert.equal(defaults.followup.size,12);assert.equal(defaults.send.size,10);assert.equal(defaults.send.paddingX,14);assert.equal(defaults.send.paddingY,6);
   assert.equal(defaults.interpretation.size,12);assert.equal(defaults.heading.size,20);assert.equal(defaults.title.size,14);assert.equal(defaults.caption.size,10);assert.equal(defaults.status.size,12);assert.equal(defaults.caption.color,'rgb(255, 255, 255)');assert.equal(defaults.status.color,'rgb(170, 181, 196)');assert.match(defaults.heading.font,/Cormorant/);assert.match(defaults.title.font,/Jost/);assert.equal(defaults.pill.paddingX,14);assert.equal(defaults.pill.paddingY,6);
   for(const width of [320,390,768,1024,1440,1920]){
     await page.setViewportSize({width,height:900});
@@ -217,6 +224,7 @@ try{
       await page.setViewportSize({width,height:1000});await checkDetails(true);
       assert.ok((await page.locator('.fa-body').boundingBox()).height>=100,mode+' saved results usable '+width);
       for(const[selector,size,color]of [['.fa-header h2',28,'rgb(170, 181, 196)'],['.fa-card-title',20,'rgb(170, 181, 196)'],['.fa-card-caption',14,'rgb(170, 181, 196)'],['.fa-status',16,'rgb(255, 255, 255)'],['.fa-observation',16,'rgb(255, 255, 255)']]){const actual=await readStyle(selector);assert.equal(actual.size,size,mode+' '+width+' '+selector+' saved size');assert.equal(actual.color,color,mode+' '+width+' '+selector+' saved color');}
+      assert.equal((await readStyle('#fabric-request')).size,16,mode+' follow-up uses saved P1 '+width);assert.ok(await page.locator('#fabric-request').evaluate(el=>{const s=getComputedStyle(el);return el.clientHeight-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom)>=(parseFloat(s.lineHeight)||parseFloat(s.fontSize))-1;}),mode+' follow-up has room for its saved text line '+width);assert.equal((await readStyle('.fa-composer button[type=submit]')).size,14,mode+' follow-up action uses saved P3 '+width);
       const outer=await readStyle('#fabric-assistant'),inner=await readStyle('.fa-product'),field=await readStyle('.fa-store-filter'),pill=await readStyle('.fa-toolbar button'),glyph=await readStyle('.fa-toolbar button svg');
       assert.deepEqual([outer.paddingX,outer.paddingY,outer.radius,outer.background],[24,18,20,'rgba(115, 46, 70, 0.65)'],mode+' outer material '+width);
       assert.deepEqual([inner.paddingX,inner.paddingY,inner.radius,inner.background],[12,10,16,'rgba(35, 76, 125, 0.7)'],mode+' inner material '+width);
@@ -296,6 +304,8 @@ try{
   assert.equal(await details.evaluate(e=>getComputedStyle(e,'::-webkit-scrollbar').width),'4px','Details use the saved shared thin scrollbar');assert.equal(requests.length,beforeDetails,'Keyboard reading makes no provider calls');await page.keyboard.press('Escape');
   await page.goto('https://maya-fabric.test/aesthetics/aesthetic-control.html');
   await page.locator('#workspace-previews > summary').click();
+  assert.equal(await page.locator('#fabric-preview-request').evaluate(e=>getComputedStyle(e).fontSize),'16px','Active follow-up preview inherits saved P1');
+  assert.equal(await page.locator('#workspace-previews .fa-actions button').first().evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(3, 15, 29, 0.65)','Active follow-up action inherits saved Glass');
   const previewTrigger=page.locator('#workspace-previews').getByRole('button',{name:'Search details',exact:true});
   await previewTrigger.click();const previewDetails=page.locator('#workspace-previews .fa-search-details');await previewDetails.waitFor({state:'visible'});
   assert.match(await previewDetails.textContent(),/Presentation sample; no search is sent/);
@@ -304,4 +314,4 @@ try{
   await page.screenshot({path:'/private/tmp/maya-fabric-details-gallery.png'});
   assert.deepEqual(errors,[]);
   console.log('Fabric UI: saved-look automatic inline search, optional same-view expansion, three shared tabs, store filter, concise sourced cards, sealed favorites/refinements/failures, and six widths passed.');
-}catch(e){console.error('Fabric UI state:',await page.locator('.fa-status').allTextContents());await page.screenshot({path:'/private/tmp/maya-fabrics-test-failure.png'}).catch(()=>{});throw e;}finally{await browser.close();}
+}catch(e){console.error('Fabric UI state:',await page.locator('.fa-status').allTextContents());console.error('Fabric geometry:',await page.locator('.fa-results').evaluate(grid=>({rows:getComputedStyle(grid).gridTemplateRows,field:(()=>{const el=document.getElementById('fabric-request'),s=getComputedStyle(el);return {height:el.clientHeight,font:s.fontSize,line:s.lineHeight,pad:[s.paddingTop,s.paddingBottom],rows:el.rows,cssHeight:s.height};})(),cards:[...grid.children].map(card=>({className:card.className,height:card.getBoundingClientRect().height,top:card.getBoundingClientRect().top,display:getComputedStyle(card).display,children:[...card.children].map(el=>({className:el.className,height:el.getBoundingClientRect().height,flex:getComputedStyle(el).flex}))}))}))); await page.screenshot({path:'/private/tmp/maya-fabrics-test-failure.png'}).catch(()=>{});throw e;}finally{await browser.close();}
