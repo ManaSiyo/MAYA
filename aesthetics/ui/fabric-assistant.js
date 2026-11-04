@@ -100,13 +100,13 @@
     const header=node('header','fa-header');
     const title=node('h2','', 'Fabrics');title.id='fabric-assistant-title';
     const toolbar=node('div','fa-toolbar');
-    const refresh=icon('Refresh fabrics','M20 7v5h-5M20 12a8 8 0 1 0-2 5',()=>refreshView());
+    const refresh=icon('Refresh fabrics','M20 7v5h-5M20 12a8 8 0 1 0-2 5',()=>view==='search'&&busy?controller?.abort():refreshView());
     const expandButton=action('Expand',()=>host?expand():close());expandButton.setAttribute('aria-expanded','false');
     toolbar.append(refresh,expandButton);
     const sub=node('p','fa-context');
     const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');tabs.dataset.mayaControl='segmented';
     const inhouse=action('In House',()=>{view='inhouse';paint();});
-    const search=action('Sourceable',()=>chooseSearch('worldwide'));
+    const search=action('Global',()=>chooseSearch('worldwide'));
     const saved=action('Favorites',async()=>{view='saved';paint();await loadBook();});
     const fresh=action('New search',()=>open({...context,forceReset:true}));
     for(const button of [inhouse,search,saved])button.dataset.mayaSegment='';
@@ -341,12 +341,14 @@
   }
   function paint() {
     els.search.setAttribute('aria-pressed',String(view==='search'));els.saved.setAttribute('aria-pressed',String(view==='saved'));els.inhouse.setAttribute('aria-pressed',String(view==='inhouse'));
-    els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=view!=='search';els.sub.hidden=!!context.automatic;
+    els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=view!=='search'||!!context.automatic;els.sub.hidden=!!context.automatic;
     workspace.classList.toggle('is-automatic',!!context.automatic);els.upload.hidden=!!context.automatic;
     els.input.rows=context.automatic?1:2;els.input.placeholder=context.automatic?'Refine these fabrics…':'Find the fabrics for this look…';
     els.stop.hidden=!busy;els.send.disabled=busy||searchState==='preparing';
-    els.details.setEnabled(view==='search');
-    els.filter.hidden=view!=='search';if(view!=='search'){els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');}
+    workspace.setAttribute('aria-busy',String(busy));
+    const refreshLabel=view==='search'&&busy?'Stop fabric search':'Refresh fabrics';els.refresh.setAttribute('aria-label',refreshLabel);els.refresh.title=refreshLabel;
+    els.details.setEnabled(view==='search'&&!context.automatic);
+    els.filter.hidden=view!=='search'||!!context.automatic;if(view!=='search'||context.automatic){els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');}
     for(const button of els.storeButtons){button.setAttribute('aria-pressed',String(activeStores.has(button.dataset.storeGroup)));button.disabled=searchState==='preparing';}
     const candidates=view==='saved'?book.items:view==='inhouse'?inventory():products;
     const allowed=new Set(storeGroups.filter(group=>activeStores.has(group.id)).flatMap(group=>group.hosts));
@@ -361,10 +363,14 @@
       const missingPhoto=item=>Number(item.classList.contains('has-missing-photo')||!item.querySelector('.fa-product-image'));
       cards.sort((a,b)=>missingPhoto(a)-missingPhoto(b));
     }
+    // Saved-look Global is the same photo gallery as In House. Exhausted source
+    // links remain private evidence, but cannot turn its grid into text rows.
+    for(const item of cards)item.hidden=!!context.automatic&&view==='search'&&searchMode==='worldwide'&&item.classList.contains('has-missing-photo');
     const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child)){child._fabricDispose?.();child.remove();}
     cards.forEach((el,index)=>{if(els.results.children[index]!==el)els.results.insertBefore(el,els.results.children[index]||null);});
+    if(items.length&&cards.every(item=>item.hidden)&&!busy){els.results.append(node('p','fa-empty','No fabric photographs loaded. Refresh to retry.'));}
     if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':searchState==='preparing'?'Preparing the saved reference…':busy?searchMode==='worldwide'?'Looking at this image and searching worldwide…':'Checking the selected retailers…':searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
-    els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||(searchMode==='retailers'&&!!context.automatic);
+    els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
   }
   async function chooseSearch(mode,group){
     if(mode===searchMode&&(mode==='worldwide'||activeStores.has(group))){view='search';paint();return;}

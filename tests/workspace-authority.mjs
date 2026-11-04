@@ -35,8 +35,8 @@ try{
  assert.equal(await page.locator('#workspace-previews a[href$="#pe-fold"],#workspace-previews a[href$="#architecture"]').count(),0,'Retired Admin sections have no misleading live-usage links');
  assert.equal(await page.locator('.spacing-preview [data-preview-heading]').count(),7,'Heading-gap previews match the seven active Admin sections');
  assert.doesNotMatch(await page.locator('#workspace-previews,.spacing-preview').allTextContents().then(v=>v.join(' ')),/Prompting Engine|Architecture/);
- await page.locator('.workspace-fabric-preview img').evaluate(image=>image.decode());
- assert.ok(await page.locator('.workspace-fabric-preview img').evaluate(image=>image.complete&&image.naturalWidth>0),'The active inventory preview loads its real fabric photograph');
+ await page.locator('.workspace-fabric-preview img').first().evaluate(image=>image.decode());
+ assert.ok(await page.locator('.workspace-fabric-preview img').first().evaluate(image=>image.complete&&image.naturalWidth>0),'The active inventory preview loads its real fabric photograph');
  for(const link of await page.locator('#workspace-previews .workspace-preview-card>a').all())assert.match(await link.getAttribute('href'),/^\/(?:status\.html|backend\.html|$)/);
  assert.equal(await page.locator('#workspace-previews button').filter({hasText:'Edit'}).count(),0,'Typography and material edits remain in their own sections');
  const initial=await css('.workspace-preview-card',['paddingLeft','paddingTop','backgroundColor']);
@@ -80,7 +80,7 @@ try{
  await page.locator(edit+' summary').click();await page.locator(edit+' .restore-editor').click();
  assert.equal((await css('.workspace-timing-preview label',['rowGap'])).rowGap,'19px','Failed Save cannot replace Restore baseline');
  await page.keyboard.press('Escape');
- if(process.env.MAYA_WORKSPACE_SCREENSHOT){await page.setViewportSize({width:1440,height:1100});await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-desktop.png'});await page.setViewportSize({width:390,height:844});await page.locator('.workspace-fabric-preview img').scrollIntoViewIfNeeded();await page.locator('.workspace-fabric-preview img').evaluate(image=>image.decode());await page.waitForTimeout(100);await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-phone.png'});}
+ if(process.env.MAYA_WORKSPACE_SCREENSHOT){await page.setViewportSize({width:1440,height:1100});await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-desktop.png'});await page.setViewportSize({width:390,height:844});await page.locator('.workspace-fabric-preview img').first().scrollIntoViewIfNeeded();await page.locator('.workspace-fabric-preview img').first().evaluate(image=>image.decode());await page.waitForTimeout(100);await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-phone.png'});}
  await page.goto('https://maya-authority.test/status.html');await page.waitForFunction(()=>typeof admTab==='function'&&window.MayaTypographyControls);
  assert.equal(await page.locator('#pe-fold,#arch-fold,.pe-live,.pe-panel,.arch .col').count(),0,'Retired Prompting and Architecture have no visible controls');
  await page.evaluate(async()=>{await MayaTypographyControls.ready;_idTok='fixture';await loadFeatureRequests();document.getElementById('features-fold').open=true;toggleDrawer(true);admTab('automations');});

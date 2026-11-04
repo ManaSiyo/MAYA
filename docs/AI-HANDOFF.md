@@ -1,79 +1,83 @@
-# Current handoff — November 3 live fabric photo correction
+# Current handoff — In House / Global gallery correction
 
-## Finding and implementation
+## Owner request and implementation
 
-Owner said “so fix it” after the exact deployed 116a11c release returned eight
-source links with zero photographs for the saved green hooded tailcoat. Hosting
-release and API commit both matched 116a11cceefb3820818ad33f0eda1eb7d102a23a;
-release published 2026-11-04T03:25:20.940Z. This was not a stale deployment.
+The owner rejected the unrequested Dictate/Find fabric/refinement controls and
+layout changes. Sourceable is now named Global in the gallery, shared segment
+preview and frontend choice. Internal sourceable schema values remain compatible.
+In House itself is unchanged and is the permanent visual baseline: Global uses
+its exact grid, viewport, scrolling, card/photo dimensions and two single-line
+caption rows. Both actual Brief and Operation Room entry points are automatic.
+They show only In House, Global, Favorites, Refresh and Expand/Collapse; no composer,
+Dictate, Find fabric, refinement field, shop filter or interpretation/details strip.
+The existing Refresh action cancels an active search; there is no added Stop pill.
 
-Using the authorized internal browser, one explicit refinement asked for image
-search, photographs of dark forest green apparel yardage and the source pages of
-those photographs, excluding upholstery/furnishing/decor. The existing live app
-then displayed four loaded fabric images from Cali Fabrics, Etsy, Fabrics4Fashion
-and Fabcurate, plus one photo-less Rex link. DOM naturalWidth was positive for all
-four and the image was visually inspected. Proof:
-/private/tmp/maya-live-fabric-photo-proof.png. No raw provider trace was captured;
-we do not claim the previous request's images were discarded by the parser. The
-mixed text/image task allowed citation-only recommendations; the focused request
-proved the same live adapter/viewer can display source-linked photographs.
+Exhausted Global photographs retain private source evidence for late recovery and
+retraction but are hidden from the gallery. When none load, an honest empty message
+offers explicit Refresh. Healthy images and partial results remain. Four validated
+source URLs/eight-second image deadlines, unsafe URL rejection, account reset,
+late color/exclusion retractions and no automatic paid retry are unchanged.
+Legacy nonautomatic manual/retailer APIs and private Favorites remain compatible
+and tested; they are not exposed as another saved-garment UI.
 
-`docs/server/fabric-worldwide.mjs` now requests only image content from web_search,
-and makes the successful explicit image-search direction the default instruction.
-Candidates select source_website_url from image results. This keeps one Responses
-call, configured model, canonical selected image/original context, client words,
-all bounds, no arbitrary seller fetch and no automatic paid retry. The existing
-source/image association and unknown seller facts remain unchanged. The official
-contract was checked at https://developers.openai.com/api/docs/guides/tools-web-search
-(image search results: content types, result include, source/image URL fields).
+Aesthetic Control has one active Fabric gallery using the real shared card classes,
+with In House/Global toggles and existing inventory photos explicitly labeled as
+layout samples. It exercises scrolling without provider calls. Shared H4/P3,
+Inner, Glass and scrollbar settings remain the authority; no saved schema/editor
+was added. Fabric JS/CSS references are v12. AGENTS.md and docs/design.md explicitly
+supersede the earlier composer/interpretation/missing-link layout instructions.
 
-The old model-candidate path could accept a generic title while its source URL or
-reason disclosed upholstery/furnishing. Every worldwide candidate now checks URL
-path, title, reason and source captions for decor. Later contradictory captions
-retract cards through the existing removedUrls and cache invalidation mechanism,
-including a later failed stream. Known fiber/client exclusions remain separate.
-Source-only completion says no fabric photographs were returned, including in
-Search details. Existing P1 status and P3 details govern this copy. No new visible
-component, CSS/layout, saved schema or presentation authority; Fabric stays v11.
+Runtime files: aesthetics/ui/fabric-assistant.{js,css}, aesthetic-control.html,
+aesthetic-control/{workspace-previews.js,gallery.css,shared-surfaces.js},
+backend/{backend,operations}.html and frontend/index.html. The new exact gallery
+regression is tests/fabric-gallery-ui.mjs, required in cloudbuild.yaml,
+app-regression and final aesthetic-authority. Existing UI/image/workflow/preview,
+asset-version and segment fixtures follow the corrected visible contract without
+removing provider, recovery, auth, cache, save or cancellation safeguards.
+Continuity: AGENTS, README, FABRIC-SEARCH, design, requests/fixes and COMMIT-REVIEW.
 
-## Files and validation
+## Live photo evidence — separate from this local layout
 
-Runtime: docs/server/fabric-worldwide.mjs only. Tests: fabric-worldwide.mjs,
-fabric-search-ui.mjs, app-regression.mjs, aesthetic-authority.mjs. Continuity:
-AGENTS.md, FABRIC-SEARCH.md, requests/fixes, this file and COMMIT-REVIEW.
-The image-only request regression fails the prior implementation. All 29 focused
-worldwide cases pass, including disguised decor, escaped source paths, late decor
-retraction followed by failure, and source-only status without retry. The actual
-UI renders that status and details under default and changed valid saved settings
-at six phone/tablet/desktop widths; isolated fabric UI passes. Default phone and
-saved desktop captures have been visually inspected. Root locked npm ci passed.
+Previous photo correction 105860bbd6e0c675f8eff2c9846efcdeafbb2f42 passed Cloud Build
+(build ef099c46-7832-4b19-b38e-cd732341a6b8, completed 2026-11-04T04:59:07Z).
+At 05:01 UTC Hosting release.json and API health both reported that commit;
+release publishedAt was 2026-11-04T04:58:05.508Z. After reloading the same saved
+Hooded tailcoat in the authorized internal browser, opening Fabrics with no typed
+refinement returned five cards and all five images loaded (naturalWidth > 0).
+Sources: texgid.ru, pendragoncostumes.com, okadaya.co.jp, tissus-en-ligne.com and Etsy.
+The Tissus photo used the provider-linked thumbnail fallback. Screenshot:
+/private/tmp/maya-live-default-five-photos.png. This is actual default-search
+acceptance for that garment, not a guarantee for every source or twelve results.
+That screenshot still has the old production layout; do not present it as this
+local gallery correction. No personal Chrome, credentials or production settings
+were accessed. No new backend/provider code is changed in this task.
 
-All 77 functional/syntax Cloud Build commands, full app-regression and smoke pass
-(79/79) under Node20.20.2. Worldwide (29), search (57), forced-GC and sourcing (18)
-also pass on Node24.22.1, downloaded to /private/tmp with the official checksum
-verified. Integrated Aesthetic Control passes within app-regression. The local
-commit requires and records a successful final standalone Aesthetic Control run
-last, after all edits and functional checks. Tests use fake providers and temporary
-headless Chromium profiles, never personal Chrome. Only the explicit live
-refinement used the live provider.
+## Validation and exact next step
 
-## Exact next step and limitations
+Focused gallery, search UI, image recovery and full workflow checks pass. Exact
+In House/Global geometry, two captions, controls, scroll positions and typography/
+materials match at 320/390/768/1024/1440/1920 under defaults and valid changed saved
+settings, inline and expanded. Explicit failure/recovery makes no automatic provider
+retry. Default phone and changed desktop captures were visually inspected:
+/private/tmp/maya-global-default-390.png and maya-global-saved-1440.png are local
+layout fixtures with existing inventory photos, not live seller search results.
+Root locked npm ci and typography role regeneration pass (counts unchanged).
+Worldwide (29), search (57), sourcing (18) and forced-GC pass on Node24.22.1;
+Node20.20.2 equivalents are in the release run. All testing uses fake providers
+and isolated temporary headless profiles except the explicit live default search.
 
-The prepared local commit contains only this task's files. Owner controls Push.
-After Push, verify successful Cloud Build and test the default search on the same
-saved garment. Do not call the local correction live
-until Hosting/App/Admin/API all match its new commit, then test the same saved
-hooded tailcoat with the default search (no specially typed refinement). The live
-four-photo proof validates the search direction on 116a11c, not the image-only
-request parameter in this unpushed revision or a guarantee of twelve websites.
-No credential, production environment, billing, saved project, account or lookbook
-mutation was performed. No Push or deployment. No private ChatGPT internals claim.
+All 78 functional/syntax Cloud Build commands, full app-regression and smoke now
+pass (80 checks including targeted/full reruns). Three initial fixture contracts
+were corrected: keep preview-only CSS in gallery.css, use Global in the segment
+fixture, and expect Fabric v12 in the deployment assertion. Namespace and segment
+reruns pass; the full app-regression rerun ends “all passed.” The final gallery
+check also verifies changed saved styles and responsive no-photo empty states.
+Final standalone Aesthetic Control passed last, after all functional checks and
+presentation edits (Node20.20.2; /private/tmp/maya-global-final-authority.log).
+The prepared local commit contains only this correction; working tree is clean
+after commit. Only the owner's Push and exact deployed layout acceptance remain.
 
-## Preserved continuity
-
-Canonical account/submission/garment scope, selected dissected image first, source
-photo URL association, unknown seller facts, exclusion/variant retractions,
-Node20 combined-signal lifetime guard and separate explicit retailer searches
-remain. Healthy image nodes retain their eight-second/four-URL fallback behavior.
-Admin stays Settings, Messages, Logs; fixed notification history and H3/circle/
-closed-spacing fixes remain. Shared aesthetic authority remains the final gate.
+Owner controls Push. After Push, verify successful Cloud Build and exact Hosting/
+API commit, then inspect Global on the saved garment. Local layout verification
+does not prove deployment. No Push, private project/lookbook mutation or provider
+configuration change.

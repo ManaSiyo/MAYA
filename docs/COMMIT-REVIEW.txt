@@ -1,24 +1,28 @@
-Title: [Codex] Require fabric image search and reject upholstery suggestions
+Title: [Codex] Match Global Fabrics to the In House gallery
 
-The deployed mixed text/image request returned eight source links without photos.
-An explicit image-search refinement on the same saved garment loaded four photos
-in the live app. Make that direction the default: request image-only search,
-select the photographs' source pages, and do not pad with text-only websites.
-Keep one Responses call, configured model, canonical private context, source-only
-image URLs, unknown seller facts, bounded streaming and no automatic paid retry.
+Remove the unrequested composer, Dictate, Find fabric, refinement, shop and details
+controls from the actual saved-garment Brief/Operation Room gallery. Rename
+Sourceable to Global. Preserve In House as the unchanged baseline: same viewport,
+scrolling, photo/card dimensions and two single-line captions. Existing Refresh
+also cancels an active search. Keep private manual/retailer compatibility APIs.
 
-Reject upholstery/furnishing/decor evidence in every candidate URL, title, reason
-and source caption. Retract later contradictions through the existing retained
-result/cache path even when the stream fails. Report a source-only completion
-honestly in the existing P1 status/P3 Search details; no new component, CSS/layout,
-saved design schema or asset version change.
+Use the same gallery in the sole Aesthetic Control Fabric preview with In House/
+Global toggles, existing inventory samples and shared H4/P3/Inner/Glass/scrollbar
+settings. Record the permanent owner standard. Hide exhausted Global photo tiles
+while retaining private evidence, bounded source fallbacks, healthy images,
+retractions, scoped caches and explicit retry. Update Fabric assets to v12.
 
-Validation: all 77 functional/syntax Cloud Build commands, full app-regression
-and smoke pass (79/79). Worldwide (29), search (57), sourcing (18) and forced-GC
-pass on Node20.20.2 and Node24.22.1. Root npm ci and default/saved UI at six widths
-pass; captures were visually inspected. The local commit requires and records a
-successful final standalone Aesthetic Control run last.
-The live four-photo result validates the request direction on 116a11c, not this
-unpushed image-only revision. Owner Push, matching release/API commit and default
-saved-garment live acceptance remain. No personal Chrome, credentials, production
-configuration, saved project/lookbook mutation, Push or deployment.
+Validation: all 78 functional/syntax release commands, full app-regression and
+smoke pass (80 checks including targeted/full reruns). Exact six-width default/
+saved gallery geometry and scrolling, inline/expanded, active preview and photo
+failure/recovery pass. Worldwide (29), search (57), sourcing (18) and forced-GC
+pass on Node20.20.2 and Node24.22.1. npm ci and typography role generation pass;
+default/saved phone/desktop gallery and Aesthetic Control captures were visually
+inspected. Final standalone Aesthetic Control passed last, after all functional
+checks and presentation edits.
+
+The earlier photo correction 105860b is deployed: the same saved hooded tailcoat
+returned five loaded photographs on default search with no typed refinement,
+verified in the authorized internal browser. This commit's layout remains local
+until the owner's Push and exact live acceptance. No backend/provider change,
+personal Chrome, credential/configuration or private project/lookbook mutation.

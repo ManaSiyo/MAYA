@@ -1,35 +1,35 @@
-# November 3 live Fabrics correction — require image search
+# Permanent owner standard — In House and Global Fabrics
 
-The main worldwide tool requests image results only (`search_content_types:
-["image"]`). The sourcing task explicitly asks for fabric photographs and their
-`source_website_url`, not a text-only website shortlist. Keep one Responses call,
-canonical image/context, existing bounds and no automatic paid retry. Reject
-upholstery/furnishing/decor evidence in every card's URL, title, reason and source
-caption, including late retractions through a failed stream. A source-only result
-must say no fabric photographs were returned. This reuses P1 status/P3 Search
-details with no new UI authority or served asset change. Live testing on 116a11c
-showed eight photo-less links; an explicit image-search refinement loaded four
-real photos. That proves the live path can display photos, not that this later
-local correction is deployed. Owner Push and exact live acceptance remain separate.
+The existing In House gallery is the visual baseline. Global (formerly Sourceable)
+must use the exact same layout, scroll containers, dimensions, photo proportions
+and two caption rows. Do not add Dictate, Find fabric, refinement fields, shop
+filters or interpretation/details controls to the saved-garment gallery. Both
+Brief and Operation Room use this automatic gallery. Refresh is the existing
+explicit retry/cancel action; keep Favorites and Expand. The sole active Fabric
+preview in Aesthetic Control toggles In House/Global using the same gallery.
+Shared H4/P3, Inner, Glass and scrollbar settings govern both; no new schema or
+independent visual settings. Fabric JS/CSS references are v12. The exact parity
+regression is tests/fabric-gallery-ui.mjs, included in release, app-regression and
+final aesthetic-authority. Run functional gates first and final authority last.
+This supersedes older follow-up/composer, interpretation and missing-link layout
+requirements below. Legacy manual/search APIs remain compatible, without exposing
+their controls in either served saved-garment entry point.
 
-# November 3 owner implementation — simple Fabrics relay
+Global displays source-backed photographs, not Photo unavailable tiles. Exhausted
+photo cards retain private source evidence for recovery/retraction but stay hidden;
+if none load, disclose the failure with explicit Refresh. Keep four source URLs,
+eight-second browser image deadlines, healthy nodes, no server image proxy and
+no automatic paid retry. Main sourcing remains one image-only OpenAI Responses
+web request, canonical selected image first, original context/client exclusions,
+up to 12 distinct cited sites and unknown seller facts. Reject decor/ambiguous
+variants and retract later contradictory evidence from retained/private caches.
 
-Main Sourceable keeps one OpenAI Responses web/image request. Send the canonical
-selected dissected image first, original look as context, client words and a short
-sourcing task; saved speculative fabric descriptions do not become query demands.
-Show up to 12 distinct source websites per request, with photographs first. Useful
-qualified tool photos may stream before the model shortlist; later exclusions or
-ambiguous variant evidence retract them. Source-backed images/URLs, unknown seller
-facts, private canonical scope and no automatic paid retry remain mandatory.
-Saved-look Fabrics exposes the existing follow-up field and Stop; refinements must
-reach the provider verbatim and cannot retain conflicting old results. Refresh
-retains healthy photos, including when a later model title replaces a raw caption.
-Each eager image attempt has an eight-second deadline, at most four source-backed
-URLs. Missing links use compact rows even among photos. Shared H4/P1/P3, Inner,
-field and Glass controls and the sole active Fabric preview govern this UI.
-Fabric JS/CSS references are v11. Run Node20/local fabric/GC gates, UI/workflow,
-exact release checks, full regression/smoke and final Aesthetic Control last.
-No claim of ChatGPT private internals or identical live result quality/speed.
+Live photo correction 105860b passed Cloud Build and reached Hosting/API on
+November 3 evening (UTC November 4). The default saved Hooded tailcoat search,
+without a typed refinement, returned five loaded photographs in the internal
+browser. This is evidence for that search, not a guarantee of every source or
+ChatGPT-equivalent speed. The Global gallery correction needs its own owner Push
+and exact deployed verification. Never claim private ChatGPT internals.
 
 # November 3 Admin review — deployment, lower folds and menu
 
@@ -72,7 +72,7 @@ Photo cards stay before compact missing-photo links even across retained results
 and Refresh. Product links have two visible text rows total. Use the full photo grid width and
 available height; long P1 interpretation stays one line with its full text inside
 Search details. Existing H4/P3/Inner/Glass and sole active Fabric preview govern.
-Shared Fabric JS/CSS references are v11, Search details v2. New image UI regression
+Shared Fabric JS/CSS references are v12, Search details v2. New image UI regression
 is in release/app-regression/final authority. Run fabric gates on Node20/local,
 full release/regression/smoke and final standalone Aesthetic Control last.
 

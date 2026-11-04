@@ -61,7 +61,7 @@ try{
  await page.goto('https://maya-workflow.test/backend.html');await page.waitForFunction(()=>!!window.MayaFabricAssistant);
  await page.evaluate(({reference,pieces})=>{window._openedSubmission={id:'project-A'};window._currentSnap={lastSummary:{}};window._dissectTarget={hero:reference,card:{_dissection:{pieces}}};renderDissection({card:{image:reference,_dissection:{pieces}}});_publishSavedOperations({pieces});},{reference,pieces});
  await page.locator('#brief-fabrics-button').click();await card(fur).waitFor();
- assert.ok(catalogRoutes.length,'Catalog is still deliberately held');assert.equal(searches.length,1,'Sourceable starts without optional inventory');
+ assert.ok(catalogRoutes.length,'Catalog is still deliberately held');assert.equal(searches.length,1,'Global starts without optional inventory');
  holdCatalog=false;await Promise.all(catalogRoutes.map(route=>route.fallback().catch(()=>{})));catalogRoutes=[];
 
  // Real browser request remains small even when saved piece images/patterns are large.
@@ -179,7 +179,7 @@ try{
  await page.locator('.fa-tabs').getByRole('button',{name:'In House',exact:true}).click();
  await page.locator('.fa-card-title').filter({hasText:'Midnight Velvet'}).waitFor();
  assert.equal(await page.locator('.fa-product').count(),8,'Inventory loads while reference conversion is still pending');
- await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();
+ await page.locator('.fa-tabs').getByRole('button',{name:'Global',exact:true}).click();
  assert.doesNotMatch(await page.locator('.fa-results').textContent(),/No relevant|confirmed yet/,'Preparing a reference is not a completed empty search');
  await page.locator('.fa-tabs').getByRole('button',{name:'In House',exact:true}).click();
  await page.evaluate(async()=>{releaseReference();await referenceOpen;});
@@ -270,11 +270,11 @@ try{
   window.fetch=(url,options)=>{if(!String(url).endsWith('/fabrics/search'))return native(url,options);window.fetch=native;return Promise.resolve(new Response(JSON.stringify({type:'done',products:reviewed,message:'Reviewed matches.'})+'\n',{headers:{'Content-Type':'application/x-ndjson'}}));};
   return MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
  },{reference,pieces,reviewed:[broken,leather,lining]});
- const missing=page.locator('.fa-product').filter({hasText:broken.title});await missing.getByText('Photo unavailable',{exact:true}).waitFor();
+ const missing=page.locator('.fa-product').filter({hasText:broken.title});await missing.getByText('Photo unavailable',{exact:true}).waitFor({state:'attached'});
  assert.equal(await page.locator('.fa-product-link').count(),3,'One browser image failure does not remove a reviewed listing');
  assert.equal(await missing.locator('a').getAttribute('href'),broken.url,'The reviewed seller link remains available');
  await page.evaluate(()=>{window.failedFabricNode=document.querySelector('.has-missing-photo');window.healthyFabricNode=[...document.querySelectorAll('.fa-product')].find(el=>!el.classList.contains('has-missing-photo'));});
- searchProducts=[broken,leather,lining];await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await missing.getByText('Photo unavailable',{exact:true}).waitFor();
+ searchProducts=[broken,leather,lining];await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await missing.getByText('Photo unavailable',{exact:true}).waitFor({state:'attached'});
  assert.equal(await page.evaluate(()=>failedFabricNode===document.querySelector('.has-missing-photo')),false,'Explicit Refresh retries a failed photograph');
  assert.equal(await page.evaluate(()=>healthyFabricNode===[...document.querySelectorAll('.fa-product')].find(el=>!el.classList.contains('has-missing-photo'))),true,'Retrying one missing photo preserves healthy loaded cards');
  for(const mode of ['default','saved']){
@@ -373,11 +373,11 @@ try{
   window.earlyWorldSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
  },{reference,pieces,product:globalProduct});
  await card(globalProduct).waitFor();assert.equal(await page.evaluate(()=>streamingSearchMode),'worldwide');
- assert.equal(await page.locator('.fa-observation').isVisible(),true);assert.match(await page.locator('.fa-observation').textContent(),/gold shoulder panels/);
- await page.getByRole('button',{name:'Search specific shops',exact:true}).click();
- await page.locator('[data-store-group=local]').click();await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
+ assert.equal(await page.locator('.fa-observation').isVisible(),false);assert.match(await page.locator('.fa-observation').textContent(),/gold shoulder panels/);
+ // Exercise retained retailer/cache compatibility without restoring shop controls to the saved-look gallery.
+ await page.locator('[data-store-group=local]').evaluate(button=>button.click());await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
  assert.equal(searches.at(-1).mode,'retailers');assert.deepEqual(searches.at(-1).storeGroups,['local']);
- await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();await card(globalProduct).waitFor();
+ await page.locator('.fa-tabs').getByRole('button',{name:'Global',exact:true}).click();await card(globalProduct).waitFor();
  assert.equal(searches.length,beforeSeparate+1,'Returning from Local does not repeat the worldwide request');
  assert.match(await page.locator('.fa-observation').textContent(),/gold shoulder panels/,'Restored cards retain their source interpretation');
  assert.match(await page.locator('.fa-status').textContent(),/Search interrupted/,'Partial results do not claim completed inventory');

@@ -2,7 +2,7 @@
 
 ## Owner's current intent
 
-The main Sourceable experience is image → identify the dominant body-cloth color and apparel use →
+The main Global experience is image → identify the dominant body-cloth color and apparel use →
 search broadly worldwide → show useful source-linked fabric photographs. Closer
 weave/motif and secondary textile options follow; bespoke embroidery is not a
 mandatory feature of the cloth. Local and
@@ -120,7 +120,7 @@ only when `mode: retailers` is explicitly requested. Browser buttons run one
 separate group search on a click: Local (Britex/Brightex, Stonemountain, Harts),
 Mood, Swatchon, Amazon, Others (Blackbird, The Fabric Store, Tessuti). Opening the
 choices makes no provider call. Clicking an already-loaded group reuses its own
-results; Refresh explicitly reruns it. Returning to Sourceable restores worldwide
+results; Refresh explicitly reruns it. Returning to Global restores worldwide
 results, without another main call. Store groups never filter the global grid.
 
 `mode` defaults to worldwide. Old client storeGroups/stores fields cannot silently
@@ -135,47 +135,44 @@ selected variants remain separate. No production credentials/config changed.
 
 ## UI, continuity and sealed data
 
-`aesthetics/ui/fabric-assistant.js` is shared by Brief and Operations. Main defaults
-to worldwide with no shops selected. The existing optional shop icon opens their
-buttons; Sourceable returns to global. In House and Favorites remain independent.
-Worldwide, each selected group, garment metadata, preferences and reference have
-separate bounded in-memory result contexts for the current account/submission.
-Switching scope never mixes their results. Actual account/project changes clear
-private state; nothing private enters localStorage or a shared public catalog.
-Explicit new search clears prior mode caches for that garment; new references
-return to worldwide. Same-account token renewal retains state and drafts.
+`aesthetics/ui/fabric-assistant.js` is shared by Brief and Operations. Both served
+entry points use the automatic saved-garment gallery. Global defaults to worldwide;
+In House and Favorites remain independent. Global must match the existing In House
+layout exactly: viewport, scroll containers, responsive columns, card/photo sizes
+and two single-line captions (H4 name and P3 source/known-unit price). Shared Inner,
+Glass and scrollbar settings govern both. Visible controls are In House, Global,
+Favorites, Refresh and Expand/Collapse. Refresh cancels an active search. No Dictate,
+Find fabric, refinement field, shop controls, interpretation or Search details strip
+is exposed in either saved-look entry point.
 
-Confirmed/source-backed card and image nodes remain mounted during Refresh when
-unchanged. A model title/reason arriving after a raw tool photo updates its text
-without replacing the healthy image. Saved-look searches expose the same shared
-follow-up field and Stop as manual searches. Typed refinements retain canonical
-saved-context validation and previous conversation, but start a fresh result set
-so old matches cannot contradict a new exclusion. Explicit Refresh retains the
-existing result set and latest submitted refinement. Failed/empty refreshes keep existing cards. Prepared photos remain a
-two-reference project-bound cache; the result cache holds 24 contexts. Recent
-empty completion is reusable for 30 seconds. Partial cached searches retain their
-interrupted state and need explicit Refresh to continue, never an automatic retry.
-These are memory caches, not promises of permanent saved search history.
+The legacy nonautomatic manual interface and explicit retailer APIs remain
+compatible and tested, but are not another served entry point. Worldwide, explicit
+retailer groups, garment metadata, preferences and reference retain separate bounded
+in-memory contexts for the current account/submission. Account/project changes clear
+private state; nothing private enters localStorage or the public catalog. Canonical
+saved-context validation, client exclusions, private books and generation checks
+remain unchanged.
 
-The existing P1 observation region is one clipped row; Search details contains
-the full qualified interpretation. Every card has exactly two visible text rows:
-H4 name and P3 source/known-unit price. Full garment/material/reason context is in
-the accessible source link name. Photos use a responsive auto-fit grid, crop with
-object-fit:cover and fill available rows; three results do not reserve a fourth
-empty column. Cards use Inner and controls Glass. Eager browser image requests each have an eight-second deadline and
-try at most four validated source-backed URLs once each, with no referrer or
-provider retry. Timeout/revocation detaches the old image so late callbacks cannot
-replace a newer photograph. Removed cards cancel their image deadlines. Missing
-links use content-sized full-width rows even in a mixed photo grid. Detached old-account cards cannot start fallback work. Healthy
-image/card nodes survive additional evidence and Refresh; explicit source-backed
-wrong-color revocations override retention, including loaded/loading photos and
-late callbacks. Explicit Refresh can retry exhausted photographs. The bounded
-results scroll area keeps first-row desktop titles/sources visible and avoids
-nested outer scrolling at all six tested widths. Active Aesthetic
-Control previews the same P1 interpretation and existing card/pill families. No new
-style family/editor was introduced. Default/saved styling, actual Save, six widths,
-focus/error and inline/expanded behavior remain mandatory checks. JS/CSS references
-are v11 and Search details v2 under their exact no-cache Hosting rules. New runtime module ships in Docker.
+Confirmed/source-backed card and image nodes remain mounted through Refresh when
+unchanged. Later model captions update text without replacing a healthy image.
+Four source-backed image URLs and eight-second browser image attempts remain the
+bound; no server proxy or automatic paid retry. Explicit source/color/exclusion
+revocations override retention, including late callbacks and failed streams.
+Exhausted Global photo cards keep private evidence but are hidden from the gallery,
+so missing-photo links cannot replace the requested photo layout. If none load,
+show an honest empty message with explicit Refresh. A failed stream remains failed
+with any healthy partial photos retained. Explicit Refresh can retry exhausted
+photographs while preserving healthy nodes.
+
+Prepared photos remain a two-reference project-bound cache; result cache holds
+24 contexts. Empty completion is reusable for 30 seconds. Partial cached searches
+retain interruption and need explicit Refresh, never an automatic provider retry.
+Full source/garment/reason context stays in the accessible source-link label.
+The sole active Aesthetic Control Fabric preview toggles In House/Global using the
+actual gallery and inventory samples labeled as layout samples, without searches.
+Default/saved styles, actual Save, six widths, inline/expanded, scrolling, photo
+failure/recovery and preview parity are release gates. JS/CSS references are v12;
+legacy Search details remains v2. Existing Hosting no-cache rules apply.
 
 Private legacy books remain at
 private/fabrics/<encoded authenticated Google sub>/<submissionId>/lookbook.json.

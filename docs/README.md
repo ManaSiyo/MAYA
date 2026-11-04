@@ -43,10 +43,12 @@ name missing settings and safe provider errors without credentials.
 Current drawer/scrollbar/segment controls: every hamburger uses the MAYA drawer
 material, with its own shared Edit/Restore preview. Scrollbars default to 4px,
 half-length painted handles and idle hiding. Brief and Fabrics keep one viewport.
-Sourceable defaults to worldwide image-led web search. Local (Bay Area), Mood,
-Swatchon, Amazon and Others are separate optional searches started by an explicit
-shop-button click; they never filter or delay worldwide results. Card Save/Use is removed;
-historical Favorites remain readable/removable.
+Global (formerly Sourceable) uses worldwide image-led search and exactly the
+existing In House gallery: same dimensions, scrolling, photos and two caption rows.
+The sole Fabric preview in Aesthetic Control locks this parity. Saved-look Brief/
+Operations have no Dictate, Find fabric, refinement field or shop/details strip.
+Explicit retailer APIs remain separate compatibility paths. Card Save/Use remains
+removed; historical Favorites stay readable/removable.
 
 Tables share Aesthetic Control settings across MAYA; their records remain separate.
 WR starts with its own empty gallery/applicants and does not import Admin data.

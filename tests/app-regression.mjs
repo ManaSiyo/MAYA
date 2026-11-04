@@ -1177,7 +1177,7 @@ ok('the inline fabric results fit a usable shared viewport without stretching th
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('flex:1;min-height:0;overflow-y:auto;') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))'));
-ok('Sourceable carries the original reference and client words without tinting seller photos',
+ok('Global carries the original reference and client words without tinting seller photos',
   BACKEND_SOURCE.includes('referenceImage:saved.referenceImage') &&
   BACKEND_SOURCE.includes("preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences)") &&
   FABRIC_UI_SOURCE.includes('context.referenceImage=reference; image=originalImage=reference') &&
@@ -1197,7 +1197,7 @@ ok('legacy merchant searches retain real feeds without sharing private queries',
   SERVER_SOURCE.includes('search/suggest.json') &&
   !SERVER_SOURCE.includes("gcsPut('catalog/queries/") && SERVER_SOURCE.includes("user.sub + '|' + q.toLowerCase()"));
 // Shared sourcing replaced the legacy Brief wall; verify the active provider/UI handoff.
-ok('Sourceable streams verified merchant photographs through the active shared assistant',
+ok('Global streams verified merchant photographs through the active shared assistant',
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true') &&
   FABRIC_UI_SOURCE.includes("fetch('/api/admin/fabrics/search'") && FABRIC_UI_SOURCE.includes('const confirmed=Array.isArray(event.products)?event.products:[];') &&
   FABRIC_SEARCH_SOURCE.includes('verify({url:candidate.url},signal)') && FABRIC_SOURCE.includes("product.evidence==='search_link'||!product.image"));
@@ -2743,7 +2743,9 @@ ok('Fabric policy, provider imports, routes, styles and served assets stay separ
 // Fabric geometry resolves the current card atomically across independent lookbook repaints.
 await import('./fabric-search-ui.mjs');
 await import('./fabric-images-ui.mjs');
-ok('Fabrics relays saved-piece follow-ups, streams source photos from twelve websites, bounds stalled images and keeps missing links compact',!process.exitCode);
+await import('./fabric-gallery-ui.mjs');
+ok('Global permanently matches In House geometry, scrolling and two-row photo captions without a composer',!process.exitCode);
+ok('Fabrics preserves legacy refinements, streams up to twelve source websites and bounds stalled photos without unavailable Global tiles',!process.exitCode);
 await import('./fabric-workflow-ui.mjs');
 ok('Late source contradictions remove retained and cached fabric cards even after interrupted searches',!process.exitCode);
 ok('Fabrics distinguishes preparation, interrupted searches and true empty results; terminal streams finish without EOF',true);
@@ -2768,7 +2770,7 @@ ok('Fabric requests carry bounded garment metadata instead of generated piece im
   FABRIC_UI_SOURCE.includes("[['id',100],['name',80],['category',80],['fabric',180],['fabric_hex',7]]") &&
   FABRIC_UI_SOURCE.includes('pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata)') &&
   BUILD_SOURCE.includes('node tests/fabric-workflow-ui.mjs'));
-ok('Sourceable starts independently of optional atelier inventory without adding paid polling',
+ok('Global starts independently of optional atelier inventory without adding paid polling',
   FABRIC_UI_SOURCE.includes('void loadInventory().catch') &&
   FABRIC_UI_SOURCE.includes('autoStarted=true;await run();') &&
   !FABRIC_UI_SOURCE.includes('await loadInventory();') &&
@@ -2778,7 +2780,7 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=11'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=12'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));

@@ -37,7 +37,7 @@ try{
  await page.evaluate(reference=>{window.fixtureOpen=MayaFabricAssistant.open({host:document.getElementById('host'),submissionId:'image-project',referenceImage:reference,automatic:true,piece:{id:'coat',name:'Green coat',fabric:'Green woven cloth'},pieces:[{id:'coat',name:'Green coat',fabric:'Green woven cloth'}]});},reference);
  await page.waitForFunction(()=>fixtureStreams.length===1);
  const empty={...product,url:product.url+'-empty',title:'Green fabric source without photograph',image:'',imageCandidates:[]};
- await publish([empty]);await page.locator('.fa-image-unavailable').waitFor();
+ await publish([empty]);await page.locator('.fa-image-unavailable').waitFor({state:'attached'});
  await page.evaluate(()=>{window.originalEmptyCard=document.querySelector('.fa-product');});
  await publish([empty,product]);
  await loaded('.fa-product-image');
@@ -78,8 +78,8 @@ try{
  assert.equal(await page.locator('.fa-product-link[href="'+revocable.url+'"] img').getAttribute('src'),corrected.image,'Explicit wrong-color evidence removes the healthy rejected photo and loads a valid alternative');
  assert.equal(await page.evaluate(url=>document.querySelector('.fa-product-link[href="'+url+'"] img')!==revokedImage,revocable.url),true,'Explicit revocation discards the rejected image node');
  await publish([richer,{...corrected,image:'',imageCandidates:[],rejectedImageURLs:[revocable.image,corrected.image]}]);
- await page.locator('.fa-product-link[href="'+revocable.url+'"] .fa-image-unavailable').waitFor();
- assert.equal(await page.locator('.fa-product-link[href="'+revocable.url+'"] img').count(),0,'Explicit rejection with no safe alternative becomes a compact source link');
+ await page.locator('.fa-product-link[href="'+revocable.url+'"] .fa-image-unavailable').waitFor({state:'attached'});
+ assert.equal(await page.locator('.fa-product-link[href="'+revocable.url+'"] img').count(),0,'Explicit rejection with no safe alternative keeps only hidden source evidence');
  holdImage='/held-rejected-loading.jpg';
  const loadingRejected={...product,url:product.url+'-loading-rejected',title:'Green fabric pending corrected photo',image:'https://fabric-cdn.example'+holdImage,imageCandidates:['https://fabric-cdn.example'+holdImage]};
  await publish([richer,loadingRejected]);await page.locator('.fa-product-link[href="'+loadingRejected.url+'"]').scrollIntoViewIfNeeded();
@@ -90,10 +90,10 @@ try{
  assert.equal(await page.locator('.fa-product-link[href="'+loadingRejected.url+'"] img').getAttribute('src'),loadingCorrected.image,'A late revoked load cannot restore the rejected photograph');
  const failed={...product,url:product.url+'-failed',title:'Green woven fabric alternative',image:'https://fabric-cdn.example/bad-a.jpg',imageCandidates:['https://fabric-cdn.example/bad-a.jpg','https://fabric-cdn.example/bad-b.jpg','https://fabric-cdn.example/bad-c.jpg','https://fabric-cdn.example/bad-d.jpg']};
  const failedCard=page.locator('.fa-product').filter({has:page.locator('.fa-product-link[href="'+failed.url+'"]')});
- await publish([richer,failed]);await failedCard.scrollIntoViewIfNeeded();await failedCard.locator('.fa-image-unavailable').waitFor();
+ await publish([richer,failed]);await failedCard.locator('.fa-image-unavailable').waitFor({state:'attached'});
  assert.equal(await failedCard.locator('img').count(),0);assert.equal(await failedCard.locator('.fa-image-unavailable').getAttribute('data-maya-type'),'P3');
  assert.equal(await failedCard.locator('a').getAttribute('href'),failed.url,'The genuine source link survives an unavailable photograph');
- assert.equal(await failedCard.evaluate(e=>e.classList.contains('has-missing-photo')),true,'Exhausted photos opt into the compact source-link layout');
+ assert.equal(await failedCard.evaluate(e=>e.classList.contains('has-missing-photo')),true,'Exhausted photos retain their failure marker for bounded recovery');
  for(const url of failed.imageCandidates)assert.equal(imageRequests.filter(value=>value===url).length,1,'Every failing source-backed photo is tried at most once');
  await publish([richer,{...failed,imageCandidates:[...failed.imageCandidates,'https://fabric-cdn.example/bad-fifth.jpg']}]);
  await page.waitForTimeout(120);
@@ -122,8 +122,8 @@ try{
  const missingLinks=Array.from({length:6},(_,i)=>({...empty,url:empty.url+'-'+i}));
  await publish([richer,...missingLinks]);
  const compact=await page.locator('.fa-results').evaluate(grid=>({height:grid.scrollHeight,rows:[...grid.querySelectorAll('.has-missing-photo')].map(card=>card.getBoundingClientRect().height)}));
- assert.equal(compact.rows.length,6);assert.ok(compact.rows.every(height=>height<100),'Missing links use compact grid tracks alongside photographs');assert.ok(compact.height<1100,'Missing links do not each consume a photo-height grid track');
- const stop=page.getByRole('button',{name:'Stop',exact:true});assert.equal(await stop.isVisible(),true,'Stop is available in automatic saved-look mode');await stop.click();
+ assert.equal(compact.rows.length,6);assert.ok(compact.rows.every(height=>height===0),'Saved-look Global hides exhausted photo links instead of changing the In House gallery');assert.ok(compact.height<1100,'Missing links do not each consume a photo-height grid track');
+ const stop=page.getByRole('button',{name:'Stop fabric search',exact:true});assert.equal(await stop.isVisible(),true,'Stop is available in automatic saved-look mode');await stop.click();
  await page.getByText('Search stopped.',{exact:true}).waitFor();assert.equal(await stop.isVisible(),false);
  // A detached old card must not start another photograph after account reset.
  holdImage='/held-old-thumbnail.jpg';await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>fixtureStreams.length===4);
@@ -136,5 +136,5 @@ try{
  assert.equal(imageRequests.some(value=>value.includes('good-old-fallback')),false,'A late old-owner failure cannot begin a fallback request in the next account');
  assert.equal(await page.evaluate(()=>fixtureSearches),4,'Only the initial request and explicit Refresh actions performed searches');
  assert.deepEqual(errors,[]);
- console.log('Fabric photographs passed: source-backed fallback, four-attempt bound, compact exhausted links, healthy DOM retention, photo-first event ordering, explicit rejection, explicit-only retry, unsafe URL rejection and stale-account cancellation. Synthetic providers only.');
+ console.log('Fabric photographs passed: source-backed fallback, four-attempt bound, hidden exhausted Global links, healthy DOM retention, photo-first event ordering, explicit rejection, explicit-only retry, unsafe URL rejection and stale-account cancellation. Synthetic providers only.');
 }finally{if(heldImage)await heldImage.abort().catch(()=>{});await browser.close();}

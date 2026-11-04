@@ -4,13 +4,12 @@ remain through refresh/failure; explicitly retracted results cannot return from
 retention or the private garment cache. No new role, material, CSS family or
 editor is introduced. Shared authority and six-width tests remain the final gate.
 
-<!-- Active owner clarification: Sourceable is worldwide by default. Local/Mood/
-Swatchon/Amazon/Others are separate explicit searches, not selected default filters.
-This supersedes older filter behavior below. P1 interpretation is visible for main
-search, with H4/P3/Inner source-backed suggestion cards and the existing Glass
-controls. Active fabric preview includes P1 interpretation; no new visual authority.
-World/retailer caches are separate. Unknown photos retain the existing P3 fallback.
--->
+<!-- Permanent owner standard: In House is the exact layout baseline for Global
+(formerly Sourceable). Same dimensions, photo proportions, two caption rows and
+scrolling; no saved-look Dictate/Find/refinement/shop/details controls. This rule
+supersedes earlier Fabric UI notes below. The sole active Fabric preview toggles
+the same In House/Global gallery with shared H4/P3/Inner/Glass/scrollbar settings.
+Worldwide/provider/private scope safeguards remain unchanged. -->
 
 <!-- October 30 owner review supersedes earlier pill/Studio layouts: Glass is the sole pill material, including Edit. Regular has no active editor/runtime authority. The internal Studio preview is removed. Historical notes are retained only when compatible with this rule. -->
 
@@ -155,12 +154,13 @@ header and voice dock are hidden only in the verified Brief embed.
 
 Fabrics opens inside the existing Brief/Operation Room viewer after a saved
 dissection. Search starts from the original look, client words and selected saved
-garment; Full view uses the saved garments together. Sourceable, In House and
+garment; Full view uses the saved garments together. Global, In House and
 Favorites share this inline view. Expand moves the same view into an optional
-dialog and returns it intact. Refresh and a store filter stay in its toolbar.
-There is no second bottom Fabrics button, Dictate or Find Fabric workflow.
-Optional photo refinement remains in the shared assistant; no generated replacement
-is used for a missing seller photo.
+dialog and returns it intact. Refresh stays in its toolbar, providing cancellation
+while a search runs. There is no second bottom Fabrics button, Dictate, Find fabric,
+refinement field, shop filter or Search details in this saved-look view. Global
+uses the existing In House layout unchanged; no generated replacement is used
+for a missing source photo.
 
 The fabric view uses Outer material, Inner product cards, Glass pills, shared
 fields, H2 title, H4 product names and P3 captions. Cards have two caption rows
@@ -476,7 +476,7 @@ Typography. Measurements stay in the Brief for saved submissions and feed the
 pattern context canonically. Standalone manual uploads retain a separate entry
 panel, not a duplicate Settings subsection.
 
-Segments is an interactive preview of the same Sourceable/In House/Favorites
+Segments is an interactive preview of the same Global/In House/Favorites
 Glass buttons. Selecting changes actual aria-pressed state/content. Glass material,
 state emphasis, X/Y padding, P3 typography and focus remain shared. Editing another
 control cannot reset an unsaved Drawer or input preview. Every Edit opens its
@@ -710,14 +710,24 @@ compatible. All seven Admin headings remain H3, including Feature requests, and
 actual D/W/M retain the existing shared circle shape under saved settings.
 
 
-## November 3 — Fabrics follow-up and compact missing-photo rows
+## Permanent Fabrics standard — In House and Global
 
-Saved-look Sourceable exposes the existing P1 field and P3 Glass Find fabric/Stop
-controls. Desktop places the field and actions in one row; phones stack them.
-The existing sole Fabric preview includes the follow-up field and both actions;
-shared field material, typography, Glass padding, colors and focus remain the
-only authority. H4/P3 photo cards keep two text rows. Mixed grids give missing
-photo links full-width content-sized rows, below photos in worldwide results.
-Phone Favorites reserve space for the existing Remove action inside photo cards.
-No new saved key, editor, material or typography family is introduced. Final
-checks cover actual Save propagation and default/changed six-width geometry.
+Global is the owner-approved replacement name for Sourceable. In House is the
+layout authority: same gallery dimensions, scroll containers, responsive columns,
+card/image geometry and two single-line captions (H4 title, P3 source/known facts).
+Saved-look Brief and Operation Room expose only In House, Global, Favorites,
+Refresh and Expand/Collapse. The existing Refresh icon cancels an active search.
+Do not reintroduce Dictate, Find fabric, a refinement field, shop controls or an
+interpretation/details strip into this gallery. Internal manual API compatibility
+is not a second served product surface.
+
+The sole Fabric preview now demonstrates the actual shared gallery, with In House
+and Global toggles and enough existing inventory sample photos to exercise scroll.
+Global preview captions say layout sample and do not invent merchant inventory.
+H4/P3, Inner, Glass and shared scrollbars are the only visual authority; no new
+saved keys or editors. Exhausted Global photographs remain private source evidence
+but do not appear as Photo unavailable tiles. An honest empty state offers explicit
+Refresh when none load; source-backed fallbacks/late retractions remain intact.
+Fabric JS/CSS is v12. tests/fabric-gallery-ui.mjs proves exact default/saved
+geometry at six widths, inline/expanded, scrolling, failures/recovery and active
+preview parity. It is required by release, app-regression and final authority.

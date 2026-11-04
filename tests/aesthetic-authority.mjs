@@ -76,9 +76,8 @@ try{
  await page.locator('[data-category=H3] [data-field=align]').selectOption('right');
  for(const heading of await pillHeadings.all()){const style=await heading.evaluate(e=>{const s=getComputedStyle(e);return [s.fontFamily,s.fontSize,s.textAlign];});assert.match(style[0],/Cormorant/);assert.equal(style[1],'18px');assert.equal(style[2],'right','Each pill family follows the active H3 preview');}
  await page.keyboard.press('Escape');
- assert.equal(await page.locator('#fabric-preview-request[data-maya-control=field]').count(),1,'Active Fabric preview includes the shared follow-up field');
- assert.equal(await page.locator('#fabric-preview-request').evaluate(e=>getComputedStyle(e).fontSize),'12px','Follow-up preview uses the default P1 field');
- assert.equal(await page.locator('#workspace-previews .fa-actions button').last().textContent(),'Stop','Active Fabric preview represents cancellation');
+ assert.equal(await page.locator('#workspace-previews textarea,#workspace-previews .fa-composer').count(),0,'Fabric preview contains no unrequested chat controls');
+ assert.equal(await page.locator('#workspace-previews .fa-product').count(),8,'Active preview is the shared In House/Global gallery');
  assert.equal(await page.locator('.pill-families + .pill-states').count(),1,'Pill states sit next to the family editors');assert.equal(await page.locator('#workspace-previews .workspace-preview-card').count(),1,'Only fabric preview remains');assert.equal(await page.locator('#workspace-previews button').filter({hasText:'Edit'}).count(),0,'Typography is edited in its own section');assert.equal(await page.locator('.input-control-usage').filter({hasText:'scrollbars'}).count(),0,'One shared scrollbar needs no repeated usage list');
  for(const selector of ['.dropdown-preview-details','.checkbox-preview-details','.scrollbar-preview-details','#workspace-previews']){const preview=page.locator(selector);assert.equal(await preview.evaluate(e=>e.open),false,selector+' starts collapsed');await preview.locator(':scope > summary').click();assert.equal(await preview.evaluate(e=>e.open),true,selector+' opens');await preview.locator(':scope > summary').click();}
  const typographyPair=await page.locator('.type-hierarchy').evaluate(el=>{const a=el.querySelector('[data-category=H1]').getBoundingClientRect(),b=el.querySelector('[data-category=H2]').getBoundingClientRect();return {right:a.right,left:b.left,top:a.top,otherTop:b.top};});assert.ok(typographyPair.right<=typographyPair.left+1&&Math.abs(typographyPair.top-typographyPair.otherTop)<2,'Changed H3 settings preserve compact typography layout');
@@ -108,10 +107,11 @@ await import('./fabric-workflow-ui.mjs?authority');
 // streamed cards and the active preview after real Save at six widths.
 // Includes four component-purpose captions, retained cards, actual Save and
 // default/changed shared materials and typography inline/expanded at six widths.
-// Includes default/saved follow-up fields and actions at six inline/expanded widths.
+// Covers legacy manual compatibility; the served gallery parity gate follows.
 // Also verifies the source-only/no-photograph P1 completion and Search details
 // under defaults and saved settings, with real response rendering at six widths.
 await import('./fabric-search-ui.mjs?authority');
+await import('./fabric-gallery-ui.mjs?authority');
 await import('./fabric-images-ui.mjs?authority');
 await import('./operation-save-failures.mjs?authority');
 await import('./client-voice-ui.mjs?authority');

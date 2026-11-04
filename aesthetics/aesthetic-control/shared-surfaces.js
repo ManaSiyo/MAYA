@@ -17,8 +17,8 @@ export function setupSharedSurfaces({parent,design}){
  highlightPadding(edit,()=>[drawer],()=>({x:values.paddingX,y:values.paddingY}));
  const segments=document.createElement('section');segments.id='segmented-controls-preview';parent.append(segments);
  const title=document.createElement('h3');title.dataset.mayaType=title.dataset.previewCategory='H3';title.textContent='Segments';
- const output=document.createElement('p');output.dataset.mayaType=output.dataset.previewCategory='P1';output.textContent='Sourceable preview';output.setAttribute('aria-live','polite');
- const group=Segmented({label:'Fabric segments preview',values:['Sourceable','In House','Favorites'],selected:'Sourceable',onChange:value=>output.textContent=value+' preview'});
+ const output=document.createElement('p');output.dataset.mayaType=output.dataset.previewCategory='P1';output.textContent='Global preview';output.setAttribute('aria-live','polite');
+ const group=Segmented({label:'Fabric segments preview',values:['Global','In House','Favorites'],selected:'Global',onChange:value=>output.textContent=value+' preview'});
  segments.append(title,group,output);
  const help=document.createElement('p');help.dataset.mayaType=help.dataset.previewCategory='P3';help.textContent='Brief and Operation Room fabric views · Glass pill material, padding and P3 text.';segments.append(help);
  render();return {drawer,settings:()=>({drawer:{...values}})};
