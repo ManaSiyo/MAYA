@@ -10,9 +10,10 @@ const png=readFileSync(root+'/aesthetics/ui/logo-circle.png');
 const product={url:'https://britexfabrics.com/products/crimson-wool',merchant:'Britex Fabrics',place:'San Francisco',title:'Crimson wool twill',image:'https://cdn.shopify.com/fabric.jpg',description:'100% wool. Sold by the yard.',composition:'100% wool',price:'69.99',currency:'USD',unit:'yard',availability:'in_stock',evidence:'seller_listing',checkedAt:'2026-10-07T00:00:00Z',reason:'May suit the matte wool request.'};
 const worldProduct={...product,url:'https://world-fabrics.example.net/fabric/crimson-wool',merchant:'world-fabrics.example.net',evidence:'web_suggestion',price:'',unit:'',currency:''};
 const reference='data:image/png;base64,'+png.toString('base64');
+const noPhotoMessage='Source links found, but no fabric photographs were returned. Refine the request or Refresh.';
 const pieces=[{name:'Crimson coat',fabric:'Crimson wool twill',fabric_spec:{fiber:'wool',weave:'twill'},_image:reference},{name:'White shirt',fabric:'White cotton poplin',_image:reference},{name:'Black leather boots',category:'footwear',fabric:'Black leather',_image:reference}];
 let savedDesign={};const designWrites=[];
-const requests=[],bookWrites=[],books=new Map(),inventoryImages=[];let layoutMode=false,componentMode=false,longPreferences=false,delayed=null,delayNext=false,failNext=false,failInventoryPreview=false,legacyCatalog=false;
+const requests=[],bookWrites=[],books=new Map(),inventoryImages=[];let noPhotoMode=false,layoutMode=false,componentMode=false,longPreferences=false,delayed=null,delayNext=false,failNext=false,failInventoryPreview=false,legacyCatalog=false;
 const catalog=JSON.parse(readFileSync(root+'/aesthetics/fabrics/fabrics.json','utf8'));
 let originalBytes=0,previewBytes=0;for(const item of catalog.items){assert.match(item.thumbnail,/^thumbs\/[^\\/]+\.jpg$/);originalBytes+=statSync(root+'/aesthetics/fabrics/'+item.fileName).size;previewBytes+=statSync(root+'/aesthetics/fabrics/'+item.thumbnail).size;}assert.ok(previewBytes<originalBytes,'Existing thumbnail files reduce the actual inventory payload');
 const jwt=(sub,lifetime=3600)=>'test.'+Buffer.from(JSON.stringify({sub,exp:Math.floor(Date.now()/1000)+lifetime})).toString('base64url')+'.test';
@@ -38,7 +39,8 @@ await page.route('**/*',async route=>{
     const resultProduct=body.mode==='worldwide'?worldProduct:{...product,url:groups.find(g=>body.storeGroups?.includes(g[0]))?.[2]||product.url};
     const fixtureProducts=layoutMode?Array.from({length:3},(_,i)=>({...resultProduct,url:resultProduct.url+'-photo-'+i,title:'Forest green cloth '+(i+1)+' with a deliberately long product name for line-budget coverage',image:'/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',garment:'Hooded tailcoat and matching slim trousers in a full-length tailored silhouette',materialLabel:'Possible matching body cloth with surface details and a detailed uncertain alternative construction',reason:'A color-first green fabric alternative; exact fiber is unconfirmed.'})):componentMode?['Body fabric','Contrast shoulder panels','Ivory inserts','Woven textile trim'].map((materialLabel,i)=>({...resultProduct,url:resultProduct.url+(i?'-component-'+i:''),title:i?materialLabel+' fabric':resultProduct.title,garment:body.piece?.name||'Crimson coat',materialId:'material-'+i,materialLabel})):[{...resultProduct,garment:body.piece?.name||'Crimson coat'},...(body.storeGroups?.length===1?[{...product,url:groups.find(g=>g[0]!==body.storeGroups[0])[2],title:'Wrong merchant fixture'}]:[])];
     const searchDetails={preferences:JSON.stringify(longPreferences?['Wool','Detailed reference direction. '.repeat(200),'No polyester']:['Wool','No polyester']),garments:[{name:body.piece?.name||'Crimson coat',fabric:'Burgundy wool twill',traits:{texture:'matte'}}],retailerQueries:['red wool twill'],webQueries:['burgundy matte wool fabric'],query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',stores:['Britex Fabrics'],stage:componentMode?'Verified matches; not confirmed: green cuffs and waistband':'Verified matches'};
-    const complete=()=>route.fulfill({contentType:'application/x-ndjson',body:[{type:'context',searchDetails},{type:'products',products:fixtureProducts,preliminary:true},{type:'done',products:fixtureProducts,searchDetails,query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',message:componentMode?'Fabrics for this look. Seller availability may change. Still unconfirmed: green cuffs and waistband.':'Refine these with another message.'}].map(v=>JSON.stringify(v)).join('\n')+'\n'});
+    if(noPhotoMode){for(const item of fixtureProducts){item.image='';item.imageCandidates=[];}searchDetails.stage='Source links only — no fabric photographs';}
+    const complete=()=>route.fulfill({contentType:'application/x-ndjson',body:[{type:'context',searchDetails},{type:'products',products:fixtureProducts,preliminary:true},{type:'done',products:fixtureProducts,searchDetails,query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',message:noPhotoMode?noPhotoMessage:componentMode?'Fabrics for this look. Seller availability may change. Still unconfirmed: green cuffs and waistband.':'Refine these with another message.'}].map(v=>JSON.stringify(v)).join('\n')+'\n'});
     if(delayNext){delayNext=false;delayed=complete;return;}
     return complete();
   }
@@ -91,12 +93,33 @@ try{
   assert.equal(await page.locator('.fa-product [title]').count(),0,'Cards do not repeat verbose hover copy');
   assert.doesNotMatch(await page.locator('.fa-card-caption').textContent(),/69.99/,'Worldwide suggestions do not invent seller prices');
   assert.equal(automatic.mode,'worldwide');assert.equal(automatic.storeGroups,undefined);
+  const checkNoPhotos=async(saved=false)=>{
+    noPhotoMode=true;
+    await page.locator('#fabric-request').fill('Show source photographs '+(saved?'saved':'default'));
+    await page.locator('.fa-composer button[type=submit]').click();
+    await page.getByText(noPhotoMessage,{exact:true}).waitFor();
+    assert.equal(await page.locator('.fa-product-image').count(),0,'Text-only completion does not pretend to have photographs');
+    for(const width of [320,390,768,1024,1440,1920]){
+      await page.setViewportSize({width,height:900});
+      const state=await page.locator('.fa-status').evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect();return {size:s.fontSize,color:s.color,role:el.dataset.mayaType,left:r.left,right:r.right,bottom:r.bottom,viewport:innerWidth,height:innerHeight};});
+      assert.equal(state.role,'P1');assert.equal(state.size,saved?'16px':'12px');assert.equal(state.color,saved?'rgb(255, 255, 255)':'rgb(170, 181, 196)');
+      assert.ok(state.left>=0&&state.right<=state.viewport+1&&state.bottom<=state.height+1,'No-photo status stays readable '+width);
+      if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-fabric-no-photos-'+(saved?'saved':'default')+'-'+width+'.png'});
+    }
+    await page.getByRole('button',{name:'Search details',exact:true}).click();
+    assert.match(await page.locator('.fa-search-details').textContent(),/Source links only — no fabric photographs/);
+    await page.keyboard.press('Escape');noPhotoMode=false;
+    await page.locator('#fabric-request').fill('Find fabric photographs again');await page.locator('.fa-composer button[type=submit]').click();
+    await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
+    await page.setViewportSize({width:1280,height:900});
+  };
   const beforeRefine=requests.length;
   await page.locator('#fabric-request').fill('Darker crimson, no polyester');await page.locator('#fabric-request').press('Enter');
   await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
   assert.equal(requests.length,beforeRefine+1);assert.equal(requests.at(-1).request,'Darker crimson, no polyester','Automatic saved-look mode relays the actual follow-up');
   assert.equal(requests.at(-1).automatic,true,'Refining keeps canonical saved-garment validation');assert.equal(requests.at(-1).history[0].request,automatic.request);
   assert.equal(requests.at(-1).submissionId,'project-A');
+  await checkNoPhotos();
   // Real long provider fields must stay inside two visible text rows. Three
   // photo cards fill the row rather than reserve a phantom fourth column.
   const checkPhotoFirst=async(label)=>{
@@ -266,6 +289,7 @@ try{
   delayNext=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();while(!delayed)await new Promise(r=>setTimeout(r,5));
   const delayedFilter=delayed;delayed=null;await chooseGroups(['local']);await delayedFilter().catch(()=>{});await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
   assert.equal(await page.locator('.fa-product').count(),1,'Obsolete retailer stream cannot repaint the new search');assert.equal(await page.locator('.fa-product-link').getAttribute('href'),product.url);assert.equal(await page.locator('#fabric-request').inputValue(),'unsent cotton draft');
+  await checkNoPhotos(true);
   failNext=true;await page.locator('#fabric-request').fill('a new texture');await page.locator('.fa-composer button[type=submit]').click();
   await page.getByText('Search temporarily unavailable.',{exact:true}).waitFor();assert.equal(await page.locator('#fabric-request').inputValue(),'a new texture');
   delayNext=true;await page.locator('.fa-composer button[type=submit]').click();while(!delayed)await new Promise(r=>setTimeout(r,5));

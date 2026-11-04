@@ -1,3 +1,17 @@
+# November 3 live Fabrics correction — require image search
+
+The main worldwide tool requests image results only (`search_content_types:
+["image"]`). The sourcing task explicitly asks for fabric photographs and their
+`source_website_url`, not a text-only website shortlist. Keep one Responses call,
+canonical image/context, existing bounds and no automatic paid retry. Reject
+upholstery/furnishing/decor evidence in every card's URL, title, reason and source
+caption, including late retractions through a failed stream. A source-only result
+must say no fabric photographs were returned. This reuses P1 status/P3 Search
+details with no new UI authority or served asset change. Live testing on 116a11c
+showed eight photo-less links; an explicit image-search refinement loaded four
+real photos. That proves the live path can display photos, not that this later
+local correction is deployed. Owner Push and exact live acceptance remain separate.
+
 # November 3 owner implementation — simple Fabrics relay
 
 Main Sourceable keeps one OpenAI Responses web/image request. Send the canonical
@@ -66,7 +80,7 @@ full release/regression/smoke and final standalone Aesthetic Control last.
 
 This clarification supersedes older default-five-filter/local-first and mandatory
 seller/second-photo-pass notes for the MAIN Sourceable search. Main is worldwide
-image-led OpenAI web/text/image search, without retailer domain filters, keyword
+image-led OpenAI web image search, without retailer domain filters, keyword
 feeds or a second ranking call. Named-shop/Local buttons are separate explicit
 searches; their results never replace or constrain worldwide results.
 

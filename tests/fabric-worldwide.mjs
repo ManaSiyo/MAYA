@@ -10,15 +10,40 @@ const content=objects=>({type:'message',content:[{type:'output_text',text:object
 const user={sub:'fixture-owner'};
 let count=0;
 async function test(name,run){await run();count++;console.log('  ok worldwide '+name);}
-await test('default is unfiltered image/text search, optional legacy groups cannot scope it',()=>{
+await test('default requires worldwide image results, optional legacy groups cannot scope it',()=>{
   const input=normalizeFabricRequest({request:'Find fabrics for this look',image,storeGroups:['local'],stores:['evil.invalid']});
   assert.equal(input.mode,'worldwide');assert.equal(input.storeGroups,undefined);assert.deepEqual(input.stores,[]);
   const body=worldwideSearchBody(input,'gpt-6-luna');assert.equal(body.stream,true);assert.equal(body.store,false);
   assert.equal(body.max_tool_calls,5);assert.equal(body.max_output_tokens,6000);assert.equal(body.tools[0].image_settings.max_results,32);
   assert.match(body.instructions,/dominant color/);assert.match(body.instructions,/Solid color body-cloth alternatives are useful/);
-  assert.equal(body.tools[0].filters,undefined);assert.deepEqual(body.tools[0].search_content_types,['text','image']);
+  assert.equal(body.tools[0].filters,undefined);assert.deepEqual(body.tools[0].search_content_types,['image']);
+  assert.match(body.instructions,/Use image search to find photographs/);
+  assert.match(body.instructions,/source_website_url/);
   assert.ok(body.include.includes('web_search_call.results'));assert.equal(body.input[0].content[1].image_url,image);
   assert.throws(()=>normalizeFabricRequest({request:'wool',mode:'unknown'}));
+});
+await test('modeled links cannot disguise upholstery, furnishing or decor evidence',async()=>{
+  for(const change of [{url:'https://cloth.example/green-jacquard-upholstery-fabric'},{title:'Green furnishing fabric'},{reason:'Green brocade, though some options are furnishing-weight.'},{caption:'Green upholstery fabric by the yard'},{caption:'Green decor fabric by the yard'},{url:'https://cloth.example/products/green-%75pholstery-fabric'}]){
+    const item={...candidate,...change},page=item.url;
+    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,action:{sources:[{url:page}]},results:[{...evidence.results[0],source_website_url:page,caption:change.caption||'Green fabric'}]},content([interpretation,item])]})});
+    await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));
+    assert.deepEqual(events.at(-1).products,[],JSON.stringify(change));
+  }
+});
+await test('late upholstery evidence retracts a modeled card even if the stream then fails',async()=>{
+  const frames=[{type:'response.output_item.done',item:evidence},{type:'response.output_text.delta',delta:JSON.stringify(candidate)+'\n'},{type:'response.output_item.done',item:{...evidence,results:[{...evidence.results[0],caption:'Green upholstery fabric by the yard'}]}},{type:'response.failed'}];
+  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(frames.map(event=>'data: '+JSON.stringify(event)+'\n\n').join(''),{headers:{'Content-Type':'text/event-stream'}})});
+  await assert.rejects(service.search(user,{request:'Green apparel fabric',image},event=>events.push(structuredClone(event))),/interrupted/);
+  assert.ok(events.some(event=>event.products?.[0]?.url===url));
+  assert.ok(events.some(event=>event.removedUrls?.includes(url)));
+  assert.deepEqual(events.filter(event=>event.products).at(-1).products,[]);
+});
+await test('a text-only provider response reports missing photographs without a paid retry',async()=>{
+  let calls=0;const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>{calls++;return Response.json({status:'completed',output:[{...evidence,results:[]},content([interpretation,candidate])]});}});
+  await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));
+  assert.equal(calls,1);assert.equal(events.at(-1).products.length,1);
+  assert.match(events.at(-1).message,/no fabric photographs/i);
+  assert.match(events.at(-1).searchDetails.stage,/source links only/i);
 });
 await test('public source links reject private addresses, credentials and unsafe schemes',()=>{
   for(const bad of ['http://shop.example/a','https://127.0.0.1/a','https://2130706433/a','https://[::1]/a','https://10.0.0.2/a','https://user:secret@shop.example/a','https://shop.local/a','https://shop.local./a','https://localhost/a','file:///etc/passwd'])assert.equal(sourceURL(bad),'',bad);

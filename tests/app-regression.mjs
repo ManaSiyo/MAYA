@@ -2731,6 +2731,7 @@ ok('Bounded fabric seeds retain reptile/long-pile texture and discard known noti
 ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
 ok('Worldwide image-led sourcing streams grounded suggestions in one call; optional retailers cannot scope or delay the main search',!process.exitCode);
+ok('Fabrics requires image search, excludes disguised upholstery and reports source-only results without retrying',!process.exitCode);
 ok('Ready feed listings verify before slow unrelated feeds without extra seller or paid calls; numeric phases remain private-content-free',!process.exitCode);
 ok('A saved look sources scoped textile components, preserves constraints and shares one bounded visual review',!process.exitCode);
 ok('Saved knit/tricot and satin-sheen looks preserve seller evidence and explicit constraints through bounded visual review',!process.exitCode);

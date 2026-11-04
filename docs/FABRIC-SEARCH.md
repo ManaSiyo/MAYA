@@ -19,12 +19,14 @@ configured text/vision model and OpenAI key. It receives the canonical selected 
 original look as context, the selected garment name, client fabric preferences
 and refinements. Canonical IDs and saved garment metadata stay on the server for
 scope and exclusions; speculative saved fabric descriptions are not sent as
-search requirements. The sourcing instruction is a short image-led request. Explicit client
+search requirements. The sourcing instruction explicitly asks for photographs and
+selects their source_website_url pages. Text-only website recommendations must not
+pad the shortlist. Explicit client
 exclusions remain authoritative; known contradictions are rejected without another
 model call. Scope/account/submission checks happen before provider work. No piece
 generation or assignment writes occur on read or browsing.
 
-The request uses web_search with text/image content, page-linked image results,
+The request uses web_search with image-only content, page-linked image results,
 source lists and streaming. It has no allowed_domains, preferred merchant list or
 local bias. Five search tool calls, 6000 output tokens and up to 32 requested image results
 bound the single request. Counts are limits, not a promised result minimum.
@@ -67,7 +69,12 @@ These are **web-sourced suggestions**, not independently verified current seller
 inventory. Model output cannot set price, currency, unit, stock or composition
 fields; they stay unknown. A photo never proves exact fiber, GSM, stretch, quantity
 or delivery. Finished clothing, footwear, tools, patterns/hardware and swatch-only
-suggestions remain excluded. No generated replacement photo is used. A useful
+suggestions remain excluded. Upholstery, furnishing and decor evidence in the
+source path (including escaped words), title, reason or image caption rejects every
+worldwide card, including model-selected links. Late evidence retracts already
+published cards through the existing retained-result/cache removal path. A completed
+response containing only links explicitly reports no fabric photographs returned.
+No generated replacement photo is used. A useful
 alternative should be described as uncertain, not turned into an exact match.
 
 ## Streaming and interruption

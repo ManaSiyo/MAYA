@@ -109,6 +109,8 @@ await import('./fabric-workflow-ui.mjs?authority');
 // Includes four component-purpose captions, retained cards, actual Save and
 // default/changed shared materials and typography inline/expanded at six widths.
 // Includes default/saved follow-up fields and actions at six inline/expanded widths.
+// Also verifies the source-only/no-photograph P1 completion and Search details
+// under defaults and saved settings, with real response rendering at six widths.
 await import('./fabric-search-ui.mjs?authority');
 await import('./fabric-images-ui.mjs?authority');
 await import('./operation-save-failures.mjs?authority');

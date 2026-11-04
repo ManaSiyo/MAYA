@@ -1,29 +1,24 @@
-Title: [Codex] Simplify Fabrics into an image-led search conversation
+Title: [Codex] Require fabric image search and reject upholstery suggestions
 
-Put the canonical selected dissected piece first in the existing single OpenAI
-web/image request. Replace verbose speculative fabric context with a short task,
-client preferences/history and the selected garment name. Stream qualified tool
-photos before the model shortlist; show up to twelve distinct website hosts.
-Retain source-backed URLs/photos, unknown seller facts, canonical private scope,
-explicit exclusions, variant separation and late retractions through failures.
-No new provider, second paid ranking stage or automatic retry.
+The deployed mixed text/image request returned eight source links without photos.
+An explicit image-search refinement on the same saved garment loaded four photos
+in the live app. Make that direction the default: request image-only search,
+select the photographs' source pages, and do not pad with text-only websites.
+Keep one Responses call, configured model, canonical private context, source-only
+image URLs, unknown seller facts, bounded streaming and no automatic paid retry.
 
-Expose saved-look follow-up and Stop. Relay actual refinements, clear incompatible
-old matches and preserve explicit Refresh results. Keep healthy photos through
-caption updates; bound each image URL to eight seconds and four attempts total.
-Use content-sized missing-link rows, reachable phone Favorites controls and the
-existing shared roles/materials. Extend the sole Fabric preview; load v11 assets.
+Reject upholstery/furnishing/decor evidence in every candidate URL, title, reason
+and source caption. Retract later contradictions through the existing retained
+result/cache path even when the stream fails. Report a source-only completion
+honestly in the existing P1 status/P3 Search details; no new component, CSS/layout,
+saved design schema or asset version change.
 
-Validation: all 77 functional/syntax release commands, full app-regression and
-smoke pass. Worldwide (26), search (57), forced-GC and sourcing pass on Node20/24.
-Locked npm ci passed. Isolated UI/workflow and integrated shared authority pass;
-default/changed saved styles and six-width captures were inspected. Standalone
-Aesthetic Control is the final verification and must pass before this commit.
-New cases cover selected-image priority, short request, early raw photos,
-twelve-site breadth, late exclusions/ambiguous variants, actual follow-ups, Stop,
-timeout recovery, healthy caption updates and content-sized missing-photo rows.
-
-Local implementation only. No personal Chrome, paid live provider test, secret or
-production configuration access, Push or deployment. Prior research verified live
-cb1c0d2/Fabric v10; owner Push and exact v11 release verification plus real-image
-acceptance remain necessary. Public API behavior does not promise ChatGPT parity.
+Validation: all 77 functional/syntax Cloud Build commands, full app-regression
+and smoke pass (79/79). Worldwide (29), search (57), sourcing (18) and forced-GC
+pass on Node20.20.2 and Node24.22.1. Root npm ci and default/saved UI at six widths
+pass; captures were visually inspected. The local commit requires and records a
+successful final standalone Aesthetic Control run last.
+The live four-photo result validates the request direction on 116a11c, not this
+unpushed image-only revision. Owner Push, matching release/API commit and default
+saved-garment live acceptance remain. No personal Chrome, credentials, production
+configuration, saved project/lookbook mutation, Push or deployment.
