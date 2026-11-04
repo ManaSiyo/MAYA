@@ -1,23 +1,27 @@
-Title: [Codex] Align Admin sections and fix release notification check
+Title: [Codex] Separate notification history from Admin fixture actions
 
-Closed Insights, Recent changes and Feature requests had unequal gaps from
-legacy footer padding/margins. Use the existing Insights spacing for both closed
-boundaries, preserve open geometry and update its working preview. Present
-Settings, Messages, Logs in matching visual/reading order, retaining private
-notifications and compatible routing IDs. Version shared presentation runtime v3
-consistently across served pages.
+Cloud Build passed the earlier lead-notes/Fabric gates but stopped before deploy
+at Admin Systems' final authority import: a legitimate blocked-GIS warning saved
+to notification history was counted as an owner action. Audit all generic Admin
+write guards and fix the four affected fixtures through one strict test helper.
+Validate the exact authenticated notification endpoint and bounded fixed states;
+reject arbitrary/private fields and keep all other mutation/send/rule guards.
 
-Cloud Build stopped before deployment because the lead-notes fixture counted a
-legitimate delayed blocked-sign-in warning as provider recovery. Exercise and
-require that real warning deterministically while still rejecting every invented
-healthy/connected observation. Production notification behavior is unchanged.
+Force the real blocked-sign-in error and drain public history in each fixture.
+Retain zero invented recovery, allowing only the automation fixture's explicit
+successful feature read. Intercept Systems background polls to prevent a slower
+CI success response from overwriting the deliberate warning. Preserve every
+STOP, reviewed send, confirmation, draft, stale-account and responsive assertion.
+No production runtime, CSS or release gate changes.
 
-Validation: all 79 required functional/release/regression/smoke command results
-pass. Node20/24 reproduce and pass the corrected fixture. Default/saved six-width
-checks, real design Save/reload, open geometry and preview behavior pass. Actual
-public saved settings confirm existing H3 font parity and circular D/W/M locally.
-Standalone Aesthetic Control is the final pre-commit gate. Synthetic providers.
+All 79 required functional/release/regression/smoke command results pass.
+The four corrected fixtures pass under Node20 and Node24 (the authority
+fixture also re-executes its imported surface checks). Shared privacy/payload
+contract negatives pass. Final standalone Aesthetic Control is the last
+pre-commit check; only commit once that run and its visual review pass.
 
-The public site remains at 41df1a5 pending owner deployment. No secrets, production
-settings, personal Chrome, paid provider calls, Push or build rerun. A successful
-Google Cloud Build and exact live release verification remain necessary.
+Hosting still serves 41df1a5 / Fabric v9; the previously pushed Fabric/Admin repairs
+remain unshipped. No Push, Cloud Build rerun, personal Chrome, live paid providers,
+credentials or environment changes. Successful owner deployment and exact live
+release/asset verification remain necessary; synthetic checks do not prove source
+relevance or real photographs on the owner's request.

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {captureAdminNotification} from './admin-notification-fixture.mjs';
 import {chromium} from 'playwright';
 import {readFileSync} from 'node:fs';
 import {extname,resolve} from 'node:path';
@@ -7,24 +8,26 @@ const root=resolve(new URL('..',import.meta.url).pathname);
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:900}}),page=await context.newPage();
 let releaseSendRefresh,holdSendRefresh=false;
-const errors=[],writes=[];let fail=false,pending=0,suggestion='Hi Angela, would you like to discuss your green suit?';
+const errors=[],writes=[],notificationWrites=[];let fail=false,pending=0,suggestion='Hi Angela, would you like to discuss your green suit?';
 page.on('pageerror',e=>errors.push(e.message));
-await page.addInitScript(()=>{window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
+// Exercise the blocked GIS retry after fake auth, independent of host speed.
+await page.addInitScript(()=>{const fixtureTimer=window.setTimeout;window.setTimeout=(fn,ms,...args)=>fixtureTimer(fn,window.fixtureFastGsi&&fn.name==='_gisBoot'?5:ms,...args);window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
 await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='maya.test')return route.abort();
  if(u.pathname.startsWith('/api/')){
+  if(captureAdminNotification(req,{tokens:['fixture-owner'],batches:notificationWrites}))return route.fulfill({json:{ok:true,items:[]}});
   if(u.pathname==='/api/admin/messages/thread'&&u.searchParams.has('before'))return route.fulfill({json:{ok:true,messages:[{id:'older-one',dir:'in',kind:'sms',text:'Archived conversation',ts:'2026-09-01'}],hasMore:false}});
   if(u.pathname==='/api/admin/messages/suggest')return route.fulfill({json:{ok:true,eligible:true,stage:'first',text:suggestion}});
   if(u.pathname==='/api/admin/booking/pending')return route.fulfill({json:{ok:true,items:Array.from({length:pending},(_,i)=>({id:'preview-'+i,name:'Synthetic contact '+i,to:'+14155550123',text:'Review this booking invitation. '+ 'Consultation details and availability. '.repeat(8)}))}});
   if(u.pathname==='/api/admin/text-automations'&&req.method()==='GET')return route.fulfill({json:{ok:true,settings:{first:{enabled:true,text:'Hi {name}',trigger:'new_lead',time:'10:00'},second:{enabled:false,text:'Hi {name}',trigger:'no_reply',time:'10:00',days:3}}}});
   if(u.pathname==='/api/admin/messages/thread'&&holdSendRefresh){holdSendRefresh=false;await new Promise(resolve=>releaseSendRefresh=resolve);}
-  if(req.method()==='POST'){if(u.pathname==='/api/admin/messages/send'&&req.postDataJSON().text==='Reviewed first message')holdSendRefresh=true;writes.push({path:u.pathname,body:req.postDataJSON(),auth:req.headers().authorization});return route.fulfill({status:fail?503:200,json:fail?{error:'Save unavailable'}:{ok:true}});}
+  if(!['GET','HEAD'].includes(req.method())){if(u.pathname==='/api/admin/messages/send'&&req.postDataJSON().text==='Reviewed first message')holdSendRefresh=true;writes.push({path:u.pathname,body:req.postDataJSON(),auth:req.headers().authorization});return route.fulfill({status:fail?503:200,json:fail?{error:'Save unavailable'}:{ok:true}});}
   return route.fulfill({json:{ok:true,connected:true,threads:[],thread:{number:u.searchParams.get('number'),name:'',consent:'none',messages:[],transcripts:[]}}});
  }
  try{return route.fulfill({body:readFileSync(resolve(root,'.'+u.pathname)),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(u.pathname)]||'application/octet-stream'});}catch{return route.abort();}
 });
 try{
  await page.goto('https://maya.test/backend/status.html');await page.waitForFunction(()=>typeof msgBegin==='function');
- await page.evaluate(()=>{_idTok='fixture-owner';toggleDrawer(true);admTab('messages');});
+ await page.evaluate(()=>{_idTok='fixture-owner';window.fixtureFastGsi=true;_gisBoot();toggleDrawer(true);admTab('messages');});
  await page.locator('#msg-begin').click();await page.locator('#msg-new-number').fill('not a phone');await page.locator('#msg-new-start').click();assert.equal(writes.length,0);assert.match(await page.locator('#msg-new-feedback').textContent(),/valid number/);
  await page.locator('#msg-new-number').fill('(415) 555-0123');await page.locator('#msg-new-name').fill('New Person');await page.locator('#msg-new-start').click();await page.locator('#msg-input').waitFor({state:'visible'});await page.waitForFunction(()=>!document.getElementById('msg-new').dataset.busy);
  assert.deepEqual(writes.map(w=>w.path),['/api/admin/messages/name']);assert.deepEqual(writes[0].body,{number:'+14155550123',name:'New Person'});assert.equal(writes[0].auth,'Bearer fixture-owner');assert.equal(await page.locator('#msg-name').inputValue(),'New Person');assert.equal(await page.locator('#msg-input').inputValue(),'');
@@ -46,6 +49,15 @@ try{
  await page.evaluate(()=>msgBack());await page.locator('#msg-begin').click();page.once('dialog',d=>d.accept());await page.locator('#msg-new-call').click();await page.waitForFunction(()=>document.getElementById('msg-consent').textContent.includes('calling'));assert.equal(writes.at(-1).path,'/api/admin/phone/call-client');assert.equal(writes.at(-1).body.to,'+14155550124');
  await page.evaluate(()=>openThread('+447700900123',''));assert.equal(await page.locator('#msg-input').inputValue(),'Keep this draft','Draft stays with its recipient');
  await page.evaluate(()=>msgBack());await page.locator('#msg-begin').click();await page.locator('#msg-new-name').fill('Save fails');fail=true;await page.locator('#msg-new-start').click();await page.getByText('Save unavailable',{exact:true}).waitFor();assert.equal(await page.locator('#msg-new-number').inputValue(),'4155550124');assert.equal(await page.locator('#msg-new-start').isEnabled(),true);fail=false;
+ // Drain automatic status history before the account reset while retaining
+ // every exact reviewed-send/STOP/call assertion above and below.
+ const beforeNotifications=writes.length;
+ await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.evaluate(()=>MayaAdminNotifications.load());
+ const observations=notificationWrites.flatMap(body=>body.items);
+ assert.ok(observations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'The blocked-GIS warning is still saved during Messages review');
+ assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Messages review does not invent provider recovery');
+ assert.equal(writes.length,beforeNotifications,'Flushing notification history does not send or change a contact');
  await page.evaluate(()=>window.dispatchEvent(new Event('maya-owner-session-changed')));assert.equal(await page.locator('#msg-new').isVisible(),false);assert.equal(await page.locator('#msg-new-name').inputValue(),'');
  for(const width of [320,390,768,1024,1440]){await page.setViewportSize({width,height:900});await page.evaluate(()=>{_idTok='fixture-owner';admTab('messages');msgNewToggle(true);});assert.ok(await page.locator('#msg-new').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Typed-number form fits '+width);}
  for(const saved of [false,true]){

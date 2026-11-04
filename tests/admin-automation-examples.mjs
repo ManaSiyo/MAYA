@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {extname,resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {createTextAutomations,DEFAULT_TEXT_AUTOMATIONS} from '../docs/server/text-automations.mjs';
+import {captureAdminNotification} from './admin-notification-fixture.mjs';
 
 let output='Hi {name}, thanks for your interest in {context}. Shall we talk?',calls=0,seen;
 const examples=createTextAutomations({read:async()=>{throw Error('Examples must not read private contacts');},write:async()=>{throw Error('Examples must not save');},complete:async(uid,instructions,data)=>{calls++;seen={uid,instructions,data};return {text:JSON.stringify({text:output})};}});
@@ -15,13 +16,15 @@ for(const invalid of ['Invented real contact','Hi {name} at {phone}','Hi {name} 
 
 const root=new URL('../',import.meta.url).pathname;
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
-const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'}),errors=[],requests=[];let nextExample=null,nextSave=null,failExample=false,failSettings=false;let persisted=structuredClone(DEFAULT_TEXT_AUTOMATIONS);
+const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'}),errors=[],requests=[],notificationWrites=[];let nextExample=null,nextSave=null,failExample=false,failSettings=false;let persisted=structuredClone(DEFAULT_TEXT_AUTOMATIONS);
 page.on('pageerror',error=>errors.push(error.message));
-await page.addInitScript(()=>{window.setInterval=()=>0;});
+// Accelerate only the blocked GIS retry after the fixture explicitly opts in.
+await page.addInitScript(()=>{const fixtureTimer=window.setTimeout;window.setTimeout=(fn,ms,...args)=>fixtureTimer(fn,window.fixtureFastGsi&&fn.name==='_gisBoot'?5:ms,...args);window.setInterval=()=>0;});
 await page.route('**/*',async route=>{
  const req=route.request(),url=new URL(req.url());if(url.hostname!=='maya.test')return route.abort();
+ if(captureAdminNotification(req,{tokens:['fixture-a','fixture-b'],batches:notificationWrites}))return route.fulfill({json:{ok:true,items:[]}});
  if(url.pathname.startsWith('/api/')){
-  if(req.method()==='POST')requests.push({path:url.pathname,body:req.postDataJSON(),auth:req.headers().authorization});
+  if(!['GET','HEAD'].includes(req.method()))requests.push({path:url.pathname,method:req.method(),body:req.postDataJSON(),auth:req.headers().authorization});
   if(url.pathname==='/api/admin/text-automations/example'){
    const body=req.postDataJSON();if(nextExample){const pending=nextExample;nextExample=null;await pending;}
    return route.fulfill({status:failExample?503:200,json:failExample?{error:'Fixture provider unavailable.'}:{ok:true,stage:body.stage,text:'Hi {name}, alternate example '+requests.length+'.'}});
@@ -70,8 +73,19 @@ try{
  assert.match(await page.locator('#automation-status').innerText(),/unsaved/i,'A later example remains unsaved after an earlier Save');
  nextSave=new Promise(resolve=>releaseSave=resolve);await page.locator('#automation-save').click();await page.locator('#automation-first-text').fill('Hi {name}, manually reviewed while saving.');releaseSave();await page.waitForFunction(()=>!document.getElementById('automation-save').disabled);
  assert.match(await page.locator('#automation-status').innerText(),/unsaved/i);assert.equal(await page.locator('#automation-first-text').inputValue(),'Hi {name}, manually reviewed while saving.');
- assert.ok(requests.every(r=>['/api/admin/text-automations/example','/api/admin/text-automations'].includes(r.path)),'Only explicit rule/example requests occur; no send endpoint');
- await page.evaluate(async()=>{document.getElementById('features-fold').open=true;await loadFeatureRequests();});
+ // Force the real blocked-GIS error after fake auth/account-race coverage,
+ // then drain the public writer before checking the action-only counter.
+ const actionsBeforeNotifications=requests.length;
+ await page.evaluate(()=>{window.fixtureFastGsi=true;_gisBoot();});
+ await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.evaluate(()=>MayaAdminNotifications.load());
+ assert.equal(requests.length,actionsBeforeNotifications,'Draining fixed-state notifications adds no rule/example/send action');
+ const earlyObservations=notificationWrites.flatMap(body=>body.items);
+ assert.ok(earlyObservations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'The real delayed blocked-GIS warning is saved');
+ assert.deepEqual(earlyObservations.filter(item=>['healthy','connected'].includes(item.code)),[],'Generating examples and saving rules never invents provider recovery');
+ assert.ok(requests.every(r=>r.method==='POST'&&['/api/admin/text-automations/example','/api/admin/text-automations'].includes(r.path)),'Only explicit rule/example requests occur; no send endpoint');
+ // This explicit successful feature read is the only genuine healthy observation.
+ await page.evaluate(async()=>{document.getElementById('features-fold').open=true;await loadFeatureRequests();await MayaAdminNotifications.load();});
  for(const width of [320,390,768,1024,1440,1920]){
   await page.setViewportSize({width,height:900});await page.evaluate(()=>admTab('systems'));
   const row=await page.locator('.systems-tools').evaluate(e=>[...e.children].map(x=>{const r=x.getBoundingClientRect();return {y:r.y,center:r.y+r.height/2};}));assert.ok(Math.abs(row[0].center-row[1].center)<2,'Systems tools share a row at '+width);
@@ -103,5 +117,16 @@ try{
  assert.equal(await page.locator('#text-automations-form').isVisible(),false);assert.equal(await page.locator('#text-automations-form').evaluate(e=>getComputedStyle(e).display),'none');
  failSettings=false;await page.evaluate(()=>loadTextAutomations());await page.locator('#text-automations-form').waitFor({state:'visible'});
  if(process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT){await page.evaluate(()=>{MayaTypographyControls.apply(MayaTypographyControls.defaults);admTab('automations');});await page.setViewportSize({width:1440,height:900});await page.locator('#drawer-automations').evaluate(e=>e.scrollTop=0);await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-desktop.png'});await page.setViewportSize({width:390,height:900});await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-phone.png'});await page.locator('#drawer-automations').evaluate(e=>e.scrollTop=e.scrollHeight);await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-save.png'});await page.evaluate(()=>admTab('systems'));await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-systems.png'});await page.evaluate(()=>admTab('logs'));await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-logs.png'});await page.setViewportSize({width:1440,height:1000});await page.evaluate(()=>{toggleDrawer(false);const h=document.getElementById('adm-hscroll');h.style.scrollSnapType='none';h.scrollTo({left:0,behavior:'instant'});document.getElementById('features-fold').scrollIntoView({behavior:'instant'});});await page.waitForFunction(()=>document.getElementById('adm-hscroll').scrollLeft===0);await page.locator('#features-fold').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-features.png'});}
- assert.deepEqual(errors,[]);console.log('Admin automation examples: fake AI validation, explicit generation, edited drafts, stale accounts, save-only behavior and responsive shared controls passed.');
+ // The final account reset cleared current status; re-exercise the blocked
+ // retry on that context, then audit every action after the public drain.
+ const actionsBeforeFinalDrain=requests.length;
+ await page.evaluate(()=>{window.fixtureFastGsi=true;_gisBoot();});
+ await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.evaluate(()=>MayaAdminNotifications.load());
+ assert.equal(requests.length,actionsBeforeFinalDrain,'The final notification drain performs no rule/example/send action');
+ const observations=notificationWrites.flatMap(body=>body.items);
+ assert.ok(observations.filter(item=>item.source==='submissions'&&item.code==='unavailable').length>=2,'Both authenticated contexts retain their genuine blocked-GIS warning');
+ assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[{source:'features',code:'healthy'}],'Only the explicit successful Feature requests read reports recovery');
+ assert.ok(requests.every(r=>r.method==='POST'&&['/api/admin/text-automations/example','/api/admin/text-automations'].includes(r.path)),'All late requests remain explicit rule/example actions; no send endpoint');
+ assert.deepEqual(errors,[]);console.log('Admin automation examples: strict fixed-state notifications, blocked GIS, fake AI validation, explicit generation, edited drafts, stale accounts, save-only behavior and responsive shared controls passed.');
 }catch(error){console.error('Admin fixture page errors:',errors);throw error;}finally{await browser.close();}

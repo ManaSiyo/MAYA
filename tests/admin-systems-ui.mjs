@@ -2,20 +2,29 @@ import {chromium} from 'playwright';
 import {readFileSync} from 'node:fs';
 import {resolve,extname} from 'node:path';
 import assert from 'node:assert/strict';
+import {captureAdminNotification} from './admin-notification-fixture.mjs';
 const root=resolve('.'), browser=await chromium.launch({headless:true,executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 try{
  const page=await browser.newPage();await page.emulateMedia({reducedMotion:'reduce'});
- const errors=[];page.on('pageerror',e=>errors.push(e.message));let writes=0;
+ const errors=[],notificationWrites=[],providerReads=[];page.on('pageerror',e=>errors.push(e.message));let writes=0;
+ // A blocked GIS script retries in the real page. Accelerate only that retry
+ // after fake auth so its late error is exercised even on a fast test host.
+ // This configuration-only fixture schedules no background polling at all;
+ // otherwise slow CI can receive a fresh healthy report after the warning.
+ await page.addInitScript(()=>{window.fixtureIntervalDelays=[];window.setInterval=(_fn,ms)=>{window.fixtureIntervalDelays.push(ms);return 0;};const fixtureTimer=window.setTimeout;window.setTimeout=(fn,ms,...args)=>fixtureTimer(fn,window.fixtureFastGsi&&fn.name==='_gisBoot'?5:ms,...args);});
  await page.route('**/*',async route=>{
-  const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();
+  const req=route.request(),u=new URL(req.url());if(u.hostname!=='maya.test')return route.abort();
+  if(captureAdminNotification(req,{tokens:['fixture'],batches:notificationWrites}))return route.fulfill({json:{ok:true,items:[]}});
+  if(u.pathname.startsWith('/api/')&&!['GET','HEAD'].includes(req.method()))writes++;
+  if(req.method()==='GET'&&['/api/admin/submissions','/api/admin/marketing'].includes(u.pathname))providerReads.push(u.pathname);
   if(u.pathname==='/api/admin/models')return route.fulfill({json:{checkedAt:'2026-10-03T12:00:00Z',models:{'Frontend text':'gpt-6-luna','Admin text':'gpt-6-luna','Fast text':'gpt-6-luna','Image default':'gpt-image-2.5-flare'},connections:[{provider:'OpenAI',model:'gpt-5-nano',configured:true,transport:'api',endpoint:'https://api.openai.com/v1/responses'},{provider:'gemini',model:'gemini-2.5-flash-lite',configured:true,transport:'vertex',endpoint:'https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/gemini-2.5-flash-lite:generateContent'}],images:[{provider:'OpenAI',model:'gpt-image-2.5-flare',configured:true,endpoint:'https://api.openai.com/v1/images/generations'}]}});
   if(u.pathname==='/api/admin/owner-crm')return route.fulfill({json:{ok:true,gmailReady:false,mailboxes:[{id:'fixture-mailbox',email:'fixture@example.com'}]}});
-  if(u.pathname.startsWith('/api/')){if(route.request().method()==='POST')writes++;return route.fulfill({json:{ok:true,items:[],list:[],mailboxes:[]}});}
+  if(u.pathname.startsWith('/api/')){return route.fulfill({json:{ok:true,items:[],list:[],mailboxes:[]}});}
   let path=u.pathname==='/status.html'?'/backend/status.html':u.pathname;
   try{return route.fulfill({body:readFileSync(root+path),contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png'})[extname(path)]||'text/plain'});}catch{return route.abort();}
  });
  await page.goto('https://maya.test/status.html');await page.locator('#model-snapshot').waitFor({state:'attached'});
- await page.evaluate(()=>{document.querySelectorAll('#gate,#auth-gate').forEach(e=>e.remove());_idTok='fixture';});
+ await page.evaluate(()=>{document.querySelectorAll('#gate,#auth-gate').forEach(e=>e.remove());_idTok='fixture';window.fixtureFastGsi=true;_gisBoot();});
  assert.deepEqual(await page.locator('#adm-mkt > details').evaluateAll(es=>es.map(e=>e.id)),['leads-fold','ads-fold','bottom-fold']);
  assert.equal(await page.locator('#leads-fold h2').textContent(),'Leads');assert.equal(await page.locator('#bottom-fold h2').textContent(),'Insights');
  assert.equal(await page.locator('#leads-fold h2').evaluate(e=>getComputedStyle(e).marginTop),'0px','Section text and chevron share a centered line');
@@ -64,6 +73,15 @@ try{
  await api.click();await popup.waitFor({state:'visible'});await page.setViewportSize({width:1300,height:1000});await popup.waitFor({state:'hidden'});
  assert.equal(await page.locator('#drawer-systems a[href*=outbound]').count(),0,'Retired Outbound has no Vault link');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-error',{detail:'Configuration request failed'})));await page.waitForTimeout(30);await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');assert.match(await page.locator('#model-snapshot').textContent(),/Configuration request failed.*Last configuration shown/);await page.keyboard.press('Escape');
+ // Await the genuine blocked-sign-in error and flush through the public API;
+ // its authenticated fixed-state history is distinct from owner actions.
+ await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.evaluate(()=>MayaAdminNotifications.load());
+ const observations=notificationWrites.flatMap(body=>body.items);
+ assert.ok(observations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'The delayed blocked-GIS warning is still saved');
+ assert.ok(await page.evaluate(()=>window.fixtureIntervalDelays.includes(5000)),'The real five-second submissions poll was intercepted before scheduling');
+ assert.deepEqual(providerReads,[],'Configuration-only checks never run background submissions or Marketing reads');
+ assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Configuration reads do not invent provider recovery');
  assert.equal(writes,0,'Reading and dismissing configuration never performs an owner action');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-clear')));assert.ok(await page.locator('#model-snapshot').isHidden());assert.equal(await page.locator('#model-snapshot').textContent(),'');
  assert.deepEqual(errors,[]);console.log('Admin hierarchy, explicit provider details and no hover snapshots, Vault, Logs conversation and dashboard approvals passed at seven widths.');

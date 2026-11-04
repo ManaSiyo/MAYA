@@ -1,3 +1,4 @@
+import {captureAdminNotification} from './admin-notification-fixture.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
@@ -76,3 +77,31 @@ for(const method of ['GET','POST']){
  for(const status of [400,409,503,500]){listFailure=Object.assign(Error('SECRET provider body'),{status});const failure=response();await run({body:batch('api','healthy')},failure);assert.equal(failure.code,method==='POST'&&[400,409].includes(status)?status:503);assert.ok(!JSON.stringify(failure.body).includes('SECRET'));assert.equal(failure.headers['Cache-Control'],'private, no-store');}listFailure=null;
 }
 console.log('Admin notifications: verified Admin routes, account isolation, fixed safe states, transition/recovery dedup, 200-item bound, CAS races and fail-closed storage passed.');
+
+// Negative coverage for the narrow UI-fixture exception: malformed/private
+// payloads and other mutations must never be silently treated as observations.
+const captured=[];
+const fixtureRequest=({path='/api/admin/notifications',method='POST',token='fixture',body=batch('submissions','unavailable'),raw,contentType='application/json'}={})=>({
+ url:()=> 'https://maya.test'+path,method:()=>method,
+ headers:()=>({authorization:'Bearer '+token,'content-type':contentType}),
+ postData:()=>raw??JSON.stringify(body),postDataJSON:()=>JSON.parse(raw??JSON.stringify(body)),
+});
+const capture=req=>captureAdminNotification(req,{tokens:['fixture'],batches:captured});
+assert.equal(capture(fixtureRequest()),true);assert.deepEqual(captured,[batch('submissions','unavailable')]);
+assert.equal(capture(fixtureRequest({method:'GET'})),true);assert.equal(captured.length,1,'Reads are not writes');
+for(const path of ['/api/admin/messages/send','/api/admin/text-automations','/api/admin/notifications/delete','/api/admin/notifications-lookalike'])assert.equal(capture(fixtureRequest({path})),false,'Owner actions never use the notification exception');
+for(const overrides of [
+ {method:'DELETE'},{method:'PUT'},{token:'other-account'},{path:'/api/admin/notifications?account=other'},{contentType:'text/plain'},
+ {raw:'not json'},{raw:' '.repeat(2049)},
+ ...[null,{},[],{items:[]},{items:Array(17).fill({source:'api',code:'healthy'})},
+ {items:[null]},{items:[{source:'unknown',code:'unavailable'}]},{items:[{source:'__proto__',code:'healthy'}]},
+ {items:[{source:'api',code:'constructor'}]},{items:[{source:'api',code:'connected'}]},
+ {items:[{source:'google_ads',code:'healthy'}]},{items:[{source:'api',code:'unavailable',text:'private provider details'}]},
+ {items:[{source:'api',code:'unavailable'}],account:'other'},
+ {items:[{source:'api',code:'healthy'},{source:'api',code:'unavailable'}]},
+ ].map(body=>({body})),
+]){
+ const before=captured.length;assert.throws(()=>capture(fixtureRequest(overrides)));
+ assert.equal(captured.length,before,'Invalid observations never enter the fixture history');
+}
+console.log('Admin notification fixture guards: exact authenticated endpoint, bounded fixed states, strict private-data rejection and no owner-action exemptions passed.');

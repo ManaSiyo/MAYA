@@ -1,24 +1,27 @@
 import assert from 'node:assert/strict';
+import {captureAdminNotification} from './admin-notification-fixture.mjs';
 import {chromium} from 'playwright';
 import {readFileSync} from 'node:fs';
 import {extname,resolve} from 'node:path';
 const root=new URL('../',import.meta.url).pathname;
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:900}}),page=await context.newPage();
-const errors=[],writes=[];
+const errors=[],writes=[],notificationWrites=[];
 page.on('pageerror',e=>errors.push(e.message));
-await page.addInitScript(()=>{window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
+// Exercise the blocked GIS retry after fake auth, independent of host speed.
+await page.addInitScript(()=>{const fixtureTimer=window.setTimeout;window.setTimeout=(fn,ms,...args)=>fixtureTimer(fn,window.fixtureFastGsi&&fn.name==='_gisBoot'?5:ms,...args);window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
 await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='maya.test')return route.abort();
  if(u.pathname.startsWith('/api/')){
+  if(captureAdminNotification(req,{tokens:['fixture'],batches:notificationWrites}))return route.fulfill({json:{ok:true,items:[]}});
   if(u.pathname==='/api/admin/text-automations'&&req.method()==='GET')return route.fulfill({json:{ok:true,settings:{first:{enabled:true,text:'Hi {name}',trigger:'new_lead',time:'10:00'},second:{enabled:false,text:'Hi {name}',trigger:'no_reply',time:'10:00',days:3}}}});
-  if(req.method()==='POST'){writes.push({path:u.pathname,body:req.postDataJSON(),auth:req.headers().authorization});return route.fulfill({json:{ok:true}});}
+  if(!['GET','HEAD'].includes(req.method())){writes.push({path:u.pathname,body:req.postDataJSON(),auth:req.headers().authorization});return route.fulfill({json:{ok:true}});}
   return route.fulfill({json:{ok:true,connected:true,threads:[]}});
  }
  try{return route.fulfill({body:readFileSync(resolve(root,'.'+u.pathname)),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(u.pathname)]||'application/octet-stream'});}catch{return route.abort();}
 });
 try{
  await page.goto('https://maya.test/backend/status.html');await page.waitForFunction(()=>typeof admTab==='function'&&window.MayaTypographyControls);
- await page.evaluate(()=>{_idTok='fixture';toggleDrawer(true);admTab('automations');});await page.locator('#automation-first-text').waitFor({state:'visible'});
+ await page.evaluate(()=>{_idTok='fixture';window.fixtureFastGsi=true;_gisBoot();toggleDrawer(true);admTab('automations');});await page.locator('#automation-first-text').waitFor({state:'visible'});
  await page.waitForFunction(()=>{const r=document.getElementById('drawer').getBoundingClientRect();return r.right<=innerWidth+1&&r.left>=0;});
  const snapshot=()=>page.evaluate(()=>Object.fromEntries([...document.querySelectorAll('#drawer-automations [data-maya-type],#adm-tabtitle')].map((e,i)=>{const s=getComputedStyle(e);return [e.id||`node-${i}`,{role:e.dataset.mayaType,font:s.fontFamily,size:s.fontSize,weight:s.fontWeight,color:s.color,case:s.textTransform,style:s.fontStyle,paddingX:s.paddingLeft,paddingY:s.paddingTop,background:s.backgroundColor}]})));
  if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT});
@@ -55,6 +58,14 @@ try{
  assert.match(await page.locator('#leads-table select.lead-stage').evaluate(e=>getComputedStyle(e).color),/0.65/,'Status color strength applies to live selection');
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('#msg-new').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Begin texting fits '+width);}
  await page.setViewportSize({width:1440,height:900});if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#drawer').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-messages.png')});
+ // Flush the real delayed warning before leaving Admin. It is history, not
+ // a message/rule action; healthy/connected observations remain forbidden here.
+ await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.evaluate(()=>MayaAdminNotifications.load());
+ const observations=notificationWrites.flatMap(body=>body.items);
+ assert.ok(observations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'The blocked-GIS warning is saved during style review');
+ assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Style review does not invent provider recovery');
+ assert.equal(writes.length,0,'Admin style review never submits messages, rules or other owner actions');
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="P3"] .type-row').waitFor();await page.waitForFunction(()=>document.getElementById('maya-surface-control-style')?.textContent.includes('#table-preview'));
  const pillHeadings=page.locator('.finish-controls>h3');
  assert.equal(await pillHeadings.count(),1,'Glass is the sole pill family');

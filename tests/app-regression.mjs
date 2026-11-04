@@ -2817,6 +2817,7 @@ await import('./message-compose-ui.mjs');
 ok('SMS composer remains reachable above the voice dock with crowded previews and suggestions',true);
 ok('The reviewed send refresh settles before the independent STOP no-send proof',true);
 await import('./admin-notifications.mjs');
+ok('Admin UI fixtures validate fixed-state notification writes separately from owner actions, retain the real blocked-sign-in warning and reject private payloads',true);
 await import('./admin-notifications-ui.mjs');
 ok('Admin stores fixed account-bound notifications in the drawer, keeps Logs collapsed and aligns all seven H3 dashboard headings',true);
 ok('Shared D/W/M circular controls preserve Glass material under saved typography and asymmetric padding',MAP_SOURCE.includes('data-maya-shape="circle"'));

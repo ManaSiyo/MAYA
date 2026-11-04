@@ -8,14 +8,19 @@ section spacing setting, including zero; open section geometry stays unchanged.
 The existing spacing preview demonstrates those three working folds. Shared
 presentation runtime references are v3; saved design schema is unchanged.
 
-At this review production still served 41df1a5, before 05e170c's notifications,
-H3/circular controls and 3722ed0's Fabric changes. Latest Cloud Build failed
-tests/lead-notes-ui.mjs before deployment: a legitimate delayed blocked-GIS
-submissions/unavailable notification was mistaken for provider recovery. Preserve
-the deterministic fixture and zero invented healthy/connected assertions; never
-silence real warnings or remove the release gate. Read-only public release/assets
-and GitHub check runs can diagnose this without personal Chrome or secrets.
-Owner Push/deployment and exact live release verification remain separate.
+At the 16:30 review production still served 41df1a5/Fabric v9, before the
+notifications/H3/circle, Fabric v10 and menu/closed-spacing changes. Latest
+3981dff Cloud Build passed lead-notes and Fabric but failed the final authority
+import of admin-systems-ui: fixed notification history was counted as an owner
+action. Four generic Admin fixtures now use tests/admin-notification-fixture.mjs
+to validate only exact authenticated bounded fixed-state history separately from
+owner actions. Its rejection checks run in admin-notifications.mjs. Keep actual
+blocked-GIS exhaustion/public-writer draining, zero invented recovery and all
+reviewed action/send/account guards. Systems must stub its background intervals
+so a fresh five-second poll cannot overwrite that warning on slow CI. Never
+silence production warnings or remove a release gate to make fixtures pass.
+Read-only public release/assets and GitHub check runs diagnose this without
+personal Chrome or secrets. Owner deployment/exact live acceptance remain separate.
 
 # November 3 owner clarification — fabric photographs and dominant color
 
