@@ -74,18 +74,17 @@ try{
  nextSave=new Promise(resolve=>releaseSave=resolve);await page.locator('#automation-save').click();await page.locator('#automation-first-text').fill('Hi {name}, manually reviewed while saving.');releaseSave();await page.waitForFunction(()=>!document.getElementById('automation-save').disabled);
  assert.match(await page.locator('#automation-status').innerText(),/unsaved/i);assert.equal(await page.locator('#automation-first-text').inputValue(),'Hi {name}, manually reviewed while saving.');
  // Force the real blocked-GIS error after fake auth/account-race coverage,
- // then drain the public writer before checking the action-only counter.
+ // then check that inline feedback performs no action.
  const actionsBeforeNotifications=requests.length;
  await page.evaluate(()=>{window.fixtureFastGsi=true;_gisBoot();});
  await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
- await page.evaluate(()=>MayaAdminNotifications.load());
- assert.equal(requests.length,actionsBeforeNotifications,'Draining fixed-state notifications adds no rule/example/send action');
+ assert.equal(requests.length,actionsBeforeNotifications,'Inline failure feedback adds no rule/example/send action');
  const earlyObservations=notificationWrites.flatMap(body=>body.items);
- assert.ok(earlyObservations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'The real delayed blocked-GIS warning is saved');
+ assert.equal(notificationWrites.length,0,'Retired history makes no writes; blocked GIS still reports its real inline warning');
  assert.deepEqual(earlyObservations.filter(item=>['healthy','connected'].includes(item.code)),[],'Generating examples and saving rules never invents provider recovery');
  assert.ok(requests.every(r=>r.method==='POST'&&['/api/admin/text-automations/example','/api/admin/text-automations'].includes(r.path)),'Only explicit rule/example requests occur; no send endpoint');
  // This explicit successful feature read is the only genuine healthy observation.
- await page.evaluate(async()=>{document.getElementById('features-fold').open=true;await loadFeatureRequests();await MayaAdminNotifications.load();});
+ await page.evaluate(async()=>{document.getElementById('features-fold').open=true;await loadFeatureRequests();});
  for(const width of [320,390,768,1024,1440,1920]){
   await page.setViewportSize({width,height:900});await page.evaluate(()=>admTab('systems'));
   const row=await page.locator('.systems-tools').evaluate(e=>[...e.children].map(x=>{const r=x.getBoundingClientRect();return {y:r.y,center:r.y+r.height/2};}));assert.ok(Math.abs(row[0].center-row[1].center)<2,'Systems tools share a row at '+width);
@@ -98,7 +97,7 @@ try{
  for(const selector of ['.fr'])assert.deepEqual(await page.locator(selector).first().evaluate(e=>{const s=getComputedStyle(e);return [s.paddingLeft,s.paddingTop,s.backgroundColor];}),['23px','17px','rgba(23, 91, 59, 0.65)'],selector+' shared Inner');
  for(const selector of ['.fr .who','.fr .ask','.fr-sec'])assert.match(await page.locator(selector).first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/,selector+' shared role');
  assert.equal(await page.locator('.automation-timing').first().evaluate(e=>getComputedStyle(e).rowGap),'21px','Saved field spacing');
- await page.evaluate(()=>admTab('logs'));assert.equal(await page.locator('#adm-tabtitle').evaluate(e=>getComputedStyle(e).textAlign),'center','Logs heading centered by default');
+ await page.evaluate(()=>admTab('logs'));assert.equal(await page.locator('#adm-tabtitle').textContent(),'Settings','The retired Logs route resolves to Settings');
  await page.evaluate(()=>{const d=structuredClone(MayaTypographyControls.defaults);d.type.H2.align='right';MayaTypographyControls.apply(d);});assert.equal(await page.locator('#adm-tabtitle').evaluate(e=>getComputedStyle(e).textAlign),'right','Saved H2 alignment remains authoritative');
  // The live dock, not just the gallery sample, obeys the saved inset.
  for(const width of [320,390,768,1024,1440,1920]){
@@ -118,15 +117,14 @@ try{
  failSettings=false;await page.evaluate(()=>loadTextAutomations());await page.locator('#text-automations-form').waitFor({state:'visible'});
  if(process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT){await page.evaluate(()=>{MayaTypographyControls.apply(MayaTypographyControls.defaults);admTab('automations');});await page.setViewportSize({width:1440,height:900});await page.locator('#drawer-automations').evaluate(e=>e.scrollTop=0);await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-desktop.png'});await page.setViewportSize({width:390,height:900});await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-phone.png'});await page.locator('#drawer-automations').evaluate(e=>e.scrollTop=e.scrollHeight);await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-save.png'});await page.evaluate(()=>admTab('systems'));await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-systems.png'});await page.evaluate(()=>admTab('logs'));await page.locator('#drawer').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-logs.png'});await page.setViewportSize({width:1440,height:1000});await page.evaluate(()=>{toggleDrawer(false);const h=document.getElementById('adm-hscroll');h.style.scrollSnapType='none';h.scrollTo({left:0,behavior:'instant'});document.getElementById('features-fold').scrollIntoView({behavior:'instant'});});await page.waitForFunction(()=>document.getElementById('adm-hscroll').scrollLeft===0);await page.locator('#features-fold').screenshot({path:process.env.MAYA_ADMIN_EXAMPLES_SCREENSHOT+'-features.png'});}
  // The final account reset cleared current status; re-exercise the blocked
- // retry on that context, then audit every action after the public drain.
+ // retry on that context, then audit every action after the inline warning.
  const actionsBeforeFinalDrain=requests.length;
  await page.evaluate(()=>{window.fixtureFastGsi=true;_gisBoot();});
  await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
- await page.evaluate(()=>MayaAdminNotifications.load());
- assert.equal(requests.length,actionsBeforeFinalDrain,'The final notification drain performs no rule/example/send action');
+ assert.equal(requests.length,actionsBeforeFinalDrain,'The final inline warning performs no rule/example/send action');
  const observations=notificationWrites.flatMap(body=>body.items);
- assert.ok(observations.filter(item=>item.source==='submissions'&&item.code==='unavailable').length>=2,'Both authenticated contexts retain their genuine blocked-GIS warning');
- assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[{source:'features',code:'healthy'}],'Only the explicit successful Feature requests read reports recovery');
+ assert.equal(notificationWrites.length,0,'Both contexts keep history retired');
+ assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Feature reads no longer write notification history');
  assert.ok(requests.every(r=>r.method==='POST'&&['/api/admin/text-automations/example','/api/admin/text-automations'].includes(r.path)),'All late requests remain explicit rule/example actions; no send endpoint');
- assert.deepEqual(errors,[]);console.log('Admin automation examples: strict fixed-state notifications, blocked GIS, fake AI validation, explicit generation, edited drafts, stale accounts, save-only behavior and responsive shared controls passed.');
+ assert.deepEqual(errors,[]);console.log('Admin automation examples: retired notification history, blocked GIS, fake AI validation, explicit generation, edited drafts, stale accounts, save-only behavior and responsive shared controls passed.');
 }catch(error){console.error('Admin fixture page errors:',errors);throw error;}finally{await browser.close();}

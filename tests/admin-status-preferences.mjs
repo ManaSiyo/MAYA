@@ -64,7 +64,7 @@ try{
  await page.evaluate(()=>{Storage.prototype.setItem=fixtureSetItem;});await adopt(token('account-a',4));assert.deepEqual(await checked(),['booked']);
  assert.equal(await page.locator('#pe-fold,#pe-retired,#arch-fold,[id^="pe-"]').count(),0);assert.equal(await page.locator('#features-fold,#changes-fold').count(),2);
  assert.equal(await page.locator('script[src*="firebase"]').count(),0,'Retired editor creates no Firebase session');
- assert.ok(notificationRequests.some(request=>request.method==='POST'),'Fixed notification observations were validated separately from semantic mutations');
+ assert.deepEqual(notificationRequests,[],'Retired notification history performs no reads or writes');
  assert.deepEqual(errors,[]);assert.ok(writes.every(path=>path==='/api/admin/marketing-brief'),'Filtering never posts lead or prompting mutations');
  console.log('Admin Leads preferences: real checkbox choices, reload, same-account renewal, A/B isolation, empty/invalid storage and denied writes passed; retired folds absent, Features/Recent changes retained.');
 }finally{await browser.close();}

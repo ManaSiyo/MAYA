@@ -15,13 +15,16 @@ Backend/docs-only work records no visible UI impact and runs the shared gate.
 Unresolved mismatches block completion. See [AGENTS.md](../AGENTS.md) for the
 mandatory workflow and [design.md](design.md) for the sole presentation canon.
 
-Admin drawer order is Settings, Messages, Logs. Operational notification history
-lives in Logs beside Messages, with Current status and diagnostics collapsed.
-Fixed operational states are retained
-privately per Admin account. Seven dashboard headings share H3, and D/W/M use the
-shared circular Glass variant and its active Pills preview. Adjacent closed
-Insights, Recent changes and Feature requests share the existing Insights spacing
-control and active spacing preview. Shared presentation runtime references are v3.
+Admin has Settings and Messages. Insights and Logs/Notifications are retired;
+active voice/pending approvals remain in Settings. Real failures stay beside the
+affected feature, after campaign data. Settings headings use shared H3; Add Tools
+replaces Outside Tools, and Twilio links to its console under Behind the scenes.
+Admin and Brief use the same image cards, scaled to the drawer. Exact duplicates
+are grouped from complete file checksums and verified owner/client/project scope;
+canonical records/files remain. Shared Inner/Drawer/H3 controls and the existing
+Drawer preview govern these surfaces. Six dashboard headings remain H3; D/W/M
+keep circular Glass. Closed Recent changes/Feature requests share the compatible
+sectionSpacing.insights key, labeled Closed sections. Presentation runtime is v4.
 
 Direct ad reporting and owner-only setup: [DIRECT-AD-REPORTING.md](DIRECT-AD-REPORTING.md). Windsor is retired; Google, Meta and ChatGPT Ads use their own reporting APIs.
 

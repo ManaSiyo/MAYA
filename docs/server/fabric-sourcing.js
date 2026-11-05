@@ -4,10 +4,13 @@ const MAX_VISUAL_CANDIDATES = 12;
 // A seller being a fabric shop does not make every item in its feed fabric.
 // Use listing facts, never the model's reason, to qualify a recommendation.
 const MATERIALS = /\b(?:fabric|yardage|brocade|jacquard|denim|chambray|wool|cashmere|cotton|linen|silk|satin|velvet|twill|poplin|canvas|chiffon|organza|crepe|crêpe|viscose|rayon|polyester|acrylic|modacrylic|fur|jersey|knit|knitted|tricot|interlock|ponte|woven|tweed|flannel|corduroy|suiting|shirting|lace|tulle|fleece|leather|leatherette|vinyl|suede)\b/i;
-const NOT_FABRIC = /\b(?:scissors?|shears?|rotary cutters?|cutting mats?|seam rippers?|sewing machines?|needles?|rulers?|zippers?|buttons?|patterns?|sewing kits?|thread spools?|(?:sewing|embroidery) threads?|yarns?|skeins?|boots?|shoes?|sandals?|sneakers?|handbags?)\b/i;
+const NOT_FABRIC = /\b(?:scissors?|shears?|rotary cutters?|cutting mats?|seam rippers?|sewing machines?|needles?|rulers?|zippers?|buttons?|sewing kits?|thread spools?|(?:sewing|embroidery) threads?|yarns?|skeins?|boots?|shoes?|sandals?|sneakers?|handbags?)\b/i;
 export function isFabricProduct(product) {
   const title=String(product?.title||''),facts=[title,product?.description,product?.composition].join(' ');
-  if(!title||NOT_FABRIC.test(title)||/\b(?:swatch|sample)\b/i.test(title)||!MATERIALS.test(facts))return false;
+  // A textile motif is not a sewing template. Garment-pattern listings remain excluded.
+  const garmentPattern=/\b(?:dress|shirt|skirt|coat|jacket|trousers?|pants?|blouse|sweater|garment)\s+patterns?\b|\bpatterns?\s+for\s+(?:(?:a|an|the)\s+)?(?:dress|shirt|skirt|coat|jacket|trousers?|pants?|blouse|sweater|garment)\b/i.test(title);
+  const sewingPattern=garmentPattern||/\b(?:sewing|knitting|crochet|dressmaking|paper|pdf|digital|downloadable)\s+patterns?\b|\bpatterns?\s+(?:pdf|downloads?|instructions?|templates?|sizes?)\b/i.test(facts)||(/\bpatterns?\b/i.test(title)&&!/\b(?:fabric|yardage|by the yard|per yard|per met(?:er|re))\b/i.test(facts));
+  if(!title||NOT_FABRIC.test(title)||sewingPattern||/\b(?:swatch|sample)\b/i.test(title)||!MATERIALS.test(facts))return false;
   const yardage=/\b(?:fabric|yardage|shirting|suiting)\b/i.test(title)||/\b(?:by the yard|per yard|per metre|per meter|sold (?:by|in) (?:the )?(?:yard|metre|meter)|fabric width)\b/i.test(facts);
   // "Cotton shirt fabric" is yardage; "cotton shirt, size M" is apparel.
   const apparel=/\bsize\s+(?:xs|s|m|l|xl|xxl|\d+)\b/i.test(facts)||(!yardage&&/\bready[ -]to[ -]wear\b/i.test(facts));

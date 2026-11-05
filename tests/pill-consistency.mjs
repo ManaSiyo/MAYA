@@ -84,9 +84,9 @@ async function populateAdmin(){await page.evaluate(async()=>{_idTok='fixture-adm
 async function adminChecks(label,x,y){
  await ready('/status.html');await populateAdmin();
  check((await page.locator('#campaigns-table .status-word').first().innerText()).toLowerCase().includes('paused'),label+' historical impressions do not relabel a paused campaign as delivering');
- check(await page.locator('#drawer-logs #ads-connection-status').count()===1&&await page.locator('#adm-mkt #ads-connection-status').count()===0,label+' provider diagnostics live inside Notifications');
- check(!await page.locator('#ads-connection-status').isVisible(),label+' provider diagnostics stay off the exposed dashboard');
- await page.evaluate(()=>{toggleDrawer(true);admTab('logs');document.getElementById('notification-current').open=true;});
+ check(await page.locator('#ads-fold #ads-connection-status').count()===1&&await page.locator('#drawer-logs').count()===0,label+' provider failures remain beside campaigns');
+ check(await page.locator('#ads-connection-status').evaluate(e=>!!(document.getElementById('campaigns-table').compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING)),label+' provider feedback follows campaign data');
+ await page.evaluate(()=>{document.getElementById('ads-fold').open=true;});
  await page.locator('#ads-connection-status').waitFor({state:'visible'});
  check((await page.locator('#ad-combined-note').textContent()).includes('Available campaign reports appear in the table above.'),label+' empty chart does not imply a missing credential');
  check(await page.locator('#ads-connection-status').evaluate(e=>e.textContent.includes('Google: direct reporting connected.')&&e.textContent.includes('ChatGPT: direct reporting unavailable.')),label+' unavailable Ads integration is explicit');

@@ -52,18 +52,17 @@ try{
  assert.equal(await page.locator('#msg-new').evaluate(e=>getComputedStyle(e).paddingLeft),'23px');
  await page.evaluate(()=>{const d=structuredClone(MayaTypographyControls.defaults);d.iconColor='#123abc';d.iconOpacity=65;d.iconStroke=3;d.sectionSpacing={submissions:48,leads:32,ads:56,insights:64,headingGap:26};d.statusStyles.completed={color:'#123abc',opacity:65,weight:450};MayaTypographyControls.apply(d);});
  assert.deepEqual(await page.locator('#msg-begin svg').evaluate(e=>{const s=getComputedStyle(e);return [s.color,s.opacity,s.strokeWidth]}),['rgb(18, 58, 188)','0.65','3px']);
- for(const [id,value] of [['submissions-heading',48],['leads-fold',32],['ads-fold',56],['bottom-fold',64]])assert.equal(await page.locator('#'+id).evaluate(e=>getComputedStyle(e).marginTop),value+'px',id+' saved spacing');
+ for(const [id,value] of [['submissions-heading',48],['leads-fold',32],['ads-fold',56],['changes-fold',64]])assert.equal(await page.locator('#'+id).evaluate(e=>getComputedStyle(e).marginTop),value+'px',id+' saved spacing');
  assert.equal(await page.locator('#leads-fold > summary + *').evaluate(e=>getComputedStyle(e).marginTop),'26px');
  assert.equal(await page.locator('#leads-table select.lead-stage').evaluate(e=>getComputedStyle(e).fontWeight),'450','Status weight applies to live selection');
  assert.match(await page.locator('#leads-table select.lead-stage').evaluate(e=>getComputedStyle(e).color),/0.65/,'Status color strength applies to live selection');
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('#msg-new').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Begin texting fits '+width);}
  await page.setViewportSize({width:1440,height:900});if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#drawer').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-messages.png')});
- // Flush the real delayed warning before leaving Admin. It is history, not
+ // Check the real delayed warning before leaving Admin. It is inline feedback, not
  // a message/rule action; healthy/connected observations remain forbidden here.
  await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
- await page.evaluate(()=>MayaAdminNotifications.load());
  const observations=notificationWrites.flatMap(body=>body.items);
- assert.ok(observations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'The blocked-GIS warning is saved during style review');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; the real blocked-GIS warning remains visible beside Submissions');
  assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Style review does not invent provider recovery');
  assert.equal(writes.length,0,'Admin style review never submits messages, rules or other owner actions');
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="P3"] .type-row').waitFor();await page.waitForFunction(()=>document.getElementById('maya-surface-control-style')?.textContent.includes('#table-preview'));
@@ -140,3 +139,4 @@ await import('./scrollbar-authority-ui.mjs?authority');
 
 // Private Admin status/history, shared heading roles and collapsed log disclosure.
 await import('./admin-notifications-ui.mjs?authority');
+await import('./submission-cards-ui.mjs?authority');

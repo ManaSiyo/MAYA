@@ -11,7 +11,11 @@ export function setupSharedSurfaces({parent,design}){
  const row=document.createElement('div');row.className='surface-edit-row';row.append(edit);host.append(row);
  addRestore(edit,{label:'drawer',read:()=>values,write:v=>{Object.assign(values,v);for(const input of edit.querySelectorAll('[data-field]'))input.value=values[input.dataset.field];render();}});
  const note=document.createElement('p');note.dataset.mayaType=note.dataset.previewCategory='P1';note.textContent='The same drawer material on MAYA, Admin, Brief and Operation Room.';
- const drawer=Drawer({title:'Settings',content:[note]});
+ const settingsSample=document.createElement('div');
+ for(const title of ['Behind the scenes','Add Tools']){const h=document.createElement('h3');h.dataset.mayaType=h.dataset.previewCategory='H3';h.textContent=title;settingsSample.append(h);}
+ const submissions=document.createElement('div');submissions.className='submission-card-list';submissions.setAttribute('aria-label','Submission cards preview');
+ const card=window.MayaSubmissionCards.create({id:'preview',name:'Submission preview',files:[{id:'preview-photo',name:'dream-garment.jpg'}]},{src:'/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',onSelect:()=>{}});card.setAttribute('aria-label','Submission card layout sample');submissions.append(card);
+ const drawer=Drawer({title:'Settings',content:[note,settingsSample,submissions]});
  host.append(Pill({label:'Drawer',onClick:event=>drawer.showFrom(event.currentTarget)}));
  const usage=document.createElement('p');usage.dataset.mayaType=usage.dataset.previewCategory='P3';for(const [label,href]of [['MAYA','/'],['Admin','/status.html'],['Brief','/backend.html'],['Operation Room','/operations.html']]){const link=document.createElement('a');link.textContent=label;link.href=href;usage.append(link,document.createTextNode(' · '));}host.append(usage);
  highlightPadding(edit,()=>[drawer],()=>({x:values.paddingX,y:values.paddingY}));

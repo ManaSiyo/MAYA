@@ -185,7 +185,7 @@ try{
  assert.equal(await page.evaluate(()=>legacyCell.dataset.orig),'Angela Example');
  // A late legacy success cannot mark a stale editor saved after an account change.
  hold('/api/admin/lead-update');await page.evaluate(()=>{legacyCell.className='';window.oldField=saveLeadField(legacyCell);});const oldField=await take('/api/admin/lead-update');await page.evaluate(b=>_adoptToken(b),b);await oldField.fulfill({json:{ok:true}});await page.evaluate(()=>oldField);assert.equal(await page.evaluate(()=>legacyCell.classList.contains('lead-saved')),false);assert.equal(await page.evaluate(()=>legacyCell.dataset.orig),'Angela Example');
- assert.ok(notificationWrites.length>0,'Safe fixed-state observations are validated independently of reviewed owner mutations');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes during account races');
  assert.deepEqual(errors,[]);
  console.log('Admin state races passed: invoice identity/recovery/save-only retry, reviewed internal drafts, session renewal/isolation, durable approval retry, duplicate guards, stale Marketing and cancelled voice startup. Fake providers only.');
 }finally{await browser.close();}

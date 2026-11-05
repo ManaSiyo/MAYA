@@ -49,6 +49,8 @@ steps:
         node tests/release-contract.mjs
         node tests/lead-store.mjs
         node tests/admin-storage.mjs
+        node tests/submission-list.mjs
+        node tests/submission-cards-ui.mjs
         node tests/admin-prompt-saves.mjs
         node tests/retired-workspaces.mjs
         node tests/retired-workspaces-ui.mjs

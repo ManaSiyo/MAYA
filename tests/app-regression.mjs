@@ -541,7 +541,7 @@ ok('the map no longer shows a percentage it cannot stand behind',
   !MAP_SOURCE.includes("'from OpenAI, $'") && !MAP_SOURCE.includes('cr-pct'));
 ok('submission cards cannot clip on hover',
   MAP_SOURCE.includes('#subs-strip{display:flex;gap:12px;overflow-x:auto;padding:10px 28px 12px;') &&
-  MAP_SOURCE.includes('.sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:scale(1.012)'));
+  readFileSync(join(ROOT,'aesthetics/ui/submission-cards.css'),'utf8').includes('.sub-tile:hover{transform:scale(1.012)'));
 ok('lights paint as each answer lands', MAP_SOURCE.includes("setDot('d-assets', a[0] && a[1] ? 'ok' : 'bad')"));
 ok('Admin image health check uses the lightweight fabric thumbnail', MAP_SOURCE.includes('/aesthetics/fabrics/thumbs/Red%20Royal.jpg'));
 
@@ -558,14 +558,14 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Admin retains users, Leads, Ads, Insights, shipped changes and feature requests without retired folds',
-  s.order === 'users-fold,leads-fold,ads-fold,bottom-fold,changes-fold,features-fold' && s.retiredFoldsAbsent);
+ok('Admin retains users, Leads, Ads, shipped changes and feature requests without retired Insights',
+  s.order === 'users-fold,leads-fold,ads-fold,changes-fold,features-fold' && s.retiredFoldsAbsent);
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
   MAP_SOURCE.includes('id="campaigns-table"') &&
   MAP_SOURCE.includes('id="leads-table"') &&
   MAP_SOURCE.includes('id="ad-chart"') &&
-  MAP_SOURCE.includes('id="bl-funnel"') &&
+  !MAP_SOURCE.includes('id="bl-funnel"') &&
   MAP_SOURCE.includes('async function loadMkt(') &&
   MAP_SOURCE.includes('function metricVal('));
 ok('embedded Marketing uses independent table geometry and retains Admin content',
@@ -614,7 +614,7 @@ ok('v13.72: the five health lights moved into the drawer',
 ok('v13.72: Maya command left the page center and became the drawer voice line',
   !MAP_SOURCE.includes('<section id="maya-command"') &&
   MAP_SOURCE.includes('id="drawer-command"') &&
-  MAP_SOURCE.includes('#drawer-command{display:flex') &&
+  MAP_SOURCE.includes('body.maya-live #drawer-command') && MAP_SOURCE.includes('#drawer-command:has(#maya-review-approvals:not([hidden])){display:flex}') &&
   MAP_SOURCE.includes("classList.toggle('maya-live', on)"));
 ok('v13.72: MANA SIYO mirrors MAYA with left-hanging Design Studio and Wix Studio',
   MAP_SOURCE.includes('class="card card-mana"') &&
@@ -685,13 +685,13 @@ const adminInteractions = await pg.evaluate(async () => {
   paintLeads({ connected:true, list:[{id:'m_test',name:'Mary Example',phone:'+14155550123',tier:'Signature · $600',note:'A fitting request'}] });
   const name = document.querySelector('.lead-identity');
   admTab('logs');
-  const logsTab = !document.getElementById('drawer-logs').hidden && document.getElementById('drawer-messages').hidden && document.getElementById('adm-tab-logs').getAttribute('aria-selected') === 'true';
+  const logsTab = !document.getElementById('drawer-logs') && !document.getElementById('adm-tab-logs') && !document.getElementById('drawer-systems').hidden;
   return { logsTab, noInjectedImage, exactName, deliveryVisible, tier: name?.parentElement?.querySelector('.category-badge')?.textContent||'',
     actionsInline: name?.nextElementSibling?.tagName==='TIME'&&!name?.parentElement?.querySelector('.category-badge'),
     actions: name?.parentElement?.querySelectorAll('.category-badge button').length,
     tierField: !!name?.parentElement?.querySelector('[data-field="tier"]') };
 });
-ok('Admin behavior: Logs is a separate accessible drawer tab', adminInteractions.logsTab);
+ok('Admin behavior: retired Logs callers safely resolve to Settings', adminInteractions.logsTab);
 ok('Admin behavior: punctuation in names is safe; failed delivery exposes carrier error', adminInteractions.noInjectedImage && adminInteractions.exactName && adminInteractions.deliveryVisible);
 const messageRefinements = await pg.evaluate(async () => {
   const input = document.getElementById('msg-name');
@@ -1139,7 +1139,7 @@ ok('Client, Admin and Brief keep their existing drawer hamburger motion',
 ok('the Backend drawer keeps the shared slide duration and curve',
   BACKEND_SOURCE.includes('transition: transform 0.42s cubic-bezier(0.16,1,0.3,1)'));
 ok('the Backend drawer slides open first and fills after',
-  /async function openClientsDrawer\(\) \{[\s\S]{0,400}classList\.add\('open'\)[\s\S]{0,400}getMayaFolder/.test(BACKEND_SOURCE));
+  (()=>{const fn=BACKEND_SOURCE.slice(BACKEND_SOURCE.indexOf('async function openClientsDrawer()'),BACKEND_SOURCE.indexOf('function toggleClientsDrawer'));return fn.indexOf("classList.add('open')")>=0&&fn.indexOf("classList.add('open')")<fn.indexOf('await getMayaFolder()');})());
 ok('Fabrics and Pinterest run the same full height as the main drawer',
   /#fabrics-drawer, #pinterest-drawer \{[\s\S]{0,200}top: 10px; right: 18px; bottom: 10px;/.test(INDEX_SOURCE));
 ok('Back in Fabrics or Pinterest keeps the main drawer open',
@@ -1657,7 +1657,7 @@ ok('the Admin drawer consolidates: firebase one line, Cloud Run, the outside man
   MAP_SOURCE.includes('>Cloud Run<') &&
   MAP_SOURCE.includes('>Google Ads Manager<') &&
   MAP_SOURCE.includes('>Meta Ads Manager<') &&
-  MAP_SOURCE.includes('<h3>Vault</h3>') &&
+  MAP_SOURCE.includes('<h3 data-maya-type="H3">Vault</h3>') &&
   !MAP_SOURCE.includes('>Design Studio<') && !MAP_SOURCE.includes('>Credits<'));
 ok('the voice and visible UI read the same bounded Admin snapshot',
   SERVER_SOURCE.includes("app.get('/api/admin/command-snapshot'") &&
@@ -1708,8 +1708,8 @@ ok('the release build gates command safety, proxy policy, fabric and routing con
   BUILD_SOURCE.includes('node tests/ai-routing.mjs') &&
   SERVER_DOCKER.includes('COPY admin-command.mjs ./') &&
   SERVER_DOCKER.includes('COPY proxy-policy.mjs ./'));
-ok('the bottom line row does the arithmetic between the streams, live',
-  MKT_SOURCE.includes('id="bottom-fold"') &&
+ok('retired Insights has no served row; legacy deterministic calculation remains inert',
+  !MKT_SOURCE.includes('id="bottom-fold"') &&
   MKT_SOURCE.includes('function paintBottomLine(') &&
   MKT_SOURCE.includes('become leads') &&
   MKT_SOURCE.includes('cheapest working door') &&
@@ -1885,10 +1885,10 @@ ok('Lead Station has a single handset action and opens Messages',
   MAP_SOURCE.includes('const PHONE_SVG =') &&
   MAP_SOURCE.includes('leadOpenThread(') &&
   !MAP_SOURCE.includes('\'call\')" title="Call \' + esc(x.phone) + \'">&#9742;'));
-ok('v13.91/v14.03: the Bottom Line is one shell; the Sources of traffic table is hidden inside it since v14.03',
-  MAP_SOURCE.includes('id="bottom-fold"') &&
+ok('Owner retirement removes Insights and its hidden Sources table',
+  !MAP_SOURCE.includes('id="bottom-fold"') &&
   !MAP_SOURCE.includes('id="sources-fold"') &&
-  MAP_SOURCE.includes('<table id="sources-table" hidden>'));
+  !MAP_SOURCE.includes('<table id="sources-table" hidden>'));
 ok('v13.94: the Admin drawer is an exact copy of the frontend — native horizontal scroll-snap, no browser back-swipe',
   MAP_SOURCE.includes('id="adm-hscroll"') &&
   MAP_SOURCE.includes('class="hpane hpane-drawer"') &&
@@ -2445,7 +2445,7 @@ ok('v14.03: the Hey Maya switch primes the microphone on the click and never sna
 ok('v14.03: Feature requests fold reads Maya\'s inbox; Sources of traffic is gone from the Bottom Line',
   MAP_SOURCE.includes('id="features-fold"') && MAP_SOURCE.includes('async function loadFeatureRequests()') &&
   MAP_SOURCE.includes("fetch('/api/admin/maya-features'") &&
-  MAP_SOURCE.includes('<table id="sources-table" hidden>') && !MAP_SOURCE.includes('<div class="bl-sub">Sources of traffic'));
+  !MAP_SOURCE.includes('<table id="sources-table" hidden>') && !MAP_SOURCE.includes('<div class="bl-sub">Sources of traffic'));
 ok('v14.03: client cards drag and resize while zoomed (pointer deltas divided by the scale)',
   INDEX_SOURCE.includes('_curDx = (me.clientX - startX) / _zs') &&
   INDEX_SOURCE.includes("const dx = (me.clientX - startX) / _zs") &&
@@ -2630,7 +2630,7 @@ ok('Outer and inner padding have live visual debug controls',compactGallery.incl
 ok('Icons are centered and save separate inside/outside text gaps',ownerDesignRuntime.includes('align-items:center!important')&&ownerDesignRuntime.includes('--maya-icon-pill-gap')&&ownerDesignConfig.includes("'iconPillGap','iconTextGap'"));
 ok('Aesthetic Control owns saved icon and dropdown dimensions',ownerDesignConfig.includes("['iconSize','dropdownHeight']") && ownerDesignRuntime.includes('--maya-control-dropdown-height'));
 ok('Saved design settings and audit entries commit atomically',ownerDesignConfig.includes('_history:history') && ownerDesignConfig.includes("found.ok ? found.generation : '0'") && readFileSync(join(ROOT,'docs/server/server.js'),'utf8').includes('/api/admin/design-history'));
-ok('Admin Logs include successful Aesthetic Control saves',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('/api/admin/design-history') && readFileSync(join(ROOT,'backend/status.html'),'utf8').includes("item.state==='saved'"));
+ok('Retired Admin Logs do not read design history; the private server audit remains',!MAP_SOURCE.includes('/api/admin/design-history') && SERVER_SOURCE.includes('/api/admin/design-history'));
 ok('Model Snapshot is a hover card with provider usage in Vault',MAP_SOURCE.includes('admin-systems.js') && MAP_SOURCE.includes('https://platform.openai.com/settings/organization/usage') && !MAP_SOURCE.includes('<maya-ai-meter>'));
 
 ok('Lead Station navigation leaves room for the fixed top bar',MAP_SOURCE.includes('#adm-scroll{scroll-padding-top:76px}') && MAP_SOURCE.includes('#leads-fold{scroll-margin-top:76px}'));
@@ -2823,12 +2823,17 @@ ok('The reviewed send refresh settles before the independent STOP no-send proof'
 await import('./admin-notifications.mjs');
 ok('Admin UI fixtures validate fixed-state notification writes separately from owner actions, retain the real blocked-sign-in warning and reject private payloads',true);
 await import('./admin-notifications-ui.mjs');
-ok('Admin stores fixed account-bound notifications in the drawer, keeps Logs collapsed and aligns all seven H3 dashboard headings',true);
+ok('Admin retires Insights and Logs/Notifications, preserves feature failures and uses shared Settings typography',true);
 ok('Shared D/W/M circular controls preserve Glass material under saved typography and asymmetric padding',MAP_SOURCE.includes('data-maya-shape="circle"'));
 ok('Fabric suggestions keep dominant-color photographs, recover source-backed images and fill the existing shared grid',
   BUILD_SOURCE.includes('node tests/fabric-images-ui.mjs') && readFileSync(join(ROOT,'docs/server/fabric-worldwide.mjs'),'utf8').includes('isColorFabricPhoto') && readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('auto-fit'));
-ok('Admin lower closed sections share Insights spacing and the drawer reads Settings, Messages, Logs',
-  presentationRuntimeSource.includes('closedInsights') && MAP_SOURCE.includes('#adm-tab-systems{order:0}#adm-tab-messages{order:1}#adm-tab-logs{order:2}') && MAP_SOURCE.includes('aria-label="Settings" title="Settings"') && MAP_SOURCE.includes("t === 'logs' ? 'Logs'"));
+ok('Remaining lower folds retain saved spacing and the drawer has Settings and Messages',
+  presentationRuntimeSource.includes('sp.insights') && MAP_SOURCE.includes('#adm-tab-systems{order:0}#adm-tab-messages{order:1}') && !MAP_SOURCE.includes('id="adm-tab-logs"'));
+await import('./submission-list.mjs');
+await import('./submission-cards-ui.mjs');
+ok('Exact duplicate submissions are hidden without merging projects; Admin and Brief share image cards',true);
+ok('Settings adds Twilio, renames Add Tools and raises group headings through shared H3',MAP_SOURCE.includes('https://console.twilio.com/') && MAP_SOURCE.includes('data-maya-type="H3">Add Tools'));
+ok('Fabric classification accepts patterned yardage while retaining sewing-pattern exclusions',readFileSync(join(ROOT,'docs/server/fabric-sourcing.js'),'utf8').includes('const sewingPattern='));
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

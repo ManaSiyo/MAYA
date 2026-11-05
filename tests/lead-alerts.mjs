@@ -78,13 +78,13 @@ const admin=await readFile(new URL('../backend/status.html',import.meta.url),'ut
 const statusFunction=admin.slice(admin.indexOf('let _callbackStatusBusy=false;'),admin.indexOf('async function checkLeadAlerts('));
 const note={style:{},textContent:''},notices=[];let resolveStatus;
 const context={_idTok:'owner-a',document:{getElementById:()=>note},Date,_adminNotice:(source,code)=>{assert.equal(source,'callback_alerts');assert.ok(['healthy','needs_attention','unavailable'].includes(code));notices.push([source,code]);},fetch:async()=>({ok:true,json:async()=>({ok:true,readiness:{schedulerConfigured:false,smsConfigured:true,voiceConfigured:true,ownerNumberConfigured:true},feed:{connected:true},items:[{name:'Julia',text:'failed',textError:'provider refused',call:'accepted'}]})})};
-runInNewContext(statusFunction,context);await context.loadLeadAlertStatus();assert.match(note.textContent,/Immediate Wix callback trigger is not configured/);assert.match(note.textContent,/Julia: text failed/);assert.equal(note.style.display,'block');assert.deepEqual(notices,[['callback_alerts','needs_attention']],'Callback details record only the fixed attention state');
+runInNewContext(statusFunction,context);await context.loadLeadAlertStatus();assert.match(note.textContent,/Immediate Wix callback trigger is not configured/);assert.match(note.textContent,/Julia: text failed/);assert.equal(note.style.display,'block');assert.deepEqual(notices,[],'Callback failures stay inline without retired notification writes');
 context.fetch=()=>new Promise(resolve=>{resolveStatus=resolve;});const late=context.loadLeadAlertStatus();context._idTok='owner-b';const oldText=note.textContent;resolveStatus({ok:true,json:async()=>({ok:true,readiness:{},feed:{},items:[{name:'Other account'}]})});await late;assert.equal(note.textContent,oldText);
-assert.equal(notices.length,1,'A late account response cannot record a notification for the new account');
+assert.equal(notices.length,0,'A late account response cannot write retired history');
 context.fetch=async()=>({ok:true,json:async()=>({ok:true,readiness:{eventConfigured:true,schedulerConfigured:true,smsConfigured:true,voiceConfigured:true,ownerNumberConfigured:true},health:{lastScheduledAt:new Date().toISOString()},feed:{connected:true},pending:0,items:[]})});
 await context.loadLeadAlertStatus();assert.equal(note.textContent,'');assert.equal(note.style.display,'none');
 context.fetch=async()=>{throw Error('Fixture status unavailable');};await context.loadLeadAlertStatus();assert.match(note.textContent,/Callback notifications: Fixture status unavailable/);
-assert.deepEqual(notices,[['callback_alerts','needs_attention'],['callback_alerts','healthy'],['callback_alerts','unavailable']],'Warning, recovery and outage persist only fixed callback state categories');
+assert.deepEqual(notices,[],'Warning, recovery and outage remain explicit inline without retired history writes');
 
 console.log('Concurrent claims, storage failure, persistent uncertainty and account-safe Admin warnings passed.');
 

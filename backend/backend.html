@@ -1389,8 +1389,9 @@
   #page-indicator { /* visible on boot */ }
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
+<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=1"><script src="/aesthetics/ui/submission-cards.js?v=1"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/presentation-runtime.js?v=3"></script>
+<script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
 <link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=12">
@@ -1487,7 +1488,7 @@
        left this drawer. The nest inputs stay in the DOM, hidden, because the
        nest code still reads them; the drawer shows only what a person uses. -->
   <div class="drawer-sub" id="clients-count">no submissions yet</div>
-  <div class="clients-list" id="clients-list"></div>
+  <div class="clients-list submission-card-list" id="clients-list" data-maya-scrollbar="visible"></div>
 
   <!-- v0.13: nest config, X / Y dimensions + inches/millimeters toggle.
        Defaults: 55in × 35in, 0.2in spacing. Internally we always store
@@ -2067,6 +2068,15 @@ async function listClients() {
   return list;
 }
 
+let _drawerListSequence=0,_drawerOwner='';
+const _drawerPhotoURLs=new Set();
+function clearSubmissionDrawer(){++_drawerListSequence;for(const url of _drawerPhotoURLs)URL.revokeObjectURL(url);_drawerPhotoURLs.clear();document.getElementById('clients-list')?.replaceChildren();}
+window.addEventListener('storage',event=>{if(event.key==='maya_admin_tok'||event.key===null){const owner=_piecesAccount(_subCachedTok()||'');if(owner!==_drawerOwner){clearSubmissionDrawer();_drawerOwner=owner;}}});
+async function paintSubmissionDrawerPhotos(list,token,valid){
+ await Promise.all([...list.querySelectorAll('img[data-thumb]')].map(async image=>{
+  try{const response=await fetch('/api/admin/subthumb?id='+encodeURIComponent(image.dataset.thumb)+'&w=480',{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)});if(!valid()||!image.isConnected)return;if(!response.ok)throw Error('Photo unavailable');const blob=await response.blob();if(!valid()||!image.isConnected)return;const url=URL.createObjectURL(blob);_drawerPhotoURLs.add(url);image.src=url;}catch{if(valid())image.remove();}
+ }));
+}
 async function openClientsDrawer() {
   const drawer = document.getElementById('clients-drawer');
   // v13.46: slide open FIRST, then fill. The open used to wait for the
@@ -2074,11 +2084,14 @@ async function openClientsDrawer() {
   if (drawer) drawer.classList.add('open');
   const listEl = document.getElementById('clients-list');
   const countEl = document.getElementById('clients-count');
+  clearSubmissionDrawer();const sequence=_drawerListSequence,owner=_piecesAccount(_subCachedTok()||'');_drawerOwner=owner;
+  const valid=()=>sequence===_drawerListSequence&&owner===_piecesAccount(_subCachedTok()||'');
   // v0.26: detect whether the MAYA folder has been granted yet. If it
   // hasn't, the drawer's empty state offers a "Choose MAYA folder"
   // button instead of just listing zero clients.
   const cached = await getMayaFolder();
   const clients = await listClients();
+  if(!valid())return;
   if (countEl) {
     if (!cached)               countEl.textContent = 'pick the MAYA folder';
     else if (clients.length === 0) countEl.textContent = 'no submissions yet';
@@ -2097,38 +2110,27 @@ async function openClientsDrawer() {
           { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
         if (r.ok) {
           const data = await r.json();
-          const folders = (data.folders || []).slice(0, 24);
+          if(!valid())return;
+          const folders = MayaSubmissionCards.unique(data.folders).slice(0,24);
           if (countEl) countEl.textContent = folders.length === 1 ? '1 submission' : folders.length + ' submissions';
-          listEl.innerHTML = folders.map(f => {
-            const m = String(f.name || '').match(/^(.*?)[-\s](\d{2}-\d{2}-\d{4})/);
-            const nm = m ? m[1].replace(/_/g, ' ') : (f.name || 'client');
-            const dt = m ? m[2] : '';
-            const img = (f.files || []).find(x => /dream-garment/i.test(x.name || ''));
-            const href = '/backend.html?submission=' + encodeURIComponent(f.id) +
-              '&name=' + encodeURIComponent(f.name || '') +
-              (img ? '&img=' + encodeURIComponent(img.id) : '');
-            return '<button class="client-item" onclick="location.href=\'' + href.replace(/'/g, '') + '\'">' +
-              '<span>' + nm.replace(/[&<>]/g, ' ') + '</span>' +
-              '<span class="client-date">' + dt + '</span></button>';
-          }).join('') || '<div class="client-date" style="padding:8px 4px">no submissions yet</div>';
+          listEl.replaceChildren(...folders.map(folder=>MayaSubmissionCards.create(folder)));
+          if(!folders.length)listEl.textContent='No submissions yet.';
+          void paintSubmissionDrawerPhotos(listEl,tok,valid);
+
         } else {
+          if(!valid())return;
           listEl.innerHTML = '<div class="client-date" style="padding:8px 4px">sign in on Admin first, then reopen</div>';
         }
       } catch (_) {
+        if(!valid())return;
         listEl.innerHTML = '<div class="client-date" style="padding:8px 4px">could not reach MAYA</div>';
       }
     } else {
-      listEl.innerHTML = clients.map(c => {
-        // "jaja 05-18-2026" → name "Jaja" + date "05-18-2026"
-        const m = c.name.match(/^(.*?)\s+(\d{2}-\d{2}-\d{4})$/);
-        const niceName = m ? m[1] : c.name;
-        const niceDate = m ? m[2] : '';
-        const active = (currentClientName === c.name) ? ' active' : '';
-        return '<button class="client-item' + active + '" onclick="loadClient(\'' + c.name.replace(/'/g, "\\'") + '\')">' +
-          '<span>' + niceName + '</span>' +
-          (niceDate ? '<span class="client-date">' + niceDate + '</span>' : '') +
-        '</button>';
-      }).join('');
+      listEl.replaceChildren(...clients.map(client=>(()=>{const card=MayaSubmissionCards.create({id:client.name,name:client.name},{onSelect:()=>loadClient(client.name)});if(currentClientName===client.name)card.setAttribute('aria-current','true');return card;})()));
+      for(const [index,client]of clients.entries()){
+        try{let file;for(const name of ['dream-garment.png','dream-garment.jpg','dream-garment.jpeg']){try{file=await (await client.getFileHandle(name)).getFile();break;}catch{}}if(!file)continue;if(!valid())return;const url=URL.createObjectURL(file);_drawerPhotoURLs.add(url);const photo=listEl.children[index]?.querySelector('img');if(photo){photo.src=url;photo.classList.remove('submission-placeholder');listEl.children[index].querySelector('.badge')?.remove();}}catch{}
+      }
+
     }
   }
 }
@@ -2508,6 +2510,7 @@ window.addEventListener('message',event=>{
 document.addEventListener('DOMContentLoaded',()=>document.getElementById('operations-embed')?.addEventListener('load',_postPiecesToOps));
 let _briefAccount = _piecesAccount(_subCachedTok()||'');
 function _clearBriefPrivate() {
+  clearSubmissionDrawer();_drawerOwner=_piecesAccount(_subCachedTok()||'');document.getElementById('clients-count').textContent='';
   window._cachedPieces=null;window._dissectTarget=null;window._currentSnap=null;window.lastSummary=null;currentClientName=null;
   _unsavedDissection=null;_retainedDissection=null;_piecesReview=null;_pieceState={pieces:[],idx:0};window._pieceState=_pieceState;
   for(const id of ['op-date','op-hero-name','op-biography','op-vision','op-chips','op-measurements','op-image-frame','piece-pills']){const el=document.getElementById(id);if(el){el.innerHTML='';el.textContent='';}}

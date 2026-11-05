@@ -32,8 +32,9 @@ await test('Admin embeds every approved Marketing surface under its shell', () =
   // paint stays safe.
   for (const token of ['id="mkt-ticker"', 'id="mkt-wix-tiles"',
     'id="campaigns-table"', 'id="ad-chart"', 'id="leads-table"',
-    'id="sources-table"', 'id="bottom-fold"']) assert.ok(admin.includes(token), token);
+    'id="changes-fold"', 'id="features-fold"']) assert.ok(admin.includes(token), token);
   assert.ok(!admin.includes('id="visitors-fold"'), 'visitors-fold removed from Admin');
+  for(const id of ['bottom-fold','sources-table','drawer-logs','adm-tab-logs','admin-notifications'])assert.ok(!admin.includes('id="'+id+'"'),id+' retired');
 });
 
 await test('Admin keeps Marketing spacing, table, folds, ticker and chart hover behavior', () => {

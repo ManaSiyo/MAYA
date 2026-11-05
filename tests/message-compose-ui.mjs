@@ -53,11 +53,10 @@ try{
  // every exact reviewed-send/STOP/call assertion above and below.
  const beforeNotifications=writes.length;
  await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
- await page.evaluate(()=>MayaAdminNotifications.load());
  const observations=notificationWrites.flatMap(body=>body.items);
- assert.ok(observations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'The blocked-GIS warning is still saved during Messages review');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; the real blocked-GIS warning remains visible beside Submissions');
  assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Messages review does not invent provider recovery');
- assert.equal(writes.length,beforeNotifications,'Flushing notification history does not send or change a contact');
+ assert.equal(writes.length,beforeNotifications,'Inline failure feedback does not send or change a contact');
  await page.evaluate(()=>window.dispatchEvent(new Event('maya-owner-session-changed')));assert.equal(await page.locator('#msg-new').isVisible(),false);assert.equal(await page.locator('#msg-new-name').inputValue(),'');
  for(const width of [320,390,768,1024,1440]){await page.setViewportSize({width,height:900});await page.evaluate(()=>{_idTok='fixture-owner';admTab('messages');msgNewToggle(true);});assert.ok(await page.locator('#msg-new').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Typed-number form fits '+width);}
  for(const saved of [false,true]){

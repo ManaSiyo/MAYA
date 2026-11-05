@@ -25,8 +25,8 @@ try{
  });
  await page.goto('https://maya.test/status.html');await page.locator('#model-snapshot').waitFor({state:'attached'});
  await page.evaluate(()=>{document.querySelectorAll('#gate,#auth-gate').forEach(e=>e.remove());_idTok='fixture';window.fixtureFastGsi=true;_gisBoot();});
- assert.deepEqual(await page.locator('#adm-mkt > details').evaluateAll(es=>es.map(e=>e.id)),['leads-fold','ads-fold','bottom-fold']);
- assert.equal(await page.locator('#leads-fold h2').textContent(),'Leads');assert.equal(await page.locator('#bottom-fold h2').textContent(),'Insights');
+ assert.deepEqual(await page.locator('#adm-mkt > details').evaluateAll(es=>es.map(e=>e.id)),['leads-fold','ads-fold']);
+ assert.equal(await page.locator('#leads-fold h2').textContent(),'Leads');assert.equal(await page.locator('#bottom-fold,#drawer-logs,#adm-tab-logs').count(),0);
  assert.equal(await page.locator('#leads-fold h2').evaluate(e=>getComputedStyle(e).marginTop),'0px','Section text and chevron share a centered line');
  assert.equal(await page.locator('maya-ai-meter').count(),0);assert.equal(await page.locator('.test-gemini').count(),0);
  assert.equal(await page.locator('#drawer-systems a').filter({hasText:'OpenAI usage'}).getAttribute('href'),'https://platform.openai.com/settings/organization/usage');
@@ -44,10 +44,10 @@ try{
   await page.keyboard.press('Escape');assert.ok(await page.locator('#model-snapshot').isHidden());
   await page.getByRole('button',{name:'Image model details',exact:true}).click();assert.match(await page.locator('#model-snapshot').textContent(),/GPT-image-2.5 Flare/);
   await page.keyboard.press('Escape');
-  await page.evaluate(()=>admTab('logs'));assert.ok(await page.locator('#drawer-systems').isHidden());
-  assert.equal(await page.locator('#drawer-logs #drawer-command #maya-chat').count(),1);
+  await page.evaluate(()=>admTab('logs'));assert.ok(await page.locator('#drawer-systems').isVisible());
+  assert.equal(await page.locator('#drawer-systems #drawer-command #maya-chat').count(),1);
   await page.evaluate(()=>{document.body.classList.add('maya-live');_mayaChatAdd('maya','Fixture conversation');});
-  assert.ok(await page.locator('#drawer-logs').isVisible());assert.ok(await page.locator('#adm-tabrow').isVisible());
+  assert.ok(await page.locator('#drawer-command').isVisible());assert.ok(await page.locator('#adm-tabrow').isVisible());
   await page.evaluate(()=>_mayaQueueAction({kind:'memory',text:'Fixture request'}));
   assert.ok(await page.locator('#maya-confirmation').evaluate(e=>e.open));assert.equal(await page.locator('#drawer #maya-action-queue').count(),0);
   b=await page.locator('#maya-confirmation').boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y+b.height<=844,'Approval fits '+width);
@@ -73,16 +73,15 @@ try{
  await api.click();await popup.waitFor({state:'visible'});await page.setViewportSize({width:1300,height:1000});await popup.waitFor({state:'hidden'});
  assert.equal(await page.locator('#drawer-systems a[href*=outbound]').count(),0,'Retired Outbound has no Vault link');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-error',{detail:'Configuration request failed'})));await page.waitForTimeout(30);await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');assert.match(await page.locator('#model-snapshot').textContent(),/Configuration request failed.*Last configuration shown/);await page.keyboard.press('Escape');
- // Await the genuine blocked-sign-in error and flush through the public API;
- // its authenticated fixed-state history is distinct from owner actions.
+ // Await the genuine blocked-sign-in error and check its inline feedback;
+ // retired history must not create any owner action.
  await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
- await page.evaluate(()=>MayaAdminNotifications.load());
  const observations=notificationWrites.flatMap(body=>body.items);
- assert.ok(observations.some(item=>item.source==='submissions'&&item.code==='unavailable'),'The delayed blocked-GIS warning is still saved');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; the real blocked-GIS warning remains visible beside Submissions');
  assert.ok(await page.evaluate(()=>window.fixtureIntervalDelays.includes(5000)),'The real five-second submissions poll was intercepted before scheduling');
  assert.deepEqual(providerReads,[],'Configuration-only checks never run background submissions or Marketing reads');
  assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Configuration reads do not invent provider recovery');
  assert.equal(writes,0,'Reading and dismissing configuration never performs an owner action');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-clear')));assert.ok(await page.locator('#model-snapshot').isHidden());assert.equal(await page.locator('#model-snapshot').textContent(),'');
- assert.deepEqual(errors,[]);console.log('Admin hierarchy, explicit provider details and no hover snapshots, Vault, Logs conversation and dashboard approvals passed at seven widths.');
+ assert.deepEqual(errors,[]);console.log('Admin hierarchy, explicit provider details and no hover snapshots, Vault, Settings conversation and dashboard approvals passed at seven widths.');
 }finally{await browser.close();}

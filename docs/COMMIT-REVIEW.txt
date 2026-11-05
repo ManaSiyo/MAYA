@@ -1,28 +1,33 @@
-Title: [Codex] Match Global Fabrics to the In House gallery
+Title: [Codex] Simplify Admin and share submission photo cards
 
-Remove the unrequested composer, Dictate, Find fabric, refinement, shop and details
-controls from the actual saved-garment Brief/Operation Room gallery. Rename
-Sourceable to Global. Preserve In House as the unchanged baseline: same viewport,
-scrolling, photo/card dimensions and two single-line captions. Existing Refresh
-also cancels an active search. Keep private manual/retailer compatibility APIs.
+Remove owner-retired Insights and Logs/Notifications UI and client history work.
+Keep feature failures beside their data, active voice/approvals in Settings, and
+private server history plus reviewed send/account guards intact. Add a Twilio
+console link under Behind the scenes, rename Outside Tools to Add Tools, and use
+shared H3 for Settings group headings.
 
-Use the same gallery in the sole Aesthetic Control Fabric preview with In House/
-Global toggles, existing inventory samples and shared H4/P3/Inner/Glass/scrollbar
-settings. Record the permanent owner standard. Hide exhausted Global photo tiles
-while retaining private evidence, bounded source fallbacks, healthy images,
-retractions, scoped caches and explicit retry. Update Fabric assets to v12.
+Share Admin image cards with the Brief drawer, scaled within its width. Group
+only complete exact submission payloads within verified owner/client/project
+scope; retain canonical records/files and direct links. Bind drawer list/photo
+responses to account and open generation. Preserve same-account renewal and the
+legacy local-folder path. Extend the existing Drawer preview and compatible
+lower-fold spacing control, with shared Inner/Drawer/H3 authority. Presentation
+references v4; new shared card assets explicitly revalidate.
 
-Validation: all 78 functional/syntax release commands, full app-regression and
-smoke pass (80 checks including targeted/full reruns). Exact six-width default/
-saved gallery geometry and scrolling, inline/expanded, active preview and photo
-failure/recovery pass. Worldwide (29), search (57), sourcing (18) and forced-GC
-pass on Node20.20.2 and Node24.22.1. npm ci and typography role generation pass;
-default/saved phone/desktop gallery and Aesthetic Control captures were visually
-inspected. Final standalone Aesthetic Control passed last, after all functional
-checks and presentation edits.
+Repair fabric classification that rejected floral/paisley patterned yardage as
+sewing patterns. Keep source, color, client-exclusion and photo evidence checks,
+all private-scope/cancellation guards and no automatic paid retry. Empty copy
+uses existing Refresh; no Fabric layout change or added control.
 
-The earlier photo correction 105860b is deployed: the same saved hooded tailcoat
-returned five loaded photographs on default search with no typed refinement,
-verified in the authorized internal browser. This commit's layout remains local
-until the owner's Push and exact live acceptance. No backend/provider change,
-personal Chrome, credential/configuration or private project/lookbook mutation.
+Validation: all 80 functional/syntax release commands, full app-regression and
+smoke pass, including corrected retirement-fixture reruns (82 required checks).
+Worldwide (30), search (57), sourcing (18) and forced-GC pass on Node20 and Node24.
+Six-width default/saved card geometry, account races, actual design Save and active
+previews pass; phone/desktop captures were visually inspected. npm ci and role
+regeneration pass. Final standalone Aesthetic Control passed last, after all functional verification
+and presentation edits. See AI-HANDOFF for evidence paths and live limitations.
+
+Live 3663a5d still produced zero cards in the saved hooded-tailcoat search. The
+local filter repair is not proof that it was the sole cause or that production
+now works. Owner Push, exact release verification and live acceptance remain.
+No personal Chrome, credential/configuration changes, record deletion or Push.

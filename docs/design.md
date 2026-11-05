@@ -1,3 +1,13 @@
+<!-- November 4 owner update supersedes earlier Insights/Logs/notification notes:
+Settings and Messages only; feature failures remain inline after the affected data.
+Add Tools and other Settings group headings use H3. Twilio is a provider-console
+link under Behind the scenes. Admin/Brief submission image cards share one
+component with Inner material, 3:2 photos and Drawer/Scrollbars; the existing Drawer
+preview demonstrates both cards and headings. Preserve Admin strip geometry and
+scale cards within Brief drawer width. No separate material/editor or saved keys.
+Remaining closed lower folds share sectionSpacing.insights (Closed sections),
+including zero; open geometry stays unchanged. Presentation references are v4. -->
+
 November 1 verification: existing H4/P3/Inner fabric cards are removed when later
 source evidence reveals a known client exclusion. Healthy loaded results still
 remain through refresh/failure; explicitly retracted results cannot return from

@@ -66,7 +66,7 @@ await page.evaluate(()=>MayaTypographyControls.previewEditor({...MayaTypographyC
 await auditLeadFilter(page);
 await page.evaluate(()=>paintLeads({connected:true,list:[{id:'fixture',name:'Example Person',phone:'+15555550100',tier:'Signature',wrote:'A custom suit for a ceremony',createdAt:'2026-09-23',stage:'new'}]}));
 await page.evaluate(()=>admTab('messages'));assert.ok(await page.locator('#drawer-systems').isHidden(),'Systems tools stay out of Messages');
-await page.evaluate(()=>admTab('logs'));assert.ok(await page.locator('#drawer-systems').isHidden(),'Systems tools stay out of Logs');
+await page.evaluate(()=>admTab('logs'));assert.ok(await page.locator('#drawer-systems').isVisible(),'Retired Logs callers safely return to Settings');assert.equal(await page.locator('#drawer-logs').count(),0);
 assert.equal(await page.locator('maya-ai-meter').count(),0);
 await page.evaluate(()=>admTab('systems'));
 assert.equal(await page.evaluate(()=>{const original=window.loadModelSnapshot;let calls=0;window.loadModelSnapshot=()=>calls++;toggleDrawer(true);window.loadModelSnapshot=original;return calls;}),1,'Systems loads on first drawer open');
@@ -74,7 +74,7 @@ await page.evaluate(()=>document.querySelector('.lead-open').click());
 await page.waitForFunction(()=>document.querySelector('#msg-number').textContent==='+15555550100');
 await page.evaluate(()=>document.querySelector('#msg-share-menu [onclick*="msgInvoice()"]').click());
 assert.ok(await page.locator('#lead-inv-modal').evaluate(e=>e.classList.contains('show')));
-const admin=readFileSync(root+'/backend/status.html','utf8');const modelCode='let _modelsLoading=false,_modelsAuth=null,_modelsChecked=0;'+admin.slice(admin.indexOf('async function loadModelSnapshot'),admin.indexOf('async function loadMayaLogs'));await page.evaluate(async code=>{const esc=v=>String(v).replace(/[&<>]/g,'');const _idTok='fixture';return eval(code+';loadModelSnapshot()');},modelCode);assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna/);
+const admin=readFileSync(root+'/backend/status.html','utf8');const modelCode='let _modelsLoading=false,_modelsAuth=null,_modelsChecked=0;'+admin.slice(admin.indexOf('async function loadModelSnapshot'),admin.indexOf('function _msgWhen'));await page.evaluate(async code=>{const esc=v=>String(v).replace(/[&<>]/g,'');const _idTok='fixture';return eval(code+';loadModelSnapshot()');},modelCode);assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna/);
 assert.deepEqual(pageErrors,[],'No uncaught UI errors');
 console.log('Admin lead styles/statuses, filter dismissal and grouped models passed.');
 }finally{await browser.close();}

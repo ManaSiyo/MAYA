@@ -33,7 +33,7 @@ try{
  await page.locator('#workspace-previews > summary').click();await page.locator('#workspace-previews .workspace-preview-card').last().waitFor();
  assert.equal(await page.locator('#workspace-previews .workspace-preview-card').count(),1,'Only the requested fabric preview remains');
  assert.equal(await page.locator('#workspace-previews a[href$="#pe-fold"],#workspace-previews a[href$="#architecture"]').count(),0,'Retired Admin sections have no misleading live-usage links');
- assert.equal(await page.locator('.spacing-preview [data-preview-heading]').count(),7,'Heading-gap previews match the seven active Admin sections');
+ assert.equal(await page.locator('.spacing-preview [data-preview-heading]').count(),6,'Heading-gap previews match the six active Admin sections');
  assert.doesNotMatch(await page.locator('#workspace-previews,.spacing-preview').allTextContents().then(v=>v.join(' ')),/Prompting Engine|Architecture/);
  await page.locator('.workspace-fabric-preview img').first().evaluate(image=>image.decode());
  assert.ok(await page.locator('.workspace-fabric-preview img').first().evaluate(image=>image.complete&&image.naturalWidth>0),'The active inventory preview loads its real fabric photograph');

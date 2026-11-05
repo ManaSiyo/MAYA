@@ -1,3 +1,22 @@
+# November 4 Admin owner update — active, supersedes older UI notes
+
+Insights and the Logs/Notifications drawer tab are retired. Admin has Settings
+and Messages; active voice conversation/pending approvals remain in Settings.
+Do not restore notification polling/writes or a diagnostic workspace. Preserve
+private server audit/history data and reviewed send/account/action guards.
+Failures stay beside the affected feature, below campaign data where applicable.
+Settings group headings use shared H3; Outside Tools is now Add Tools. Twilio is
+an external console link under Behind the scenes, not a credential/config editor.
+Admin and Brief submissions use the same image card component, scaled to drawer
+width. Exact repeated payloads may be hidden only after complete file checksums
+and verified owner/client/project scope match; preserve canonical records/links.
+The existing Drawer preview includes the shared card and Settings headings.
+Inner/Drawer/H3/Glass/Scrollbars remain the sole authority. No new saved schema.
+The legacy sectionSpacing.insights key now governs the two remaining lower folds;
+its visible label is Closed sections. Shared presentation references are v4.
+Run submission-list/cards, Admin retirement/systems, communications, both-runtime
+fabric gates, exact release/regression/smoke and standalone Aesthetic Control last.
+
 # Permanent owner standard — In House and Global Fabrics
 
 The existing In House gallery is the visual baseline. Global (formerly Sourceable)

@@ -8,7 +8,6 @@
 #drawer #adm-tabrow .adm-tab.on{color:#a9c9ff;border-color:currentColor}
 #drawer{padding-bottom:calc(var(--maya-drawer-dock-inset,4px) + env(safe-area-inset-bottom,0px))!important}
 #drawer #voice-dock{flex:none;margin-top:auto;margin-bottom:0;padding-top:8px;padding-bottom:0}
-#drawer-logs #drawer-command{display:flex}
 .maya-model-popover,#maya-confirmation{position:fixed;z-index:10020;box-sizing:border-box;width:min(460px,calc(100vw - 16px));max-height:calc(100dvh - 32px);overflow:auto;color:#fff;font:13px/1.5 var(--maya-font-ui);overflow-wrap:anywhere}
 .maya-model-popover h2{font-size:var(--maya-type-H2-size,20px);margin:0 0 8px}
 .maya-model-popover p{margin:6px 0}.model-provider{margin:8px 0}.model-provider summary{cursor:pointer}.model-provider p{font-size:12px}

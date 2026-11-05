@@ -193,6 +193,6 @@ export async function searchWorldwide({input,model,apiKey,fetchImpl,emit,signal,
   const visible=visibleProducts();
   const timings={contextMs,webMs:Math.max(0,elapsed()-contextMs),retailerMs:0,webSellerMs:0,visualMs:0,firstResultsMs:firstAt,totalMs:elapsed()};
   send({type:'done',products:visible,searchDetails:details(),query,observation,
-    message:visible.length?(visible.some(p=>p.image)?'Worldwide fabric suggestions. Check current seller details.':'Source links found, but no fabric photographs were returned. Refine the request or Refresh.'):'No source-backed fabric suggestions found. Refine the request or Refresh.',timings});
+    message:visible.length?(visible.some(p=>p.image)?'Worldwide fabric suggestions. Check current seller details.':'Source links found, but no fabric photographs were returned. Refresh to search again.'):'No source-backed fabric suggestions found. Refresh to search again.',timings});
   return {count:visible.length,...timings};
 }

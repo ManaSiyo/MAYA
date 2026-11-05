@@ -22,6 +22,17 @@ await test('default requires worldwide image results, optional legacy groups can
   assert.ok(body.include.includes('web_search_call.results'));assert.equal(body.input[0].content[1].image_url,image);
   assert.throws(()=>normalizeFabricRequest({request:'wool',mode:'unknown'}));
 });
+await test('patterned apparel yardage is not mistaken for a sewing pattern',async()=>{
+  for(const title of ['Forest green floral pattern jacquard fabric','Black floral pattern on forest green apparel fabric by the yard']){
+    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:[{...evidence.results[0],caption:title}]},content([{...interpretation,colorFamily:'green'},{...candidate,title}])]})});
+    await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));
+    assert.equal(events.at(-1).products.length,1,title);assert.ok(events.at(-1).products[0].image);
+  }
+  for(const title of ['PDF sewing pattern for green fabric coat','Knitting pattern for wool sweater','Digital pattern download with fabric guide','Dress pattern for green stretch fabrics','Pattern for a shirt using cotton fabric']){
+    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([interpretation,{...candidate,title}])]})});
+    await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));assert.deepEqual(events.at(-1).products,[]);
+  }
+});
 await test('modeled links cannot disguise upholstery, furnishing or decor evidence',async()=>{
   for(const change of [{url:'https://cloth.example/green-jacquard-upholstery-fabric'},{title:'Green furnishing fabric'},{reason:'Green brocade, though some options are furnishing-weight.'},{caption:'Green upholstery fabric by the yard'},{caption:'Green decor fabric by the yard'},{url:'https://cloth.example/products/green-%75pholstery-fabric'}]){
     const item={...candidate,...change},page=item.url;

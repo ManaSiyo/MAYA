@@ -1,83 +1,101 @@
-# Current handoff — In House / Global gallery correction
+# Current handoff — November 4 Admin update and fabric classification
 
 ## Owner request and implementation
 
-The owner rejected the unrequested Dictate/Find fabric/refinement controls and
-layout changes. Sourceable is now named Global in the gallery, shared segment
-preview and frontend choice. Internal sourceable schema values remain compatible.
-In House itself is unchanged and is the permanent visual baseline: Global uses
-its exact grid, viewport, scrolling, card/photo dimensions and two single-line
-caption rows. Both actual Brief and Operation Room entry points are automatic.
-They show only In House, Global, Favorites, Refresh and Expand/Collapse; no composer,
-Dictate, Find fabric, refinement field, shop filter or interpretation/details strip.
-The existing Refresh action cancels an active search; there is no added Stop pill.
+Admin now has Settings and Messages. Insights and the Logs/Notifications tab,
+diagnostic loader, client history polling and fixed-state notification writes are
+removed. Private server history/audit stores and endpoints remain unchanged.
+Real failures stay beside the affected feature, after campaign data; account
+changes clear the notes. Active voice conversation and pending approvals remain
+in Settings, with the existing reviewed-action dialog and send safeguards.
 
-Exhausted Global photographs retain private source evidence for late recovery and
-retraction but are hidden from the gallery. When none load, an honest empty message
-offers explicit Refresh. Healthy images and partial results remain. Four validated
-source URLs/eight-second image deadlines, unsafe URL rejection, account reset,
-late color/exclusion retractions and no automatic paid retry are unchanged.
-Legacy nonautomatic manual/retailer APIs and private Favorites remain compatible
-and tested; they are not exposed as another saved-garment UI.
+Settings headings explicitly use H3 (16px default), Outside Tools is Add Tools,
+and Twilio links to https://console.twilio.com/ under Behind the scenes. No
+credential, account, billing or production setting was opened or changed.
 
-Aesthetic Control has one active Fabric gallery using the real shared card classes,
-with In House/Global toggles and existing inventory photos explicitly labeled as
-layout samples. It exercises scrolling without provider calls. Shared H4/P3,
-Inner, Glass and scrollbar settings remain the authority; no saved schema/editor
-was added. Fabric JS/CSS references are v12. AGENTS.md and docs/design.md explicitly
-supersede the earlier composer/interpretation/missing-link layout instructions.
+Admin and Brief now render the same submission image component. The Admin strip
+keeps its existing horizontal layout; Brief scales the same 3:2 card to its drawer
+width, with contained photos and no name-only rows or added metadata overlay.
+Private thumbnail requests bind to account and drawer generation; stale list or
+image responses cannot return after account changes, A→B→A or a later open.
+Same-account token renewal preserves cards. The legacy local-folder path remains.
 
-Runtime files: aesthetics/ui/fabric-assistant.{js,css}, aesthetic-control.html,
-aesthetic-control/{workspace-previews.js,gallery.css,shared-surfaces.js},
-backend/{backend,operations}.html and frontend/index.html. The new exact gallery
-regression is tests/fabric-gallery-ui.mjs, required in cloudbuild.yaml,
-app-regression and final aesthetic-authority. Existing UI/image/workflow/preview,
-asset-version and segment fixtures follow the corrected visible contract without
-removing provider, recovery, auth, cache, save or cancellation safeguards.
-Continuity: AGENTS, README, FABRIC-SEARCH, design, requests/fixes and COMMIT-REVIEW.
+The authenticated listing marks exact repeats only when the complete authored
+file set, names, MIME types, sizes and MD5 checksums match, and verified marker
+owner/client/project identity agrees. Derived one-pager exports are excluded.
+Unknown checksums/markers remain separate. Legacy markers lack project IDs, so
+complete identical payloads within the same owner/client can be grouped; distinct
+explicit project IDs never group. All canonical IDs/files remain in the listing
+and direct Brief reads; nothing is deleted, merged or redirected. This is display
+deduplication, not upload idempotency. Existing first-40 listing limit remains;
+marker reads are bounded to rendered/name and potential-repeat candidates.
 
-## Live photo evidence — separate from this local layout
+The existing Drawer preview now contains the real shared submission card and
+Settings H3 headings. Inner/Drawer/H3/Glass/Scrollbars remain the authority, with
+no new saved design key. The legacy sectionSpacing.insights key now controls
+closed Recent changes/Feature requests, labeled Closed sections. Open geometry
+is unchanged. Shared presentation references are v4; submission assets are v1
+and explicitly revalidated. Fabric v12 and In House/Global parity are unchanged.
 
-Previous photo correction 105860bbd6e0c675f8eff2c9846efcdeafbb2f42 passed Cloud Build
-(build ef099c46-7832-4b19-b38e-cd732341a6b8, completed 2026-11-04T04:59:07Z).
-At 05:01 UTC Hosting release.json and API health both reported that commit;
-release publishedAt was 2026-11-04T04:58:05.508Z. After reloading the same saved
-Hooded tailcoat in the authorized internal browser, opening Fabrics with no typed
-refinement returned five cards and all five images loaded (naturalWidth > 0).
-Sources: texgid.ru, pendragoncostumes.com, okadaya.co.jp, tissus-en-ligne.com and Etsy.
-The Tissus photo used the provider-linked thumbnail fallback. Screenshot:
-/private/tmp/maya-live-default-five-photos.png. This is actual default-search
-acceptance for that garment, not a guarantee for every source or twelve results.
-That screenshot still has the old production layout; do not present it as this
-local gallery correction. No personal Chrome, credentials or production settings
-were accessed. No new backend/provider code is changed in this task.
+Fabric qualification previously rejected every title containing “pattern”,
+including floral/paisley apparel yardage. It now distinguishes genuine sewing,
+knitting, PDF/downloadable patterns from fabric. The regression checks accepted
+patterned yardage and rejected patterns, while all source, color, exclusion,
+cancellation, photo-origin and private-cache safeguards remain. Empty-result
+copy names existing Refresh, not a removed refinement control. No automatic paid
+retry, additional provider, source-site fetch or cosmetic fabric change was added.
 
-## Validation and exact next step
+## Files and verification
 
-Focused gallery, search UI, image recovery and full workflow checks pass. Exact
-In House/Global geometry, two captions, controls, scroll positions and typography/
-materials match at 320/390/768/1024/1440/1920 under defaults and valid changed saved
-settings, inline and expanded. Explicit failure/recovery makes no automatic provider
-retry. Default phone and changed desktop captures were visually inspected:
-/private/tmp/maya-global-default-390.png and maya-global-saved-1440.png are local
-layout fixtures with existing inventory photos, not live seller search results.
-Root locked npm ci and typography role regeneration pass (counts unchanged).
-Worldwide (29), search (57), sourcing (18) and forced-GC pass on Node24.22.1;
-Node20.20.2 equivalents are in the release run. All testing uses fake providers
-and isolated temporary headless profiles except the explicit live default search.
+Runtime: backend/{status,backend}.html; aesthetics/ui/submission-cards.{js,css};
+docs/server/{submission-list.mjs,server.js,Dockerfile,fabric-sourcing.js,
+fabric-worldwide.mjs}; shared presentation runtime and Aesthetic Control Drawer/
+spacing previews. Other served pages only receive presentation-runtime v4.
+Hosting headers revalidate the new shared assets. Typography role counts were
+regenerated. Cloud Build/app-regression/final authority require the new submission
+unit/UI gates. Existing Admin tests now assert retirement instead of demanding
+removed tabs/history, preserving actual blocked-GIS failures and all reviewed
+owner/send/account guards. Backend private-history tests remain unchanged.
 
-All 78 functional/syntax Cloud Build commands, full app-regression and smoke now
-pass (80 checks including targeted/full reruns). Three initial fixture contracts
-were corrected: keep preview-only CSS in gallery.css, use Global in the segment
-fixture, and expect Fabric v12 in the deployment assertion. Namespace and segment
-reruns pass; the full app-regression rerun ends “all passed.” The final gallery
-check also verifies changed saved styles and responsive no-photo empty states.
-Final standalone Aesthetic Control passed last, after all functional checks and
-presentation edits (Node20.20.2; /private/tmp/maya-global-final-authority.log).
-The prepared local commit contains only this correction; working tree is clean
-after commit. Only the owner's Push and exact deployed layout acceptance remain.
+Focused grouping, cards, account races, Admin retirement, Systems, provider
+feedback, typography, spacing and saved-design propagation pass. The image cards
+and Settings were visually inspected under defaults and materially different
+valid settings at phone/desktop; computed geometry checks cover six widths.
+Root locked npm ci --ignore-scripts and typography generation pass. Worldwide
+(30), search (57), sourcing (18) and forced-GC pass on Node24.22.1; Node20.20.2
+fabric equivalents pass in the release suite. Isolated browsers and fake providers
+are used for all automated tests; no personal Chrome was accessed.
 
-Owner controls Push. After Push, verify successful Cloud Build and exact Hosting/
-API commit, then inspect Global on the saved garment. Local layout verification
-does not prove deployment. No Push, private project/lookbook mutation or provider
-configuration change.
+All 80 functional/syntax Cloud Build commands, full app-regression and smoke
+pass (82 required checks, including the focused reruns). Retirement-related old
+assertions and a function-extraction fixture boundary were updated to the actual
+new UI; the complete regression rerun ends “all passed.” Final standalone
+Aesthetic Control passed last after all functional verification and presentation
+edits (Node20.20.2; /private/tmp/maya-admin-final-authority.log). The verified
+changes are prepared as a local commit; only owner Push and live acceptance remain.
+Local evidence logs/captures: /private/tmp/maya-admin-gates-summary.log,
+maya-admin-reruns-summary.log, maya-admin-regression-final.log,
+maya-cards-final.log, maya-admin-node24-*.log,
+maya-cards-{admin,drawer}-{default,saved}-{390,1440}.png,
+maya-admin-settings-{default,saved}-{390,1440}.png and
+maya-cards-active-preview.png. Photos in local UI fixtures are inventory samples,
+not live search acceptance.
+
+## Live evidence and exact next step
+
+The owner pushed previous gallery correction 3663a5d154390cf8313afa86fd60c8e99d6114fe.
+On November 4, Hosting release.json and API health both reported that commit;
+Hosting publishedAt was 2026-11-04T20:54:07.431Z. Authorized internal-browser
+inspection of the saved hooded tailcoat reproduced a completed search with zero
+source-backed cards and no browser errors. The prior five-photo run on 105860b
+was a single successful run, not proof of consistent current provider results.
+The “pattern” rejection is reproduced locally; without that live provider's raw
+result trace it is not proven to be the sole cause of the empty run. No claim is
+made about ChatGPT's private internals or identical latency/reliability.
+
+Prepare the verified local commit only; owner controls Push. After Push, verify
+successful Cloud Build and exact Hosting/API commit, then test the same saved
+hooded tailcoat and the reported duplicate submissions on the actual account.
+This local repair does not prove deployed Fabrics result quality or that an
+unverified pair with different authored content should be hidden. Do not silently
+relax exclusions, scope, source/photo evidence or retry a paid search automatically.

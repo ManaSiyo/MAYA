@@ -31,20 +31,20 @@ export function setupPresentation({buttons,preview,colors,design,controlSizes}){
  const spacing=document.createElement('section');spacing.className='spacing-controls';
  const row=document.createElement('div');row.className='surface-edit-row';
  spacing.append(row);preview.append(spacing);
- editor(row,'section spacing',sectionSpacing,[['submissions','Mana Siyo → Submissions',{min:0,max:160}],['leads','Before Leads',{min:0,max:160}],['ads','Before Ad campaigns',{min:0,max:160}],['insights','Insights / closed sections',{min:0,max:160}],['headingGap','All headings → content',{min:0,max:160}]]);
- const help=document.createElement('p');help.className='spacing-usage';help.dataset.mayaType='P1';help.append('Space between Admin headings and content. Insights spacing also separates closed lower sections. ');
+ editor(row,'section spacing',sectionSpacing,[['submissions','Mana Siyo → Submissions',{min:0,max:160}],['leads','Before Leads',{min:0,max:160}],['ads','Before Ad campaigns',{min:0,max:160}],['insights','Closed sections',{min:0,max:160}],['headingGap','All headings → content',{min:0,max:160}]]);
+ const help=document.createElement('p');help.className='spacing-usage';help.dataset.mayaType='P1';help.append('Space between Admin headings and content. Closed-section spacing separates Recent changes and Feature requests. ');
  const link=document.createElement('a');link.dataset.mayaType='P1';link.href='/status.html';link.textContent='Used across Admin';help.append(link);spacing.append(help);
  const sample=document.createElement('div');sample.className='spacing-preview';sample.dataset.mayaPanel='inner';
  const brand=document.createElement('span');brand.dataset.mayaType=brand.dataset.previewCategory='P3';brand.textContent='Mana Siyo';sample.append(brand);
  const sections=[
   ['Submissions','submissions','Latest submission'],['Users and traffic','','Users · 12'],['Leads','leads','Full name · Angela | Status · Not contacted'],
-  ['Ad campaigns','ads','D / W / M · Campaign preview'],['Insights','insights','Lead and campaign totals'],['Recent changes','','Latest change'],
+  ['Ad campaigns','ads','D / W / M · Campaign preview'],['Recent changes','insights','Latest change'],
   ['Feature requests','','Latest request']
  ];
  for(const [name,before,text] of sections){
   const heading=document.createElement('h3');heading.dataset.mayaType=heading.dataset.previewCategory='H3';heading.dataset.previewHeading='';heading.textContent=name;if(before)heading.dataset.spacing=before;
   const content=document.createElement('div');content.dataset.headingGap='';content.className='spacing-preview-content';content.dataset.mayaType=content.dataset.previewCategory='P1';content.textContent=text;
-  if(['Insights','Recent changes','Feature requests'].includes(name)){
+  if(['Recent changes','Feature requests'].includes(name)){
    const fold=document.createElement('details');fold.className='review-fold';fold.dataset.previewFold='';const summary=document.createElement('summary');summary.append(heading);fold.append(summary,content);if(before){fold.dataset.spacing=before;delete heading.dataset.spacing;}sample.append(fold);
   }else sample.append(heading,content);
  }

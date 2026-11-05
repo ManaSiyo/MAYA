@@ -153,24 +153,9 @@ try {
   #drawer.msgs > h3, #drawer.msgs > a, #drawer.msgs > #top-lights{display:none}
   /* Voice keeps the active drawer tab visible. */
   #drawer-messages{flex:1;min-height:0;display:flex;flex-direction:column;text-align:left}
-  #drawer-messages[hidden],#drawer-logs[hidden]{display:none}
-  #drawer-logs{flex:1;min-height:0;overflow:auto;scrollbar-width:none;text-align:left}
-  #drawer-logs::-webkit-scrollbar{display:none}
-
-  /* Layout only: shared H3/P1/P3, Glass, Inner and Scrollbars own presentation. */
-  .notification-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  #admin-notification-list{display:grid;gap:var(--maya-field-gap,10px);max-height:42vh;overflow:auto;min-width:0}
-  .admin-notification{min-width:0;overflow-wrap:anywhere}
-  .admin-notification p{margin:6px 0 0}
-  #notifications-feedback:empty,#notification-current [data-notification-status]:empty{display:none}
-  #notification-current [data-notification-status]{overflow-wrap:anywhere}
-  .admin-log-fold{margin-top:16px;min-width:0}
-  .admin-log-fold>summary{cursor:pointer;margin-bottom:10px}
-  .maya-log{padding:12px 0;border-bottom:var(--maya-hairline) solid var(--line)}
-  #drawer-logs > .note{font-size:13px;line-height:1.5;color:var(--dim)}
-  .maya-log p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:var(--maya-text-body);line-height:1.5;margin:6px 0}
-  .maya-log small{color:var(--dim);font-size:11px}
-
+  #drawer-messages[hidden]{display:none}
+  .admin-feature-feedback:empty{display:none}
+  .admin-feature-feedback{overflow-wrap:anywhere}
   #msg-list{flex:1;min-height:0;overflow-y:auto;margin:0 -4px}
   .msg-row{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer;transition:background .2s}
   .msg-row:hover{background:rgba(255,255,255,0.06)}
@@ -260,8 +245,9 @@ try {
   body.drawer-open #voice-chip{bottom:calc(110px + env(safe-area-inset-bottom,0px))}
   #voice-chip.show{display:flex}
   #voice-chip .dot{flex:none;width:9px;height:9px;border-radius:50%;background:currentColor;animation:voicepulse 1.6s ease-in-out infinite}
-  /* Maya conversation and briefing live within Logs; approvals use a dashboard dialog. */
-  #drawer-command{display:flex;flex-direction:column;min-height:0;text-align:left;padding:2px 2px 6px}
+  /* Active voice and pending approvals stay reachable within Settings. */
+  body.maya-live #drawer-command,#drawer-command:has(#maya-review-approvals:not([hidden])){display:flex}
+  #drawer-command{display:none;flex-direction:column;min-height:0;text-align:left;padding:2px 2px 6px}
   /* v13.79: the on-screen conversation. Maya's lines and yours, each copyable. */
   #maya-chat{display:none;flex-direction:column;gap:8px;margin:6px 0 12px;max-height:42vh;overflow:auto}
   #maya-chat.show{display:flex}
@@ -362,18 +348,9 @@ try {
               width:100vw;margin-left:calc(50% - 50vw);
               height:34vh;min-height:260px;scrollbar-width:none}
   #subs-strip::-webkit-scrollbar{display:none}
-  .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/2;max-inline-size:calc(100vw - 56px);border-radius:22px;overflow:hidden;
-            border:var(--maya-hairline) solid rgba(255,255,255,0.28);background:rgba(4,7,16,0.75);text-decoration:none;color:var(--ink);
-            box-shadow:0 10px 34px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
-            transition:border-color .2s, transform .2s, box-shadow .2s}
-  .sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:scale(1.012);box-shadow:0 14px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12)}
-  .sub-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0.95}
-  @media(max-width:640px){.sub-tile{flex-basis:calc(100vw - 56px);width:calc(100vw - 56px);min-inline-size:0;aspect-ratio:auto}}
-  .sub-tile .badge{position:absolute;top:10px;left:10px;font-family:var(--maya-font-ui);font-size:8.5px;
-                   letter-spacing:0.16em;text-transform:uppercase;color:#0b1408;background:var(--green);
-                   border-radius:20px;padding:3px 9px}
-  /* v13.33: a picture that never landed is not still arriving. */
-  .sub-tile .badge.stale{background:rgba(255,196,120,0.92);color:#241503}
+  #subs-strip>.submission-card-frame{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/2;max-inline-size:calc(100vw - 56px)}
+  #subs-strip .sub-tile{height:100%}
+  @media(max-width:640px){#subs-strip>.submission-card-frame{flex-basis:calc(100vw - 56px);width:calc(100vw - 56px);min-inline-size:0;aspect-ratio:auto}}
   .sub-tile.more{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
                  font-family:var(--maya-font-ui);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim)}
   #subs-note-inline{font-family:var(--maya-font-ui);font-size:11px;color:var(--dim);
@@ -775,7 +752,7 @@ try {
   /* v13.94: on a phone the drawer pane is the full width, like the app. */
   @media (max-width:640px){ .hpane-drawer{width:100vw} #adm-scroll{padding:70px 14px 30px} #drawer{right:12px;left:12px;padding:64px 12px 16px} }
 
-#adm-tab-systems{order:0}#adm-tab-messages{order:1}#adm-tab-logs{order:2}#adm-tabtitle{order:3}
+#adm-tab-systems{order:0}#adm-tab-messages{order:1}#adm-tabtitle{order:2}
 #adm-mkt #leads-table td,#drawer .msg-number,#model-snapshot{font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums}
 .lead-open{background:none;border:0;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:0}
 #adm-mkt #leads-table .lead-h-stage{width:160px}.lead-stage{max-width:145px;}
@@ -842,12 +819,13 @@ try {
 #admin-design{outline:none!important;box-sizing:border-box;position:fixed;inset:0;width:100vw;height:100dvh!important;max-width:100vw!important;max-height:100dvh!important;margin:0!important;padding:0!important;border:0!important;background:#000}#admin-design::backdrop{background:#000}#admin-design iframe{display:block;width:100%;height:100%;border:0;outline:none}
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
+<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=1"><script src="/aesthetics/ui/submission-cards.js?v=1"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/presentation-runtime.js?v=3"></script>
+<script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
 <script src="/aesthetics/ui/voice-preparation.js?v=3"></script>
-<script src="/aesthetics/ui/admin-notifications.js?v=1"></script>
+
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -912,54 +890,8 @@ try {
        older checks expect them. -->
   <div id="adm-tabrow" role="tablist">
     <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
-    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle" data-maya-type="H2">Settings</span>
+    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><span id="adm-tabtitle" data-maya-type="H2">Settings</span>
   </div>
-  <div id="drawer-logs" hidden>
-    <section id="admin-notifications" aria-label="Notifications">
-      <div class="notification-heading"><h3 data-maya-type="H3">Recent notifications</h3><button type="button" class="maya-glass-button" data-maya-type="P3" onclick="MayaAdminNotifications.load()">Refresh</button></div>
-      <p id="notifications-feedback" data-maya-type="P1" role="status" aria-live="polite"></p>
-      <div id="admin-notification-list" data-maya-scrollbar="visible" tabindex="0" role="region" aria-label="Saved notifications" aria-live="polite"></div>
-      <details id="notification-current" class="admin-log-fold"><summary data-maya-type="P3" data-maya-pill="glass">Current status</summary>
-      <div id="mkt-status" data-maya-type="P1" data-notification-status role="status" style="display:none"></div>
-      <div id="mkt-wix-note" data-maya-type="P1" data-notification-status class="note" style="display:none"></div>
-      <div id="leads-note" data-maya-type="P1" data-notification-status class="note" style="display:none"></div>
-      <div id="callback-alert-note" data-maya-type="P1" data-notification-status class="note" role="status" style="display:none"></div>
-      <p id="ads-connection-status" data-maya-type="P1" data-notification-status role="status"></p>
-      <div id="ad-combined-note" data-maya-type="P1" data-notification-status class="note" style="display:none;margin-top:10px"></div>
-      <div id="bl-note" data-maya-type="P1" data-notification-status class="note" style="display:none;margin-top:8px"></div>
-      <p id="features-notification-status" data-maya-type="P1" data-notification-status role="status"></p>
-      <p id="submissions-notification-status" data-maya-type="P1" data-notification-status role="status"></p>
-      <p id="traffic-note" data-maya-type="P1" data-notification-status role="status"></p>
-      <p id="marketing-warning-status" data-maya-type="P1" data-notification-status role="status"></p>
-      </details>
-    </section>
-    <details id="maya-logs-disclosure" class="admin-log-fold"><summary data-maya-type="P3" data-maya-pill="glass">Logs</summary>
-    <div class="msg-controls"><button type="button" class="maya-glass-button" data-maya-type="P3" onclick="loadMayaLogs()">Refresh logs</button></div><p data-maya-type="P1" class="note">Maya requests and saved aesthetic changes.</p><div id="maya-logs-list" aria-live="polite"></div>
-  <div id="drawer-command" aria-live="polite" aria-label="Maya command line">
-    <div class="maya-command-head">
-      <span class="maya-command-title">Maya</span>
-      <span id="maya-command-state">sign in to ground the briefing</span>
-      <button id="wake-toggle" onclick="toggleWakeWord()" title="When on, just say &quot;Hey Maya&quot; to wake her">Hey Maya: off</button>
-    </div>
-
-    <!-- v13.79: the conversation reads on screen too, so it is never voice-only.
-         Each line can be copied. -->
-    <div id="maya-chat" aria-label="Maya conversation"></div>
-    <div id="maya-command-brief">Today and attention will appear here from the same sources as Admin.</div>
-    <div id="maya-command-attention"></div>
-    <div class="maya-command-nav" aria-label="Admin panel shortcuts">
-      <button onclick="mayaShowPanel('submissions')">Submissions</button>
-      <button onclick="mayaShowPanel('traffic')">Traffic</button>
-      <button onclick="mayaShowPanel('ads')">Ads</button>
-      <button onclick="mayaShowPanel('leads')">Leads</button>
-      <button onclick="mayaShowPanel('sources')">Sources</button>
-      <button onclick="mayaShowPanel('bottom')">Insights</button>
-      <button onclick="loadMayaCommand()">Refresh</button>
-    </div>
-    <button id="maya-review-approvals" type="button" hidden onclick="document.getElementById('maya-confirmation').showModal()">Review approvals</button>
-  </div>
-    </details>
-</div>
   <div id="drawer-messages" hidden>
     <button id="msg-begin" class="maya-glass-button" data-maya-type="P3" type="button" onclick="msgNewToggle()" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Begin texting</button>
     <form id="msg-new" hidden onsubmit="event.preventDefault();msgBegin()" data-maya-panel="inner">
@@ -991,22 +923,44 @@ try {
   <div id="drawer-systems">
   <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button" href="/wr.html">WR</a><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
   <button data-maya-type="P3" class="maya-glass-button design-quicklink" onclick="admTab('automations')">Automations</button></div>
-  <h3>Vault</h3>
+  <h3 data-maya-type="H3">Vault</h3>
   <a data-maya-type="P2" href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small data-maya-type="P1">Data and hosting</small></a>
-  <h3>Behind the scenes</h3>
+  <h3 data-maya-type="H3">Behind the scenes</h3>
   <a data-maya-type="P2" href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank" rel="noopener">Cloud Run<small data-maya-type="P1">API logs and revisions</small></a>
+  <a data-maya-type="P2" href="https://console.twilio.com/" target="_blank" rel="noopener">Twilio<small data-maya-type="P1">Calls and messages</small></a>
   <a data-maya-type="P2" href="https://console.cloud.google.com/vertex-ai?project=pro-maya" target="_blank" rel="noopener">Vertex AI<small data-maya-type="P1">Google model console</small></a>
   <a data-maya-type="P2" href="https://platform.openai.com/settings/organization/usage" target="_blank" rel="noopener">OpenAI usage<small data-maya-type="P1">Tokens and usage</small></a>
   <a data-maya-type="P2" href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener">OpenAI billing<small data-maya-type="P1">Invoices and credits</small></a>
   <a data-maya-type="P2" href="https://aistudio.google.com/usage" target="_blank" rel="noopener">Gemini usage<small data-maya-type="P1">Google model usage</small></a>
   <a data-maya-type="P2" href="https://console.cloud.google.com/billing?project=pro-maya" target="_blank" rel="noopener">Google Cloud billing<small data-maya-type="P1">Cloud costs</small></a>
-  <h3>Outside tools</h3>
+  <h3 data-maya-type="H3">Add Tools</h3>
   <a data-maya-type="P2" href="https://ads.google.com/aw/overview" target="_blank" rel="noopener">Google Ads Manager<small data-maya-type="P1">Search campaigns</small></a>
   <a data-maya-type="P2" href="https://ads.openai.com/manage/campaigns" target="_blank" rel="noopener">ChatGPT Ads Manager<small data-maya-type="P1">Campaigns</small></a>
   <a data-maya-type="P2" href="https://adsmanager.facebook.com/adsmanager" target="_blank" rel="noopener">Meta Ads Manager<small data-maya-type="P1">Social campaigns</small></a>
   <a data-maya-type="P2" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank" rel="noopener">Wix<small data-maya-type="P1">Website and forms</small></a>
-  <h3>Privacy</h3>
+  <h3 data-maya-type="H3">Privacy</h3>
   <a data-maya-type="P2" href="/privacy.html">Privacy policy<small data-maya-type="P1">Data privacy terms</small></a>
+  <div id="drawer-command" aria-live="polite" aria-label="Maya command line">
+    <div class="maya-command-head">
+      <span class="maya-command-title">Maya</span>
+      <span id="maya-command-state">sign in to ground the briefing</span>
+      <button id="wake-toggle" onclick="toggleWakeWord()" title="When on, just say &quot;Hey Maya&quot; to wake her">Hey Maya: off</button>
+    </div>
+
+    <!-- v13.79: the conversation reads on screen too, so it is never voice-only.
+         Each line can be copied. -->
+    <div id="maya-chat" aria-label="Maya conversation"></div>
+    <div id="maya-command-brief">Today and attention will appear here from the same sources as Admin.</div>
+    <div id="maya-command-attention"></div>
+    <div class="maya-command-nav" aria-label="Admin panel shortcuts">
+      <button onclick="mayaShowPanel('submissions')">Submissions</button>
+      <button onclick="mayaShowPanel('traffic')">Traffic</button>
+      <button onclick="mayaShowPanel('ads')">Ads</button>
+      <button onclick="mayaShowPanel('leads')">Leads</button>
+      <button onclick="loadMayaCommand()">Refresh</button>
+    </div>
+    <button id="maya-review-approvals" type="button" hidden onclick="document.getElementById('maya-confirmation').showModal()">Review approvals</button>
+  </div>
   </div>
 
   <div id="drawer-automations" hidden>
@@ -1086,13 +1040,14 @@ try {
 
   <h2 data-maya-type="H3" class="grp" id="submissions-heading" data-maya-section-heading>Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
   <div id="subs-strip" data-maya-section-content style="display:none"></div>
+  <p id="submissions-notification-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p>
   <div id="subs-note-inline" data-maya-section-content>Waiting for the one sign in at the top of the page.</div>
 
   <!-- v13.39: one row, five numbers, and nothing underneath. Users first,
        because that is the number that matters, then the site's own traffic. -->
   <details class="fold" data-maya-section id="users-fold" open>
     <summary><h2 data-maya-type="H3" class="grp">Users and traffic <span class="traffic-legend">manasiyo.com <span style="margin:0 3px">|</span> <span class="lg-b">maya</span></span></h2></summary>
-    <div data-maya-section-content class="fold-body"><div id="head-tiles" class="tiles hidden"></div></div>
+    <div data-maya-section-content class="fold-body"><div id="head-tiles" class="tiles hidden"></div><p id="traffic-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="mkt-wix-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p></div>
   </details>
 
 
@@ -1110,7 +1065,7 @@ try {
   <details class="fold" data-maya-section id="leads-fold" open>
     <summary><h2 data-maya-type="H3" class="grp">Leads</h2></summary>
 
-    <div data-maya-section-content class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
+    <div data-maya-section-content class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div><p id="leads-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="callback-alert-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p>
 
 
   </details>
@@ -1148,25 +1103,11 @@ try {
     </div>
 
   </div>
+<p id="mkt-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="ads-connection-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="ad-combined-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="marketing-warning-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p>
   </details>
 
 
 
-  <!-- v13.91: Sources of traffic and The bottom line share one shell now, per
-       Fromsa — one fold, the funnel and tiles up top, the traffic sources under
-       a divider below. -->
-  <details class="fold" data-maya-section id="bottom-fold" open>
-    <summary><h2 data-maya-type="H3" class="grp">Insights</h2></summary>
-    <div data-maya-section-content class="panel">
-      <div id="bl-funnel" class="bl-funnel"></div>
-      <div id="bl-tiles" class="bl-tiles"></div>
-      <!-- v14.03: the Sources of traffic table is gone, per Fromsa (it was not
-           telling him anything). The element stays, hidden, because the
-           marketing painter still writes into it. -->
-      <table id="sources-table" hidden><tbody></tbody></table>
-    </div>
-
-  </details>
   </div>
 
   <div class="map-footer">
@@ -1333,7 +1274,8 @@ try {
   <details class="fold" data-maya-section id="features-fold">
   <summary><h2 data-maya-type="H3" class="grp">Feature requests <span class="new-dot"></span></h2></summary>
   <div data-maya-section-content class="fold-body">
-    <div id="features-list" class="fr-list"><div class="note">Waiting for the one sign in at the top of the page.</div></div>
+    <p id="features-notification-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p>
+  <div id="features-list" class="fr-list"><div class="note">Waiting for the one sign in at the top of the page.</div></div>
   </div>
   </details>
 
@@ -1363,7 +1305,7 @@ async function loadFeatureRequests(){
     if(!frR.ok) throw new Error(j.error||('http '+frR.status));
     const fb=fbR?await fbR.json().catch(()=>({})):{};
     if(sequence!==_featureSequence||!_adminContextCurrent(context))return;
-    _adminNotice('features','healthy');document.getElementById('features-notification-status').textContent='';
+    document.getElementById('features-notification-status').textContent='';
     const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const day=ts=>{ try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}).format(new Date(ts)); }catch(_){ return ''; } };
     const short=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>110?t.slice(0,107).replace(/\s\S*$/,'')+'\u2026':t; };
@@ -1388,7 +1330,7 @@ async function loadFeatureRequests(){
     if(f&&newest){ const latest=String(newest.id||newest.ts||''); let seen=''; try{ seen=localStorage.getItem('maya_features_seen')||''; }catch(_){}
       f.classList.toggle('unseen', seen!==latest);
       f.addEventListener('toggle',()=>{ if(f.open){ f.classList.remove('unseen'); try{ localStorage.setItem('maya_features_seen',latest); }catch(_){} } },{once:true}); }
-  }catch(e){if(sequence!==_featureSequence||!_adminContextCurrent(context))return;_adminNotice('features','unavailable');const note=document.getElementById('features-notification-status');note.textContent='Feature requests could not be loaded. Your existing requests remain unchanged.';note.style.display='';if(!host.querySelector('.fr-room'))host.innerHTML='<p data-maya-type="P1">No requests to display.</p>';}
+  }catch(e){if(sequence!==_featureSequence||!_adminContextCurrent(context))return;const note=document.getElementById('features-notification-status');note.textContent='Feature requests could not be loaded. Your existing requests remain unchanged.';note.style.display='';if(!host.querySelector('.fr-room'))host.innerHTML='<p data-maya-type="P1">No requests to display.</p>';}
 }
 async function markFeatureDone(btn){
   const rowEl=btn.closest('.fr'); const id=rowEl&&rowEl.getAttribute('data-fid'); if(!id||!_idTok) return;
@@ -1500,8 +1442,6 @@ function _adminSubject(token){
 }
 function _adminContext(){return {session:_adminSession,subject:_adminSubject(_idTok),token:_idTok};}
 function _adminContextCurrent(context){return !!context?.token&&!!_idTok&&context.session===_adminSession&&(context.token===_idTok||!!context.subject&&context.subject===_adminSubject(_idTok));}
-window.MayaAdminNotifications=createMayaAdminNotifications({context:_adminContext,current:_adminContextCurrent});
-function _adminNotice(source,code){MayaAdminNotifications.record([{source,code}]);}
 
 let _modelsLoading = false, _modelsAuth = null, _modelsChecked = 0;
 let _healthSeq = 0;
@@ -1567,7 +1507,6 @@ async function runChecks(){
   const [[site,assets,backup],health]=await Promise.all([assetChecks,healthCheck]);
   const {api,apiWhy,drive,driveWhy}=health;
   if (checkSeq !== _healthSeq) return;
-  if(_adminContextCurrent(checkContext))MayaAdminNotifications.record([{source:'site',code:site?'healthy':'unavailable'},{source:'api',code:api?'healthy':'unavailable'},{source:'images',code:assets?'healthy':'unavailable'},{source:'backup',code:backup?'healthy':'unavailable'}]);
   setDot('d-site',site?'ok':'bad');setDot('d-api',api?'ok':'bad');
   setDot('d-assets',assets?'ok':'bad');setDot('d-backup',backup?'ok':'bad');
   setDot('d-drive', drive===null?'wait':(drive?'ok':'bad'));
@@ -1589,7 +1528,7 @@ const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleuser
 // to the console, where whoever is wiring things up actually looks.
 function _note(html) {
   const n=document.getElementById('traffic-note');if(n){n.textContent=String(html).replace(/<[^>]+>/g,' ');n.style.display='';}
-  _adminNotice('analytics','unavailable');
+
 }
 function _showSignin(show) {
   const p = document.getElementById('signin-panel');
@@ -1706,7 +1645,7 @@ function _subsNote(html,empty=false) {
   const n=document.getElementById('subs-note-inline'),notice=document.getElementById('submissions-notification-status');
   if(empty){n.style.display='';n.innerHTML=html;return;}
   n.style.display='none';if(notice){notice.textContent=String(html).replace(/<[^>]+>/g,' ');notice.style.display='';}
-  _adminNotice('submissions','unavailable');
+
 }
 let _subsSeq = 0;
 async function loadSubmissions() {
@@ -1750,8 +1689,8 @@ async function loadSubmissions() {
   if (requestSeq !== _subsSeq || !_adminContextCurrent(context)) return;
   window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
   window.MAYA_ADMIN_DATA.submissions = data;
-  _adminNotice('submissions','healthy');document.getElementById('submissions-notification-status').textContent='';
-  document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
+  document.getElementById('submissions-notification-status').textContent='';
+  document.getElementById('subs-count').textContent = (data.uniqueTotal??data.total) ? (data.uniqueTotal??data.total) + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const prettyName = n => { const m = String(n).match(/^(.*?)-\d{2}-\d{2}-\d{4}\s*$/); const r = (m ? m[1] : String(n)).trim();
     return r.charAt(0).toUpperCase() + r.slice(1); };
@@ -1767,7 +1706,7 @@ async function loadSubmissions() {
   // pictureless submissions drop off, as before.
   const ARRIVING_MS = 3 * 60 * 1000;
   const KEEP_MS = 24 * 60 * 60 * 1000;
-  const visible = (data.folders || []).map(f => {
+  const visible = MayaSubmissionCards.unique(data.folders).map(f => {
     const dream = (f.files || []).find(x => /dream-garment/i.test(x.name || ''));
     const anyImg = (f.files || []).find(x => /^image\//i.test(x.mime || ''));
     const ageMs = Date.now() - new Date(f.createdTime || 0).getTime();
@@ -1790,19 +1729,7 @@ async function loadSubmissions() {
   const stripSig = visible.map(x => x.f.id + ':' + (x.thumbId || x.state)).join(',');
   if (strip.dataset.sig === stripSig) return;      // nothing new, leave it alone
   strip.dataset.sig = stripSig;
-  strip.innerHTML = visible.map(({ f, thumbId, state }) => {
-    // v13.3: the tile picture comes through our own API now, carrying the
-    // admin token in a header. The old public Google thumbnail address only
-    // rendered files shared with the world, so private submissions drew empty
-    // tiles. v13.27: the picture now comes out of MAYA's own store.
-    const img = thumbId
-      ? '<img loading="lazy" data-thumb="' + esc(thumbId) + '" alt="" onerror="this.remove()">'
-      : '<img src="/aesthetics/ui/logo-circle.png" alt="" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;object-fit:contain;opacity:0.3">';
-    return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" aria-label="Open Brief for ' + esc(prettyName(f.name)) + '">' +
-      img + (state ? '<span class="badge' + (state === 'arriving' ? '' : ' stale') + '">' + state + '</span>' : '') +
-      '</a>';
-  }).join('') +
-  '';
+  strip.replaceChildren(...visible.map(({f})=>{const frame=document.createElement('div');frame.className='submission-card-frame';frame.append(MayaSubmissionCards.create(f,{newTab:true}));return frame;}));
   _paintThumbs();
 }
 
@@ -1880,7 +1807,7 @@ async function loadTraffic() {
   if (requestSeq !== _trafficSeq || !_adminContextCurrent(context)) return;
   window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
   window.MAYA_ADMIN_DATA.traffic = d;
-  _adminNotice('analytics',d.ok===false?'unavailable':'healthy');if(d.ok!==false){document.getElementById('traffic-note').textContent='';}
+  if(d.ok!==false){document.getElementById('traffic-note').textContent='';}
   _paintHeadTiles(d);
   if(!tiles)return; // The current workspace uses the heading metrics; the legacy tile row is optional.
   if (!d.ok) {
@@ -1998,9 +1925,10 @@ window.addEventListener('maya-owner-session-changed',()=>{
   ++_subsSeq;++_trafficSeq;++_featureSequence;_usersPopData=null;_usersPopAt=0;
   for(const url of _thumbUrls.values())URL.revokeObjectURL(url);_thumbUrls.clear();
   _modelsAuth=null;_modelsChecked=0;delete window.MAYA_MODEL_SNAPSHOT;window.dispatchEvent(new CustomEvent('maya-model-clear'));
-  for(const id of ['subs-strip','subs-count','features-list','head-tiles','traffic-tiles','maya-logs-list']){
+  for(const id of ['subs-strip','subs-count','features-list','head-tiles','traffic-tiles']){
     const el=document.getElementById(id);if(el){el.replaceChildren();delete el.dataset.sig;}
   }
+  document.querySelectorAll('.admin-feature-feedback').forEach(el=>{el.textContent='';el.style.display='';});
   for(const id of ['subs-note-inline','traffic-note']){const el=document.getElementById(id);if(el)el.textContent='Sign in to load this account.';}
 });
 let _mayaActions = [];
@@ -2015,7 +1943,7 @@ window.mayaCommandState=mayaCommandState;
 function _mayaEscText(value){ return String(value==null?'':value).replace(/\s+/g,' ').trim(); }
 function _mayaPanelTarget(panel){
   return ({submissions:'subs-strip',traffic:'users-fold',ads:'ads-fold',leads:'leads-fold',
-    sources:'bottom-fold',bottom:'bottom-fold',changes:'changes-fold'})[panel]||'';
+    changes:'changes-fold'})[panel]||'';
 }
 function _mayaPanelData(panel){
   const d=window.MAYA_ADMIN_DATA||{}, t=d.traffic||{}, m=d.marketing||{}, c=d.command||{};
@@ -2077,10 +2005,10 @@ async function loadMayaCommand(){
     if(sequence!==_mayaCommandSequence||!_adminContextCurrent(context))return null;
     if(r.status===401){ _expired(auth); return null; }
     if(!r.ok||!j.ok) throw new Error(j.error||('snapshot '+r.status));
-    window.MAYA_ADMIN_DATA.command=j; _mayaRenderCommand(j);_adminNotice('briefing','healthy');
+    window.MAYA_ADMIN_DATA.command=j; _mayaRenderCommand(j);
     mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
     return j;
-  }catch(e){ if(sequence===_mayaCommandSequence&&_adminContextCurrent(context)){mayaCommandState('briefing unavailable','waiting');_adminNotice('briefing','unavailable');} return null; }
+  }catch(e){ if(sequence===_mayaCommandSequence&&_adminContextCurrent(context)){mayaCommandState('briefing unavailable','waiting');} return null; }
 }
 window.loadMayaCommand=loadMayaCommand;
 
@@ -2222,11 +2150,11 @@ function _voiceLive(on, word){
   // _wakeLabel); the live-voice state shows only on the logo ring + chip.
   const chip=document.getElementById('voice-chip'); if(chip) chip.classList.toggle('show', on);
   const cw=document.getElementById('voice-chip-word'); if(cw && word) cw.textContent=word;
-  // Voice conversation stays in Logs, without forcing the drawer open.
+  // Voice conversation stays in Settings, without forcing the drawer open.
   // v13.82: but tapping the voice logo must NOT pull the drawer open. The drawer
   // stays closed unless Fromsa opens it himself (or asks Maya to, via show_drawer).
   document.body.classList.toggle('maya-live', on);
-  if(on)admTab('logs');
+  if(on)admTab('systems');
 }
 function _voiceStop(){
   ++_voiceGeneration;_voiceStarting=false;
@@ -2594,6 +2522,7 @@ function label(src, med) {
 function paintSite(a) {
   if (!a.connected) return;
   const st = document.querySelector('#sources-table tbody');
+  if(!st)return; // Insights/Sources were retired by the owner.
   st.innerHTML = '<tr><th>Source</th><th class="num">Visits</th><th class="num">People</th></tr>' +
     (a.sources || []).map(s => {
       const src = String(s.source || '');
@@ -3249,8 +3178,8 @@ async function loadLeadAlertStatus(){
     for(const item of j.items||[])for(const channel of ['text','call'])if(['failed','uncertain','claimed'].includes(item[channel]))warnings.push((item.name||'Callback')+': '+channel+' '+item[channel]+(item[channel+'Error']?' ('+item[channel+'Error']+')':''));
     for(const item of j.items||[])for(const channel of ['text','call'])if(item[channel+'RecordingError'])warnings.push(item[channel+'RecordingError']);
     if(j.health?.lastError)warnings.push(j.health.lastError);
-    note.textContent=warnings.join(' ').slice(0,900);note.style.display=warnings.length?'block':'none';_adminNotice('callback_alerts',warnings.length?'needs_attention':'healthy');
-  }catch(e){if(auth===_idTok){note.textContent='Callback notifications: '+e.message;note.style.display='block';_adminNotice('callback_alerts','unavailable');}}
+    note.textContent=warnings.join(' ').slice(0,900);note.style.display=warnings.length?'block':'none';
+  }catch(e){if(auth===_idTok){note.textContent='Callback notifications: '+e.message;note.style.display='block';}}
   finally{_callbackStatusBusy=false;}
 }
 async function checkLeadAlerts(quiet=false){
@@ -3284,20 +3213,16 @@ window.addLeadManual = addLeadManual;
 let _msgSending = false;
 let _msgTab = 'systems', _msgOpen = null, _msgTimer = null, _msgThreads = [];
 function admTab(t) {
-  if (!['systems','messages','logs','automations'].includes(t)) return;
+  if(t==='logs')t='systems'; // Compatibility for already-open old callers.
+  if (!['systems','messages','automations'].includes(t)) return;
   _msgTab = t;
-  document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Logs' : t === 'automations' ? 'Automations' : 'Settings';
+  document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'automations' ? 'Automations' : 'Settings';
   document.getElementById('drawer-automations').hidden = t !== 'automations';
   if(t==='automations')loadTextAutomations();
-  document.getElementById('drawer-logs').hidden = t !== 'logs';
   document.getElementById('drawer-systems').hidden = t !== 'systems';
-  document.getElementById('adm-tab-logs').classList.toggle('on', t === 'logs');
-  document.getElementById('adm-tab-logs').setAttribute('aria-selected', String(t === 'logs'));
-  if (t === 'logs') { MayaAdminNotifications.load(); if(document.getElementById('maya-logs-disclosure').open)loadMayaLogs(); }
   if (t === 'systems') { loadModelSnapshot(); }
   const d = document.getElementById('drawer');
   d.classList.toggle('msgs', t !== 'systems');
-  d.classList.toggle('logs', t === 'logs');
   document.getElementById('adm-tab-systems').classList.toggle('on', t === 'systems'||t==='automations');
   document.getElementById('adm-tab-messages').classList.toggle('on', t === 'messages');
   document.getElementById('adm-tab-systems').setAttribute('aria-selected', t === 'systems'||t==='automations' ? 'true' : 'false');
@@ -3321,24 +3246,6 @@ async function loadModelSnapshot(){
  catch(e){if(auth===_idTok)window.dispatchEvent(new CustomEvent('maya-model-error',{detail:e.message}));}
  finally{_modelsLoading=false;}
 }
-async function loadMayaLogs() {
-  const context=_adminContext();
-  const host = document.getElementById('maya-logs-list');
-  if (!_idTok) { host.textContent = 'Sign in to read Maya’s feedback.'; return; }
-  host.textContent = 'Loading feedback...';
-  try {
-    const auth=_idTok;
-    const [r,designResponse] = await Promise.all([fetch('/api/admin/maya-features', {headers:{Authorization:'Bearer '+auth}}),fetch('/api/admin/design-history', {headers:{Authorization:'Bearer '+auth},cache:'no-store'})]);
-    const [j,designLog]=await Promise.all([r.json(),designResponse.json()]);
-    if(!_adminContextCurrent(context))return;
-    if(!designResponse.ok||!designLog.ok)throw Error('Saved aesthetic history could not be loaded.');
-    j.items=[...(j.items||[]),...(designLog.items||[])];
-    if (!r.ok || !j.ok) throw new Error('The feedback inbox could not be loaded.');
-    host.innerHTML = (j.items || []).slice().sort((a,b)=>String(b.ts).localeCompare(String(a.ts))).map(item =>
-      '<article class="maya-log"><small>' + esc(item.who || 'Maya') + ' · ' + esc(item.source || 'voice') + ' · ' + esc(_msgWhen(item.ts)) + ' · ' + (item.state==='saved' ? 'Saved' : item.done ? 'Shipped' : 'Open') + '</small><p>' + esc(item.text || '') + '</p></article>').join('') || '<p class="note">No feedback logged yet.</p>';
-  } catch(e) { if(_adminContextCurrent(context))host.textContent = e.message; }
-}
-document.getElementById('maya-logs-disclosure').addEventListener('toggle',event=>{if(event.currentTarget.open&&_msgTab==='logs')loadMayaLogs();});
 function _msgWhen(ts) {
   if (!ts) return '';
   const d = new Date(ts), now = new Date();
@@ -3705,7 +3612,7 @@ function leadMayaCall(i) {
 setInterval(() => { if (_idTok && _msgTab !== 'messages' && document.visibilityState === 'visible') loadThreads(); }, 60000);
 document.addEventListener('visibilitychange', () => { if (_idTok && document.visibilityState === 'visible') { loadThreads(); if (_msgTab === 'messages' && _msgOpen) loadThread(_msgOpen.number, true); } });
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, msgSuggest, msgUseIdea, loadTextAutomations, generateAutomationExample, saveTextAutomations, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, msgLoadOlder, msgNewToggle, msgBegin, msgTypedNumber, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadModelSnapshot, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, msgSuggest, msgUseIdea, loadTextAutomations, generateAutomationExample, saveTextAutomations, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, msgLoadOlder, msgNewToggle, msgBegin, msgTypedNumber, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 if (_idTok) loadModelSnapshot();
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;
@@ -4021,23 +3928,23 @@ async function loadMkt(){
   if(status)status.textContent='Refreshing Marketing';
   let r;
   try{r=await fetch('/api/admin/marketing?t='+Date.now(),{headers:{Authorization:'Bearer '+auth},cache:'no-store'});}
-  catch(_){if(current()&&status){status.textContent='Could not reach Marketing. Existing numbers remain on screen.';status.style.display='';_adminNotice('marketing','unavailable');}return;}
+  catch(_){if(current()&&status){status.textContent='Could not reach Marketing. Existing numbers remain on screen.';status.style.display='';}return;}
   if(!current())return;
   if(r.status===401||r.status===403){if(auth===_idTok)_expired(auth);return;}
-  if(!r.ok){if(status){status.textContent='Marketing data unavailable ('+r.status+'). Existing numbers remain on screen.';status.style.display='';}_adminNotice('marketing','unavailable');return;}
-  let d;try{d=await r.json();}catch(_){if(current()&&status){status.textContent='Marketing returned an unreadable response.';status.style.display='';_adminNotice('marketing','unavailable');}return;}
+  if(!r.ok){if(status){status.textContent='Marketing data unavailable ('+r.status+'). Existing numbers remain on screen.';status.style.display='';}return;}
+  let d;try{d=await r.json();}catch(_){if(current()&&status){status.textContent='Marketing returned an unreadable response.';status.style.display='';}return;}
   if(!current())return;
   window.MAYA_ADMIN_DATA=window.MAYA_ADMIN_DATA||{};window.MAYA_ADMIN_DATA.marketing=d;
   document.getElementById('adm-mkt').hidden=false;
   if(status)status.textContent='';
-  _adminNotice('marketing',d.warnings?.length?'needs_attention':'healthy');
+
   _paintMkt(d,true);
 }
 // v14.16: one paint path for fresh and cached data. The brief only runs on a
 // fresh fetch, never off the cache, so no double AI call.
 function _paintMkt(d, alsoBrief){
   try{ paintVisitors(d); }catch(e){ console.warn('[mkt] visitors',e); }
-  try{ paintSite(d.analytics||{}); }catch(e){ console.warn('[mkt] sources',e); }
+
   _adData = d.adCombined||null;
   const adConnections=document.getElementById('ads-connection-status');
   if(adConnections){
@@ -4045,15 +3952,14 @@ function _paintMkt(d, alsoBrief){
     const why=(name,r)=>{const setup=d.adSetup?.[name.toLowerCase()];return setup?.missingLabels?.length?'Missing '+setup.missingLabels.join(', ')+'.':r?.why||'direct reporting unavailable.';};
     adConnections.style.display='';
     const allowed=new Set(['not_configured','oauth_expired','project_access','account_access','scope','authorization','account_mismatch','provider_error','incomplete_report','invalid_report','invalid_metric','invalid_account']);
-    MayaAdminNotifications.record(reports.map(([name,report])=>({source:name.toLowerCase()+'_ads',code:report?.connected?(d.adCombined?.excludedSources||[]).includes(name.toLowerCase())?'currency_excluded':'connected':allowed.has(report?.code)?report.code:d.adSetup?.[name.toLowerCase()]?.configured===false?'not_configured':'provider_error'})));
     adConnections.textContent=reports.map(([name,r])=>name+': '+(r?.connected?(d.adCombined?.excludedSources||[]).includes(name.toLowerCase())?'reported currency cannot be combined with USD.':'direct reporting connected.':why(name,r))).join(' ')+' Daily results use completed days in each ad account timezone.';
   }
   try{ paintAdCombined(); }catch(e){ console.warn('[mkt] ads',e); }
   try{ paintCampaigns(); }catch(e){ console.warn('[mkt] campaigns',e); }
-  const leadReport=d.leads||{};_adminNotice('leads',leadReport.connected?'healthy':'unavailable');
+  const leadReport=d.leads||{};
   if(leadReport.connected){const note=document.getElementById('leads-note');note.textContent='';note.style.display='none';}
   try{ paintLeads(d.leads||{}); }catch(e){ console.warn('[mkt] leads',e); }
-  try{ paintBottomLine(d); }catch(e){ console.warn('[mkt] bottomline',e); }
+
   try{ buildTicker(d); }catch(e){ console.warn('[mkt] ticker',e); }
   if(alsoBrief) fetchBrief(d);
 }

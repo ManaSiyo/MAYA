@@ -1,3 +1,4 @@
+import {submissionContentKey,markExactSubmissionRepeats} from './submission-list.mjs';
 import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds,adSetupStatus} from './ad-reporting.mjs';
 // ═══════════════════════════════════════════════════════════════════════════
 // MAYA — Cloud Run API service (replaces the three Vercel functions)
@@ -796,7 +797,7 @@ async function gcsListSubmissions() {
   const tok = await serviceToken(STORAGE_SCOPE);
   const qs = new URLSearchParams({
     prefix: SUB_PREFIX, maxResults: '1000',
-    fields: 'items(name,size,contentType,timeCreated),nextPageToken',
+    fields: 'items(name,size,contentType,timeCreated,md5Hash),nextPageToken',
   });
   const items=[],seen=new Set();let page='';
   do{
@@ -2172,20 +2173,23 @@ app.get('/api/admin/submissions', async (req, res) => {
       if (rest[1] === 'submission.json') { sub.marker = it.name; continue; }
       sub.files.push({
         id: pathToId(it.name), name: rest[1], mime: it.contentType || '',
-        size: Number(it.size || 0), createdTime: it.timeCreated,
+        size: Number(it.size || 0), createdTime: it.timeCreated, checksum: it.md5Hash || '',
         url: '/api/admin/subfile?id=' + pathToId(it.name),
       });
     }
-    const folders = [...byId.values()]
+    let folders = [...byId.values()]
       .sort((a, b) => String(b.createdTime || '').localeCompare(String(a.createdTime || '')));
     // The client's real name lives in the marker; read it only for the cards
     // that are actually rendered, so a long history costs nothing.
-    await Promise.all(folders.slice(0, 16).map(async f => {
+    const candidates=folders.slice(0,40),contentCounts=new Map(),markers=new Map();
+    for(const f of candidates){const key=submissionContentKey(f);if(key)contentCounts.set(key,(contentCounts.get(key)||0)+1);}
+    const markerReads=candidates.filter((f,index)=>index<16||(contentCounts.get(submissionContentKey(f))||0)>1);
+    await Promise.all(markerReads.map(async f => {
       if (!f.marker) return;
       const m = await gcsGet(f.marker).catch(() => ({ ok: false }));
       if (!m.ok) return;
       try {
-        const j = JSON.parse(m.buf.toString('utf8'));
+        const j = JSON.parse(m.buf.toString('utf8'));markers.set(f.id,j);
         // Keep the shape every screen already parses: <client>-MM-DD-YYYY. The
         // Systems Map strips the date for its label and the Brief reads it for
         // the caption, so inventing a new shape would blank both.
@@ -2193,9 +2197,10 @@ app.get('/api/admin/submissions', async (req, res) => {
         if (j && j.client) f.name = String(j.client).slice(0, 60) + (dm ? '-' + dm[1] : '');
       } catch (_) {}
     }));
-    for (const f of folders) delete f.marker;
+    folders=markExactSubmissionRepeats(folders,markers);
+    for (const f of folders){delete f.marker;for(const file of f.files)delete file.checksum;}
     console.log('[admin] submissions OK for', user.email, '—', folders.length, 'submissions');
-    const payload = { ok: true, total: folders.length, folders: folders.slice(0, 40),
+    const payload = { ok: true, total: folders.length, uniqueTotal:folders.filter(f=>!f.duplicateOf).length, folders: folders.slice(0, 40),
       store: 'maya-storage', ts: new Date().toISOString() };
     _subsCache = { ts: Date.now(), body: payload };
     res.json(payload);

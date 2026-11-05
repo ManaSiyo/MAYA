@@ -53,7 +53,7 @@ const gap=async(heading,content)=>page.evaluate(({heading,content})=>{
  const h=document.querySelector(heading),c=document.querySelector(content);
  return {gap:c.getBoundingClientRect().top-h.getBoundingClientRect().bottom,display:getComputedStyle(c).display};
 },{heading,content});
-const sections=['users-fold','leads-fold','ads-fold','bottom-fold','changes-fold','features-fold'];
+const sections=['users-fold','leads-fold','ads-fold','changes-fold','features-fold'];
 const colors={new:'rgb(181, 189, 200)',contacted:'rgb(74, 222, 128)',in_progress:'rgb(134, 239, 172)',booked:'rgb(251, 191, 36)',completed:'rgb(34, 197, 94)',canceled:'rgb(248, 113, 113)'};
 try{
  await page.goto('https://maya-presentation.test/backend/status.html');
@@ -67,8 +67,8 @@ try{
  });
  assert.equal(await page.locator('#range-chips [data-r=W]').getAttribute('aria-pressed'),'true');await page.evaluate(()=>{setAdRange('D');setAdMetric('cpc');});assert.equal(await page.locator('#range-chips [data-r=D]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#metric-chips [data-m=cpc]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#range-chips [aria-pressed=true]').count(),1);assert.equal(await page.locator('#metric-chips [aria-pressed=true]').count(),1);await page.evaluate(()=>{setAdRange('W');setAdMetric('clicks');});
  assert.equal(await page.locator('[data-maya-section]').count(),sections.length,'Every main Admin fold declares its heading/content boundary');
- const openLayout=()=>page.evaluate(()=>Object.fromEntries(['#adm-mkt','.map-footer','#bottom-fold','#changes-fold','#features-fold'].map(selector=>{const s=getComputedStyle(document.querySelector(selector));return [selector,[s.marginTop,s.marginBottom,s.paddingTop]];})));const beforeClosed=await openLayout();
- const lowerFolds=['bottom-fold','changes-fold','features-fold'];
+ const openLayout=()=>page.evaluate(()=>Object.fromEntries(['#adm-mkt','.map-footer','#changes-fold','#features-fold'].map(selector=>{const s=getComputedStyle(document.querySelector(selector));return [selector,[s.marginTop,s.marginBottom,s.paddingTop]];})));const beforeClosed=await openLayout();
+ const lowerFolds=['changes-fold','features-fold'];
  const closedGeometry=()=>page.evaluate(ids=>{const nodes=ids.map(id=>document.getElementById(id)),headings=nodes.map(node=>node.querySelector('summary>h2')),rects=headings.map(node=>node.getBoundingClientRect());return {gaps:rects.slice(1).map((rect,i)=>rect.top-rects[i].bottom),fonts:headings.map(node=>{const s=getComputedStyle(node);return [node.dataset.mayaType,s.fontFamily,s.fontSize,s.fontWeight,s.fontStyle,s.textTransform];})};},lowerFolds);
  await page.evaluate(ids=>ids.forEach(id=>document.getElementById(id).open=false),lowerFolds);
  for(const width of [320,390,768,1024,1440,1920]){
@@ -77,8 +77,8 @@ try{
    await page.evaluate(spacing=>{const d=structuredClone(MayaTypographyControls.defaults);d.sectionSpacing.insights=spacing;if(spacing===30)Object.assign(d.type.H3,{font:'jost',size:14,weight:350,case:'uppercase',align:'center',vertical:'middle'});if(spacing===64)Object.assign(d.type.H3,{font:'cormorant',size:22,weight:500,style:'italic',case:'uppercase'});MayaTypographyControls.apply(d);},spacing);
    const measured=await closedGeometry();
    for(const font of measured.fonts)assert.deepEqual(font,measured.fonts[0],'Feature requests and other closed headings share H3 at '+width);
-   for(const actual of measured.gaps)assert.ok(Math.abs(actual-spacing)<1,'Closed Insights / changes / requests share the saved Insights gap at '+width+': '+JSON.stringify(measured.gaps)+', expected '+spacing);
-   if([390,1440].includes(width)&&[16,30].includes(spacing)){await page.locator('#bottom-fold').scrollIntoViewIfNeeded();await page.screenshot({path:'/private/tmp/maya-admin-closed-'+(spacing===16?'default':'saved')+'-'+width+'.png'});}
+   for(const actual of measured.gaps)assert.ok(Math.abs(actual-spacing)<1,'Closed changes / requests share the saved Insights gap at '+width+': '+JSON.stringify(measured.gaps)+', expected '+spacing);
+   if([390,1440].includes(width)&&[16,30].includes(spacing)){await page.locator('#changes-fold').scrollIntoViewIfNeeded();await page.screenshot({path:'/private/tmp/maya-admin-closed-'+(spacing===16?'default':'saved')+'-'+width+'.png'});}
   }
  }
  await page.evaluate(()=>{document.querySelectorAll('[data-maya-section]').forEach(e=>e.open=true);MayaTypographyControls.apply(structuredClone(MayaTypographyControls.defaults));});assert.deepEqual(await openLayout(),beforeClosed,'Distinct open-section margins and footer placement remain unchanged');
@@ -140,8 +140,8 @@ try{
  await spacing.locator('[data-field="headingGap"]').fill('37');await spacing.locator('[data-field="insights"]').fill('30');
  await page.keyboard.press('Escape'); // Close the actual editor before opening its usage preview.
  await spacing.locator('details.input-control-usage > summary').click();
- assert.equal(await spacing.locator('[data-heading-gap]').count(),7,'Every Admin group has a spacing preview');
- const lowerPreview=spacing.locator('[data-preview-fold]');assert.equal(await lowerPreview.count(),3,'The existing spacing preview includes the three closed lower sections');
+ assert.equal(await spacing.locator('[data-heading-gap]').count(),6,'Every Admin group has a spacing preview');
+ const lowerPreview=spacing.locator('[data-preview-fold]');assert.equal(await lowerPreview.count(),2,'The existing spacing preview includes the two remaining closed lower sections');
  for(const width of [320,390,768,1024,1440,1920]){
   await page.setViewportSize({width,height:1000});
   const previewGaps=await lowerPreview.evaluateAll(folds=>folds.slice(1).map((fold,i)=>fold.getBoundingClientRect().top-folds[i].getBoundingClientRect().bottom));for(const actual of previewGaps)assert.ok(Math.abs(actual-30)<1,'Closed preview uses the same Insights spacing at '+width);
@@ -163,7 +163,7 @@ try{
  await page.evaluate(()=>localStorage.removeItem('maya-typography-controls-v1'));
  await page.goto('https://maya-presentation.test/backend/status.html');await page.waitForFunction(()=>window.MayaTypographyControls&&typeof paintLeads==='function');await page.evaluate(async ids=>{await MayaTypographyControls.ready;ids.forEach(id=>document.getElementById(id).open=false);},lowerFolds);
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});const measured=await closedGeometry();for(const actual of measured.gaps)assert.ok(Math.abs(actual-30)<1,'The real saved Insights gap reloads on Admin at '+width);for(const font of measured.fonts)assert.deepEqual(font,measured.fonts[0],'Reloaded Feature requests keeps the same H3 font at '+width);}
- assert.ok(notificationWrites.length>0,'Expected fixed operational observations are validated separately from account mutations');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes');
  assert.deepEqual(errors,[]);assert.deepEqual(writes,[],'Presentation verification must not perform account mutations');
- console.log('Presentation consistency passed: saved/reloaded uniform closed lower sections, all seven H3 heading/content boundaries, empty/populated submissions, D/W/M, current and retained status colors, saved overrides and functional gallery previews.');
+ console.log('Presentation consistency passed: saved/reloaded uniform closed lower sections, all six H3 heading/content boundaries, empty/populated submissions, D/W/M, current and retained status colors, saved overrides and functional gallery previews.');
 }finally{await browser.close();}

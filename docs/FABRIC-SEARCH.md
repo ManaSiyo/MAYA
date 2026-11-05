@@ -208,3 +208,12 @@ coverage and factual accuracy. Do not claim a fake-provider test proves parity.
 Official API contracts read for this implementation:
 - https://developers.openai.com/api/docs/guides/tools-web-search
 - https://developers.openai.com/api/docs/guides/streaming-responses
+
+
+November 4 classification repair: “pattern” may describe printed or woven yardage.
+Accept positively identified apparel fabric with floral/paisley patterns; reject
+sewing/knitting/PDF/downloadable patterns and tools. This does not relax client
+exclusions, source/photo evidence, color checks or seller-fact rules. Empty results
+ask for the existing Refresh action; do not restore the removed refinement UI.
+A live default search on deployed 3663a5d returned no sourced cards on November 4;
+this local classification repair is not proof of consistent live provider results.
