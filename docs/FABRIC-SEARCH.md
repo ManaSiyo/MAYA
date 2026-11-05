@@ -1,3 +1,23 @@
+# November 5 correction
+
+One bottom P1 loading message says “Searching for Fabrics” from preparation through
+streaming/Refresh. The gallery has no duplicate loading paragraph. After an expired
+session clears private state, automatic gallery mode stays intact and explicit
+Refresh calls the host to revalidate/reopen the current saved garment. This never
+restores another account's saved context or starts a paid retry automatically.
+
+The provider's first query is broad color plus apparel yardage, with weave/motif
+refinement later. Short titles such as “green floral pattern brocade” no longer
+fail the generic pattern check; explicit garment/sewing/knitting/PDF patterns still
+fail. Private searchDetails.diagnostics contains only bounded counts of source and
+image pages, candidate records, exclusions and qualified/photo products. No new
+on-screen report or raw provider-content log is added. Official response format
+was checked against https://developers.openai.com/api/docs/guides/tools-web-search .
+
+Live bb7c678 was verified on November 5. A fresh saved-look search still completed
+with zero cards; these local fixes are not evidence that the live provider issue
+is solved. Owner Push, exact release verification and live acceptance remain.
+
 # Fabrics — worldwide main search and separate optional retailers
 
 ## Owner's current intent
@@ -68,7 +88,7 @@ arbitrary discovered host with or without credentials.
 These are **web-sourced suggestions**, not independently verified current seller
 inventory. Model output cannot set price, currency, unit, stock or composition
 fields; they stay unknown. A photo never proves exact fiber, GSM, stretch, quantity
-or delivery. Finished clothing, footwear, tools, patterns/hardware and swatch-only
+or delivery. Finished clothing, footwear, tools, sewing/knitting patterns/hardware and swatch-only
 suggestions remain excluded. Upholstery, furnishing and decor evidence in the
 source path (including escaped words), title, reason or image caption rejects every
 worldwide card, including model-selected links. Late evidence retracts already

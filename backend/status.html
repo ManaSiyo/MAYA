@@ -154,8 +154,6 @@ try {
   /* Voice keeps the active drawer tab visible. */
   #drawer-messages{flex:1;min-height:0;display:flex;flex-direction:column;text-align:left}
   #drawer-messages[hidden]{display:none}
-  .admin-feature-feedback:empty{display:none}
-  .admin-feature-feedback{overflow-wrap:anywhere}
   #msg-list{flex:1;min-height:0;overflow-y:auto;margin:0 -4px}
   .msg-row{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer;transition:background .2s}
   .msg-row:hover{background:rgba(255,255,255,0.06)}
@@ -1040,14 +1038,14 @@ try {
 
   <h2 data-maya-type="H3" class="grp" id="submissions-heading" data-maya-section-heading>Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
   <div id="subs-strip" data-maya-section-content style="display:none"></div>
-  <p id="submissions-notification-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p>
+
   <div id="subs-note-inline" data-maya-section-content>Waiting for the one sign in at the top of the page.</div>
 
   <!-- v13.39: one row, five numbers, and nothing underneath. Users first,
        because that is the number that matters, then the site's own traffic. -->
   <details class="fold" data-maya-section id="users-fold" open>
     <summary><h2 data-maya-type="H3" class="grp">Users and traffic <span class="traffic-legend">manasiyo.com <span style="margin:0 3px">|</span> <span class="lg-b">maya</span></span></h2></summary>
-    <div data-maya-section-content class="fold-body"><div id="head-tiles" class="tiles hidden"></div><p id="traffic-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="mkt-wix-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p></div>
+    <div data-maya-section-content class="fold-body"><div id="head-tiles" class="tiles hidden"></div></div>
   </details>
 
 
@@ -1065,7 +1063,7 @@ try {
   <details class="fold" data-maya-section id="leads-fold" open>
     <summary><h2 data-maya-type="H3" class="grp">Leads</h2></summary>
 
-    <div data-maya-section-content class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div><p id="leads-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="callback-alert-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p>
+    <div data-maya-section-content class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
 
 
   </details>
@@ -1103,7 +1101,7 @@ try {
     </div>
 
   </div>
-<p id="mkt-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="ads-connection-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="ad-combined-note" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p><p id="marketing-warning-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p>
+
   </details>
 
 
@@ -1274,7 +1272,7 @@ try {
   <details class="fold" data-maya-section id="features-fold">
   <summary><h2 data-maya-type="H3" class="grp">Feature requests <span class="new-dot"></span></h2></summary>
   <div data-maya-section-content class="fold-body">
-    <p id="features-notification-status" data-maya-type="P1" class="note admin-feature-feedback" role="status"></p>
+
   <div id="features-list" class="fr-list"><div class="note">Waiting for the one sign in at the top of the page.</div></div>
   </div>
   </details>
@@ -1305,7 +1303,6 @@ async function loadFeatureRequests(){
     if(!frR.ok) throw new Error(j.error||('http '+frR.status));
     const fb=fbR?await fbR.json().catch(()=>({})):{};
     if(sequence!==_featureSequence||!_adminContextCurrent(context))return;
-    document.getElementById('features-notification-status').textContent='';
     const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const day=ts=>{ try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}).format(new Date(ts)); }catch(_){ return ''; } };
     const short=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>110?t.slice(0,107).replace(/\s\S*$/,'')+'\u2026':t; };
@@ -1330,7 +1327,7 @@ async function loadFeatureRequests(){
     if(f&&newest){ const latest=String(newest.id||newest.ts||''); let seen=''; try{ seen=localStorage.getItem('maya_features_seen')||''; }catch(_){}
       f.classList.toggle('unseen', seen!==latest);
       f.addEventListener('toggle',()=>{ if(f.open){ f.classList.remove('unseen'); try{ localStorage.setItem('maya_features_seen',latest); }catch(_){} } },{once:true}); }
-  }catch(e){if(sequence!==_featureSequence||!_adminContextCurrent(context))return;const note=document.getElementById('features-notification-status');note.textContent='Feature requests could not be loaded. Your existing requests remain unchanged.';note.style.display='';if(!host.querySelector('.fr-room'))host.innerHTML='<p data-maya-type="P1">No requests to display.</p>';}
+  }catch(e){if(sequence!==_featureSequence||!_adminContextCurrent(context))return;if(!host.querySelector('.fr-room'))host.innerHTML='<p data-maya-type="P1">No requests to display.</p>';}
 }
 async function markFeatureDone(btn){
   const rowEl=btn.closest('.fr'); const id=rowEl&&rowEl.getAttribute('data-fid'); if(!id||!_idTok) return;
@@ -1526,10 +1523,7 @@ runChecks();
 const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com';
 // v13.42: the setup box under the numbers is gone. What it used to say goes
 // to the console, where whoever is wiring things up actually looks.
-function _note(html) {
-  const n=document.getElementById('traffic-note');if(n){n.textContent=String(html).replace(/<[^>]+>/g,' ');n.style.display='';}
-
-}
+function _note() { /* Operational reporting stays off the dashboard. */ }
 function _showSignin(show) {
   const p = document.getElementById('signin-panel');
   if (p) p.style.display = show ? '' : 'none';
@@ -1642,9 +1636,9 @@ function _expired(expectedToken) {
   }, 2500);
 }
 function _subsNote(html,empty=false) {
-  const n=document.getElementById('subs-note-inline'),notice=document.getElementById('submissions-notification-status');
+  const n=document.getElementById('subs-note-inline');
   if(empty){n.style.display='';n.innerHTML=html;return;}
-  n.style.display='none';if(notice){notice.textContent=String(html).replace(/<[^>]+>/g,' ');notice.style.display='';}
+  n.style.display='none';
 
 }
 let _subsSeq = 0;
@@ -1689,7 +1683,6 @@ async function loadSubmissions() {
   if (requestSeq !== _subsSeq || !_adminContextCurrent(context)) return;
   window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
   window.MAYA_ADMIN_DATA.submissions = data;
-  document.getElementById('submissions-notification-status').textContent='';
   document.getElementById('subs-count').textContent = (data.uniqueTotal??data.total) ? (data.uniqueTotal??data.total) + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const prettyName = n => { const m = String(n).match(/^(.*?)-\d{2}-\d{2}-\d{4}\s*$/); const r = (m ? m[1] : String(n)).trim();
@@ -1807,7 +1800,6 @@ async function loadTraffic() {
   if (requestSeq !== _trafficSeq || !_adminContextCurrent(context)) return;
   window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
   window.MAYA_ADMIN_DATA.traffic = d;
-  if(d.ok!==false){document.getElementById('traffic-note').textContent='';}
   _paintHeadTiles(d);
   if(!tiles)return; // The current workspace uses the heading metrics; the legacy tile row is optional.
   if (!d.ok) {
@@ -1928,7 +1920,7 @@ window.addEventListener('maya-owner-session-changed',()=>{
   for(const id of ['subs-strip','subs-count','features-list','head-tiles','traffic-tiles']){
     const el=document.getElementById(id);if(el){el.replaceChildren();delete el.dataset.sig;}
   }
-  document.querySelectorAll('.admin-feature-feedback').forEach(el=>{el.textContent='';el.style.display='';});
+
   for(const id of ['subs-note-inline','traffic-note']){const el=document.getElementById(id);if(el)el.textContent='Sign in to load this account.';}
 });
 let _mayaActions = [];
@@ -2496,7 +2488,7 @@ try { _adRange = localStorage.getItem('maya_mkt_range') || 'W'; } catch (_) {}
 if (!['D', 'W', 'M'].includes(_adRange)) _adRange = 'W';
 let _leadList = [];
 let _hoverState = null;
-let _brief = null, _briefHour = '';
+
 function metricVal(r, m) {
   if (m === 'cpc') return r.cpc;
   if (m === 'clicks') return (r.linkClicks != null ? r.linkClicks : r.clicks);
@@ -2540,16 +2532,11 @@ function paintVisitors(d) {
   const a = ((d.analytics || {}).ranges) || {};
   const live = (d.analytics || {}).live;
   const tiles = document.getElementById('mkt-wix-tiles');
-  const note = document.getElementById('mkt-wix-note');
-  if (!tiles || !note) return;
+  if (!tiles) return;
   if (!w.connected) {
     tiles.innerHTML = '';
-    note.style.display = '';
-    note.innerHTML = '<b>Wix is not connected yet.</b> ' + esc(w.why || '') +
-      ' The manasiyo.com visitor feed is unavailable; MAYA will not invent it.';
     return;
   }
-  note.style.display = 'none';
   const pair = (wix, maya) =>
     (wix == null ? '<span title="Wix publishes manasiyo.com a day at a time; today lands tonight">&#8230;</span>' : n0(wix)) +
     '<span class="pair-bar">|</span><span class="pair-b">' + n0(maya || 0) + '</span>';
@@ -2634,7 +2621,6 @@ function buildTicker(d) {
   if (!el) return;
   const sep = '<span class="tk-sep">&#183;</span>';
   const bits = [];
-  const warning=document.getElementById('marketing-warning-status');if(warning){warning.textContent=[...(d.warnings||[]).map(w=>String(w.text||'')),_brief?.ok?_brief.headline:'',_brief?.ok?_brief.action:''].filter(Boolean).join(' ');warning.style.display=warning.textContent?'':'none';}
   const src=d.adCombined?.sources||{};
   const g = src.google_ads || {};
   const f = src.facebook || {};
@@ -2657,37 +2643,18 @@ function buildTicker(d) {
   const chars = el.textContent.length / 2;
   el.style.animationDuration = Math.max(20, Math.min(80, Math.round(chars / 4.5))) + 's';
 }
-async function fetchBrief(d) {
-  const context=_adminContext();
-  const hour = new Date().toISOString().slice(0, 13);
-  if (_briefHour === hour && _brief) return;
-  try {
-    const payload = { ...d };
-    delete payload.analytics; delete payload.saEmail;
-    if (payload.leads) payload.leads = { today: payload.leads.today, d7: payload.leads.d7, d28: payload.leads.d28 };
-    const r = await fetch('/api/admin/marketing-brief', {
-      method: 'POST', headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: payload }),
-    });
-    if (!r.ok) return;
-    const brief=await r.json();if(!_adminContextCurrent(context))return;
-    _brief=brief;_briefHour=hour;buildTicker(d);
-  } catch (_) { /* deterministic warnings and live numbers already stand */ }
-}
 
 function paintLeads(l) {
   _restoreLeadStatusFilter();
   if(document.getElementById('lead-note-input'))return; // Keep an active or failed inline draft intact during refresh.
   _leadList = l.connected ? (l.list || []) : [];
   const tb = document.querySelector('#leads-table tbody');
-  const note = document.getElementById('leads-note');
   if (!tb) return;
   const filterOpen = !!_leadFilterOwner?.open;
   const focusedStatus = _leadFilterMenu?.contains(document.activeElement) ? document.activeElement.dataset.status : null;
   closeLeadFilter();
   if (!l.connected) {
     tb.innerHTML = '<tr><td data-maya-type="P1">No lead data available.</td></tr>';
-    note.textContent=l.why||'Leads could not be loaded. Review the connection in Systems.';note.style.display='';
     return;
   }
   if (!(l.list || []).length) {
@@ -3157,37 +3124,13 @@ async function deleteLeadRow(i) {
   } catch (_) { reloadLeads(); }
 }
 function reloadLeads() { try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
-let _callbackStatusBusy=false;
-async function loadLeadAlertStatus(){
-  if(!_idTok||_callbackStatusBusy)return;
-  const note=document.getElementById('callback-alert-note');if(!note)return;
-  _callbackStatusBusy=true;const auth=_idTok;
-  try{
-    const r=await fetch('/api/admin/lead-alerts/status',{headers:{Authorization:'Bearer '+_idTok},cache:'no-store'}),j=await r.json();
-    if(!r.ok||!j.ok)throw Error(j.error||'Callback notification status unavailable.');
-    if(auth!==_idTok)return;
-    const warnings=[],scheduled=Date.parse(j.health?.lastScheduledAt||'');
-    if(!j.readiness?.eventConfigured)warnings.push('Immediate Wix callback trigger is not configured.');
-    if(!j.readiness?.schedulerConfigured)warnings.push('Automatic callback checks are not configured.');
-    else if(!Number.isFinite(scheduled)||Date.now()-scheduled>5*60000)warnings.push('No recent automatic callback check. Verify the dedicated Scheduler job.');
-    if(!j.feed?.connected)warnings.push('Callback form feed is unavailable.');
-    if(!j.readiness?.smsConfigured)warnings.push('Callback SMS provider is not configured.');
-    if(!j.readiness?.voiceConfigured)warnings.push('Callback voice bridge is not configured.');
-    if(!j.readiness?.ownerNumberConfigured)warnings.push('Owner callback number is not explicitly configured.');
-    if(j.pending)warnings.push(j.pending+' recent callback request(s) still need an alert check.');
-    for(const item of j.items||[])for(const channel of ['text','call'])if(['failed','uncertain','claimed'].includes(item[channel]))warnings.push((item.name||'Callback')+': '+channel+' '+item[channel]+(item[channel+'Error']?' ('+item[channel+'Error']+')':''));
-    for(const item of j.items||[])for(const channel of ['text','call'])if(item[channel+'RecordingError'])warnings.push(item[channel+'RecordingError']);
-    if(j.health?.lastError)warnings.push(j.health.lastError);
-    note.textContent=warnings.join(' ').slice(0,900);note.style.display=warnings.length?'block':'none';
-  }catch(e){if(auth===_idTok){note.textContent='Callback notifications: '+e.message;note.style.display='block';}}
-  finally{_callbackStatusBusy=false;}
-}
-async function checkLeadAlerts(quiet=false){
-  const note=document.getElementById('leads-note');if(!quiet){note.style.display='block';note.textContent='Checking new signups...';}
-  try{const r=await fetch('/api/admin/lead-alerts/check',{method:'POST',headers:{Authorization:'Bearer '+_idTok}});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||j.failed?.map(x=>x.channel+': '+x.why).join('; ')||'Alert check failed.');
-    if(!quiet||j.texts||j.calls||j.failed?.length){note.style.display='block';note.textContent=`Checked ${j.checked} recent signups · ${j.texts} texts accepted · ${j.calls} calls placed`+(j.failed?.length?' · '+j.failed.map(x=>x.channel+': '+x.why).join('; ').slice(0,240):'');}
-    if(!quiet||j.texts||j.calls)reloadLeads();
-  }catch(e){note.style.display='block';note.textContent=e.message;}finally{loadLeadAlertStatus();}
+// Keep the independently deduplicated callback check; its private server health
+// owns provider diagnostics. Dashboard visits never render notification reports.
+async function checkLeadAlerts(){
+  const context=_adminContext();
+  try{const r=await fetch('/api/admin/lead-alerts/check',{method:'POST',headers:{Authorization:'Bearer '+_idTok}});const j=await r.json();
+    if(_adminContextCurrent(context)&&r.ok&&j.ok&&(j.texts||j.calls))reloadLeads();
+  }catch(_){}
 }
 window.reloadLeads = reloadLeads;
 // The server scheduler works without an open browser. This owner-only check
@@ -3706,7 +3649,6 @@ _syncRangeChips();
 
 function paintAdCombined() {
   const svg = document.getElementById('ad-chart');
-  const note = document.getElementById('ad-combined-note');
   const ylab = document.getElementById('ad-ylabels');
   const xaxis = document.getElementById('ad-xaxis');
   const yword = document.getElementById('ad-yaxis-word');
@@ -3715,11 +3657,8 @@ function paintAdCombined() {
   if (!d || !d.connected || !(d.days || []).length) {
     svg.innerHTML = ''; if (ylab) ylab.innerHTML = ''; if (xaxis) xaxis.innerHTML = '';
     if (yword) yword.textContent = '';
-    note.style.display = '';
-    note.textContent = 'No combined ad data yet for this window. Available campaign reports appear in the table above.';
     return;
   }
-  note.style.display = 'none';
   const W = 700, H = 190, PAD = 8;
   // v13.54: the range decides how many of the 30 days are on screen.
   const keep = _adRange === 'M' ? 30 : _adRange === 'D' ? 2 : 7;
@@ -3913,7 +3852,7 @@ function paintCampaigns() {
 
 let _marketingSequence=0;
 function _clearMarketing(){
-  ++_marketingSequence;_leadList=[];_adData=null;_brief=null;_briefHour='';
+  ++_marketingSequence;_leadList=[];_adData=null;
   if(window.MAYA_ADMIN_DATA)delete window.MAYA_ADMIN_DATA.marketing;
   document.getElementById('adm-mkt').hidden=true;
   document.querySelector('#leads-table tbody').replaceChildren();
@@ -3922,46 +3861,30 @@ function _clearMarketing(){
 }
 window.addEventListener('maya-owner-session-changed',_clearMarketing);
 async function loadMkt(){
-  const status=document.getElementById('mkt-status'),context=_adminContext(),auth=_idTok,sequence=++_marketingSequence;
+  const context=_adminContext(),auth=_idTok,sequence=++_marketingSequence;
   const current=()=>sequence===_marketingSequence&&_adminContextCurrent(context);
-  if(!auth){if(status)status.textContent='Sign in to load Marketing.';return;}
-  if(status)status.textContent='Refreshing Marketing';
+  if(!auth)return;
   let r;
-  try{r=await fetch('/api/admin/marketing?t='+Date.now(),{headers:{Authorization:'Bearer '+auth},cache:'no-store'});}
-  catch(_){if(current()&&status){status.textContent='Could not reach Marketing. Existing numbers remain on screen.';status.style.display='';}return;}
+  try{r=await fetch('/api/admin/marketing?t='+Date.now(),{headers:{Authorization:'Bearer '+auth},cache:'no-store'});}catch(_){return;}
   if(!current())return;
   if(r.status===401||r.status===403){if(auth===_idTok)_expired(auth);return;}
-  if(!r.ok){if(status){status.textContent='Marketing data unavailable ('+r.status+'). Existing numbers remain on screen.';status.style.display='';}return;}
-  let d;try{d=await r.json();}catch(_){if(current()&&status){status.textContent='Marketing returned an unreadable response.';status.style.display='';}return;}
+  if(!r.ok)return;
+  let d;try{d=await r.json();}catch(_){return;}
   if(!current())return;
   window.MAYA_ADMIN_DATA=window.MAYA_ADMIN_DATA||{};window.MAYA_ADMIN_DATA.marketing=d;
   document.getElementById('adm-mkt').hidden=false;
-  if(status)status.textContent='';
-
-  _paintMkt(d,true);
+  _paintMkt(d);
 }
-// v14.16: one paint path for fresh and cached data. The brief only runs on a
-// fresh fetch, never off the cache, so no double AI call.
-function _paintMkt(d, alsoBrief){
+// Paint factual metrics only; no generated insight or provider commentary.
+function _paintMkt(d){
   try{ paintVisitors(d); }catch(e){ console.warn('[mkt] visitors',e); }
 
   _adData = d.adCombined||null;
-  const adConnections=document.getElementById('ads-connection-status');
-  if(adConnections){
-    const reports=[['Google',d.googleAds],['Meta',d.meta],['ChatGPT',d.chatgptAds]];
-    const why=(name,r)=>{const setup=d.adSetup?.[name.toLowerCase()];return setup?.missingLabels?.length?'Missing '+setup.missingLabels.join(', ')+'.':r?.why||'direct reporting unavailable.';};
-    adConnections.style.display='';
-    const allowed=new Set(['not_configured','oauth_expired','project_access','account_access','scope','authorization','account_mismatch','provider_error','incomplete_report','invalid_report','invalid_metric','invalid_account']);
-    adConnections.textContent=reports.map(([name,r])=>name+': '+(r?.connected?(d.adCombined?.excludedSources||[]).includes(name.toLowerCase())?'reported currency cannot be combined with USD.':'direct reporting connected.':why(name,r))).join(' ')+' Daily results use completed days in each ad account timezone.';
-  }
   try{ paintAdCombined(); }catch(e){ console.warn('[mkt] ads',e); }
   try{ paintCampaigns(); }catch(e){ console.warn('[mkt] campaigns',e); }
-  const leadReport=d.leads||{};
-  if(leadReport.connected){const note=document.getElementById('leads-note');note.textContent='';note.style.display='none';}
   try{ paintLeads(d.leads||{}); }catch(e){ console.warn('[mkt] leads',e); }
 
   try{ buildTicker(d); }catch(e){ console.warn('[mkt] ticker',e); }
-  if(alsoBrief) fetchBrief(d);
 }
 // expose the handlers the markup calls, and the loader
 window.setAdRange=setAdRange; window.setAdMetric=setAdMetric;

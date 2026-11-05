@@ -72,21 +72,19 @@ const parallelStore={read:async key=>parallelFiles.has(key)?{ok:true,buf:Buffer.
 const concurrent=createLeadAlerts({...parallelStore,now:()=>now,fetchLeads:async()=>({connected:true,list:[{id:'concurrent',source:'wix',name:'Concurrent',ts:new Date(now).toISOString()}]}),textOwner:async()=>{parallelTexts++;return {ok:true,sid:'SMconcurrent'};},callOwner:async()=>{parallelCalls++;return {ok:true,sid:'CAconcurrent'};}});
 await Promise.all([concurrent.run(),concurrent.run()]);assert.equal(parallelTexts,1);assert.equal(parallelCalls,1);
 
-// Admin reports failures without HTML injection or leaking a late account response.
-const {readFile}=await import('node:fs/promises');const {runInNewContext}=await import('node:vm');
+// Provider health remains private; the dashboard cannot render raw errors.
+const {readFile}=await import('node:fs/promises');
 const admin=await readFile(new URL('../backend/status.html',import.meta.url),'utf8');
-const statusFunction=admin.slice(admin.indexOf('let _callbackStatusBusy=false;'),admin.indexOf('async function checkLeadAlerts('));
-const note={style:{},textContent:''},notices=[];let resolveStatus;
-const context={_idTok:'owner-a',document:{getElementById:()=>note},Date,_adminNotice:(source,code)=>{assert.equal(source,'callback_alerts');assert.ok(['healthy','needs_attention','unavailable'].includes(code));notices.push([source,code]);},fetch:async()=>({ok:true,json:async()=>({ok:true,readiness:{schedulerConfigured:false,smsConfigured:true,voiceConfigured:true,ownerNumberConfigured:true},feed:{connected:true},items:[{name:'Julia',text:'failed',textError:'provider refused',call:'accepted'}]})})};
-runInNewContext(statusFunction,context);await context.loadLeadAlertStatus();assert.match(note.textContent,/Immediate Wix callback trigger is not configured/);assert.match(note.textContent,/Julia: text failed/);assert.equal(note.style.display,'block');assert.deepEqual(notices,[],'Callback failures stay inline without retired notification writes');
-context.fetch=()=>new Promise(resolve=>{resolveStatus=resolve;});const late=context.loadLeadAlertStatus();context._idTok='owner-b';const oldText=note.textContent;resolveStatus({ok:true,json:async()=>({ok:true,readiness:{},feed:{},items:[{name:'Other account'}]})});await late;assert.equal(note.textContent,oldText);
-assert.equal(notices.length,0,'A late account response cannot write retired history');
-context.fetch=async()=>({ok:true,json:async()=>({ok:true,readiness:{eventConfigured:true,schedulerConfigured:true,smsConfigured:true,voiceConfigured:true,ownerNumberConfigured:true},health:{lastScheduledAt:new Date().toISOString()},feed:{connected:true},pending:0,items:[]})});
-await context.loadLeadAlertStatus();assert.equal(note.textContent,'');assert.equal(note.style.display,'none');
-context.fetch=async()=>{throw Error('Fixture status unavailable');};await context.loadLeadAlertStatus();assert.match(note.textContent,/Callback notifications: Fixture status unavailable/);
-assert.deepEqual(notices,[],'Warning, recovery and outage remain explicit inline without retired history writes');
-
-console.log('Concurrent claims, storage failure, persistent uncertainty and account-safe Admin warnings passed.');
+assert.ok(!admin.includes('loadLeadAlertStatus')&&!admin.includes('callback-alert-note'));
+assert.ok(admin.includes("fetch('/api/admin/lead-alerts/check'"),'Independent deduplicated callback check remains');
+const {runInNewContext}=await import('node:vm');
+const checkCode=admin.slice(admin.indexOf('async function checkLeadAlerts('),admin.indexOf('window.reloadLeads = reloadLeads;'));
+let owner='owner-a',refreshes=0,screenReads=0,finishCheck;
+const ui={_idTok:'fixture',_adminContext:()=>owner,_adminContextCurrent:ticket=>ticket===owner,reloadLeads:()=>refreshes++,document:{getElementById(){screenReads++;throw Error('No dashboard reporting');}},fetch:async()=>({ok:false,json:async()=>({ok:false,error:'PRIVATE_PROVIDER_FAILURE'})})};
+runInNewContext(checkCode,ui);await ui.checkLeadAlerts();assert.equal(screenReads,0);assert.equal(refreshes,0,'Failure cannot imply delivery or refresh');
+ui.fetch=async()=>({ok:true,json:async()=>({ok:true,texts:1,calls:0})});await ui.checkLeadAlerts();assert.equal(refreshes,1,'Accepted callback still refreshes current leads');
+ui.fetch=()=>new Promise(resolve=>{finishCheck=resolve;});const late=ui.checkLeadAlerts();owner='owner-b';finishCheck({ok:true,json:async()=>({ok:true,texts:1})});await late;assert.equal(refreshes,1,'Late callback result cannot repaint another account');assert.equal(screenReads,0);
+console.log('Concurrent claims, storage failure and persistent uncertainty remain protected; dashboard diagnostics are retired.');
 
 // A blocked SMS formatter/provider cannot hold up the independent owner call.
 let releaseText,ringed=false;

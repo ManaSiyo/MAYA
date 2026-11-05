@@ -16,6 +16,7 @@ export function setupWorkspacePreviews({parent,render}){
   const image=document.createElement('img');image.src='/aesthetics/fabrics/thumbs/'+encodeURIComponent(name)+'.jpg';image.alt=name+' layout sample';image.className='fa-product-image';
   const productTitle=role('h4',name,'H4');productTitle.className='fa-card-title';const caption=role('p','Atelier inventory','P3');caption.className='fa-card-caption';link.append(image,productTitle,caption);material.append(link);results.append(material);
  }
+ const status=role('p','Searching for Fabrics','P1');status.className='fa-status';status.setAttribute('role','status');fabrics.append(status);
  for(const name of ['In House','Global']){const button=role('button',name,'P3');button.type='button';button.className='pill maya-pill';button.dataset.mayaSegment='';button.setAttribute('aria-pressed',String(name==='In House'));button.addEventListener('click',()=>{for(const tab of tabs.children)tab.setAttribute('aria-pressed',String(tab===button));for(const caption of results.querySelectorAll('.fa-card-caption'))caption.textContent=name==='In House'?'Atelier inventory':'Global layout sample';});tabs.append(button);}
  render();
 }

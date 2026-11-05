@@ -1394,9 +1394,9 @@
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=12">
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=13">
 <script defer src="/aesthetics/ui/fabric-search-details.js?v=2"></script>
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=12"></script>
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=13"></script>
 </head>
 <body>
 
@@ -3852,7 +3852,7 @@ async function showBriefFabrics() {
   document.querySelectorAll('#piece-pills [data-maya-segment]').forEach(node=>node.setAttribute('aria-pressed','false'));
   document.getElementById('op-image-frame').style.display='none';
   const host=document.getElementById('brief-fabrics');host.style.display='flex';
-  return window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces});
+  return window.MayaFabricAssistant.open({host,automatic:true,reopenSaved:showBriefFabrics,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces});
 }
 function setPatternPage(page) {
   const swiper = document.getElementById('op-pattern-swiper');

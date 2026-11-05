@@ -15,7 +15,7 @@ await test('default requires worldwide image results, optional legacy groups can
   assert.equal(input.mode,'worldwide');assert.equal(input.storeGroups,undefined);assert.deepEqual(input.stores,[]);
   const body=worldwideSearchBody(input,'gpt-6-luna');assert.equal(body.stream,true);assert.equal(body.store,false);
   assert.equal(body.max_tool_calls,5);assert.equal(body.max_output_tokens,6000);assert.equal(body.tools[0].image_settings.max_results,32);
-  assert.match(body.instructions,/dominant color/);assert.match(body.instructions,/Solid color body-cloth alternatives are useful/);
+  assert.match(body.instructions,/first image-search query broad/);assert.match(body.instructions,/sewing\/knitting patterns/);assert.match(body.instructions,/dominant color/);assert.match(body.instructions,/Solid color body-cloth alternatives are useful/);
   assert.equal(body.tools[0].filters,undefined);assert.deepEqual(body.tools[0].search_content_types,['image']);
   assert.match(body.instructions,/Use image search to find photographs/);
   assert.match(body.instructions,/source_website_url/);
@@ -23,10 +23,10 @@ await test('default requires worldwide image results, optional legacy groups can
   assert.throws(()=>normalizeFabricRequest({request:'wool',mode:'unknown'}));
 });
 await test('patterned apparel yardage is not mistaken for a sewing pattern',async()=>{
-  for(const title of ['Forest green floral pattern jacquard fabric','Black floral pattern on forest green apparel fabric by the yard']){
+  for(const title of ['Forest green floral pattern brocade', 'Forest green floral pattern jacquard fabric','Black floral pattern on forest green apparel fabric by the yard']){
     const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:[{...evidence.results[0],caption:title}]},content([{...interpretation,colorFamily:'green'},{...candidate,title}])]})});
     await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));
-    assert.equal(events.at(-1).products.length,1,title);assert.ok(events.at(-1).products[0].image);
+    assert.equal(events.at(-1).products.length,1,title);assert.ok(events.at(-1).products[0].image);assert.equal(events.at(-1).searchDetails.diagnostics.imagePages,1);assert.equal(events.at(-1).searchDetails.diagnostics.photoProducts,1);
   }
   for(const title of ['PDF sewing pattern for green fabric coat','Knitting pattern for wool sweater','Digital pattern download with fabric guide','Dress pattern for green stretch fabrics','Pattern for a shirt using cotton fabric']){
     const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([interpretation,{...candidate,title}])]})});

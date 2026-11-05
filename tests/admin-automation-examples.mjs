@@ -77,7 +77,7 @@ try{
  // then check that inline feedback performs no action.
  const actionsBeforeNotifications=requests.length;
  await page.evaluate(()=>{window.fixtureFastGsi=true;_gisBoot();});
- await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.waitForFunction(()=>_gisTries>40&&!document.getElementById('submissions-notification-status'));
  assert.equal(requests.length,actionsBeforeNotifications,'Inline failure feedback adds no rule/example/send action');
  const earlyObservations=notificationWrites.flatMap(body=>body.items);
  assert.equal(notificationWrites.length,0,'Retired history makes no writes; blocked GIS still reports its real inline warning');
@@ -120,7 +120,7 @@ try{
  // retry on that context, then audit every action after the inline warning.
  const actionsBeforeFinalDrain=requests.length;
  await page.evaluate(()=>{window.fixtureFastGsi=true;_gisBoot();});
- await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.waitForFunction(()=>_gisTries>40&&!document.getElementById('submissions-notification-status'));
  assert.equal(requests.length,actionsBeforeFinalDrain,'The final inline warning performs no rule/example/send action');
  const observations=notificationWrites.flatMap(body=>body.items);
  assert.equal(notificationWrites.length,0,'Both contexts keep history retired');

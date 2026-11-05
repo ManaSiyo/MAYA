@@ -115,12 +115,12 @@ if(MAP_SOURCE.includes('<maya-owner-crm>'))throw Error('Retired Owner tools must
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
 const AD_REPORTING_SOURCE=readFileSync(join(ROOT,'docs/server/ad-reporting.mjs'),'utf8');
-ok('Ads reports exact missing setup in Admin and public readiness without values',AD_REPORTING_SOURCE.includes('adSetupStatus') && SERVER_SOURCE.includes('out.adSetup=adSetupStatus(process.env)') && MAP_SOURCE.includes('setup.missingLabels.join'));
+ok('Ads keeps private setup diagnostics without rendering them in Admin',AD_REPORTING_SOURCE.includes('adSetupStatus') && SERVER_SOURCE.includes('out.adSetup=adSetupStatus(process.env)') && !MAP_SOURCE.includes('setup.missingLabels.join'));
 ok('Visible scrollbar paint is governed only by the shared runtime',!INDEX_SOURCE.includes('scrollbar-width: thin') && !BACKEND_SOURCE.includes('scrollbar-color: rgba') && readFileSync(join(ROOT,'aesthetics/ui/presentation-runtime.js'),'utf8').includes(':where(html,body,body *){scrollbar-width:auto}'));
 ok('Google direct setup uses OAuth without retired developer-token configuration',AD_REPORTING_SOURCE.includes("const missing=['id','secret','refresh','customer']") && !SERVER_SOURCE.includes('GOOGLE_ADS_DEVELOPER_TOKEN') && !AD_REPORTING_SOURCE.includes("'developer-token'"));
 const fabricClientSource=readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8');
 ok('Fabric results survive garment returns and empty refreshes within the sealed project',fabricClientSource.includes('const resultCache=new Map()') && fabricClientSource.includes('resultCache.clear()') && fabricClientSource.includes('Previously loaded fabrics are kept.') && fabricClientSource.includes('storeGroups:[...activeStores]'));
-ok('Ad reporting exposes missing connections and honors provider paused state',MAP_SOURCE.includes('id="ads-connection-status"') && MAP_SOURCE.includes("state==='paused'") && SERVER_SOURCE.includes('combineDirectAds({google:gads,meta,chatgpt})'));
+ok('Ad reporting omits provider commentary and honors provider paused state',!MAP_SOURCE.includes('id="ads-connection-status"') && MAP_SOURCE.includes("state==='paused'") && SERVER_SOURCE.includes('combineDirectAds({google:gads,meta,chatgpt})'));
 ok('Retired Studio implementation has no served page or Admin/gallery entry', !existsSync(join(ROOT,'backend/design-studio-2.html')) && !MAP_SOURCE.includes('/design-studio-2.html') && !readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('studio-control-preview'));
 const wrClientSource=readFileSync(join(ROOT,'aesthetics/ui/wr.js'),'utf8');
 ok('WR is independently empty and never copies Admin submissions or lead data',!wrClientSource.includes('/api/admin/submissions')&&!wrClientSource.includes('/api/admin/subthumb')&&wrClientSource.includes('/api/admin/wr/leads')&&wrClientSource.includes('No submissions yet.'));
@@ -580,11 +580,11 @@ ok('embedded Marketing uses independent table geometry and retains Admin content
 ok('embedded Marketing keeps the standalone chart and refresh interactions',
   MAP_SOURCE.includes('function paintVisitors(') &&
   MAP_SOURCE.includes('function buildTicker(') &&
-  MAP_SOURCE.includes('function fetchBrief(') &&
+  !MAP_SOURCE.includes('function fetchBrief(') &&
   MAP_SOURCE.includes('function bindChartHover(') &&
   MAP_SOURCE.includes("addEventListener('touchmove'") &&
   MAP_SOURCE.includes('_syncRangeChips();') &&
-  MAP_SOURCE.includes('Existing numbers remain on screen') &&
+  MAP_SOURCE.includes('if(!r.ok)return;') &&
   MAP_SOURCE.includes('r.status===401'));
 ok('Redundant architecture dashboard is retired', s.retiredFoldsAbsent);
 ok('door cards have no arrows', s.arrows === 0);
@@ -963,9 +963,8 @@ ok('standalone Marketing is removed; Admin retains authenticated marketing',
   MKT_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
   MKT_SOURCE.includes('/api/admin/marketing'));
 ok('the marketing page never invents an ad number',
-  // v13.56: the panels are gone; honesty lives in the chart note and the
-  // null conversions that can never paint as a fake zero.
-  MKT_SOURCE.includes('No combined ad data yet') &&
+  // Unavailable series stay empty; null conversions cannot become a fake zero.
+  MKT_SOURCE.includes("if (!d || !d.connected || !(d.days || []).length)") &&
   AD_REPORTING_SOURCE.includes('metrics.conversions') && !AD_REPORTING_SOURCE.includes('lead_created'));
 ok('marketing reads Analytics, Meta and Google Ads separately',
   SERVER_SOURCE.includes("app.get('/api/admin/marketing'") &&
@@ -1174,7 +1173,7 @@ ok('the paid chart has axes and an All three chip',
 ok('the inline fabric results fit a usable shared viewport without stretching the Brief canvas',
   BACKEND_SOURCE.includes('grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr)') &&
   BACKEND_SOURCE.includes('width:100%; height:70dvh; max-height:70dvh; min-width:0; min-height:0;') &&
-  BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid') &&
+  BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true,reopenSaved:showBriefFabrics,submissionId:context.sid') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('flex:1;min-height:0;overflow-y:auto;') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))'));
 ok('Global carries the original reference and client words without tinting seller photos',
@@ -1393,8 +1392,8 @@ ok('an information dump per lead is stored and steers the next draft',
   SERVER_SOURCE.includes('async function loadLeadNotes(') &&
   SERVER_SOURCE.includes("emailsSent === 0 ? 'first contact'") &&
   MKT_SOURCE.includes('function saveLeadNote('));
-ok('Direct ad providers independently expose connection state',
-  SERVER_SOURCE.includes('googleAds:gads,chatgptAds:chatgpt') && MAP_SOURCE.includes("['ChatGPT',d.chatgptAds]"));
+ok('Direct ad providers retain private connection state without dashboard commentary',
+  SERVER_SOURCE.includes('googleAds:gads,chatgptAds:chatgpt') && !MAP_SOURCE.includes('id="ads-connection-status"'));
 ok('the D W M chips sit close together',
   MKT_SOURCE.includes('display:inline-flex;gap:3px" id="range-chips"'));
 // ── v13.56: marketing reads itself out and folds away ──────────────────────
@@ -1429,9 +1428,9 @@ ok('the ticker starts mid story and loops seamlessly',
   MKT_SOURCE.includes('el.innerHTML = line + line') &&
   MKT_SOURCE.includes('to{transform:translateX(-50%)}') &&
   !MKT_SOURCE.includes('padding-left:100%'));
-ok('Empty ad charts distinguish unavailable time-series data from reporting configuration',
+ok('Empty ad charts clear unavailable series without provider commentary',
   !MKT_SOURCE.includes('Connecting what is missing') && !MKT_SOURCE.includes('WINDSOR_API_KEY') &&
-  MKT_SOURCE.includes('Available campaign reports appear in the table above.'));
+  MKT_SOURCE.includes("svg.innerHTML = ''; if (ylab) ylab.innerHTML = '';") && !MKT_SOURCE.includes('id="ad-combined-note"'));
 // ── v13.57: terms at the door, a truthful wall, a complete Users count ─────
 const TERMS_SOURCE = existsSync(join(ROOT, 'backend/terms.html'))
   ? readFileSync(join(ROOT, 'backend/terms.html'), 'utf8') : '';
@@ -1748,8 +1747,8 @@ ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('cost per link click jumped') &&
   SERVER_SOURCE.includes('week over week') &&
   SERVER_SOURCE.includes('Meta frequency is'));
-ok('Admin: the ticker renders the warnings even when the AI is down',
-  MAP_SOURCE.includes('id="mkt-ticker"') && MAP_SOURCE.includes('function buildTicker(') && MAP_SOURCE.includes('if (!r.ok) return;') && MAP_SOURCE.includes('deterministic warnings and live numbers already stand') && SERVER_SOURCE.includes("app.post('/api/admin/marketing-brief'") && SERVER_SOURCE.includes('never names'));
+ok('Admin ticker retains factual metrics without generated advice or provider warnings',
+  MAP_SOURCE.includes('id="mkt-ticker"') && MAP_SOURCE.includes('function buildTicker(') && !MAP_SOURCE.includes('marketing-warning-status') && !MAP_SOURCE.includes("fetch('/api/admin/marketing-brief'") && SERVER_SOURCE.includes("app.post('/api/admin/marketing-brief'"));
 ok('the chart has D W M ranges that survive a reload, and a real hover',
   MKT_SOURCE.includes('class="range-chip"') &&
   MKT_SOURCE.includes("localStorage.setItem('maya_mkt_range'") &&
@@ -2306,7 +2305,7 @@ ok('v14.17: Pinterest search for fingers and voice, the continuous glide, and po
 ok('v14.16: the studio gauge is truthful; private Marketing stays in the authenticated session',
   INDEX_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&
   INDEX_SOURCE.includes('admin: !!j.admin,') &&
-  MAP_SOURCE.includes('function _paintMkt(d, alsoBrief)') &&
+  MAP_SOURCE.includes('function _paintMkt(d)') &&
   !MAP_SOURCE.includes("localStorage.setItem('maya_mkt_cache'") &&
   !MAP_SOURCE.includes('_mktWarmPaint') &&
   MAP_SOURCE.includes("localStorage.removeItem('maya_mkt_cache')") &&
@@ -2576,10 +2575,10 @@ ok('A new Wix Call back lead can alert the owner through the scheduled check and
   SERVER_SOURCE.includes("fetchLeads:submissionId=>wixLeads({fresh:true,summaries:false,submissionId})") &&
   MAP_SOURCE.includes("/api/admin/lead-alerts/check") &&
   MAP_SOURCE.includes('checkLeadAlerts(true);},300000)'));
-ok('Callback alerts have independent authenticated scheduling and visible failures',
+ok('Callback alerts retain independent authenticated scheduling without dashboard reports',
   SERVER_SOURCE.includes('mountLeadAlertRoutes(app,') &&
   readFileSync(join(ROOT,'docs/server/lead-alerts.mjs'),'utf8').includes("app.post('/api/tasks/lead-alerts'") &&
-  MAP_SOURCE.includes('/api/admin/lead-alerts/status') && MAP_SOURCE.includes('callback-alert-note'));
+  !MAP_SOURCE.includes('/api/admin/lead-alerts/status') && !MAP_SOURCE.includes('callback-alert-note'));
 ok('Booking uses the owner-shared link, exact lead and confirmation before client SMS',
   readFileSync(join(ROOT,'docs/server/booking-link.mjs'),'utf8').includes("https://wix.to/wT2lSqE") &&
   MAP_SOURCE.includes("const link='https://wix.to/wT2lSqE'") &&
@@ -2780,7 +2779,7 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=12'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=13'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));
@@ -2821,9 +2820,9 @@ await import('./message-compose-ui.mjs');
 ok('SMS composer remains reachable above the voice dock with crowded previews and suggestions',true);
 ok('The reviewed send refresh settles before the independent STOP no-send proof',true);
 await import('./admin-notifications.mjs');
-ok('Admin UI fixtures validate fixed-state notification writes separately from owner actions, retain the real blocked-sign-in warning and reject private payloads',true);
+ok('Admin UI fixtures validate fixed-state notification writes separately from owner actions, exercise real blocked-sign-in exhaustion and reject private payloads',true);
 await import('./admin-notifications-ui.mjs');
-ok('Admin retires Insights and Logs/Notifications, preserves feature failures and uses shared Settings typography',true);
+ok('Admin retires Insights and Logs/Notifications, omits unsolicited reporting and uses shared Settings typography',true);
 ok('Shared D/W/M circular controls preserve Glass material under saved typography and asymmetric padding',MAP_SOURCE.includes('data-maya-shape="circle"'));
 ok('Fabric suggestions keep dominant-color photographs, recover source-backed images and fill the existing shared grid',
   BUILD_SOURCE.includes('node tests/fabric-images-ui.mjs') && readFileSync(join(ROOT,'docs/server/fabric-worldwide.mjs'),'utf8').includes('isColorFabricPhoto') && readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('auto-fit'));
@@ -2834,6 +2833,10 @@ await import('./submission-cards-ui.mjs');
 ok('Exact duplicate submissions are hidden without merging projects; Admin and Brief share image cards',true);
 ok('Settings adds Twilio, renames Add Tools and raises group headings through shared H3',MAP_SOURCE.includes('https://console.twilio.com/') && MAP_SOURCE.includes('data-maya-type="H3">Add Tools'));
 ok('Fabric classification accepts patterned yardage while retaining sewing-pattern exclusions',readFileSync(join(ROOT,'docs/server/fabric-sourcing.js'),'utf8').includes('const sewingPattern='));
+// November 5 owner correction: clean screens and one existing bottom loading line.
+ok('Admin has no insight generation or unsolicited provider reporting',!MAP_SOURCE.includes('/api/admin/marketing-brief')&&!MAP_SOURCE.includes('class="note admin-feature-feedback"')&&!MAP_SOURCE.includes('loadLeadAlertStatus'));
+ok('Fabrics uses one bottom loading message and preserves the saved gallery after reset',readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8').includes("status('Searching for Fabrics')")&&readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8').includes('reopenSaved'));
+
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

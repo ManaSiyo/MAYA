@@ -47,8 +47,10 @@ await test('Admin keeps Marketing spacing, table, folds, ticker and chart hover 
   assert.ok(admin.includes('function paintVisitors('));
 });
 
-await test('Admin refresh and command actions fail visibly and writes wait for confirmation', () => {
-  assert.ok(admin.includes('Existing numbers remain on screen'));
+await test('Admin omits unsolicited refresh reports and command writes wait for confirmation', () => {
+  assert.ok(!admin.includes('id="mkt-status"'));
+  assert.ok(!admin.includes('/api/admin/marketing-brief'));
+  assert.ok(admin.includes('if(!r.ok)return;'));
   assert.ok(admin.includes('r.status===401'));
   assert.ok(admin.includes('id="maya-action-queue"'));
   assert.ok(admin.includes("yes.onclick=()=>mayaConfirmAction(action.id)"));

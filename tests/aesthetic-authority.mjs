@@ -58,11 +58,12 @@ try{
  assert.match(await page.locator('#leads-table select.lead-stage').evaluate(e=>getComputedStyle(e).color),/0.65/,'Status color strength applies to live selection');
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('#msg-new').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Begin texting fits '+width);}
  await page.setViewportSize({width:1440,height:900});if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#drawer').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-messages.png')});
- // Check the real delayed warning before leaving Admin. It is inline feedback, not
- // a message/rule action; healthy/connected observations remain forbidden here.
- await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ // Exercise real blocked-GIS exhaustion without restoring unsolicited reporting.
+ // No message/rule action or invented recovery is allowed.
+ await page.waitForFunction(()=>_gisTries>40&&!document.getElementById('submissions-notification-status'));
+ assert.equal(await page.locator('.admin-feature-feedback,#ads-connection-status,#callback-alert-note,#marketing-warning-status').count(),0,'Saved presentation cannot restore retired dashboard reporting');
  const observations=notificationWrites.flatMap(body=>body.items);
- assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; the real blocked-GIS warning remains visible beside Submissions');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; blocked GIS does not render a dashboard report');
  assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Style review does not invent provider recovery');
  assert.equal(writes.length,0,'Admin style review never submits messages, rules or other owner actions');
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="P3"] .type-row').waitFor();await page.waitForFunction(()=>document.getElementById('maya-surface-control-style')?.textContent.includes('#table-preview'));

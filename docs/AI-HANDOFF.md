@@ -1,101 +1,80 @@
-# Current handoff — November 4 Admin update and fabric classification
+# Current handoff — November 5 clean screens and Fabrics recovery
 
-## Owner request and implementation
+## Current owner request
 
-Admin now has Settings and Messages. Insights and the Logs/Notifications tab,
-diagnostic loader, client history polling and fixed-state notification writes are
-removed. Private server history/audit stores and endpoints remain unchanged.
-Real failures stay beside the affected feature, after campaign data; account
-changes clear the notes. Active voice conversation and pending approvals remain
-in Settings, with the existing reviewed-action dialog and send safeguards.
+No Insights/advice or provider/notification commentary on screens. This expressly
+supersedes the previous decision to move failures inline. Keep factual Admin
+metrics/cards/tables and the approved In House/Global aesthetics. Fabrics has one
+bottom loading message, “Searching for Fabrics”. Global still returns no photos.
 
-Settings headings explicitly use H3 (16px default), Outside Tools is Add Tools,
-and Twilio links to https://console.twilio.com/ under Behind the scenes. No
-credential, account, billing or production setting was opened or changed.
+## Implemented locally
 
-Admin and Brief now render the same submission image component. The Admin strip
-keeps its existing horizontal layout; Brief scales the same 3:2 card to its drawer
-width, with contained photos and no name-only rows or added metadata overlay.
-Private thumbnail requests bind to account and drawer generation; stale list or
-image responses cannot return after account changes, A→B→A or a later open.
-Same-account token renewal preserves cards. The legacy local-folder path remains.
+Admin removes diagnostic destinations below Submissions, Users, Leads, Ads and
+Feature requests. It no longer requests generated marketing briefs or reads
+callback health to print Twilio/configuration failures. Independent deduplicated
+callback checks and private server health/history stay intact. Explicit reviewed
+send/save/auth outcomes and account/session guards remain. No provider settings,
+credentials, billing or production environment were changed.
 
-The authenticated listing marks exact repeats only when the complete authored
-file set, names, MIME types, sizes and MD5 checksums match, and verified marker
-owner/client/project identity agrees. Derived one-pager exports are excluded.
-Unknown checksums/markers remain separate. Legacy markers lack project IDs, so
-complete identical payloads within the same owner/client can be grouped; distinct
-explicit project IDs never group. All canonical IDs/files remain in the listing
-and direct Brief reads; nothing is deleted, merged or redirected. This is display
-deduplication, not upload idempotency. Existing first-40 listing limit remains;
-marker reads are bounded to rendered/name and potential-repeat candidates.
+Fabrics suppresses the second busy paragraph and normalizes preparation/streaming/
+Refresh to one existing bottom P1 status. The sole Fabric preview represents it;
+there are no new visual settings or changed gallery dimensions. The exact default/
+saved six-width In House/Global parity gate remains. Fabric references are v13.
+Private account resets retain only automatic presentation mode, clearing private
+photos/results/context as before. Explicit Refresh calls Brief/Operations to
+validate and reopen the current saved garment. This repairs the observed expired-
+session state that restored retired chat controls and stranded Refresh, without
+an automatic search or restoring another account's cached data.
 
-The existing Drawer preview now contains the real shared submission card and
-Settings H3 headings. Inner/Drawer/H3/Glass/Scrollbars remain the authority, with
-no new saved design key. The legacy sectionSpacing.insights key now controls
-closed Recent changes/Feature requests, labeled Closed sections. Open geometry
-is unchanged. Shared presentation references are v4; submission assets are v1
-and explicitly revalidated. Fabric v12 and In House/Global parity are unchanged.
+Remaining generic “pattern” rejection removed from textile names: green floral
+pattern brocade now qualifies, while garment/sewing/knitting/PDF templates remain
+excluded. The first provider image query explicitly starts broad with color and
+apparel yardage before motif/weave refinements. Source-backed photos, color/client
+exclusions, late retractions, four-URL fallbacks, cancellation and private cache
+boundaries remain. Private searchDetails.diagnostics adds only source/image-page,
+candidate/exclusion and qualified/photo-product counts; no raw provider log or
+on-screen reporting is added. Official image-result schema was checked at
+https://developers.openai.com/api/docs/guides/tools-web-search .
 
-Fabric qualification previously rejected every title containing “pattern”,
-including floral/paisley apparel yardage. It now distinguishes genuine sewing,
-knitting, PDF/downloadable patterns from fabric. The regression checks accepted
-patterned yardage and rejected patterns, while all source, color, exclusion,
-cancellation, photo-origin and private-cache safeguards remain. Empty-result
-copy names existing Refresh, not a removed refinement control. No automatic paid
-retry, additional provider, source-site fetch or cosmetic fabric change was added.
+## Live evidence and limitation
 
-## Files and verification
+Public Hosting release and /api/healthz both reported bb7c678 on November 5 at
+20:04 UTC. An authorized internal-browser reload and default saved hooded-tailcoat
+search reproduced both loading lines and a completed zero-card Global gallery.
+No photos were returned to the rendered DOM; the interpretation was dark forest
+green brocade/jacquard apparel yardage. The raw provider trace is unavailable, so
+these local corrections must not be presented as proof Global is fixed live.
+One unrelated MutationObserver error occurred on page load. No personal Chrome
+was accessed. No Push/deployment or credentials were used.
 
-Runtime: backend/{status,backend}.html; aesthetics/ui/submission-cards.{js,css};
-docs/server/{submission-list.mjs,server.js,Dockerfile,fabric-sourcing.js,
-fabric-worldwide.mjs}; shared presentation runtime and Aesthetic Control Drawer/
-spacing previews. Other served pages only receive presentation-runtime v4.
-Hosting headers revalidate the new shared assets. Typography role counts were
-regenerated. Cloud Build/app-regression/final authority require the new submission
-unit/UI gates. Existing Admin tests now assert retirement instead of demanding
-removed tabs/history, preserving actual blocked-GIS failures and all reviewed
-owner/send/account guards. Backend private-history tests remain unchanged.
+## Files and validation
 
-Focused grouping, cards, account races, Admin retirement, Systems, provider
-feedback, typography, spacing and saved-design propagation pass. The image cards
-and Settings were visually inspected under defaults and materially different
-valid settings at phone/desktop; computed geometry checks cover six widths.
-Root locked npm ci --ignore-scripts and typography generation pass. Worldwide
-(30), search (57), sourcing (18) and forced-GC pass on Node24.22.1; Node20.20.2
-fabric equivalents pass in the release suite. Isolated browsers and fake providers
-are used for all automated tests; no personal Chrome was accessed.
+Runtime: backend/{status,backend,operations}.html; aesthetics/ui/fabric-assistant.js;
+aesthetics/aesthetic-control/{workspace-previews,presentation-controls}.js and gallery.css;
+aesthetics/aesthetic-control.html; docs/server/{fabric-worldwide.mjs,fabric-sourcing.js}.
+Typography usage regenerated. Preview-only status margins match the live component;
+no saved schema or served gallery layout change. Tests now require absent
+operational reporting and one bottom loading line, preserving actual blocked-GIS
+exhaustion, reviewed sends, truthful provider metrics, scopes and private history.
+The existing active preview and final authority cover the changed surfaces.
 
-All 80 functional/syntax Cloud Build commands, full app-regression and smoke
-pass (82 required checks, including the focused reruns). Retirement-related old
-assertions and a function-extraction fixture boundary were updated to the actual
-new UI; the complete regression rerun ends “all passed.” Final standalone
-Aesthetic Control passed last after all functional verification and presentation
-edits (Node20.20.2; /private/tmp/maya-admin-final-authority.log). The verified
-changes are prepared as a local commit; only owner Push and live acceptance remain.
-Local evidence logs/captures: /private/tmp/maya-admin-gates-summary.log,
-maya-admin-reruns-summary.log, maya-admin-regression-final.log,
-maya-cards-final.log, maya-admin-node24-*.log,
-maya-cards-{admin,drawer}-{default,saved}-{390,1440}.png,
-maya-admin-settings-{default,saved}-{390,1440}.png and
-maya-cards-active-preview.png. Photos in local UI fixtures are inventory samples,
-not live search acceptance.
+Focused Admin retirement/Ads, Fabric gallery/search/workflow and callback gates
+pass. Node24 search (57), worldwide (30), sourcing (18), forced-GC pass. All 80 exact
+Cloud Build functional/syntax commands and app-regression/smoke pass under Node20
+(82 required checks including corrected reruns). The initial Admin UI, workflow
+and static regression expectations required retired reporting/loading text; their
+updated full reruns pass. All functional verification is complete. Final standalone Aesthetic Control
+passed last, after the preview spacing correction, stronger real-editor checks
+and visual inspection of the default/saved loading preview. Final log:
+/private/tmp/maya-clean-final-authority-verified.log . Evidence is under
+/private/tmp/maya-clean-*.log and /private/tmp/maya-clean-gates/ .
 
-## Live evidence and exact next step
+## Exact next step
 
-The owner pushed previous gallery correction 3663a5d154390cf8313afa86fd60c8e99d6114fe.
-On November 4, Hosting release.json and API health both reported that commit;
-Hosting publishedAt was 2026-11-04T20:54:07.431Z. Authorized internal-browser
-inspection of the saved hooded tailcoat reproduced a completed search with zero
-source-backed cards and no browser errors. The prior five-photo run on 105860b
-was a single successful run, not proof of consistent current provider results.
-The “pattern” rejection is reproduced locally; without that live provider's raw
-result trace it is not proven to be the sole cause of the empty run. No claim is
-made about ChatGPT's private internals or identical latency/reliability.
-
-Prepare the verified local commit only; owner controls Push. After Push, verify
-successful Cloud Build and exact Hosting/API commit, then test the same saved
-hooded tailcoat and the reported duplicate submissions on the actual account.
-This local repair does not prove deployed Fabrics result quality or that an
-unverified pair with different authored content should be hidden. Do not silently
-relax exclusions, scope, source/photo evidence or retry a paid search automatically.
+Local changes are verified and prepared for the owner-authorized local commit.
+Owner Push is the next step; no Push or deployment was performed. After deployment, verify release,
+page assets and API commit, then explicitly run the same saved garment's Global
+search and Refresh. Require actual loaded photographs and clean Admin screens;
+if still empty, inspect count-only search diagnostics to distinguish missing
+provider images from rejected/unmatched candidates. Never claim synthetic images
+or local fixtures prove real-world sourcing works.

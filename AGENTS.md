@@ -1,10 +1,31 @@
+# November 5 owner correction — clean screens, no unsolicited reporting
+
+Remove all dashboard insight/advice and provider/notification commentary. Do not
+move it into another visible area. The owner handles troubleshooting in Codex.
+This supersedes older instructions to preserve inline operational warnings or
+notification UI. Keep private server health/audit records, truthful explicit
+save/send/auth outcomes and all reviewed-action/account guards. Keep factual
+metrics, campaigns and submissions unchanged. Admin must not request a generated
+marketing brief or poll callback health for on-screen diagnostics.
+
+Fabrics has one bottom loading message: “Searching for Fabrics”, including saved
+photo preparation, server phases and Refresh. No loading copy inside the gallery.
+Keep the automatic gallery mode after private state resets; explicit Refresh asks
+the host for the current canonical saved garment, never an old cached account's
+context. No automatic paid retry. Shared P1 controls the bottom status, also shown
+in the sole Fabric preview; In House/Global geometry stays identical. Fabric
+assets are v13. Pattern motifs in brocade/jacquard names are not sewing templates.
+The first worldwide image query is broad color/apparel yardage; later queries may
+refine weave/motif. Content-free diagnostic counts stay in private response data,
+not on screen. Provider quality still requires exact live acceptance.
+
 # November 4 Admin owner update — active, supersedes older UI notes
 
 Insights and the Logs/Notifications drawer tab are retired. Admin has Settings
 and Messages; active voice conversation/pending approvals remain in Settings.
 Do not restore notification polling/writes or a diagnostic workspace. Preserve
 private server audit/history data and reviewed send/account/action guards.
-Failures stay beside the affected feature, below campaign data where applicable.
+Operational reporting is retired by the November 5 clarification above.
 Settings group headings use shared H3; Outside Tools is now Add Tools. Twilio is
 an external console link under Behind the scenes, not a credential/config editor.
 Admin and Brief submissions use the same image card component, scaled to drawer
@@ -27,7 +48,7 @@ Brief and Operation Room use this automatic gallery. Refresh is the existing
 explicit retry/cancel action; keep Favorites and Expand. The sole active Fabric
 preview in Aesthetic Control toggles In House/Global using the same gallery.
 Shared H4/P3, Inner, Glass and scrollbar settings govern both; no new schema or
-independent visual settings. Fabric JS/CSS references are v12. The exact parity
+independent visual settings. Fabric JS/CSS references are v13. The exact parity
 regression is tests/fabric-gallery-ui.mjs, included in release, app-regression and
 final aesthetic-authority. Run functional gates first and final authority last.
 This supersedes older follow-up/composer, interpretation and missing-link layout

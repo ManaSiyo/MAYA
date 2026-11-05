@@ -230,13 +230,13 @@ try{
   };
   window.visualReview=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
  },{reference,pieces,product:fur});
- await page.getByText('Retailer candidates. Photo comparison pending…',{exact:true}).waitFor();
+ await page.getByText('Searching for Fabrics',{exact:true}).waitFor();assert.equal(await page.locator('.fa-empty').count(),0,'No second loading paragraph');
  assert.equal(await page.locator('.fa-product-link').count(),0,'Unreviewed retailer candidates are not actionable');
  for(const mode of ['default','saved']){
   await page.evaluate(mode=>{const d=structuredClone(MayaTypographyControls.defaults);if(mode==='saved')Object.assign(d.type.P1,{font:'cormorant',size:16,weight:450,color:'white'});MayaTypographyControls.apply(d);},mode);
   for(const width of [320,390,768,1024,1440,1920]){
    await page.setViewportSize({width,height:1000});
-   const style=await page.locator('.fa-empty').evaluate(el=>{const s=getComputedStyle(el);return {size:s.fontSize,color:s.color};});
+   const style=await page.locator('.fa-status').evaluate(el=>{const s=getComputedStyle(el);return {size:s.fontSize,color:s.color};});
    assert.equal(style.size,mode==='saved'?'16px':'12px');assert.equal(style.color,mode==='saved'?'rgb(255, 255, 255)':'rgb(170, 181, 196)');
    assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Pending search fits '+mode+' '+width);
    if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-fabric-pending-'+mode+'-'+width+'.png'});

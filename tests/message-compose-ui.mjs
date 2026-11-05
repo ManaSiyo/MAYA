@@ -52,9 +52,9 @@ try{
  // Drain automatic status history before the account reset while retaining
  // every exact reviewed-send/STOP/call assertion above and below.
  const beforeNotifications=writes.length;
- await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.waitForFunction(()=>_gisTries>40&&!document.getElementById('submissions-notification-status'));
  const observations=notificationWrites.flatMap(body=>body.items);
- assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; the real blocked-GIS warning remains visible beside Submissions');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; blocked GIS does not render a dashboard report');
  assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Messages review does not invent provider recovery');
  assert.equal(writes.length,beforeNotifications,'Inline failure feedback does not send or change a contact');
  await page.evaluate(()=>window.dispatchEvent(new Event('maya-owner-session-changed')));assert.equal(await page.locator('#msg-new').isVisible(),false);assert.equal(await page.locator('#msg-new-name').inputValue(),'');

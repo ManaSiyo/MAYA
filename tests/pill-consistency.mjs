@@ -84,15 +84,8 @@ async function populateAdmin(){await page.evaluate(async()=>{_idTok='fixture-adm
 async function adminChecks(label,x,y){
  await ready('/status.html');await populateAdmin();
  check((await page.locator('#campaigns-table .status-word').first().innerText()).toLowerCase().includes('paused'),label+' historical impressions do not relabel a paused campaign as delivering');
- check(await page.locator('#ads-fold #ads-connection-status').count()===1&&await page.locator('#drawer-logs').count()===0,label+' provider failures remain beside campaigns');
- check(await page.locator('#ads-connection-status').evaluate(e=>!!(document.getElementById('campaigns-table').compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING)),label+' provider feedback follows campaign data');
+ check(await page.locator('#ads-connection-status,#ad-combined-note,#drawer-logs').count()===0,label+' no provider reporting or retired Logs');
  await page.evaluate(()=>{document.getElementById('ads-fold').open=true;});
- await page.locator('#ads-connection-status').waitFor({state:'visible'});
- check((await page.locator('#ad-combined-note').textContent()).includes('Available campaign reports appear in the table above.'),label+' empty chart does not imply a missing credential');
- check(await page.locator('#ads-connection-status').evaluate(e=>e.textContent.includes('Google: direct reporting connected.')&&e.textContent.includes('ChatGPT: direct reporting unavailable.')),label+' unavailable Ads integration is explicit');
- check(await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontSize)===await page.locator('#drawer p[data-maya-type=P1]').first().evaluate(e=>getComputedStyle(e).fontSize),label+' Ads connection copy follows the shared P1 role');
- check(await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontSize)===(label==='saved'?'16px':'12px'),label+' Ads connection copy visibly follows saved P1 size');
- if(label==='saved')check((await page.locator('#ads-connection-status').evaluate(e=>getComputedStyle(e).fontFamily)).includes('Cormorant'),label+' Ads connection copy follows saved P1 font');
  await page.evaluate(()=>toggleDrawer(false));
  const snapshots={};
  for(const width of widths){await page.setViewportSize({width,height:1000});for(const [selector,name,kind] of adminTargets){const box=await measure(selector);geometry(box,`${label} ${name} ${width}`,x,y,{kind});const selected=await page.locator(selector).first().getAttribute('aria-pressed')==='true';check(box.background===(label==='saved'?'rgba(3, 15, 29, 0.55)':'rgba(3, 15, 29, 0.18)')&&box.blur===(label==='saved'?'blur(9px) saturate(1.4)':'blur(22px) saturate(1.8)'),label+' '+name+' actual material '+width,{background:box.background,blur:box.blur});if(width===1440)snapshots[selector]=box;}

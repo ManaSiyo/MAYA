@@ -16,8 +16,8 @@ Unresolved mismatches block completion. See [AGENTS.md](../AGENTS.md) for the
 mandatory workflow and [design.md](design.md) for the sole presentation canon.
 
 Admin has Settings and Messages. Insights and Logs/Notifications are retired;
-active voice/pending approvals remain in Settings. Real failures stay beside the
-affected feature, after campaign data. Settings headings use shared H3; Add Tools
+active voice/pending approvals remain in Settings. Unsolicited insight, provider and notification commentary is removed entirely;
+private server diagnostics remain. Settings headings use shared H3; Add Tools
 replaces Outside Tools, and Twilio links to its console under Behind the scenes.
 Admin and Brief use the same image cards, scaled to the drawer. Exact duplicates
 are grouped from complete file checksums and verified owner/client/project scope;
@@ -40,8 +40,8 @@ Owner SMS understands all/status-filtered lead lists and counts with durable MOR
 All visible scrollbar paint/geometry comes from the shared runtime; page CSS may
 only hide intentional navigation tracks. Runtime v2 removes native-width/theme
 conflicts. Tests measure actual gutter and Save propagation across served pages.
-Public health reports Ads configuration presence only; private Admin diagnostics
-name missing settings and safe provider errors without credentials.
+Public health reports Ads configuration presence only. Private server diagnostics
+remain available for troubleshooting; the dashboard renders no operational reports.
 
 Current drawer/scrollbar/segment controls: every hamburger uses the MAYA drawer
 material, with its own shared Edit/Restore preview. Scrollbars default to 4px,

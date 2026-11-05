@@ -73,11 +73,11 @@ try{
  await api.click();await popup.waitFor({state:'visible'});await page.setViewportSize({width:1300,height:1000});await popup.waitFor({state:'hidden'});
  assert.equal(await page.locator('#drawer-systems a[href*=outbound]').count(),0,'Retired Outbound has no Vault link');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-error',{detail:'Configuration request failed'})));await page.waitForTimeout(30);await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');assert.match(await page.locator('#model-snapshot').textContent(),/Configuration request failed.*Last configuration shown/);await page.keyboard.press('Escape');
- // Await the genuine blocked-sign-in error and check its inline feedback;
+ // Await genuine blocked-sign-in exhaustion without on-screen reporting;
  // retired history must not create any owner action.
- await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.waitForFunction(()=>_gisTries>40&&!document.getElementById('submissions-notification-status'));
  const observations=notificationWrites.flatMap(body=>body.items);
- assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; the real blocked-GIS warning remains visible beside Submissions');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; blocked GIS does not render a dashboard report');
  assert.ok(await page.evaluate(()=>window.fixtureIntervalDelays.includes(5000)),'The real five-second submissions poll was intercepted before scheduling');
  assert.deepEqual(providerReads,[],'Configuration-only checks never run background submissions or Marketing reads');
  assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Configuration reads do not invent provider recovery');

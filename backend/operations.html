@@ -289,9 +289,9 @@ if (self !== top) document.documentElement.classList.add('embedded');
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=12">
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=13">
 <script defer src="/aesthetics/ui/fabric-search-details.js?v=2"></script>
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=12"></script>
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=13"></script>
 </head>
 <body>
 <!-- Front End drawer model: horizontal scroll-snap with a main pane + a drawer pane.
@@ -502,7 +502,7 @@ function openOperationFabrics() {
   const context=_operationInputContext,piece=FILES.piece;
   if(!context?.submissionId||context.account!==operationAccount()||!piece||!FILES.saved)return toast('Open a saved dissected garment before choosing Fabrics.');
   const host=$('operation-fabrics-host');host.hidden=false;$('hero-img').style.display='none';$('hero-empty').style.display='none';
-  return window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.submissionId,referenceImage:context.referenceImage,preferences:typeof context.preferences==='string'?context.preferences:JSON.stringify(context.preferences||''),piece,pieces:context.pieces});
+  return window.MayaFabricAssistant.open({host,automatic:true,reopenSaved:openOperationFabrics,submissionId:context.submissionId,referenceImage:context.referenceImage,preferences:typeof context.preferences==='string'?context.preferences:JSON.stringify(context.preferences||''),piece,pieces:context.pieces});
 }
 function closeOperationFabrics(){window.MayaFabricAssistant?.close();const host=$('operation-fabrics-host');if(host)host.hidden=true;}
 window.addEventListener('maya:fabric-selected', event => {

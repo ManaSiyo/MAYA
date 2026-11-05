@@ -1,5 +1,12 @@
+<!-- November 5: Fabrics has one existing bottom P1 loading line, “Searching for
+Fabrics”; no second loading sentence in the gallery. The active Fabric preview
+shows that P1 line under both identical gallery views. No new role, material,
+layout or saved key. Private resets preserve automatic presentation; host-scoped
+explicit Refresh can reopen the current saved garment. Shared Fabric assets v13. -->
+
 <!-- November 4 owner update supersedes earlier Insights/Logs/notification notes:
-Settings and Messages only; feature failures remain inline after the affected data.
+Settings and Messages only. November 5 supersedes inline feature reporting: no
+unsolicited insights, provider diagnostics or notification commentary on screens.
 Add Tools and other Settings group headings use H3. Twilio is a provider-console
 link under Behind the scenes. Admin/Brief submission image cards share one
 component with Inner material, 3:2 photos and Drawer/Scrollbars; the existing Drawer

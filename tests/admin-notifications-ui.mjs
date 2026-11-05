@@ -9,7 +9,7 @@ const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||pro
 const page=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
 page.on('pageerror',e=>errors.push(e.message));
 await page.addInitScript(()=>{window.setInterval=()=>0;window.google={accounts:{id:{initialize(){},prompt(){},renderButton(){},cancel(){},disableAutoSelect(){}}}};});
-let report={ok:true,analytics:{connected:true,sources:[]},googleAds:{connected:false,code:'oauth_expired'},meta:{connected:false,code:'not_configured'},chatgptAds:{connected:true},adCombined:{campaignDaily:[],campaigns:[],excludedSources:[]},leads:{connected:false},warnings:[]};
+let report={ok:true,analytics:{connected:true,sources:[]},googleAds:{connected:false,code:'oauth_expired'},meta:{connected:false,code:'not_configured'},chatgptAds:{connected:true},adCombined:{campaignDaily:[],campaigns:[],excludedSources:[]},leads:{connected:false,why:'PRIVATE_PROVIDER_FAILURE'},warnings:[{text:'UNSOLICITED_INSIGHT'}]};
 await page.route('**/*',async route=>{
  const req=route.request(),u=new URL(req.url());if(u.origin!==origin)return route.abort();
  if(u.pathname.startsWith('/api/')){
@@ -31,10 +31,9 @@ try{
  assert.equal(await page.locator('#drawer-systems>h3').filter({hasText:'Add Tools'}).count(),1);
  assert.equal(await page.locator('#drawer-systems>h3').filter({hasText:'Outside tools'}).count(),0);
  await page.evaluate(()=>loadMkt());
- assert.match(await page.locator('#ads-connection-status').textContent(),/unavailable/i,'Real provider failure remains explicit');
- assert.ok(await page.locator('#ads-connection-status').evaluate(e=>!!(document.getElementById('campaigns-table').compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING)),'Failure follows campaign data');
- const warning=await page.locator('#leads-note').textContent();assert.ok(warning);
- await page.evaluate(()=>paintLeads({connected:true,list:[]}));assert.equal(await page.locator('#leads-note').textContent(),warning,'A local repaint cannot invent recovery');
+ assert.equal(await page.locator('.admin-feature-feedback,#leads-note,#ads-connection-status,#marketing-warning-status').count(),0,'No unsolicited reporting survives provider failures');
+ assert.ok(!/PRIVATE_PROVIDER_FAILURE|UNSOLICITED_INSIGHT/.test(await page.locator('body').innerText()),'Provider errors and generated advice cannot leak through another screen element');
+ await page.evaluate(()=>paintLeads({connected:true,list:[]}));
  for(const saved of [false,true]){
   await page.evaluate(saved=>{const d=structuredClone(MayaTypographyControls.defaults);if(saved){Object.assign(d.type.H3,{font:'cormorant',size:18,weight:500,style:'italic',case:'uppercase'});Object.assign(d.drawer,{paddingX:21,paddingY:19});}MayaTypographyControls.apply(d);},saved);
   for(const width of [320,390,768,1024,1440,1920]){
@@ -51,8 +50,8 @@ try{
  await page.evaluate(()=>_mayaQueueAction({kind:'memory',text:'Fixture reviewed memory'}));assert.ok(await page.locator('#maya-confirmation').evaluate(e=>e.open));await page.getByRole('button',{name:'Dismiss',exact:true}).click();
  await page.evaluate(()=>admTab('messages'));assert.ok(await page.locator('#drawer-messages').isVisible());assert.ok(await page.locator('#drawer-systems').isHidden());
  await page.evaluate(()=>{_idTok='other-fixture';++_adminSession;window.dispatchEvent(new Event('maya-owner-session-changed'));});
- for(const id of ['leads-note','ads-connection-status','submissions-notification-status'])assert.equal(await page.locator('#'+id).textContent(),'','Account reset clears '+id);
- assert.deepEqual(requests.filter(r=>r.path==='/api/admin/notifications'||r.path==='/api/admin/design-history'),[],'No retired history read, poll or write');
- assert.deepEqual(requests.filter(r=>r.method!=='GET'&&r.path!=='/api/admin/marketing-brief'),[],'Reviewing Settings and dismissing approval sends nothing');
- assert.deepEqual(errors,[]);console.log('Admin retirement passed: no Insights/Logs/history activity, honest feature errors, account clearing, voice approvals, Messages, Twilio/Add Tools and shared H3 at six widths.');
+ assert.equal(await page.locator('.admin-feature-feedback').count(),0,'Account changes cannot resurrect reporting');
+ assert.deepEqual(requests.filter(r=>['/api/admin/notifications','/api/admin/design-history','/api/admin/marketing-brief','/api/admin/lead-alerts/status'].includes(r.path)),[],'No retired history read, poll or write');
+ assert.deepEqual(requests.filter(r=>r.method!=='GET'),[],'Reviewing Settings and dismissing approval sends nothing');
+ assert.deepEqual(errors,[]);console.log('Admin retirement passed: no Insights/Logs/history activity, no provider commentary, account clearing, voice approvals, Messages, Twilio/Add Tools and shared H3 at six widths.');
 }finally{await browser.close();}

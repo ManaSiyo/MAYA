@@ -1,33 +1,30 @@
-Title: [Codex] Simplify Admin and share submission photo cards
+Title: [Codex] Remove dashboard reporting and repair Fabric loading/reset
 
-Remove owner-retired Insights and Logs/Notifications UI and client history work.
-Keep feature failures beside their data, active voice/approvals in Settings, and
-private server history plus reviewed send/account guards intact. Add a Twilio
-console link under Behind the scenes, rename Outside Tools to Add Tools, and use
-shared H3 for Settings group headings.
+Remove unsolicited Admin insight/advice and provider/notification commentary,
+including generated marketing-brief calls and callback-health display polling.
+Keep factual cards/metrics/tables, independent callback checks/private health and
+reviewed save/send/account protections. No diagnostic relocation or new dashboard controls.
 
-Share Admin image cards with the Brief drawer, scaled within its width. Group
-only complete exact submission payloads within verified owner/client/project
-scope; retain canonical records/files and direct links. Bind drawer list/photo
-responses to account and open generation. Preserve same-account renewal and the
-legacy local-folder path. Extend the existing Drawer preview and compatible
-lower-fold spacing control, with shared Inner/Drawer/H3 authority. Presentation
-references v4; new shared card assets explicitly revalidate.
+Use one existing bottom P1 Fabrics loading message: Searching for Fabrics. Keep
+In House/Global dimensions, scrolling and two caption rows identical. Preserve
+automatic gallery presentation after private resets; explicit Refresh validates
+and reopens the current saved garment through its host. Shared Fabric references
+v13 and active preview cover the status without a new saved setting.
 
-Repair fabric classification that rejected floral/paisley patterned yardage as
-sewing patterns. Keep source, color, client-exclusion and photo evidence checks,
-all private-scope/cancellation guards and no automatic paid retry. Empty copy
-uses existing Refresh; no Fabric layout change or added control.
+Accept short patterned textile names while rejecting actual sewing/knitting/PDF
+templates. Start worldwide image queries broadly by color/apparel yardage. Add
+count-only private response diagnostics; preserve image/source, exclusion,
+cancellation and private-scope safeguards, with no automatic paid retry.
 
-Validation: all 80 functional/syntax release commands, full app-regression and
-smoke pass, including corrected retirement-fixture reruns (82 required checks).
-Worldwide (30), search (57), sourcing (18) and forced-GC pass on Node20 and Node24.
-Six-width default/saved card geometry, account races, actual design Save and active
-previews pass; phone/desktop captures were visually inspected. npm ci and role
-regeneration pass. Final standalone Aesthetic Control passed last, after all functional verification
-and presentation edits. See AI-HANDOFF for evidence paths and live limitations.
+Validation: focused Admin, Fabric and callback tests pass. Node24 worldwide,
+search, sourcing and forced-GC pass. All 80 exact functional/syntax
+release commands plus full app-regression/smoke pass (82 required checks with
+corrected retirement-expectation reruns). Default/saved six-width geometry and
+session recovery pass, with phone/desktop visual inspection. Final standalone
+Aesthetic Control passed last after preview spacing/default/saved editor checks
+and visual inspection. Details and evidence paths are in AI-HANDOFF.
 
-Live 3663a5d still produced zero cards in the saved hooded-tailcoat search. The
-local filter repair is not proof that it was the sole cause or that production
-now works. Owner Push, exact release verification and live acceptance remain.
-No personal Chrome, credential/configuration changes, record deletion or Push.
+Live bb7c678 was freshly verified and still returned zero Global cards. Local
+fixes do not prove the provider issue is resolved. Owner Push, exact release
+verification and actual loaded-photo acceptance remain. No personal Chrome,
+credentials/configuration changes, production writes or Push.

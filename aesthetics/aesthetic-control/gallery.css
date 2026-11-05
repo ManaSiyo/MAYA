@@ -260,4 +260,4 @@ html body #cell-format-toolbar{width:100%;backdrop-filter:var(--maya-frost);bord
 .camera-style-preview{text-align:center;max-width:440px;margin:10px auto}.camera-preview-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 
 /* In House is the permanent layout authority for the saved-look Global gallery. */
-.workspace-fabric-gallery{height:520px;min-height:0}.workspace-fabric-gallery .fa-body{flex:1;min-height:0}.workspace-fabric-gallery .fa-results{flex:1 1 260px}.workspace-preview-card.workspace-fabric-gallery{grid-column:1/-1}
+.workspace-fabric-gallery>.fa-status{margin:0}.workspace-fabric-gallery{height:520px;min-height:0}.workspace-fabric-gallery .fa-body{flex:1;min-height:0}.workspace-fabric-gallery .fa-results{flex:1 1 260px}.workspace-preview-card.workspace-fabric-gallery{grid-column:1/-1}

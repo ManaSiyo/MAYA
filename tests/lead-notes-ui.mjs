@@ -120,9 +120,9 @@ try{
  // Wait for the actual blocked-sign-in failure, with no notification
  // history writer. No timing sleep or source/code
  // validation is relaxed; unavailable is a genuine error, not recovery.
- await page.waitForFunction(()=>_gisTries>40&&document.getElementById('submissions-notification-status').textContent.includes('Google sign in could not load.'));
+ await page.waitForFunction(()=>_gisTries>40&&!document.getElementById('submissions-notification-status'));
  const observations=notificationWrites.flatMap(write=>write.body.items);
- assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; the real blocked-GIS warning remains visible beside Submissions');
+ assert.equal(notificationWrites.length,0,'Retired notification history performs no writes; blocked GIS does not render a dashboard report');
  assert.deepEqual(observations.filter(item=>item.source==='leads'&&item.code==='healthy'),[],'Local lead note and filter renders never invent a healthy Leads observation');
  assert.deepEqual(observations.filter(item=>['healthy','connected'].includes(item.code)),[],'Local note and filter renders do not report any provider recovery without a fresh provider read');
  assert.deepEqual(errors,[]);console.log('Lead note Save/Cancel, outside-click discard, confirmed persistence, H4/H5, Contact and unsent Booking Link drafts passed at four widths.');

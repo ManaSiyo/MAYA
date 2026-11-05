@@ -9,6 +9,7 @@
     {id:'amazon',label:'Amazon',hosts:['amazon.com']},
     {id:'others',label:'Others',hosts:['blackbirdfabrics.com','thefabricstore.com','tessuti.com.au']},
   ];
+  let reopenSaved=null;
   let searchSeq=0, autoStarted=false, searchMode='worldwide',activeStores=new Set(),filterTouched=false,submittedRequest='',lastSearchStores='',completedStatus='';
   const storeKey=()=>searchMode==='worldwide'?'worldwide':'retailers|'+[...activeStores].sort().join('|');
   let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
@@ -369,7 +370,7 @@
     const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child)){child._fabricDispose?.();child.remove();}
     cards.forEach((el,index)=>{if(els.results.children[index]!==el)els.results.insertBefore(el,els.results.children[index]||null);});
     if(items.length&&cards.every(item=>item.hidden)&&!busy){els.results.append(node('p','fa-empty','No fabric photographs loaded. Refresh to retry.'));}
-    if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':searchState==='preparing'?'Preparing the saved reference…':busy?searchMode==='worldwide'?'Looking at this image and searching worldwide…':'Checking the selected retailers…':searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
+    if(!items.length&&!busy&&searchState!=='preparing')els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
     els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
   }
   async function chooseSearch(mode,group){
@@ -387,6 +388,7 @@
     for(const item of els.results.querySelectorAll('.has-missing-photo'))item._fabricSignature='';
     if(view==='saved')return loadBook();
     if(view==='inhouse'){try{if(context.loadInhouse){const stamp=epoch;const items=await context.loadInhouse();if(current(stamp)){context.inhouse=items;paint();}}else await loadInventory(true);}catch(e){status(e.message);}return;}
+    if(context.automatic&&!context.submissionId&&reopenSaved)return reopenSaved();
     if(searchState==='preparing')return;
     if(context.automatic&&!image)return open({...context,host,forceReset:true});
     return run(true,!!submittedRequest);
@@ -406,7 +408,7 @@
     let retained=(filterOnly||request===submittedRequest)?products:[];
     if(!retained.length)resultCache.delete(resultKey());
     busy=true;searchState='searching';completedStatus=''; els.send.disabled=true; els.stop.hidden=false; view='search'; els.saveStatus.textContent='';
-    products=retained;if(!retained.length){searchDetails=null;els.details.set(null);}paint();status(retained.length?'Checking for more fabrics…':'Searching fabric shops…');
+    products=retained;if(!retained.length){searchDetails=null;els.details.set(null);}paint();status('Searching for Fabrics');
     const submitted=request || 'Find fabrics like this photo';
     submittedRequest=submitted;
     const line=node('p','fa-request',submitted); els.transcript.append(line);
@@ -423,7 +425,7 @@
         const event=JSON.parse(raw);
         if(event.type==='error')throw Error(event.message);
         if(event.searchDetails){searchDetails=event.searchDetails;els.details.set(searchDetails);}
-        if(event.type==='status')status(event.message);
+        if(event.type==='status')status('Searching for Fabrics');
         if(event.type==='interpretation'){els.observation.textContent=event.observation||'';paint();}
         if(event.type==='products'&&event.incremental&&!event.preliminary){
           const removed=new Set(Array.isArray(event.removedUrls)?event.removedUrls:[]);
@@ -431,7 +433,7 @@
           published=(Array.isArray(event.products)?event.products:[]).filter(p=>!removed.has(p.url));
           products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-48);paint();rememberResults();
         }
-        if(event.type==='products' && event.preliminary)status('Retailer candidates. Photo comparison pending…');
+        if(event.type==='products' && event.preliminary)status('Searching for Fabrics');
         if(event.type==='done'){
           const confirmed=Array.isArray(event.products)?event.products:[];
           products=[...new Map([...retained,...confirmed].map(p=>[p.url,p])).values()].slice(-48);
@@ -454,6 +456,7 @@
     rememberResults();
     const previousContext=context, prevIdentity=identity;
     context={...next};
+    reopenSaved=typeof next.reopenSaved==='function'?next.reopenSaved:null;
     const nextIdentity=scope();
     const changed=next.forceReset||prevIdentity!==nextIdentity||(next.referenceImage&&next.referenceImage!==originalImage)||(next.preferences!==undefined&&next.preferences!==previousContext.preferences);
     if(next.silent&&!changed){context={...previousContext,...next};return;}
@@ -474,7 +477,7 @@
     if(!restored)void loadBook();
     // Inventory must remain usable even if the private reference photo fails.
     void loadInventory().catch(e=>{if(current(stamp)&&view==='inhouse')status(e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':e.message);});
-    if(changed&&!restored)status(context.automatic?'Loading the saved look…':'Describe what you need. A photo is optional.');
+    if(changed&&!restored)status(context.automatic?'Searching for Fabrics':'Describe what you need. A photo is optional.');
     els.send.disabled=true;
     try{
       if(changed&&!restored&&next.referenceImage){const value=await preparedPhoto(next.referenceImage);if(!current(stamp)||preparationSequence!==searchSeq)return;image=value;originalImage=next.referenceImage;paintPhoto();}
@@ -487,12 +490,12 @@
   }
   function guardAccount(){if(dialog && identity!==scope()){
     const previousSubmission=context.submissionId;
-    context={};reset();identity=scope();paint();els.sub.textContent='Fabric search';
+    context={automatic:!!context.automatic};reset();identity=scope();paint();els.sub.textContent='Fabric search';
     window.dispatchEvent(new CustomEvent('maya:fabric-selected',{detail:{submissionId:previousSubmission,product:null}}));
     window.dispatchEvent(new CustomEvent('maya:fabric-context',{detail:{submissionId:previousSubmission,referenceImage:''}}));
     status('Account changed. Start a new search.');
   }}
   window.addEventListener('storage',guardAccount);window.addEventListener('focus',guardAccount);window.addEventListener('maya-owner-session-changed',guardAccount);
   setInterval(()=>{if(dialog)guardAccount();},1000);
-  window.MayaFabricAssistant={open,close,expand,prepare:next=>open({...next,silent:true}),reset:()=>{context={};reset();identity=scope();if(els){els.sub.textContent='';paint();}},selection:piece=>{guardAccount();return selectedProduct(piece);},focusGarment:piece=>{guardAccount();if(!context.submissionId)return;rememberResults();context={...context,piece:pieceMetadata(piece)};if(identity!==scope()){reset();identity=scope();paint();notifySelection();}}};
+  window.MayaFabricAssistant={open,close,expand,prepare:next=>open({...next,silent:true}),reset:()=>{context={automatic:!!context.automatic};reset();identity=scope();if(els){els.sub.textContent='';paint();}},selection:piece=>{guardAccount();return selectedProduct(piece);},focusGarment:piece=>{guardAccount();if(!context.submissionId)return;rememberResults();context={...context,piece:pieceMetadata(piece)};if(identity!==scope()){reset();identity=scope();paint();notifySelection();}}};
 })();

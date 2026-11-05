@@ -9,7 +9,7 @@ export function isFabricProduct(product) {
   const title=String(product?.title||''),facts=[title,product?.description,product?.composition].join(' ');
   // A textile motif is not a sewing template. Garment-pattern listings remain excluded.
   const garmentPattern=/\b(?:dress|shirt|skirt|coat|jacket|trousers?|pants?|blouse|sweater|garment)\s+patterns?\b|\bpatterns?\s+for\s+(?:(?:a|an|the)\s+)?(?:dress|shirt|skirt|coat|jacket|trousers?|pants?|blouse|sweater|garment)\b/i.test(title);
-  const sewingPattern=garmentPattern||/\b(?:sewing|knitting|crochet|dressmaking|paper|pdf|digital|downloadable)\s+patterns?\b|\bpatterns?\s+(?:pdf|downloads?|instructions?|templates?|sizes?)\b/i.test(facts)||(/\bpatterns?\b/i.test(title)&&!/\b(?:fabric|yardage|by the yard|per yard|per met(?:er|re))\b/i.test(facts));
+  const sewingPattern=garmentPattern||/\b(?:sewing|knitting|crochet|dressmaking|paper|pdf|digital|downloadable)\s+patterns?\b|\bpatterns?\s+(?:pdf|downloads?|instructions?|templates?|sizes?)\b/i.test(facts);
   if(!title||NOT_FABRIC.test(title)||sewingPattern||/\b(?:swatch|sample)\b/i.test(title)||!MATERIALS.test(facts))return false;
   const yardage=/\b(?:fabric|yardage|shirting|suiting)\b/i.test(title)||/\b(?:by the yard|per yard|per metre|per meter|sold (?:by|in) (?:the )?(?:yard|metre|meter)|fabric width)\b/i.test(facts);
   // "Cotton shirt fabric" is yardage; "cotton shirt, size M" is apparel.
