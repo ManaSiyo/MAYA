@@ -1,3 +1,16 @@
+# November 5 image model update
+
+New image generations and edits use gpt-image-2.6-flare across frontend, Brief
+piece/pattern renders and Operation Room. Keep existing quality, dimensions,
+reference images and prompts. Proxy permissions and community provenance retain
+gpt-image-2.5-flare and gpt-image-2 for older open clients and saved images; never
+relabel historical images. tests/image-models.mjs executes actual request builders
+with fake transport and is a release gate. Run it with proxy-policy on release
+Node20 and local Node. No new UI, settings or independent aesthetic authority.
+This image-generation upgrade does not fix worldwide Fabric web-photo sourcing.
+Published token prices match 2.5 Flare; entitlement, real output quality and live
+latency still require deployed acceptance. Do not claim a measured speedup.
+
 # November 5 owner correction — clean screens, no unsolicited reporting
 
 Remove all dashboard insight/advice and provider/notification commentary. Do not

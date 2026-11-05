@@ -1,30 +1,21 @@
-Title: [Codex] Remove dashboard reporting and repair Fabric loading/reset
+Title: [Codex] Upgrade image generation and editing to GPT Image 2.6 Flare
 
-Remove unsolicited Admin insight/advice and provider/notification commentary,
-including generated marketing-brief calls and callback-health display polling.
-Keep factual cards/metrics/tables, independent callback checks/private health and
-reviewed save/send/account protections. No diagnostic relocation or new dashboard controls.
+Use the documented newest fast-iteration OpenAI image model across frontend
+creation/edits, Brief piece/pattern renders and Operation Room edits. Update
+central model metadata, endpoint permissions and community provenance rules.
+Retain older open clients and saved 2.5 Flare/Image 2 images without relabeling.
+Preserve quality, sizes, prompts, references, response handling, account/project
+boundaries, image-count caps and Admin-only high quality. No aesthetic changes.
 
-Use one existing bottom P1 Fabrics loading message: Searching for Fabrics. Keep
-In House/Global dimensions, scrolling and two caption rows identical. Preserve
-automatic gallery presentation after private resets; explicit Refresh validates
-and reopens the current saved garment through its host. Shared Fabric references
-v13 and active preview cover the status without a new saved setting.
+New fake-transport request-contract tests are part of release and app-regression;
+extended proxy and community regressions preserve compatibility and restrictions.
+Node20/Node24 image/proxy checks and focused project/operation races pass.
+All 81 exact release functional/syntax commands plus app-regression and smoke
+pass (83/83). Updated model details preserve default/saved shared popup styling
+at seven widths; phone/desktop screenshots visually inspected. Final standalone
+Aesthetic Control passed last (exit 0).
 
-Accept short patterned textile names while rejecting actual sewing/knitting/PDF
-templates. Start worldwide image queries broadly by color/apparel yardage. Add
-count-only private response diagnostics; preserve image/source, exclusion,
-cancellation and private-scope safeguards, with no automatic paid retry.
-
-Validation: focused Admin, Fabric and callback tests pass. Node24 worldwide,
-search, sourcing and forced-GC pass. All 80 exact functional/syntax
-release commands plus full app-regression/smoke pass (82 required checks with
-corrected retirement-expectation reruns). Default/saved six-width geometry and
-session recovery pass, with phone/desktop visual inspection. Final standalone
-Aesthetic Control passed last after preview spacing/default/saved editor checks
-and visual inspection. Details and evidence paths are in AI-HANDOFF.
-
-Live bb7c678 was freshly verified and still returned zero Global cards. Local
-fixes do not prove the provider issue is resolved. Owner Push, exact release
-verification and actual loaded-photo acceptance remain. No personal Chrome,
-credentials/configuration changes, production writes or Push.
+Official standard token prices match 2.5 Flare. No live speed, output-quality,
+per-image cost or account-entitlement claim: no paid provider calls were made.
+No credentials/environment/billing changes or Push. Owner deployment and live
+acceptance remain; the prior empty Global sourcing incident is still unverified.

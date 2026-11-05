@@ -17,7 +17,7 @@ try{
   if(captureAdminNotification(req,{tokens:['fixture'],batches:notificationWrites}))return route.fulfill({json:{ok:true,items:[]}});
   if(u.pathname.startsWith('/api/')&&!['GET','HEAD'].includes(req.method()))writes++;
   if(req.method()==='GET'&&['/api/admin/submissions','/api/admin/marketing'].includes(u.pathname))providerReads.push(u.pathname);
-  if(u.pathname==='/api/admin/models')return route.fulfill({json:{checkedAt:'2026-10-03T12:00:00Z',models:{'Frontend text':'gpt-6-luna','Admin text':'gpt-6-luna','Fast text':'gpt-6-luna','Image default':'gpt-image-2.5-flare'},connections:[{provider:'OpenAI',model:'gpt-5-nano',configured:true,transport:'api',endpoint:'https://api.openai.com/v1/responses'},{provider:'gemini',model:'gemini-2.5-flash-lite',configured:true,transport:'vertex',endpoint:'https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/gemini-2.5-flash-lite:generateContent'}],images:[{provider:'OpenAI',model:'gpt-image-2.5-flare',configured:true,endpoint:'https://api.openai.com/v1/images/generations'}]}});
+  if(u.pathname==='/api/admin/models')return route.fulfill({json:{checkedAt:'2026-11-05T12:00:00Z',models:{'Frontend text':'gpt-6-luna','Admin text':'gpt-6-luna','Fast text':'gpt-6-luna','Image default':'gpt-image-2.6-flare'},connections:[{provider:'OpenAI',model:'gpt-5-nano',configured:true,transport:'api',endpoint:'https://api.openai.com/v1/responses'},{provider:'gemini',model:'gemini-2.5-flash-lite',configured:true,transport:'vertex',endpoint:'https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/gemini-2.5-flash-lite:generateContent'}],images:[{provider:'OpenAI',model:'gpt-image-2.6-flare',configured:true,endpoint:'https://api.openai.com/v1/images/generations'}]}});
   if(u.pathname==='/api/admin/owner-crm')return route.fulfill({json:{ok:true,gmailReady:false,mailboxes:[{id:'fixture-mailbox',email:'fixture@example.com'}]}});
   if(u.pathname.startsWith('/api/')){return route.fulfill({json:{ok:true,items:[],list:[],mailboxes:[]}});}
   let path=u.pathname==='/status.html'?'/backend/status.html':u.pathname;
@@ -37,12 +37,21 @@ try{
   await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');
   await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('GPT-5 Nano'));
   assert.equal(await page.locator('.model-provider[open]').count(),0,'Explicit details stay compact until expanded');assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna · Frontend, Admin, Fast/);
-  assert.doesNotMatch(await page.locator('#model-snapshot').textContent(),/GPT-image-2.5 Flare/);
+  assert.doesNotMatch(await page.locator('#model-snapshot').textContent(),/GPT-image-2.6 Flare/);
   await page.locator('.model-provider summary').filter({hasText:'Gemini'}).click();assert.match(await page.locator('#model-snapshot').textContent(),/aiplatform.googleapis.com/);
   if(width===1440)await page.screenshot({path:'/private/tmp/maya-admin-systems-preview.png'});
   let b=await page.locator('#model-snapshot').boundingBox();assert.ok(b.width<=340,'Compact card width');assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=844,'Model popup fits '+width);
   await page.keyboard.press('Escape');assert.ok(await page.locator('#model-snapshot').isHidden());
-  await page.getByRole('button',{name:'Image model details',exact:true}).click();assert.match(await page.locator('#model-snapshot').textContent(),/GPT-image-2.5 Flare/);
+  await page.getByRole('button',{name:'Image model details',exact:true}).click();assert.match(await page.locator('#model-snapshot').textContent(),/GPT-image-2.6 Flare/);
+  b=await page.locator('#model-snapshot').boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=844,'New image-model label fits existing popup at '+width);
+  if(width===390||width===1440)await page.locator('#model-snapshot').screenshot({path:'/private/tmp/maya-image26-model-default-'+width+'.png'});
+  await page.evaluate(()=>{const d=structuredClone(MayaTypographyControls.defaults);Object.assign(d.editor,{paddingX:19,paddingY:11,background:'green',fill:70,borderColor:'gray',rim:73,radius:16});MayaTypographyControls.apply(d);});
+  await page.locator('.model-provider summary').click();
+  assert.deepEqual(await page.locator('#model-snapshot').evaluate(e=>{const s=getComputedStyle(e);return [s.paddingLeft,s.paddingTop,s.backgroundColor,s.borderRadius];}),['19px','11px','rgba(23, 91, 59, 0.7)','16px'],'Current image metadata uses saved shared editor material');
+  b=await page.locator('#model-snapshot').boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=844,'Expanded image-model configuration fits saved settings at '+width);
+  assert.ok(await page.locator('#model-snapshot').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Model label and endpoint wrap within saved padding');
+  if(width===390||width===1440)await page.locator('#model-snapshot').screenshot({path:'/private/tmp/maya-image26-model-saved-'+width+'.png'});
+  await page.evaluate(()=>MayaTypographyControls.apply(MayaTypographyControls.defaults));
   await page.keyboard.press('Escape');
   await page.evaluate(()=>admTab('logs'));assert.ok(await page.locator('#drawer-systems').isVisible());
   assert.equal(await page.locator('#drawer-systems #drawer-command #maya-chat').count(),1);

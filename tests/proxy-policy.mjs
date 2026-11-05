@@ -45,6 +45,24 @@ function multipart(fields, opts = {}) {
 { const m = multipart([['model', 'whisper-1']]); const r = ev({ upstreamPath: 'v1/audio/transcriptions', contentType: m.contentType, body: m.body }); ok('valid multipart transcription: whisper-1', r.ok && r.model === 'whisper-1'); }
 
 // ── missing / unknown / malformed / mismatch ──
+// Current and already-open legacy image clients keep the same endpoint/cost policy.
+for (const model of ['gpt-image-2.6-flare', 'gpt-image-2.5-flare']) {
+  const body = json({ model, prompt: 'same garment', size: '1024x1536', quality: 'medium', n: 1 });
+  const generation = ev({ upstreamPath: 'v1/images/generations', body });
+  ok(model + ' generation is forwarded unchanged without model fallback', generation.ok && generation.model === model && generation.body.equals(body) && !generation.fallback);
+  const m = multipart([['model', model], ['quality', 'medium'], ['n', '1']], { bigFileFirst: true, fileSize: 300000 });
+  const edit = ev({ upstreamPath: 'v1/images/edits', ...m });
+  ok(model + ' edit preserves reference bytes', edit.ok && edit.body.equals(m.body) && !edit.fallback);
+  const wrong = ev({ body: json({ model, messages: [] }) });
+  ok(model + ' cannot use chat', !wrong.ok && wrong.error === 'model_endpoint_mismatch');
+  const count = ev({ upstreamPath: 'v1/images/generations', body: json({ model, n: 3 }) });
+  ok(model + ' retains the image-count cap', !count.ok && count.error === 'too_many_images');
+  const high = multipart([['model', model], ['quality', 'high']], { bigFileFirst: true, fileSize: 300000 });
+  const denied = ev({ upstreamPath: 'v1/images/edits', ...high });
+  ok(model + ' keeps high quality Admin-only', !denied.ok && denied.error === 'quality_not_allowed');
+  ok(model + ' permits reviewed Admin quality', ev({ upstreamPath: 'v1/images/edits', ...high, isAdmin: true }).ok);
+}
+
 { const r = ev({ body: json({ messages: [] }) }); ok('missing model is refused', !r.ok && r.error === 'model_required'); }
 { const r = ev({ body: json({ model: 'gpt-4-turbo', messages: [] }) }); ok('unknown model is refused', !r.ok && r.error === 'model_not_allowed'); }
 { const r = ev({ body: Buffer.from('{ not json', 'utf8') }); ok('malformed JSON on a model route is refused', !r.ok && r.error === 'malformed_body'); }

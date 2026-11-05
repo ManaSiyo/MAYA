@@ -42,8 +42,8 @@ function endpointModels(cfg) {
   const TERRA = cfg.TERRA, LUNA = cfg.LUNA, SOL = cfg.SOL;
   return {
     'v1/chat/completions': new Set([TERRA, LUNA, SOL, 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.6-sol']),
-    'v1/images/generations': new Set(['gpt-image-2', 'gpt-image-2.5-flare']),
-    'v1/images/edits': new Set(['gpt-image-2', 'gpt-image-2.5-flare']),
+    'v1/images/generations': new Set(['gpt-image-2', 'gpt-image-2.5-flare', 'gpt-image-2.6-flare']),
+    'v1/images/edits': new Set(['gpt-image-2', 'gpt-image-2.5-flare', 'gpt-image-2.6-flare']),
     'v1/audio/transcriptions': new Set(['whisper-1']),
     'v1/embeddings': new Set(['text-embedding-3-small']),
     'v1/decisions': new Set(['gpt-6-luna']),
@@ -177,7 +177,7 @@ function evaluateProxyPolicy(opts) {
   if (!allowed.has(target)) {
     // unknown everywhere vs a real model on the wrong endpoint
     const knownAnywhere = [cfg.TERRA, cfg.LUNA, cfg.SOL, 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.6-sol',
-      'gpt-image-2', 'gpt-image-2.5-flare', 'whisper-1', 'text-embedding-3-small'].includes(target);
+      'gpt-image-2', 'gpt-image-2.5-flare', 'gpt-image-2.6-flare', 'whisper-1', 'text-embedding-3-small'].includes(target);
     if (knownAnywhere) return reject(403, 'model_endpoint_mismatch', target + ' is not valid on ' + upstreamPath);
     return reject(403, 'model_not_allowed', target);
   }

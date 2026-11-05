@@ -2705,7 +2705,7 @@ async function renderPiece(heroImage, piece) {
     'the garment keys cleanly to transparent. The garment is the only thing visible. ' +
     'No text, no labels, no captions, no measurements, no rulers.';
   const form = new FormData();
-  form.append('model', 'gpt-image-2.5-flare');
+  form.append('model', 'gpt-image-2.6-flare');
   form.append('prompt', prompt);
   const blob = await (await fetch(heroImage)).blob();
   form.append('image', blob, 'hero.png');
@@ -3065,7 +3065,7 @@ async function generatePattern(heroImage, piece) {
     'No model, no 3D garment, no body, no mannequin, no shading, no rendering, no text ' +
     'other than the small panel labels. Output: a flat technical-drawing PDF look.';
   const form = new FormData();
-  form.append('model', 'gpt-image-2.5-flare');
+  form.append('model', 'gpt-image-2.6-flare');
   form.append('prompt', prompt);
   const blob = await (await fetch(heroImage)).blob();
   form.append('image', blob, 'hero.png');

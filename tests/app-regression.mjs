@@ -209,6 +209,8 @@ const r = await pg.evaluate(async () => {
   out.wallMovesLeftToRight = communityBoard._startDrift.toString().includes('[-26, 21, -31]');
   out.visionGate = [
     communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-2' }) === true,
+    communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-2.5-flare' }) === true,
+    communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-2.6-flare' }) === true,
     communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-1.5' }) === false,
     communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_legacy1', version: 1 }) === true,
     communityBoard._isVision({ kind: 'inspo', image: 'x' }) === false,          // upload
@@ -344,7 +346,7 @@ ok('share rules bound the item list and schema',
 ok('wall updates cannot move a post between projects',
   RULES_SOURCE.includes('request.resource.data.pid == resource.data.pid'));
 ok('new wall posts require GPT Image 2 provenance',
-  RULES_SOURCE.includes("request.resource.data.model in ['gpt-image-2', 'gpt-image-2.5-flare']") &&
+  RULES_SOURCE.includes("request.resource.data.model in ['gpt-image-2', 'gpt-image-2.5-flare', 'gpt-image-2.6-flare']") &&
   INDEX_SOURCE.includes("model: card.generatedBy || 'gpt-image-2'"));
 ok('community uses a live listener instead of polling', p.liveListener);
 ok('fabric library is lazy and URL-backed',
@@ -1248,8 +1250,8 @@ ok('AI route telemetry records metadata only and the build gates its contracts',
 ok('GPT Image 1.5 is retired from every active image path and picker',
   !INDEX_SOURCE.includes('gpt-image-1.5') &&
   !BACKEND_SOURCE.includes('gpt-image-1.5') &&
-  BACKEND_SOURCE.includes("form.append('model', 'gpt-image-2.5-flare')") &&
-  INDEX_SOURCE.includes("stored !== 'gpt-image-2.5-flare'"));
+  BACKEND_SOURCE.includes("form.append('model', 'gpt-image-2.6-flare')") &&
+  INDEX_SOURCE.includes("stored !== 'gpt-image-2.6-flare'"));
 ok('piece render quality, size and parallel behavior stayed unchanged',
   /async function renderPiece[\s\S]{0,3000}form\.append\('size', '1536x1024'\)[\s\S]{0,120}form\.append\('quality', 'medium'\)/.test(BACKEND_SOURCE) &&
   BACKEND_SOURCE.includes('const promises = targets.map(p =>') &&
@@ -2836,6 +2838,9 @@ ok('Fabric classification accepts patterned yardage while retaining sewing-patte
 // November 5 owner correction: clean screens and one existing bottom loading line.
 ok('Admin has no insight generation or unsolicited provider reporting',!MAP_SOURCE.includes('/api/admin/marketing-brief')&&!MAP_SOURCE.includes('class="note admin-feature-feedback"')&&!MAP_SOURCE.includes('loadLeadAlertStatus'));
 ok('Fabrics uses one bottom loading message and preserves the saved gallery after reset',readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8').includes("status('Searching for Fabrics')")&&readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.js'),'utf8').includes('reopenSaved'));
+
+await import('./image-models.mjs');
+ok('New image generation and editing use GPT Image 2.6 Flare, preserving quality, reference images and legacy provenance',true);
 
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

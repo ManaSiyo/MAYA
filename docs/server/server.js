@@ -298,7 +298,7 @@ const MODEL_UPGRADES = Object.freeze({
 const MODEL_ALLOWED = new Set([
   MODEL_TERRA, MODEL_LUNA, MODEL_SOL,
   'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.6-sol',
-  IMAGE_MODEL, 'gpt-image-2', // legacy images remain readable
+  IMAGE_MODEL, 'gpt-image-2.5-flare', 'gpt-image-2', // keep older open clients compatible
   'whisper-1',                // transcription, untouched
   'text-embedding-3-small',   // pattern book retrieval, untouched
 ]);

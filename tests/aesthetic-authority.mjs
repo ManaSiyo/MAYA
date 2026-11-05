@@ -121,6 +121,8 @@ await import('./input-controls-ui.mjs?authority');
 
 await import('./operation-controls.mjs?authority');
 await import('./retired-workspaces-ui.mjs?authority');
+// Image-model migration adds no UI; the existing provider popup checks the
+// current 2.6 Flare label and unchanged geometry at all seven responsive widths.
 await import('./admin-systems-ui.mjs?authority');
 await import('./message-compose-ui.mjs?authority');
 

@@ -1,6 +1,6 @@
 // Cost-first defaults. Audio and embeddings keep their modality-specific models.
 export const TEXT_MODEL = process.env.MODEL_LUNA || 'gpt-6-luna';
-export const IMAGE_MODEL = 'gpt-image-2.5-flare';
+export const IMAGE_MODEL = 'gpt-image-2.6-flare';
 export function chatBody(body, model = TEXT_MODEL) {
   const next = {...body, model};
   if (/^gpt-6-/.test(model)) {

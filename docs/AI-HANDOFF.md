@@ -1,80 +1,79 @@
-# Current handoff — November 5 clean screens and Fabrics recovery
+# Current handoff — November 5 image model upgrade
 
-## Current owner request
+## Current owner request and implementation
 
-No Insights/advice or provider/notification commentary on screens. This expressly
-supersedes the previous decision to move failures inline. Keep factual Admin
-metrics/cards/tables and the approved In House/Global aesthetics. Fabrics has one
-bottom loading message, “Searching for Fabrics”. Global still returns no photos.
+Upgrade to the newest image models. Active OpenAI generation and edit requests
+now use gpt-image-2.6-flare in frontend/index.html, backend/backend.html and
+backend/operations.html. docs/server/model-config.mjs also exposes the new default
+through existing authenticated Admin model metadata. Proxy policy/server inventory
+and Firestore community create/update rules accept it; old 2.5 Flare and Image 2
+clients/posts remain compatible. Existing historical model tags are preserved.
 
-## Implemented locally
+No prompts, rendering quality, dimensions, reference-image handling, output format,
+retry behavior, account/project authorization or usage limits changed. Optional
+Vertex, text, speech and Fabric web-search models are unchanged. No added UI or
+aesthetic settings; existing provider metadata and the dormant model selector
+only report the updated model name. Existing shared typography/materials apply.
+No credentials, billing, environment settings, personal Chrome or paid calls used.
 
-Admin removes diagnostic destinations below Submissions, Users, Leads, Ads and
-Feature requests. It no longer requests generated marketing briefs or reads
-callback health to print Twilio/configuration failures. Independent deduplicated
-callback checks and private server health/history stay intact. Explicit reviewed
-send/save/auth outcomes and account/session guards remain. No provider settings,
-credentials, billing or production environment were changed.
+## Verified official research
 
-Fabrics suppresses the second busy paragraph and normalizes preparation/streaming/
-Refresh to one existing bottom P1 status. The sole Fabric preview represents it;
-there are no new visual settings or changed gallery dimensions. The exact default/
-saved six-width In House/Global parity gate remains. Fabric references are v13.
-Private account resets retain only automatic presentation mode, clearing private
-photos/results/context as before. Explicit Refresh calls Brief/Operations to
-validate and reopen the current saved garment. This repairs the observed expired-
-session state that restored retired chat controls and stranded Refresh, without
-an automatic search or restoring another account's cached data.
+Checked November 5: OpenAI's November 4 release introduced 2.6 Sunburst and Flare.
+Flare is documented for fast iteration and supports the same Images generation
+and editing endpoints. It replaces MAYA's previous Flare role directly.
+- https://developers.openai.com/api/docs/changelog
+- https://developers.openai.com/api/docs/models/gpt-image-2.6-flare
+- https://developers.openai.com/api/docs/pricing
+- https://developers.openai.com/api/reference/resources/images/methods/generate
+- https://developers.openai.com/api/reference/resources/images/methods/edit
 
-Remaining generic “pattern” rejection removed from textile names: green floral
-pattern brocade now qualifies, while garment/sewing/knitting/PDF templates remain
-excluded. The first provider image query explicitly starts broad with color and
-apparel yardage before motif/weave refinements. Source-backed photos, color/client
-exclusions, late retractions, four-URL fallbacks, cancellation and private cache
-boundaries remain. Private searchDetails.diagnostics adds only source/image-page,
-candidate/exclusion and qualified/photo-product counts; no raw provider log or
-on-screen reporting is added. Official image-result schema was checked at
-https://developers.openai.com/api/docs/guides/tools-web-search .
+Standard token rates equal 2.5 Flare: image input/cached/output $8/$2/$30 per
+million; text input/cached $5/$1.25. This is not a guaranteed identical per-image
+bill or a measured speed comparison. No extra complexity/quality tuning is added.
+Account entitlement and real output quality/latency are unverified until live use.
 
-## Live evidence and limitation
+## Validation
 
-Public Hosting release and /api/healthz both reported bb7c678 on November 5 at
-20:04 UTC. An authorized internal-browser reload and default saved hooded-tailcoat
-search reproduced both loading lines and a completed zero-card Global gallery.
-No photos were returned to the rendered DOM; the interpretation was dark forest
-green brocade/jacquard apparel yardage. The raw provider trace is unavailable, so
-these local corrections must not be presented as proof Global is fixed live.
-One unrelated MutationObserver error occurred on page load. No personal Chrome
-was accessed. No Push/deployment or credentials were used.
+New tests/image-models.mjs executes the actual frontend, Brief and Operations
+request builders with fake transport. It checks the new model, cleared obsolete
+preferences, auth, unchanged quality/sizes/options, original reference bytes and
+response handling. It runs in Cloud Build and app-regression. Proxy tests cover
+2.6 and 2.5 passthrough, endpoint rejection, image-count caps and Admin-only high
+quality after large multipart images. Regression checks include current/legacy
+community provenance and updated rules. Node20/Node24 image/proxy checks and
+Node20 Brief/Operation races and project-lifecycle pass.
 
-## Files and validation
+All 81 exact Cloud Build functional/syntax commands plus full app-regression and
+smoke pass (83/83). Updated image-model details also pass default/saved shared
+editor material and seven-width checks; phone/desktop screenshots were visually
+inspected. No layout/material changes were needed. Final standalone Aesthetic
+Control passed last (exit 0), after all functional checks and visual inspection. Evidence:
+/private/tmp/maya-image26-release.log, /private/tmp/maya-image26-gates/,
+/private/tmp/maya-image26-admin-systems.log, and model-default/model-saved PNGs.
+Final authority log: /private/tmp/maya-image26-final-authority.log.
 
-Runtime: backend/{status,backend,operations}.html; aesthetics/ui/fabric-assistant.js;
-aesthetics/aesthetic-control/{workspace-previews,presentation-controls}.js and gallery.css;
-aesthetics/aesthetic-control.html; docs/server/{fabric-worldwide.mjs,fabric-sourcing.js}.
-Typography usage regenerated. Preview-only status margins match the live component;
-no saved schema or served gallery layout change. Tests now require absent
-operational reporting and one bottom loading line, preserving actual blocked-GIS
-exhaustion, reviewed sends, truthful provider metrics, scopes and private history.
-The existing active preview and final authority cover the changed surfaces.
+## Prior work and remaining Global incident
 
-Focused Admin retirement/Ads, Fabric gallery/search/workflow and callback gates
-pass. Node24 search (57), worldwide (30), sourcing (18), forced-GC pass. All 80 exact
-Cloud Build functional/syntax commands and app-regression/smoke pass under Node20
-(82 required checks including corrected reruns). The initial Admin UI, workflow
-and static regression expectations required retired reporting/loading text; their
-updated full reruns pass. All functional verification is complete. Final standalone Aesthetic Control
-passed last, after the preview spacing correction, stronger real-editor checks
-and visual inspection of the default/saved loading preview. Final log:
-/private/tmp/maya-clean-final-authority-verified.log . Evidence is under
-/private/tmp/maya-clean-*.log and /private/tmp/maya-clean-gates/ .
+Local commit 42622c7 removes all unsolicited Admin insight/provider/notification
+reporting and uses one bottom Fabrics line: Searching for Fabrics. It also repairs
+explicit Refresh after private resets and patterned-textile qualification. In
+House/Global layout parity and private source/exclusion/account guards remain.
+That commit passed all required local checks and final standalone authority.
+
+Last live evidence (November 5, 20:04 UTC): Hosting and /api/healthz both bb7c678.
+An authorized internal-browser reload of the saved hooded-tailcoat reproduced a
+completed empty Global gallery. No photographs reached the DOM. Interpretation
+was dark forest green brocade/jacquard apparel yardage. Raw provider trace was
+unavailable. Local fixes do not prove this live provider issue is resolved.
 
 ## Exact next step
 
-Local changes are verified and prepared for the owner-authorized local commit.
-Owner Push is the next step; no Push or deployment was performed. After deployment, verify release,
-page assets and API commit, then explicitly run the same saved garment's Global
-search and Refresh. Require actual loaded photographs and clean Admin screens;
-if still empty, inspect count-only search diagnostics to distinguish missing
-provider images from rejected/unmatched candidates. Never claim synthetic images
-or local fixtures prove real-world sourcing works.
+All local verification is complete for the separate image-model commit.
+Owner Push is the next step; no Push or deployment was performed.
+Then verify release.json, page build stamps and /api/healthz commit. Accept one
+actual image generation/edit and saved-image sharing, checking entitlement,
+quality and timing. Separately run that same saved garment's Global search and
+Refresh: require actual loaded sourced photographs and clean Admin screens.
+If Global remains empty, use private count-only search diagnostics to distinguish
+missing provider image results from rejected/unmatched candidates. Generated
+images are never a substitute for sourced Fabric photographs.
