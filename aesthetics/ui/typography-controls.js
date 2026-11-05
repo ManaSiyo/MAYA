@@ -12,7 +12,7 @@
     },
     typeVersion:2,
     finish:'current',glass:{fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},
-    overlay:{fill:18,rim:22,blur:22,saturation:180,radius:12},editor:{fill:100,rim:14,radius:12,paddingX:8,paddingY:8,background:'black',borderColor:'white'},pillX:14,pillY:6,iconSize:28,dropdownHeight:28,iconPillGap:6,iconTextGap:8
+    overlay:{fill:18,rim:22,blur:22,saturation:180,radius:12},editor:{fill:100,rim:14,radius:12,paddingX:8,paddingY:8,background:'black',borderColor:'white'},pillX:14,pillY:6,touchTargetSize:44,iconSize:28,dropdownHeight:28,iconPillGap:6,iconTextGap:8
   };
   for(const [role,t] of Object.entries(defaults.type))Object.assign(t,{style:'normal',font:['H0','H1','H2'].includes(role)?'cormorant':'jost',case:role==='H0'||role==='H1'||role==='P3'?'uppercase':'none'});
   const surfaceDefaults={background:'black',blur:22,saturation:180,fill:18,rim:22,radius:12,paddingX:16,paddingY:12};
@@ -42,6 +42,7 @@
     v.scrollbar.version=2;v.drawer={...defaults.drawer,...v.drawer};
     v.layoutSpacing={...defaults.layoutSpacing,...v.layoutSpacing};v.semanticStyles={nonFabric:{...defaults.semanticStyles.nonFabric,...v.semanticStyles?.nonFabric}};
     for(const key of ['iconColor','iconOpacity','iconStroke'])v[key]??=defaults[key];v.sectionSpacing={...defaults.sectionSpacing,...v.sectionSpacing};v.statusStyles=Object.fromEntries(Object.entries(defaults.statusStyles).map(([key,state])=>[key,{...state,...v.statusStyles?.[key]}]));
+    v.touchTargetSize ??= defaults.touchTargetSize;
     v.iconPillGap ??= defaults.iconPillGap;v.iconTextGap ??= defaults.iconTextGap;v.iconSize ??= defaults.iconSize;v.dropdownHeight ??= defaults.dropdownHeight;v.inner={...defaults.inner,...v.inner};v.filter={...defaults.filter,...v.filter};
     const t=v.table||{};v.table={...defaults.table,...t,innerRim:t.innerRim??t.rim??defaults.table.innerRim,innerBorderColor:t.innerBorderColor??t.borderColor??defaults.table.innerBorderColor,columnWidths:{...t.columnWidths},cells:{...t.cells},header:{...defaults.table.header,...t.header},firstColumn:{...defaults.table.firstColumn,...t.firstColumn},columns:defaults.table.columns.map((c,i)=>({...c,...t.columns?.[i]}))};
     // Legacy cell saves now become whole-column settings in preview, not writes.

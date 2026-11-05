@@ -17,3 +17,7 @@
 /* Mixed results give unavailable links content-sized rows below the photos. */
 .fa-results:has(.has-missing-photo:not([hidden])){grid-auto-rows:max-content;align-content:start}.fa-results:has(.has-missing-photo:not([hidden])) .fa-product:not(.has-missing-photo){height:320px}.fa-product.has-missing-photo{grid-column:1/-1}
 @media(max-width:600px){.fa-product:not(.has-missing-photo):has(.fa-card-actions){display:flex;flex-direction:column}.fa-product:not(.has-missing-photo):has(.fa-card-actions) .fa-product-link{flex:1 1 0;height:auto;min-height:0}.fa-card-actions{flex-shrink:0}}
+
+/* Larger touch controls must not collapse the results region on narrow screens. */
+@media(any-pointer:coarse){.fabric-assistant{overflow-y:auto}.fabric-assistant .fa-body{min-height:120px}}
+@media(any-pointer:coarse) and (max-width:600px){.fa-store-wrap{flex-wrap:nowrap;align-self:stretch;overflow-x:auto;overscroll-behavior-x:contain}}

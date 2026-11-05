@@ -1,3 +1,31 @@
+# November 5 phone/iPad visualization and automatic avatars
+
+Photo uploads, camera photos, replacements, names and measurements save avatars
+automatically; names are optional and no physical Avatar Save button remains.
+Use stable avatar IDs, serialized account/client-bound transactions and revision
+checks. Keep unrelated records, reject stale/deleted records, reuse acknowledged
+Storage photos, and preserve project photos when removing a library entry. Do not
+remove explicit project/design saves, confirmations or reviewed send controls.
+Face-only visualization must work without measurements and without waiting for
+cloud avatar storage. Flush short final/interim speech once before visualization;
+consumed interim text must not trigger repeated paid extraction or a 30s delay.
+Prepare image references once, with bounded concurrency and original order.
+Frontend 2.6 Flare uses medium complexity; quality and image sizes stay unchanged.
+
+Glass owns optional touchTargetSize (integer 32–56, default 44), with an active
+Touch preview and field in its existing editor. Coarse pointers use this shared
+minimum target; desktop geometry and saved materials remain unchanged. Shared
+pill runtime v2, typography v25 and gallery v35 ship across served pages. Compact
+board dots keep their existing size; hide board navigation under the phone drawer.
+Avatar/project row actions reserve separate targets and remain visible on touch.
+Fabric assets are v14: narrow touch shop choices scroll horizontally, with a
+120px minimum results area and the same bottom status. Run
+avatar-autosave, visualize-preparation, mobile-visualize-ui, avatar-camera-ui,
+profile-crm, project-lifecycle and the voice/hands suites, exact release/regression
+and smoke, then standalone aesthetic-authority last. The mobile fixture supports
+MAYA_MOBILE_ENGINE=webkit for isolated iOS-engine checks. Emulation/fake transport
+does not prove real-device or provider latency. No personal Chrome or paid call.
+
 # November 5 image model update
 
 New image generations and edits use gpt-image-2.6-flare across frontend, Brief

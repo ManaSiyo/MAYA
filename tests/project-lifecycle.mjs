@@ -47,7 +47,7 @@ function harness(page) {
     compressBlobForUpload:async blob=>blob,
     _authSeq:1,_boardEpoch:1,_persistTimer:null,_hydrating:false,_creatingBin:false,_flushNow:false,_autosaveDirty:false,_activeSessionId:null,
     currentClientName:null,lastSummary:null,lastTranscript:'',items:[],_lastPaintDropped:0,
-    _avatarLibCache:null,_avatarLibCacheUid:null,_pendingAssetDeletes:[],_pendingLegacyDeletes:[],
+    _avatarLibCache:null,_avatarLibCacheUid:null,_facePhotoVersion:0,_avatarSaveInFlight:false,_avatarSavePending:null,_avatarSaveTimer:null,_pendingAssetDeletes:[],_pendingLegacyDeletes:[],
     _cardSig:c=>c.title||c.imageUrl||c.image||'',_twoWordFromItems:()=>'',_autoProjectName:()=> 'Untitled fixture',
     _drainAssetDeletes(){},_hydrate:async fn=>fn(),_doClear(){ctx.items=[];ctx.lastSummary=null;ctx.lastTranscript='';ctx._boardEpoch++;},
     showError:msg=>notices.push(msg),showToast:msg=>notices.push(msg),refreshDrawerClientName(){},renderNotesPanel(){},

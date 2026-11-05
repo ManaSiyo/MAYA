@@ -1,79 +1,89 @@
-# Current handoff — November 5 image model upgrade
+# Current handoff — November 5 phone/iPad visualization
 
-## Current owner request and implementation
+## Request and changes
 
-Upgrade to the newest image models. Active OpenAI generation and edit requests
-now use gpt-image-2.6-flare in frontend/index.html, backend/backend.html and
-backend/operations.html. docs/server/model-config.mjs also exposes the new default
-through existing authenticated Admin model metadata. Proxy policy/server inventory
-and Firestore community create/update rules accept it; old 2.5 Flare and Image 2
-clients/posts remain compatible. Existing historical model tags are preserved.
+Phone/iPad visualization, avatar auto-save, larger touch buttons and newest image
+models. frontend/index.html now saves uploaded/camera/replacement/random photos,
+names and measurements automatically, without requiring a name or Avatar Save.
+Transactions retain stable IDs and unrelated records; account/client versions and
+remote revisions reject stale writes/deleted entries. Stored photo URLs are reused.
+Removing an avatar retains its project photo. Existing explicit project/design
+Save, confirmations and reviewed send controls remain.
 
-No prompts, rendering quality, dimensions, reference-image handling, output format,
-retry behavior, account/project authorization or usage limits changed. Optional
-Vertex, text, speech and Fabric web-search models are unchanged. No added UI or
-aesthetic settings; existing provider metadata and the dormant model selector
-only report the updated model name. Existing shared typography/materials apply.
-No credentials, billing, environment settings, personal Chrome or paid calls used.
+A photo alone is sufficient to visualize. Local photo preparation settles before
+visualization; slow cloud save does not block it. Short speech tails flush once,
+and consumed interim speech no longer causes a 30-second wait/repeated extraction.
+Image edit references prepare once with two bounded workers, preserving order and
+uncropped originals. Frontend requests use gpt-image-2.6-flare with medium complexity;
+quality, size and prompts remain unchanged. Brief/Operations already use 2.6 Flare
+from b7ccf5d. Sharing opens an already-generated image, so its load time is not a
+fresh-generation latency benchmark.
 
-## Verified official research
+Optional touchTargetSize (32–56px, default 44) lives in the existing Glass editor
+and active Touch preview, validated client/server. Coarse pointers gain that
+minimum button size; desktop geometry/materials stay intact. Shared pill runtime
+v2 / typography v25 and gallery v35 are cache-bumped across served consumers.
+Compact board dots stay compact and hide beneath the phone drawer. Avatar/project
+row controls reserve separate targets and do not depend on hover. Fabric assets
+v14 preserve the results area and bottom status; narrow touch shop choices scroll
+horizontally. In House/Global photo/caption geometry remains the same.
+Files: frontend, shared pill/typography/gallery, design-config, served HTML refs,
+new autosave/preparation/mobile fixtures, updated regression/lifecycle/model tests,
+cloudbuild and final authority, plus continuity docs.
 
-Checked November 5: OpenAI's November 4 release introduced 2.6 Sunburst and Flare.
-Flare is documented for fast iteration and supports the same Images generation
-and editing endpoints. It replaces MAYA's previous Flare role directly.
-- https://developers.openai.com/api/docs/changelog
-- https://developers.openai.com/api/docs/models/gpt-image-2.6-flare
-- https://developers.openai.com/api/docs/pricing
-- https://developers.openai.com/api/reference/resources/images/methods/generate
-- https://developers.openai.com/api/reference/resources/images/methods/edit
+## Official image guidance
 
-Standard token rates equal 2.5 Flare: image input/cached/output $8/$2/$30 per
-million; text input/cached $5/$1.25. This is not a guaranteed identical per-image
-bill or a measured speed comparison. No extra complexity/quality tuning is added.
-Account entitlement and real output quality/latency are unverified until live use.
+https://developers.openai.com/api/docs/guides/image-generation documents 2.6 Flare
+for fast iteration, with low/medium/high complexity and high as omitted default.
+Complexity controls planning separately from quality. The prior model migration
+verified published token rates equal 2.5 Flare; per-image cost and live latency are
+not measured. No paid calls, credentials, environment changes or personal Chrome.
 
-## Validation
+## Verification
 
-New tests/image-models.mjs executes the actual frontend, Brief and Operations
-request builders with fake transport. It checks the new model, cleared obsolete
-preferences, auth, unchanged quality/sizes/options, original reference bytes and
-response handling. It runs in Cloud Build and app-regression. Proxy tests cover
-2.6 and 2.5 passthrough, endpoint rejection, image-count caps and Admin-only high
-quality after large multipart images. Regression checks include current/legacy
-community provenance and updated rules. Node20/Node24 image/proxy checks and
-Node20 Brief/Operation races and project-lifecycle pass.
+All 84 Cloud Build functional/syntax commands pass after targeted reruns, plus
+full app-regression and smoke (86 commands total). Obsolete manual-avatar Save
+expectations were updated; actual touch overlap and narrow Fabric results/status
+failures were repaired, with the assertions retained. Release/domain asset checks
+now require v14. Focused Node20/Node24 autosave, preparation/model checks pass;
+Node24 worldwide/legacy fabric and forced-GC gates also pass. Final conflict-cache
+recovery reran avatar, profile and project lifecycle checks after review.
 
-All 81 exact Cloud Build functional/syntax commands plus full app-regression and
-smoke pass (83/83). Updated image-model details also pass default/saved shared
-editor material and seven-width checks; phone/desktop screenshots were visually
-inspected. No layout/material changes were needed. Final standalone Aesthetic
-Control passed last (exit 0), after all functional checks and visual inspection. Evidence:
-/private/tmp/maya-image26-release.log, /private/tmp/maya-image26-gates/,
-/private/tmp/maya-image26-admin-systems.log, and model-default/model-saved PNGs.
-Final authority log: /private/tmp/maya-image26-final-authority.log.
+Chromium and WebKit cover 320/390 phones, phone landscape, 768/834 tablets and
+1194px tablet landscape, using fake providers. Upload without a name/measurements
+reaches one 2.6 Flare request while cloud storage is held, without Avatar Save or
+a missing-avatar modal. Saved avatars reopen correctly. Default/saved 44/52px
+controls fit; avatar/project actions do not overlap, desktop geometry stays intact,
+touch circles stay circular, and the active Touch editor saves/reloads its value.
+Default/saved phone/tablet captures were visually inspected. Personal Chrome,
+real microphones, live provider calls and physical iPad performance were not used.
 
-## Prior work and remaining Global incident
+Evidence: /private/tmp/maya-mobile-release.log and maya-mobile-gates/ (initial
+run), maya-mobile-hands-rerun.log, maya-mobile-fabric-final.log,
+maya-mobile-regression-complete.log, maya-mobile-smoke-final.log,
+maya-mobile-webkit-authority.log and maya-mobile-fabric-node24.log.
+Final standalone command is tests/aesthetic-authority.mjs on Node20, run last
+before commit; its exit-zero result is required and recorded in
+/private/tmp/maya-mobile-final-authority.log. Typography usage is regenerated.
 
-Local commit 42622c7 removes all unsolicited Admin insight/provider/notification
-reporting and uses one bottom Fabrics line: Searching for Fabrics. It also repairs
-explicit Refresh after private resets and patterned-textile qualification. In
-House/Global layout parity and private source/exclusion/account guards remain.
-That commit passed all required local checks and final standalone authority.
+## Deployment and unresolved live sourcing
 
-Last live evidence (November 5, 20:04 UTC): Hosting and /api/healthz both bb7c678.
-An authorized internal-browser reload of the saved hooded-tailcoat reproduced a
-completed empty Global gallery. No photographs reached the DOM. Interpretation
-was dark forest green brocade/jacquard apparel yardage. Raw provider trace was
-unavailable. Local fixes do not prove this live provider issue is resolved.
+Owner pushed b7ccf5d (new model) and 42622c7 (clean screens/Fabric reset).
+Hosting release.json, app/Admin page build stamps and /api/healthz now all match
+b7ccf5d2911c8dc08008f0bf5963bbf058a38002. tests/verify-live.mjs passed on that
+prior release; evidence: /private/tmp/maya-mobile-prior-live.log. These mobile
+changes are local only; no Push or deployment performed here.
+
+Earlier live Global on the saved hooded-tailcoat completed empty: no photographs
+reached the DOM. Cleanup/Fabric fixes and the model change do not prove that source
+quality issue resolved. In House/Global parity, source evidence, exclusions and
+private account/garment scope remain required. Image generation never substitutes
+for sourced product photos.
 
 ## Exact next step
 
-All local verification is complete for the separate image-model commit.
-Owner Push is the next step; no Push or deployment was performed.
-Then verify release.json, page build stamps and /api/healthz commit. Accept one
-actual image generation/edit and saved-image sharing, checking entitlement,
-quality and timing. Separately run that same saved garment's Global search and
-Refresh: require actual loaded sourced photographs and clean Admin screens.
-If Global remains empty, use private count-only search diagnostics to distinguish
-missing provider image results from rejected/unmatched candidates. Generated
-images are never a substitute for sourced Fabric photographs.
+After the required final authority exits zero, commit these verified task files
+locally. Owner Push remains for this task; do not Push automatically. After deployment verify release.json, page stamps and
+/api/healthz, then actual iPhone/iPad photo upload/reopen/visualization and output
+quality/timing. Separately accept the same saved garment Global search/Refresh
+with real loaded photographs and clean Admin screens.

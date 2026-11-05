@@ -7,8 +7,9 @@
   };
   function apply(value){
     const g=value.glass;
+    const touchSize=Number.isInteger(value.touchTargetSize)&&value.touchTargetSize>=32&&value.touchTargetSize<=56?value.touchTargetSize:44;
     const border=name=>name==='black'?'0 0 0':name==='gray'?'170 181 196':'255 255 255';
-    let css=`:root{--maya-pill-x:${value.pillX}px;--maya-pill-y:${value.pillY}px;--maya-icon-glyph:calc(var(--maya-control-icon-size,28px)*.6);}`;
+    let css=`:root{--maya-pill-x:${value.pillX}px;--maya-pill-y:${value.pillY}px;--maya-touch-target:${touchSize}px;--maya-icon-glyph:calc(var(--maya-control-icon-size,28px)*.6);}`;
     const both=`html body :is(${glass})`;
     css+=`${both}{align-self:center!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;aspect-ratio:auto!important;flex:0 0 auto;inline-size:max-content!important;block-size:auto!important;min-inline-size:0!important;min-block-size:0!important;max-inline-size:100%;max-block-size:none!important;border-radius:100px!important;line-height:1.4!important;vertical-align:middle;gap:var(--maya-icon-pill-gap,6px)!important;white-space:normal;overflow-wrap:anywhere;text-align:center;}`;
     css+=`html body :is(${glass}){padding:var(--maya-pill-y) var(--maya-pill-x)!important;border:1px solid var(--maya-button-edge)!important;background-color:var(--maya-button-fill)!important;background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%)!important;backdrop-filter:var(--maya-button-frost)!important;-webkit-backdrop-filter:var(--maya-button-frost)!important;box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),inset 0 -1px 1px rgb(0 0 0 / .18),0 4px 16px rgb(0 0 0 / .22)!important;}`;
@@ -28,6 +29,11 @@
     css+=`html body .maya-icon-button{aspect-ratio:auto!important;letter-spacing:normal!important}html body .maya-icon-button>span{display:grid!important;place-items:center;inline-size:var(--maya-icon-glyph);block-size:var(--maya-icon-glyph);font-size:var(--maya-icon-glyph);line-height:1!important}html body :is(.maya-icon-button svg,#save svg){display:block!important;inline-size:var(--maya-icon-glyph)!important;block-size:var(--maya-icon-glyph)!important;min-inline-size:var(--maya-icon-glyph);min-block-size:var(--maya-icon-glyph);fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;}`;
     // Native status selects remain the authenticated input over an intrinsic label.
     css+=`html body .lead-status{padding-right:calc(var(--maya-pill-x) + var(--maya-icon-pill-gap) + var(--maya-control-icon-size)*.45)!important}html body .lead-status::after{right:var(--maya-pill-x)!important}html body .status-pill::before{flex:none}html body .lead-status select{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;padding:0!important;}`;
+    // Coarse pointers get a shared minimum hit area; saved Glass padding and
+    // materials still own each control. Ordinary desktop geometry is unchanged.
+    const touch=`${both}:is(button,summary,a,[role="button"],select,#voice-bar),html body :is(button:not(.page-dot),[role="button"],summary,[data-maya-touch])`;
+    const touchRule=`min-inline-size:var(--maya-touch-target)!important;min-block-size:var(--maya-touch-target)!important;touch-action:manipulation;`;
+    css+=`@media(any-pointer:coarse){${touch}{${touchRule}}}${both}[data-maya-touch-preview]{${touchRule}}`;
     css+=`@media(forced-colors:active){${both}{background:ButtonFace!important;color:ButtonText!important;border-color:ButtonText!important;box-shadow:none!important;backdrop-filter:none!important}}`;
     let style=document.getElementById('maya-pill-control-style');if(!style){style=document.createElement('style');style.id='maya-pill-control-style';document.head.append(style);}style.textContent=css;
   }

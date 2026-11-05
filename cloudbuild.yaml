@@ -78,6 +78,9 @@ steps:
         node tests/admin-wake.mjs
         node tests/proxy-policy.mjs
         node tests/image-models.mjs
+        node tests/avatar-autosave.mjs
+        node tests/visualize-preparation.mjs
+        node tests/mobile-visualize-ui.mjs
         node tests/pattern-decisions.mjs
         node tests/refresh-efficiency.mjs
         node tests/owner-crm.mjs

@@ -1,3 +1,20 @@
+## November 5 — shared touch controls and automatic avatars
+
+Phone/tablet coarse pointers use a shared minimum button target of 44px. The
+existing Glass editor owns Touch size (integer 32–56px) and a working Touch pill
+preview. This optional setting survives Save/Restore and legacy designs default
+to 44. It changes minimum hit dimensions, not typography, colors, materials or
+ordinary desktop geometry. Existing circle controls retain square dimensions.
+Shared pill runtime v2 and typography v25 load on every served consumer; gallery
+v35 provides the active control. Existing camera/field/drawer previews continue
+to govern avatar controls. Avatar photo/name/measurement changes save themselves;
+remove only the avatar Save buttons, preserving explicit project/design/actions.
+Compact board dots retain their existing size; board navigation hides under the
+phone drawer. Avatar/project row actions reserve separate targets and stay visible
+without hover. Fabric assets v14 retain In House/Global gallery parity; narrow
+touch shop choices scroll horizontally and results retain at least 120px height,
+keeping the existing bottom status readable under larger saved typography.
+
 <!-- November 5: Fabrics has one existing bottom P1 loading line, “Searching for
 Fabrics”; no second loading sentence in the gallery. The active Fabric preview
 shows that P1 line under both identical gallery views. No new role, material,
@@ -193,7 +210,7 @@ The preview lives in `aesthetics/aesthetic-control.html` with support files in `
 `aesthetics/ui/components/`; global application in
 `aesthetics/ui/typography-controls.js`. The Admin-authenticated save and public
 read endpoints are in `docs/server/server.js`; `docs/server/design-config.mjs`
-validates the settings. Served pages load runtime v24 and gallery v34; Hosting revalidates this
+validates the settings. Served pages load runtime v25 and gallery v35; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
 the inactive style-inventory viewer, generated report and generator were removed;
 the active typography role audit remains. No page should introduce a competing design specification.

@@ -1,21 +1,28 @@
-Title: [Codex] Upgrade image generation and editing to GPT Image 2.6 Flare
+Title: [Codex] Autosave avatars and streamline phone and iPad visualization
 
-Use the documented newest fast-iteration OpenAI image model across frontend
-creation/edits, Brief piece/pattern renders and Operation Room edits. Update
-central model metadata, endpoint permissions and community provenance rules.
-Retain older open clients and saved 2.5 Flare/Image 2 images without relabeling.
-Preserve quality, sizes, prompts, references, response handling, account/project
-boundaries, image-count caps and Admin-only high quality. No aesthetic changes.
+Uploaded/camera/replacement avatars, names and measurements now save automatically
+without a name or Avatar Save button. Stable IDs, transaction revisions and
+account/client guards preserve unrelated records and reject stale/deleted entries.
+Acknowledged photos are reused; conflict recovery refreshes the library. A face
+alone can visualize while cloud saving remains pending.
 
-New fake-transport request-contract tests are part of release and app-regression;
-extended proxy and community regressions preserve compatibility and restrictions.
-Node20/Node24 image/proxy checks and focused project/operation races pass.
-All 81 exact release functional/syntax commands plus app-regression and smoke
-pass (83/83). Updated model details preserve default/saved shared popup styling
-at seven widths; phone/desktop screenshots visually inspected. Final standalone
-Aesthetic Control passed last (exit 0).
+Short speech tails flush once, reference images prepare once with at most two
+workers, and frontend 2.6 Flare uses medium planning at unchanged quality and size.
+The existing Glass editor owns a 44px touch minimum with validated 32–56px control
+and active preview. Avatar/project actions remain visible and separate; board dots
+stay compact, phone drawer navigation does not overlap, and narrow Fabric shop
+controls scroll while retaining results/status space. Desktop materials/layout
+and In House/Global photo geometry remain intact. Shared asset refs are updated.
 
-Official standard token prices match 2.5 Flare. No live speed, output-quality,
-per-image cost or account-entitlement claim: no paid provider calls were made.
-No credentials/environment/billing changes or Push. Owner deployment and live
-acceptance remain; the prior empty Global sourcing incident is still unverified.
+Validation: all 84 exact release functional/syntax commands, full app-regression
+and smoke pass after targeted reruns (86 total). Node20/Node24 focused autosave,
+model, preparation and fabric/deadline checks pass. Chromium/WebKit cover six
+phone/tablet sizes, held cloud writes, actual UI upload/reopen/visualize and saved
+shared touch settings. Default/saved phone/tablet captures visually inspected.
+Final standalone Aesthetic Control runs last before committing; completion
+requires exit zero in /private/tmp/maya-mobile-final-authority.log.
+
+No Push, personal Chrome, credentials/environment/billing changes or paid calls.
+The previous b7ccf5d model upgrade is verified live; these changes need owner Push.
+Real iPhone/iPad timing and output quality still require deployed acceptance.
+The prior empty Global sourcing incident remains separately unverified.

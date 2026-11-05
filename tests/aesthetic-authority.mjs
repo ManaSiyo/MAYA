@@ -143,3 +143,6 @@ await import('./scrollbar-authority-ui.mjs?authority');
 // Private Admin status/history, shared heading roles and collapsed log disclosure.
 await import('./admin-notifications-ui.mjs?authority');
 await import('./submission-cards-ui.mjs?authority');
+
+// Phone/tablet controls use the existing Glass/Editor authority and active Touch preview.
+await import('./mobile-visualize-ui.mjs?authority');

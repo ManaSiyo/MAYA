@@ -469,7 +469,7 @@ ok('the tab reads Profile', fold.title === 'Profile', fold.title);
 ok('Projects is a fold above Stats holding the list', fold.foldAboveStats === true && fold.listInFold === true);
 ok('the placeholder pills and the beside pill are gone', fold.pillHidden === true && fold.actionsHidden === true);
 ok('the fold summary carries the open project name', fold.summary === 'Rudy the Presley' && fold.summaryIdle === '', JSON.stringify([fold.summary, fold.summaryIdle]));
-const expectedAvatarActions = ['Randomize', 'Save', 'Replace', 'Camera'];
+const expectedAvatarActions = ['Randomize', 'Replace', 'Camera'];
 ok('the client dropdown carries the approved actions for ' + SURFACE + ', even when empty',
   JSON.stringify(fold.actionButtons) === JSON.stringify(expectedAvatarActions) && fold.newClient === true, JSON.stringify(fold.actionButtons));
 ok('a project is renamed where it sits', fold.renameBox === true && fold.renamed === 'Gala 2026' && fold.summaryAfter === 'Gala 2026', JSON.stringify([fold.renamed, fold.titleAfter, fold.summaryAfter]));
@@ -524,7 +524,7 @@ const c8 = await page.evaluate(async () => {
   const out = {};
   out.pencilByName = !!document.getElementById('drawer-avatar-rename');
   // a pencil and an x on every saved client; renaming a row rewrites the roster
-  (0, eval)("projectStore.ready = () => true; projectStore._uid = () => 'avatar-fixture'; _avatarsDoc = () => ({set:async()=>{},get:async()=>({exists:false})}); _avatarLibCacheUid = 'avatar-fixture'; _avatarLibCache = [{ id: 'micheal', name: 'Micheal', face: null }, { id: 'rudy', name: 'Rudy', face: null }]; lastSummary = { client: { name: 'Micheal' } }; _avatarSwitcherOpen = false;");
+  (0, eval)("projectStore.ready = () => true; projectStore._uid = () => 'avatar-fixture'; _avatarsDoc = () => ({set:async()=>{},get:async()=>({exists:false})}); _avatarLibCacheUid = 'avatar-fixture'; _avatarLibCache = [{ id: 'micheal', name: 'Micheal', face: null }, { id: 'rudy', name: 'Rudy', face: null }]; lastSummary = { client: { name: 'Micheal' }, _avatarLibraryId:'micheal', _avatarLibraryRevision:0 }; _avatarSwitcherOpen = false; _avatarsDoc = () => ({get:async()=>({exists:true,data:()=>({list:_avatarLibCache})}),set:async data=>{_avatarLibCache=data.list;}}); window.firebase ||= {}; firebase.firestore = () => ({runTransaction:async fn=>fn({get:doc=>doc.get(),set:(doc,data)=>doc.set(data)})});");
   await toggleAvatarSwitcher();
   const panel = document.getElementById('drawer-avatar-switcher');
   out.rowPencils = panel.querySelectorAll('.avatar-switch-rename').length;
@@ -757,7 +757,7 @@ ok('the voice line out of credit says so to the studio', /OpenAI credit has run 
 ok('the feedback box opens above the open picture, and her look can carry a picture at full detail',
   Number(c11.fbZ) > 200 && /^data:image\/jpeg/.test(c11.pic || ''), JSON.stringify([c11.fbZ, String(c11.pic).slice(0, 30)]));
 ok('the client on the board sits in the list, highlighted; every pencil hides until its row is hovered, like the x (v14.28)',
-  c11.namePencilHidden === true && c11.activeName === 'Fromsa (unsaved)' && c11.hasSave === true && c11.rowNames.includes('Linda') && c11.activePencil === true && c11.otherPencilHidden === true && c11.hoverRule === true,
+  c11.namePencilHidden === true && c11.activeName === 'Fromsa' && c11.hasSave === false && c11.rowNames.includes('Linda') && c11.activePencil === true && c11.otherPencilHidden === true && c11.hoverRule === true,
   JSON.stringify([c11.namePencilHidden, c11.rowNames, c11.activeName, c11.activePencil, c11.otherPencilHidden, c11.hoverRule]));
 
 // ── 3c12. v14.27: a phone: the switch is the line, the touched card carries the controls ──

@@ -792,7 +792,7 @@ ok('the Brief no longer paints from a public Drive thumbnail',
 const RAW_PICTURE_READS = INDEX_SOURCE.split('await (await fetch(src)).blob()').length - 1;
 ok('every stored picture is read through the one helper',
   INDEX_SOURCE.includes('async function blobFromPicture(src)') &&
-  INDEX_SOURCE.includes('const rawBlob = await blobFromPicture(src);') &&
+  INDEX_SOURCE.includes('await blobFromPicture(sources[index])') &&
   RAW_PICTURE_READS === 2 &&
   !INDEX_SOURCE.includes('await (await fetch(it.card.image)).blob()') &&
   !INDEX_SOURCE.includes('await (await fetch(videoUrl)).blob()') &&
@@ -2093,15 +2093,15 @@ ok('September 22: Mana links sit left, lead tools grow, gear stays square',
 ok('Admin keeps real lead stages after Affiliates retirement',
   !MAP_SOURCE.includes('affiliates-view') && !MAP_SOURCE.includes('id="affiliate-profile"') &&
   MAP_SOURCE.includes('aria-label="Lead status"') && cleanLeadPatch({stage:'completed'}).stage==='completed');
-ok('September 22: frontend retains explicit new-avatar Save, slower zoom and Pinterest scopes',
+ok('Frontend retains stable avatar IDs, transactions, slower zoom and Pinterest scopes',
   [INDEX_SOURCE].every(source =>
-    source.includes('id:crypto.randomUUID()') && source.includes('runTransaction(async transaction') &&
-    source.includes('const merged = [record, ...list]') && source.includes('enumerable:false') &&
+    source.includes('snapshot._avatarLibraryId || crypto.randomUUID()') && source.includes('runTransaction(async transaction') &&
+    source.includes('const merged = [record, ...list.filter(a => a.id !== id)]') && source.includes('enumerable:false') &&
     source.includes('pg-avatar-nameline:hover #drawer-avatar-rename') &&
     source.includes('const step = 0.025') && source.includes('(d / pinchD - 1) * 0.5') &&
     !source.includes('id="pin-search-scope"') && source.includes('Open Pinterest search')));
-ok('Client: avatar Save awaits cloud write; name edits in place',
-  INDEX_SOURCE.includes('saveAvatarFromDrawer(this)') && INDEX_SOURCE.includes('await _saveCurrentAvatarToLibrary(true)') &&
+ok('Client: avatars save automatically; name edits stay in place',
+  !INDEX_SOURCE.includes('saveAvatarFromDrawer(this)') && INDEX_SOURCE.includes('await _saveCurrentAvatarToLibrary()') &&
   INDEX_SOURCE.includes('id="drawer-avatar-name" role="button" tabindex="0" onclick="pgRenameClient()"'));
 // ── v14.03 ──
 ok('v14.36: the audit: a lead is found by phone too, the thread learns the name Maya heard',
@@ -2202,7 +2202,7 @@ ok('v14.26: demo readiness: fabric thumbnails, Pinterest answers in words, the v
   SERVER_SOURCE.includes("? 'voice_credit' : 'voice_failed'") &&
   INDEX_SOURCE.includes('#notes-drawer #drawer-avatar-rename { display: inline-flex; }') &&
   INDEX_SOURCE.includes('#notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }') &&
-  INDEX_SOURCE.includes("if (!strict) return;") &&
+  INDEX_SOURCE.includes("_queueAvatarSave(true)") && !INDEX_SOURCE.includes("if (!strict) return;") &&
   INDEX_SOURCE.includes('.note-group-title { color: rgba(255,255,255,0.98); font-weight: 400; margin: 0 0 3px; }') &&
   INDEX_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
   INDEX_SOURCE.includes('} else if (typeof _zCounter !== \'undefined\') {') &&
@@ -2514,8 +2514,8 @@ const clientBehavior = await pg.evaluate(async () => {
   _avatarsDoc = () => ({ get: async () => ({ exists:false }), set: async data => { saved = data; } });
   projectStore.uploadImage = async () => ({url:'https://example.com/new-face.jpg',path:'test/avatars/face.jpg'});
   lastSummary = {client:{name:'Taylor'},_face_photo:'data:image/png;base64,AAAA'};
-  const save = document.createElement('button');
-  await saveAvatarFromDrawer(save);
+  await _queueAvatarSave(true);
+  _avatarSwitcherOpen=false;await toggleAvatarSwitcher();
   const avatarSaved = saved?.list[0]?.name === 'Taylor' && saved?.list[0]?.face === 'https://example.com/new-face.jpg';
   const actions = [...document.querySelectorAll('.avatar-switch-actions button')].map(b => b.textContent).join(',');
   document.getElementById('drawer-avatar-name').click();
@@ -2523,8 +2523,8 @@ const clientBehavior = await pg.evaluate(async () => {
   document.getElementById('pg-client-rename')?.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));
   lastSummary.client.name = 'Changed name';
   firebase.firestore = () => ({runTransaction: async () => {throw new Error('Cloud unavailable');}});
-  await saveAvatarFromDrawer(save);
-  const failureHonest = notices.at(-1) === 'Cloud unavailable' && !save.disabled;
+  await _queueAvatarSave(true);
+  const failureHonest = notices.at(-1) === 'Avatar could not sync. Your photo is still here.';
   const calls = [];
   _pinApi = async url => { calls.push(url); return url.includes('bookmark=next')
     ? { pins:[{id:'1',url:'https://example.com/one.jpg'},{id:'2',url:'https://example.com/two.jpg'}] }
@@ -2540,7 +2540,7 @@ const clientBehavior = await pg.evaluate(async () => {
   return {avatarSaved,actions,editableName,failureHonest,pagination,globalSearch,savedSearch:noScopeMenu && scope==='everywhere'};
 });
 ok('Client avatar behavior: cloud Save, camera action, direct name editing, honest save errors',
-  clientBehavior.avatarSaved && clientBehavior.actions === 'Randomize,Save,Replace,Camera' && clientBehavior.editableName && clientBehavior.failureHonest);
+  clientBehavior.avatarSaved && clientBehavior.actions === 'Randomize,Replace,Camera' && clientBehavior.editableName && clientBehavior.failureHonest);
 ok('Client Pinterest behavior: next-page cursor, deduplicated pins, explicit global/saved search',
   clientBehavior.pagination && clientBehavior.globalSearch && clientBehavior.savedSearch);
 
@@ -2781,7 +2781,7 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=13'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=14'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));
@@ -2841,6 +2841,11 @@ ok('Fabrics uses one bottom loading message and preserves the saved gallery afte
 
 await import('./image-models.mjs');
 ok('New image generation and editing use GPT Image 2.6 Flare, preserving quality, reference images and legacy provenance',true);
+
+await import('./avatar-autosave.mjs');
+await import('./visualize-preparation.mjs');
+await import('./mobile-visualize-ui.mjs');
+ok('Phone/tablet avatar uploads autosave, face-only visualization proceeds promptly and shared touch sizes persist',true);
 
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

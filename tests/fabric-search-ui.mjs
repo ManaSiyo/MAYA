@@ -107,7 +107,7 @@ try{
       await page.setViewportSize({width,height:900});
       const state=await page.locator('.fa-status').evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect();return {size:s.fontSize,color:s.color,role:el.dataset.mayaType,left:r.left,right:r.right,bottom:r.bottom,viewport:innerWidth,height:innerHeight};});
       assert.equal(state.role,'P1');assert.equal(state.size,saved?'16px':'12px');assert.equal(state.color,saved?'rgb(255, 255, 255)':'rgb(170, 181, 196)');
-      assert.ok(state.left>=0&&state.right<=state.viewport+1&&state.bottom<=state.height+1,'No-photo status stays readable '+width);
+      if(state.bottom>state.height+1)console.log('Fabric overflow',await page.locator('#fabric-assistant').evaluate(root=>[root,...root.children].map(e=>({class:e.className,top:e.getBoundingClientRect().top,height:e.getBoundingClientRect().height,scroll:e.scrollHeight}))));assert.ok(state.left>=0&&state.right<=state.viewport+1&&state.bottom<=state.height+1,'No-photo status stays readable '+width+' '+JSON.stringify(state));
       if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-fabric-no-photos-'+(saved?'saved':'default')+'-'+width+'.png'});
     }
     await page.getByRole('button',{name:'Search details',exact:true}).click();
@@ -249,7 +249,7 @@ try{
     if(mode==='expanded')await page.locator('.fa-toolbar').getByRole('button',{name:'Expand',exact:true}).click();
     for(const width of [320,390,768,1024,1440,1920]){
       await page.setViewportSize({width,height:1000});await checkDetails(true);
-      assert.ok((await page.locator('.fa-body').boundingBox()).height>=100,mode+' saved results usable '+width);
+      const bodyHeight=(await page.locator('.fa-body').boundingBox()).height;assert.ok(bodyHeight>=100,mode+' saved results usable '+width+' (height '+bodyHeight+')');
       for(const[selector,size,color]of [['.fa-header h2',28,'rgb(170, 181, 196)'],['.fa-card-title',20,'rgb(170, 181, 196)'],['.fa-card-caption',14,'rgb(170, 181, 196)'],['.fa-status',16,'rgb(255, 255, 255)'],['.fa-observation',16,'rgb(255, 255, 255)']]){const actual=await readStyle(selector);assert.equal(actual.size,size,mode+' '+width+' '+selector+' saved size');assert.equal(actual.color,color,mode+' '+width+' '+selector+' saved color');}
       assert.equal((await readStyle('#fabric-request')).size,16,mode+' follow-up uses saved P1 '+width);assert.ok(await page.locator('#fabric-request').evaluate(el=>{const s=getComputedStyle(el);return el.clientHeight-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom)>=(parseFloat(s.lineHeight)||parseFloat(s.fontSize))-1;}),mode+' follow-up has room for its saved text line '+width);assert.equal((await readStyle('.fa-composer button[type=submit]')).size,14,mode+' follow-up action uses saved P3 '+width);
       const outer=await readStyle('#fabric-assistant'),inner=await readStyle('.fa-product'),field=await readStyle('.fa-store-filter'),pill=await readStyle('.fa-toolbar button'),glyph=await readStyle('.fa-toolbar button svg');

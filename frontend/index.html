@@ -4132,6 +4132,17 @@
 #avatar-camera::backdrop{background:rgba(0,0,0,.72)}
 #avatar-camera h2,#avatar-camera p{margin:0 0 12px}#avatar-camera video,#avatar-camera img{display:block;width:100%;max-height:55dvh;object-fit:contain;background:#000}#avatar-camera video{transform:scaleX(-1)}
 #avatar-camera .camera-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}#avatar-camera [hidden]{display:none!important}
+/* Reserve the shared touch target for each existing row action. */
+@media(any-pointer:coarse){
+  #notes-drawer .avatar-switch-row[data-id]{min-block-size:calc(var(--maya-touch-target,44px) + 16px)!important;padding-right:calc(var(--maya-touch-target,44px)*2 + var(--maya-icon-pill-gap,6px) + 16px)}
+  #notes-drawer .avatar-switch-row[data-id] .avatar-switch-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #notes-drawer .avatar-switch-rename{right:calc(var(--maya-touch-target,44px) + var(--maya-icon-pill-gap,6px) + 8px)}
+  #notes-drawer .session-item{min-height:calc(var(--maya-touch-target,44px) + 16px);padding-right:calc(var(--maya-touch-target,44px)*3 + var(--maya-icon-pill-gap,6px)*2 + 16px);box-sizing:border-box}
+  #notes-drawer .session-item-share{right:calc(var(--maya-touch-target,44px) + var(--maya-icon-pill-gap,6px) + 8px)}
+  #notes-drawer .session-item-rename{right:calc((var(--maya-touch-target,44px) + var(--maya-icon-pill-gap,6px))*2 + 8px)}
+  #notes-drawer :is(.session-item-title,.session-item-meta){overflow-wrap:anywhere}
+  #notes-drawer :is(.avatar-switch-rename,.avatar-switch-delete,.session-item-rename,.session-item-share,.session-item-delete){opacity:1}
+}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ETTJ6PXEMM"></script>
@@ -4143,8 +4154,8 @@
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
-<script src="/aesthetics/ui/typography-controls.js?v=24"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=2"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=25"></script>
 </head>
 <body>
 <!-- v14.21: this is the Playground, promoted whole. The amber badge is the
@@ -4378,6 +4389,7 @@
     /* v11.33: page indicator shrunk ~half per Fromsa, it read too big on phones */
     .page-dot { width: 6px; height: 6px; }
     #page-indicator { left: 6px; gap: 8px; padding: 4px 4px; }
+    body.drawer-open #page-indicator { visibility:hidden;pointer-events:none; }
     /* legibility floor + iOS focus-zoom prevention */
     input, textarea { font-size: 16px !important; }
     #manual-ref-input { width: min(230px, 70vw); }
@@ -5048,7 +5060,6 @@
       <!-- v7.4: Randomize, fills measurements with random values and picks
            a random headshot from MAYA/uploads/headshots/. v9.2: no closet render. -->
       <button class="drawer-action" onclick="randomizeAvatar()" title="Random measurements + random headshot from MAYA/uploads/headshots/">Randomize</button>
-      <button class="drawer-action violet" onclick="saveAvatar()">Save</button>
     </div>
   </div>
 </div>
@@ -5342,7 +5353,7 @@
 <div class="modal" id="avatar-check-modal">
   <button class="modal-close" onclick="closeAvatarCheck()">Close</button>
   <div class="modal-card" style="text-align:center">
-    <h2 style="text-align:center">No avatar yet</h2>
+    <h2 style="text-align:center">Add a face photo?</h2>
     <div class="modal-hint" style="text-align:center" id="avatar-check-hint">Maya will render without the client's face or measurements.</div>
     <div class="modal-actions" style="justify-content:center;gap:12px">
       <button class="top-btn" onclick="closeAvatarCheck(); openAvatarSubMenu()">Set up avatar</button>
@@ -8274,7 +8285,14 @@ const MEASUREMENT_SCHEMA = [
 // v5.23: face photo upload, stored as data URL on lastSummary._face_photo.
 let _facePhotoVersion = 0;
 let _facePickerGuard = null;
-async function onFacePhotoSelected(ev, cameraContext) {
+let _pendingAvatarPhoto = null;
+function onFacePhotoSelected(ev, cameraContext) {
+  const pending = _readAvatarPhoto(ev, cameraContext);
+  _pendingAvatarPhoto = pending;
+  pending.finally(() => { if (_pendingAvatarPhoto === pending) _pendingAvatarPhoto = null; });
+  return pending;
+}
+async function _readAvatarPhoto(ev, cameraContext) {
   const file = ev.target.files && ev.target.files[0];
   ev.target.value = '';
   if (!file) { if (!cameraContext) _facePickerGuard = null; return; }
@@ -8295,39 +8313,23 @@ async function onFacePhotoSelected(ev, cameraContext) {
       fr.readAsDataURL(file);
     });
     if (!current()) return;
+    const small = await _shrinkFace(dataUrl);
+    if (!current()) return;
     if (!lastSummary) lastSummary = { client: { name: null } };
-    lastSummary._face_photo = dataUrl;
-    // v12.5: new bytes, so the copy in Storage is stale. Clearing these forces
-    // a fresh upload; without it the OLD face came back on every other device.
+    lastSummary._face_photo = small || dataUrl;
+    lastSummary._face_descriptors = null;
     delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
-    // v12.7: shrink it first. A phone photo is several megabytes of text, and
-    // every save deep copied the whole thing on the main thread, which is the
-    // stall you feel a second after letting go of a card.
-    const _faceCtx = _opContext();      // v13.0: whose face is this?
-    _shrinkFace(dataUrl).then(small => {
-      if (!_opStillValid(_faceCtx) || photoVersion !== _facePhotoVersion) return;   // a different client is open now
-      if (small && lastSummary) {
-        lastSummary._face_photo = small;
-        if (typeof _refreshActiveAvatarView === 'function') _refreshActiveAvatarView();
-        if (typeof _persistSession === 'function') _persistSession();
-      }
-    });
-    showToast('Face saved.');
     _refreshActiveAvatarView();
-    // v14.24: the roster gets the new face right away, and the big photo is
-    // persisted only once shrunk (the shrink path persists), never at full size.
-    try { _saveCurrentAvatarToLibrary(); } catch (_) {}
-    try { if (typeof projectStore !== 'undefined' && projectStore.currentId) projectStore.queueSave(); } catch (_) {}
-    // v9.2: still cache face descriptors for future use. No closet refresh.
-    analyzeFacePhoto(dataUrl).then(d => {
-        // v13.0: do not write one client's face onto another's project
-        if (!_opStillValid(_faceCtx) || photoVersion !== _facePhotoVersion) return;
-        if (lastSummary) lastSummary._face_descriptors = d;
-        // v10.4: persist so we don't re-call gpt-4.1 on next reload.
-        if (typeof _persistSession === 'function') _persistSession();
-        console.log('[Maya] face descriptors cached', d);
-      })
-      .catch(e => console.warn('[Maya face analysis]', e));
+    _persistSession();
+    _queueAvatarSave(true);
+    // The original upload never goes into a second full-size AI payload.
+    const faceContext = _opContext(), faceSummary = lastSummary;
+    analyzeFacePhoto(lastSummary._face_photo).then(d => {
+      if (!_opStillValid(faceContext) || lastSummary !== faceSummary || photoVersion !== _facePhotoVersion) return;
+      lastSummary._face_descriptors = d;
+      _persistSession();
+      _queueAvatarSave();
+    }).catch(e => console.warn('[Maya face analysis]', e));
   } catch (e) {
     showError('Could not read that image.');
     console.error('[Maya face upload]', e);
@@ -8342,8 +8344,10 @@ function clearFacePhoto() {
   if (lastSummary) {
     lastSummary._face_photo = null;
     lastSummary._face_descriptors = null;
+    delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
   }
   if (typeof _persistSession === 'function') _persistSession();
+  _queueAvatarSave(true);
   showToast('Face removed.');
   _refreshActiveAvatarView();
 }
@@ -8394,7 +8398,7 @@ function _renderAvatarBody() {
           return '<div class="meas-row' + (isRec ? ' recommended' : '') + '">' +
             '<label for="ameas-' + key + '">' + escapeHtml(label) +
               (isRec ? ' <span class="meas-rec">rec</span>' : '') + '</label>' +
-            '<input id="ameas-' + key + '" data-key="' + key + '" value="' + escapeHtml(m[key] != null ? String(m[key]) : '') + '" inputmode="decimal" placeholder="·" />' +
+            '<input id="ameas-' + key + '" data-key="' + key + '" value="' + escapeHtml(m[key] != null ? String(m[key]) : '') + '" inputmode="decimal" placeholder="·" oninput="updateAvatarMeasurement(this)" />' +
           '</div>';
         }).join('')
       ).join('') +
@@ -8424,7 +8428,7 @@ function saveAvatar() {
   const n = Object.keys(lastSummary._measurements).length;
   // v11.25: persist this avatar into the avatar LIBRARY so it can be switched
   // to from any project.
-  _saveCurrentAvatarToLibrary();
+  _queueAvatarSave(true);
   // v10.4: persist to IndexedDB so measurements survive reload.
   if (typeof _persistSession === 'function') _persistSession();
   showToast(n + ' measurement' + (n === 1 ? '' : 's') + ' saved');
@@ -8444,7 +8448,7 @@ function _avatarIdentity() {
   const name = lastSummary.client && lastSummary.client.name;
   if (!name && !lastSummary._face_photo && !lastSummary._measurements) return null;
   return {
-    name: name || 'client',
+    name: name || 'Avatar',
     face: lastSummary._face_photo || null,
     descriptors: lastSummary._face_descriptors || null,
     measurements: lastSummary._measurements || null,
@@ -8473,61 +8477,98 @@ async function _loadAvatarLibrary() {
     return _avatarLibCache;
   } catch (_) { return []; }
 }
-async function _saveCurrentAvatarToLibrary(strict = false) {
-  // Library changes are explicit. Editing a project never overwrites a saved person.
-  if (!strict) return;
-  const snapshot = lastSummary;
-  const uid = projectStore._uid();
+// Avatar edits save automatically, serialized and pinned to the current client.
+let _avatarSaveTimer = null, _avatarSavePending = null, _avatarSaveInFlight = false, _avatarSaveChain = Promise.resolve();
+function _queueAvatarSave(immediate = false) {
+  if (!lastSummary || !projectStore.ready()) return Promise.resolve(false);
+  _avatarSavePending = {context:_opContext(), summary:lastSummary, version:_facePhotoVersion};
+  clearTimeout(_avatarSaveTimer);
+  if (immediate) return _flushAvatarSave();
+  _avatarSaveTimer = setTimeout(_flushAvatarSave, 350);
+  return _avatarSaveChain;
+}
+function _flushAvatarSave() {
+  clearTimeout(_avatarSaveTimer); _avatarSaveTimer = null;
+  const pending = _avatarSavePending; _avatarSavePending = null;
+  if (!pending) return _avatarSaveChain;
+  const current = () => _opStillValid(pending.context) && lastSummary === pending.summary && _facePhotoVersion === pending.version;
+  _avatarSaveChain = _avatarSaveChain.catch(() => false).then(async () => {
+    if (!current()) return false;
+    _avatarSaveInFlight = true;
+    try {
+      await _saveCurrentAvatarToLibrary();
+      if (!current()) return false;
+      _persistSession();
+      refreshDrawerClientName();
+      // Keep focused name/measurement inputs intact while an acknowledgement lands.
+      if (_avatarSwitcherOpen && !document.querySelector('#drawer-avatar-switcher input:focus')) {
+        _avatarSwitcherOpen = false; await toggleAvatarSwitcher();
+      }
+      return true;
+    } catch (error) {
+      if (current() && error.message === 'This avatar changed elsewhere. Reopen it before editing.') _avatarLibCache = null;
+      if (current()) showToast('Avatar could not sync. Your photo is still here.');
+      console.warn('[Maya avatar save]', error);
+      return false;
+    } finally { _avatarSaveInFlight = false; }
+  });
+  return _avatarSaveChain;
+}
+function updateAvatarMeasurement(input) {
+  if (!lastSummary) lastSummary = {client:{name:null}};
+  lastSummary._measurements ||= {};
+  const value = input.value.trim();
+  if (value) lastSummary._measurements[input.dataset.key] = value;
+  else delete lastSummary._measurements[input.dataset.key];
+  _persistSession(); _queueAvatarSave();
+}
+async function _saveCurrentAvatarToLibrary() {
+  const snapshot = lastSummary, account = projectStore._accountContext();
+  const uid = projectStore._uid(), version = _facePhotoVersion;
   const identity = _avatarIdentity();
-  if (!identity || !identity.name || identity.name.toLowerCase() === 'client') throw new Error('Name this avatar first.');
+  if (!identity) return false;
   if (!uid || !projectStore.ready()) throw new Error('Sign in to save this avatar.');
   const signature = JSON.stringify(identity);
-  const same = () => projectStore._uid() === uid && lastSummary === snapshot && JSON.stringify(_avatarIdentity()) === signature;
-  if (snapshot._avatarSavedSignature === signature && snapshot._avatarLibraryId && _avatarLibCacheUid === uid && _avatarLibCache?.some(a => a.id === snapshot._avatarLibraryId)) return true;
+  const same = () => projectStore._accountValid(account) && projectStore._uid() === uid && lastSummary === snapshot && version === _facePhotoVersion;
+  if (snapshot._avatarSavedSignature === signature && snapshot._avatarLibraryId) return true;
   const doc = _avatarsDoc();
   let face = identity.face;
   if (typeof face === 'string' && face.startsWith('data:')) {
     const uploaded = await projectStore.uploadImage(face, 'avatars');
-    if (!same()) throw new Error('The open client changed. Please save again.');
+    if (!same()) throw new Error('The open client changed.');
     face = uploaded.url;
   }
-  if (!same()) throw new Error('The open client changed. Please save again.');
-  const record = JSON.parse(JSON.stringify({...identity, face:face || null, id:crypto.randomUUID(), updatedAt:Date.now()}));
+  if (!same()) throw new Error('The open client changed.');
+  const id = snapshot._avatarLibraryId || crypto.randomUUID();
+  const expected = snapshot._avatarLibraryRevision;
+  const record = JSON.parse(JSON.stringify({...identity, face:face || null, id, updatedAt:Math.max(Date.now(), (expected || 0) + 1)}));
   const next = await firebase.firestore().runTransaction(async transaction => {
     const stored = await transaction.get(doc);
-    if (!same()) throw new Error('The open client changed. Please save again.');
-    const list = stored.exists && Array.isArray(stored.data()?.list) ? stored.data().list : [];
-    const merged = [record, ...list];
+    if (!same()) throw new Error('The open client changed.');
+    const data = stored.exists ? stored.data() : null;
+    if (stored.exists && !Array.isArray(data?.list)) throw new Error('Avatar list could not be read safely.');
+    const list = data?.list || [];
+    const previous = list.find(a => a.id === id);
+    if (snapshot._avatarLibraryId && (!previous || (expected !== undefined && (previous.updatedAt || 0) !== expected))) throw new Error('This avatar changed elsewhere. Reopen it before editing.');
+    const merged = [record, ...list.filter(a => a.id !== id)];
     transaction.set(doc, {list:merged, updatedAtMs:Date.now()});
     return merged;
   });
   if (same()) {
-    _avatarLibCache = next;
-    _avatarLibCacheUid = uid;
+    _avatarLibCache = next; _avatarLibCacheUid = uid;
     snapshot._avatarLibraryId = record.id;
-    Object.defineProperty(snapshot, '_avatarSavedSignature', {value:signature,writable:true,configurable:true,enumerable:false});
+    snapshot._avatarLibraryRevision = record.updatedAt;
+    // Reuse the acknowledged Storage copy until this photo changes.
+    if (snapshot._face_photo === identity.face && face) {
+      snapshot._face_photo = face;
+      snapshot._face_photo_url = face;
+      identity.face = face;
+    }
+    Object.defineProperty(snapshot, '_avatarSavedSignature', {value:JSON.stringify(identity),writable:true,configurable:true,enumerable:false});
   }
   return true;
 }
-async function saveAvatarFromDrawer(button) {
-  const snapshot = lastSummary, uid = projectStore._uid();
-  const name = (lastSummary && lastSummary.client && lastSummary.client.name || '').trim();
-  if (!name || name.toLowerCase() === 'client') { pgRenameClient(); showToast('Name the avatar, then press Save.'); return; }
-  if (button) button.disabled = true;
-  try {
-    await _saveCurrentAvatarToLibrary(true);
-    if (snapshot !== lastSummary || uid !== projectStore._uid()) throw new Error('The open client changed.');
-    if (typeof projectStore !== 'undefined' && projectStore.currentId) {
-      projectStore.queueSave();
-      if (!(await projectStore.flush())) throw new Error('Avatar saved, but the project did not save. Please try again.');
-    }
-    refreshDrawerClientName();
-    _avatarSwitcherOpen = false;
-    await toggleAvatarSwitcher();
-    showToast('Avatar saved.');
-  } catch (e) { showToast(e.message || 'Avatar did not save. Please try again.'); }
-  finally { if (button) button.disabled = false; }
-}
+async function saveAvatarFromDrawer() { return _queueAvatarSave(true); }
 async function toggleAvatarSwitcher() {
   const panel = document.getElementById('drawer-avatar-switcher');
   const caret = document.getElementById('drawer-avatar-caret');
@@ -8540,7 +8581,7 @@ async function toggleAvatarSwitcher() {
   const signature = JSON.stringify(current);
   const curKey = lastSummary && lastSummary._avatarSavedSignature === signature ? lastSummary._avatarLibraryId : null;
   const preview = current && !lib.some(a => a.id === curKey)
-    ? '<div class="avatar-switch-row active">' + (current.face ? '<img class="avatar-switch-face" alt="Current avatar" src="' + escapeHtml(current.face) + '">' : '') + '<span class="avatar-switch-name">' + escapeHtml(current.name || 'Client') + ' (unsaved)</span></div>' : '';
+    ? '<div class="avatar-switch-row active">' + (current.face ? '<img class="avatar-switch-face" alt="Current avatar" src="' + escapeHtml(current.face) + '">' : '') + '<span class="avatar-switch-name">' + escapeHtml(current.name || 'Client') + '</span></div>' : '';
   const rows = lib.map(a =>
     '<div class="avatar-switch-row' + (a.id === curKey ? ' active' : '') + '" role="button" tabindex="0" data-id="' + escapeHtml(a.id) + '" onclick="switchAvatar(\'' + escapeHtml(a.id) + '\')">' +
       (a.face ? '<span class="avatar-switch-face" style="background-image:url(\'' + a.face + '\')"></span>'
@@ -8552,14 +8593,13 @@ async function toggleAvatarSwitcher() {
   ).join('');
   // v14.20: Rename, Randomize, Replace and Remove ride inside the dropdown,
   // beside the photo they act on, whether or not the list has anyone in it.
-  // Explicit Save sits between Randomize and Replace; the name is editable above.
+  // Upload, camera and avatar edits save automatically; naming remains optional.
   const actions = '<div class="avatar-switch-actions">' +
     '<button class="drawer-action" type="button" onclick="randomizeAvatar()" title="Random measurements and a random face">Randomize</button>' +
-    '<button class="drawer-action" type="button" onclick="saveAvatarFromDrawer(this)" title="Save as a new avatar">Save</button>' +
     '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace</button>' +
     '<button class="drawer-action" data-maya-type="P3" type="button" onclick="MayaAvatarCamera.open()">Camera</button>' +
     '</div>';
-  panel.innerHTML = actions + preview + (rows || '<div class="avatar-switch-empty">Name this avatar, then press Save.</div>') +
+  panel.innerHTML = actions + preview + (rows || '<div class="avatar-switch-empty">Upload a photo to add an avatar.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
   panel.style.display = 'block';
   // v13.82: make sure the freshly opened list is fully visible, not cut at the fold.
@@ -8587,6 +8627,7 @@ function _wearClient(a) {
   lastSummary._measurements = (a && a.measurements) || null;
   delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
   lastSummary._avatarLibraryId = a ? a.id : null;
+  lastSummary._avatarLibraryRevision = a ? (a.updatedAt || 0) : undefined;
   Object.defineProperty(lastSummary, '_avatarSavedSignature', {value:a ? JSON.stringify(_avatarIdentity()) : null,writable:true,configurable:true,enumerable:false});
   refreshDrawerClientName();
   if (typeof _renderAvatarBody === 'function') { try { _renderAvatarBody(); } catch (_) {} }
@@ -8613,22 +8654,30 @@ async function newAvatar() {
 async function renameAvatarById(id, name) {
   name = String(name || '').trim().slice(0, 40);
   if (!name) return false;
-  const lib = await _loadAvatarLibrary();
-  const a = lib.find(x => x.id === id);
-  if (!a) return false;
-  const key = name.toLowerCase();
-  const next = lib.filter(x => x.id !== id);
-  next.unshift(Object.assign({}, a, { name, updatedAt: Date.now() }));
-  _avatarLibCache = next;
-  try { if (typeof projectStore !== 'undefined' && projectStore.ready()) await _avatarsDoc().set({ list: next, updatedAtMs: Date.now() }); }
-  catch (e) { showError('Could not rename that client. ' + ((e && e.message) || '')); return false; }
-  const curKey = String((lastSummary && lastSummary.client && lastSummary.client.name) || '').trim().toLowerCase();
-  if (lastSummary?._avatarLibraryId === id || curKey === id) { updateClientNameInline(name); refreshDrawerClientName(); }
-  _avatarSwitcherOpen = false;
-  toggleAvatarSwitcher();
-  showToast('Renamed to ' + name);
-  return true;
+  const account = projectStore._accountContext(), doc = _avatarsDoc();
+  const snapshot = lastSummary, version = _facePhotoVersion;
+  try {
+    const next = await firebase.firestore().runTransaction(async transaction => {
+      const stored = await transaction.get(doc);
+      if (!projectStore._accountValid(account)) throw new Error('The account changed.');
+      const list = stored.data()?.list;
+      if (!Array.isArray(list) || !list.some(a => a.id === id)) throw new Error('Reopen the avatar list before renaming.');
+      const previous = list.find(a => a.id === id);
+      if (lastSummary === snapshot && snapshot?._avatarLibraryId === id && snapshot._avatarLibraryRevision !== undefined && (previous.updatedAt || 0) !== snapshot._avatarLibraryRevision) throw new Error('This avatar changed elsewhere. Reopen it before editing.');
+      const merged = list.map(a => a.id === id ? {...a, name, updatedAt:Math.max(Date.now(),(a.updatedAt||0)+1)} : a);
+      transaction.set(doc, {list:merged,updatedAtMs:Date.now()});return merged;
+    });
+    if (!projectStore._accountValid(account)) return false;
+    _avatarLibCache = next;_avatarLibCacheUid = account.uid;
+    if (lastSummary === snapshot && version === _facePhotoVersion && snapshot?._avatarLibraryId === id) {
+      snapshot._avatarLibraryRevision = next.find(a => a.id === id).updatedAt;
+      updateClientNameInline(name);refreshDrawerClientName();
+    }
+    _avatarSwitcherOpen = false;await toggleAvatarSwitcher();
+    return true;
+  } catch (error) { if (projectStore._accountValid(account)) { if (error.message === 'This avatar changed elsewhere. Reopen it before editing.') _avatarLibCache = null;showError('Could not rename that avatar. '+error.message); }return false; }
 }
+
 function pgRenameAvatarRow(id) {
   let row = null;
   try { const sel = (window.CSS && CSS.escape) ? CSS.escape(id) : id; row = document.querySelector('#drawer-avatar-switcher .avatar-switch-row[data-id="' + sel + '"]'); } catch (_) {}
@@ -8652,17 +8701,28 @@ function pgRenameAvatarRow(id) {
   inp.focus(); inp.select();
 }
 async function deleteAvatar(id) {
+  const account = projectStore._accountContext(), doc = _avatarsDoc();
   const lib = await _loadAvatarLibrary();
-  const a = lib.find(x => x.id === id);
-  if (!a) return;
-  if (!confirm('Remove ' + (a.name || 'this client') + ' from your client list? Their projects stay.')) return;
-  const next = lib.filter(x => x.id !== id);
-  _avatarLibCache = next;
-  try { await _avatarsDoc().set({ list: next, updatedAtMs: Date.now() }); }
-  catch (e) { showError('Could not remove that client. ' + ((e && e.message) || '')); }
-  _avatarSwitcherOpen = false;
-  toggleAvatarSwitcher();
-  showToast('Removed ' + (a.name || 'client') + ' from the list.');
+  if (!projectStore._accountValid(account)) return;
+  const avatar = lib.find(a => a.id === id);
+  if (!avatar || !confirm('Remove ' + (avatar.name || 'this client') + ' from your client list? Their projects stay.')) return;
+  try {
+    const next = await firebase.firestore().runTransaction(async transaction => {
+      const stored = await transaction.get(doc);
+      if (!projectStore._accountValid(account)) throw new Error('The account changed.');
+      const list = stored.data()?.list;
+      if (!Array.isArray(list)) throw new Error('Avatar list could not be read safely.');
+      const merged = list.filter(a => a.id !== id);transaction.set(doc,{list:merged,updatedAtMs:Date.now()});return merged;
+    });
+    if (!projectStore._accountValid(account)) return;
+    _avatarLibCache = next;_avatarLibCacheUid = account.uid;
+    if (lastSummary?._avatarLibraryId === id) {
+      _facePhotoVersion++; // Cancel an older automatic save; never recreate a deleted entry.
+      lastSummary._avatarLibraryId = null;delete lastSummary._avatarLibraryRevision;
+      delete lastSummary._avatarSavedSignature;_persistSession();
+    }
+    _avatarSwitcherOpen = false;await toggleAvatarSwitcher();
+  } catch (error) { if (projectStore._accountValid(account)) showError('Could not remove that avatar. '+error.message); }
 }
 // Helper for face-photo handlers, re-render whichever Avatar UI is active.
 function _refreshActiveAvatarView() {
@@ -8904,34 +8964,27 @@ async function randomizeAvatar() {
     if (!currentRandom()) return;
     if (dataUrl) {
       lastSummary._face_photo = dataUrl;
-    // v12.5: new bytes, so the copy in Storage is stale. Clearing these forces
-    // a fresh upload; without it the OLD face came back on every other device.
-    delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
-    // v12.7: shrink it first. A phone photo is several megabytes of text, and
-    // every save deep copied the whole thing on the main thread, which is the
-    // stall you feel a second after letting go of a card.
-    const _faceCtx = _opContext();      // v13.0: whose face is this?
-    _shrinkFace(dataUrl).then(small => {
-      if (!_opStillValid(_faceCtx) || !currentRandom()) return;   // a different client is open now
-      if (small && lastSummary) {
-        lastSummary._face_photo = small;
-        if (typeof _refreshActiveAvatarView === 'function') _refreshActiveAvatarView();
-        if (typeof _persistSession === 'function') _persistSession();
-      }
-    });
+      delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
+      const small = await _shrinkFace(dataUrl);
+      if (!currentRandom()) return;
+      lastSummary._face_photo = small || dataUrl;
+      const _faceCtx = _opContext();
       lastSummary._face_descriptors = null;
-      analyzeFacePhoto(dataUrl).then(d => {
+      analyzeFacePhoto(lastSummary._face_photo).then(d => {
           // v13.0: do not write one client's face onto another's project
           if (!_opStillValid(_faceCtx) || !currentRandom()) return;
           if (lastSummary) lastSummary._face_descriptors = d;
+          _persistSession(); _queueAvatarSave();
         })
         .catch(e => console.warn('[Maya face analysis]', e));
     }
   } catch (e) {
     console.warn('[Maya randomize]', e);
   }
+  if (!currentRandom()) return;
   _refreshActiveAvatarView();
-  try { _saveCurrentAvatarToLibrary(); } catch (_) {}
+  _persistSession();
+  try { _queueAvatarSave(true); } catch (_) {}
   try { if (typeof projectStore !== 'undefined' && projectStore.currentId) projectStore.queueSave(); } catch (_) {}
   showToast('Randomized.');
 }
@@ -9019,6 +9072,7 @@ function updateClientNameInline(v) {
   lastSummary.client = lastSummary.client || {};
   lastSummary.client.name = name;
   if (typeof _persistSession === 'function') _persistSession();
+  _queueAvatarSave();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -9320,6 +9374,8 @@ function _doClear() {
   // SAME client, not a new person. Carry those fields onto a fresh summary
   // instead of nulling lastSummary outright.
   const _keepAvatar = lastSummary ? {
+    _avatarLibraryId: lastSummary._avatarLibraryId || null,
+    _avatarLibraryRevision: lastSummary._avatarLibraryRevision,
     _face_photo:       lastSummary._face_photo || null,
     _face_photo_url:   lastSummary._face_photo_url || null,
     _face_photo_path:  lastSummary._face_photo_path || null,
@@ -9526,6 +9582,7 @@ async function processConsultation(transcript) {
       return;
     }
     lastSummary = summary;
+    if (summary._face_photo) _queueAvatarSave();
     placeConsultationCards(summary);   // uses placeItemUnique under the hood
     renderNotesPanel(summary);
     if (summary.dream_outcome) {
@@ -10381,43 +10438,24 @@ function _clearPendingTitle(t) {
 // stopped a final batch wouldn't fire on its own), then polls until
 // nothing is in flight and there's no unprocessed text waiting.
 async function _waitForVoicePipelineQuiet(opts = {}) {
-  const maxMs = opts.maxMs || 30000;   // safety ceiling so it can't hang
-  const start = Date.now();
-  // The interval guard requires isListening; bypass it for the flush.
-  const _wasFlag = isListening;
-  isListening = true;
-  // Push a status pill so the user sees we're waiting on something real.
+  const maxMs = opts.maxMs || 30000, start = Date.now(), context = _opContext();
+  const havePending = () => batchInFlight || liveTranscriptBuffer.slice(lastProcessedLength).trim() || liveInterimBuffer.trim();
+  if (!havePending()) return;
+  const wasListening = isListening;
+  isListening = true; // Let the current final batch settle after Stop.
   pushRenderStatus('waiting');
   try {
-    const havePending = () =>
-      batchInFlight ||
-      (liveTranscriptBuffer && liveTranscriptBuffer.length > lastProcessedLength + 5) ||
-      (liveInterimBuffer && liveInterimBuffer.trim().length > 0);
-    let lastSwap = 'waiting';
-    while (havePending() && (Date.now() - start) < maxMs) {
-      // If nothing is in flight but we have pending text, kick a batch.
-      if (!batchInFlight) {
-        // Best-effort: ignore failures, they'll be surfaced by the batch itself.
-        processLiveBatch().catch(() => {});
-      }
-      if (lastSwap === 'waiting') {
-        // After ~1 s of waiting flip the label to 'starting' so the user
-        // sees forward motion before the render itself kicks off.
-        if (Date.now() - start > 1000) {
-          popRenderStatus();
-          pushRenderStatus('starting');
-          lastSwap = 'starting';
-        }
-      }
-      await new Promise(r => setTimeout(r, 250));
+    while (havePending() && _opStillValid(context) && Date.now() - start < maxMs) {
+      if (!batchInFlight) processLiveBatch({flush:true}).catch(() => {});
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
   } finally {
-    isListening = _wasFlag;
+    if (_opStillValid(context)) isListening = wasListening;
     popRenderStatus();
   }
 }
 
-async function processLiveBatch() {
+async function processLiveBatch(opts = {}) {
   if (batchInFlight || !isListening || !getApiKey()) return;
   const ctx = _opContext();
   // include the trailing interim text so words don't get stuck in limbo
@@ -10425,7 +10463,7 @@ async function processLiveBatch() {
   const finalNew  = liveTranscriptBuffer.slice(lastProcessedLength).trim();
   const interim   = (liveInterimBuffer || '').trim();
   const newPortion = (finalNew + ' ' + interim).trim();
-  if (newPortion.length < 15) return;
+  if (!newPortion || (newPortion.length < 15 && !opts.flush)) return;
 
   batchInFlight = true;
   const consumeUpTo = liveTranscriptBuffer.length;
@@ -10437,6 +10475,7 @@ async function processLiveBatch() {
       return;
     }
     lastProcessedLength = consumeUpTo;
+    if (liveInterimBuffer.trim() === interim) liveInterimBuffer = '';
     // v5.23: belt + suspenders dedupe. The LLM is instructed not to repeat,
     // but if it slips up we filter again locally before placement, AND we
     // run a full canvas sweep right after to scoop up any near-duplicates
@@ -10455,7 +10494,10 @@ async function processLiveBatch() {
     if (typeof dedupeSweep === 'function') setTimeout(dedupeSweep, 250);
   } catch (e) {
     console.error('[Maya live extract]', e);
-    if (_opStillValid(ctx)) lastProcessedLength = consumeUpTo;
+    if (_opStillValid(ctx)) {
+      lastProcessedLength = consumeUpTo;
+      if (liveInterimBuffer.trim() === interim) liveInterimBuffer = '';
+    }
   } finally {
     batchInFlight = false;
   }
@@ -12438,16 +12480,11 @@ async function _resizeImageDataUrlToSize(dataUrl, sizeStr) {
 // /v1/images/edits. Callers should order the array so the prompt's "Image 1
 // is X, Image 2 is Y" indexing matches.
 async function callOpenAIImageEditSafe(prevDataUrl, prompt, size, quality, opts) {
-  const targetSize = size || '1536x1024';
-  // v7.8: ensure each base image matches target output dims
-  const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
-  const resized = [];
-  for (const src of inputList) {
-    if (!src) continue;
-    try { resized.push(await _resizeImageDataUrlToSize(src, targetSize)); }
-    catch (_) { resized.push(src); }
-  }
-  const baseArg = resized.length > 1 ? resized : resized[0];
+  // Current GPT Image accepts reference images at their original aspect ratio.
+  // Compression happens once in callOpenAIImageEdit, without a full-size PNG
+  // upscale/crop first (especially costly on phones and tablets).
+  const inputList = (Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl]).filter(Boolean);
+  const baseArg = inputList.length > 1 ? inputList : inputList[0];
   try {
     return await callOpenAIImageEdit(baseArg, prompt, size, quality, opts);
   } catch (e) {
@@ -12474,21 +12511,21 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   // shape, same standard sizes. 2K (2560×1440) is also available if we
   // ever want to bump resolution.
   form.append('model', getImageModel());
+  form.append('complexity', 'medium');
   form.append('prompt', prompt);
   const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
-  let idx = 0;
-  for (const src of inputList) {
-    if (!src) continue;
-    const rawBlob = await blobFromPicture(src);
-    // v10.26: compress every anchor regardless of source (user upload, prior
-    // Maya output, session-restored image). Total payload stays well under
-    // Vercel's 4.5MB cap even with 10+ anchors.
-    const blob = await compressBlobForUpload(rawBlob);
-    // Use image[] for multi; gpt-image-2 also accepts plain 'image' for one.
-    const field = inputList.length > 1 ? 'image[]' : 'image';
-    form.append(field, blob, 'anchor_' + idx + '.jpg');
-    idx++;
-  }
+  // Two preparations overlap network reads without decoding every large photo
+  // at once on a tablet. Preserve the face/reference order used by the prompt.
+  const sources = inputList.filter(Boolean), prepared = new Array(sources.length);
+  let next = 0;
+  const prepare = async () => {
+    while (next < sources.length) {
+      const index = next++;
+      prepared[index] = await compressBlobForUpload(await blobFromPicture(sources[index]));
+    }
+  };
+  await Promise.all([prepare(), prepare()]);
+  for (const [index, blob] of prepared.entries()) form.append(sources.length > 1 ? 'image[]' : 'image', blob, 'anchor_' + index + '.jpg');
   form.append('size', size || '1536x1024');
   // v5.15: use caller's quality override OR the Settings preference
   form.append('quality', quality || getImageQuality() || 'medium');
@@ -12538,6 +12575,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
     // v9.11: gpt-image-2, same model used by the /edits path. Reasoning-
     // capable, stronger identity carry across renders, 2K-ready.
     model: getImageModel(),
+    complexity: 'medium',
     prompt: prompt,
     size: size || '1024x1536',
     quality: quality || getImageQuality() || 'medium',
@@ -12591,7 +12629,11 @@ async function visualizeGarment() {
   // proceed. There's a ~3 s gap between speaking the last word and seeing
   // its cards appear (callLiveExtract runs as a batch). If Visualize fires
   // mid-batch the prompt would miss whatever's still in flight.
+  const visualizeContext = _opContext(), visualizeAvatarVersion = _facePhotoVersion;
+  if (_pendingAvatarPhoto) await _pendingAvatarPhoto;
+  if (!_opStillValid(visualizeContext) || _facePhotoVersion !== visualizeAvatarVersion) return;
   await _waitForVoicePipelineQuiet();
+  if (!_opStillValid(visualizeContext) || _facePhotoVersion !== visualizeAvatarVersion) return;
   // v10.16: avatar safety check. If no face photo AND no measurements,
   // ask before proceeding. If either is set, that's enough, render goes.
   const facePhoto = (lastSummary && lastSummary._face_photo) || null;
@@ -12603,10 +12645,6 @@ async function visualizeGarment() {
   }
   if (!facePhoto) {
     _openAvatarCheck('no-face');
-    return;
-  }
-  if (!hasMeas) {
-    _openAvatarCheck('no-meas');
     return;
   }
   // Avatar is set up, proceed to the fabric mode picker.
@@ -14570,19 +14608,20 @@ function _persistSession() {
 // (which on phones is how every session ends).
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
+    _flushAvatarSave();
     clearTimeout(_persistTimer);
     _persistNow(true);            // v12.9: save NOW, do not queue. The tab may not come back.
   }
 });
 // v11.32: iOS Safari sometimes kills the tab without ever firing
 // visibilitychange, pagehide is the reliable last-gasp save on that path.
-window.addEventListener('pagehide', () => { clearTimeout(_persistTimer); _persistNow(true); });
+window.addEventListener('pagehide', () => { _flushAvatarSave(); clearTimeout(_persistTimer); _persistNow(true); });
 // v13.14: while there are unsaved changes, closing the tab asks first. The
 // last gasp save is best-effort, even while online. Warn until its write is
 // acknowledged instead of assuming connectivity guarantees durability.
 window.addEventListener('beforeunload', (e) => {
   try {
-    const pendingEdit = !!_persistTimer || (typeof projectStore !== 'undefined' && projectStore._dirty);
+    const pendingEdit = _avatarSaveInFlight || !!_avatarSavePending || !!_avatarSaveTimer || !!_persistTimer || (typeof projectStore !== 'undefined' && projectStore._dirty);
     if (pendingEdit) { e.preventDefault(); e.returnValue = ''; }
   } catch (_) {}
 });
@@ -17744,7 +17783,7 @@ function pgRenameClient() {
     span.style.display = '';
     if (commit && v !== cur) {
       updateClientNameInline(v);
-      try { _saveCurrentAvatarToLibrary(); } catch (_) {}
+      try { _queueAvatarSave(); } catch (_) {}
       try { if (typeof projectStore !== 'undefined' && projectStore.currentId) projectStore.queueSave(); } catch (_) {}
     }
     refreshDrawerClientName();
