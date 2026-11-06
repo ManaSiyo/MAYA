@@ -1,0 +1,10 @@
+.DS_Store
+.firebase/
+_to_delete/
+docs/_to_delete/
+backend/server/node_modules/
+node_modules/
+
+docs/node_modules/
+.hosting/
+firebase.json
