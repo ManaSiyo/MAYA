@@ -1,503 +1,150 @@
 # MAYA
 
-Sole active written aesthetic specification: [design.md](design.md).
-## Governing completion rule
+MAYA turns client references and an avatar into garment visualizations, favorites,
+community designs and private atelier submissions. Admin manages submissions,
+leads, messages and advertising. The Brief includes dissection, pattern work and
+Fabrics; there is no separate public Operation Room or WR workspace.
 
-Aesthetic Control is the final completion gate.
+## Source layout
 
-Every addition or change in MAYA-new must preserve this rule. New visible UI
-must use the shared settings and have an active Aesthetic Control preview.
-Finish functional tests first; the last verification before completion, commit
-or handoff is the Aesthetic Control check, including saved-settings mutations,
-visual inspection and phone/tablet/desktop layouts. Extend the authority test
-for new surfaces. A later presentation change requires checking again.
-Backend/docs-only work records no visible UI impact and runs the shared gate.
-Unresolved mismatches block completion. See [AGENTS.md](../AGENTS.md) for the
-mandatory workflow and [design.md](design.md) for the sole presentation canon.
-
-Admin has Settings and Messages. Insights and Logs/Notifications are retired;
-active voice/pending approvals remain in Settings. Unsolicited insight, provider and notification commentary is removed entirely;
-private server diagnostics remain. Settings headings use shared H3; Add Tools
-replaces Outside Tools, and Twilio links to its console under Behind the scenes.
-Admin and Brief use the same image cards, scaled to the drawer. Exact duplicates
-are grouped from complete file checksums and verified owner/client/project scope;
-canonical records/files remain. Shared Inner/Drawer/H3 controls and the existing
-Drawer preview govern these surfaces. Six dashboard headings remain H3; D/W/M
-keep circular Glass. Closed Recent changes/Feature requests share the compatible
-sectionSpacing.insights key, labeled Closed sections. Presentation runtime is v4.
-
-Direct ad reporting and owner-only setup: [DIRECT-AD-REPORTING.md](DIRECT-AD-REPORTING.md). Windsor is retired; Google, Meta and ChatGPT Ads use their own reporting APIs.
-
-Current screen, file and backend architecture: [ARCHITECTURE-MAP.md](ARCHITECTURE-MAP.md).
-
-Conversational fabric search, scoped textile components and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).
-Messages → Begin texting accepts a typed number and optional saved name. Send is
-reviewed; phone actions are confirmed. Aesthetic Control also governs individual
-status colors/weights with usage links, icon color/stroke and all Admin section gaps.
-Pills size from content plus saved X/Y padding; H4 covers names, H5 dates and P3 captions.
-Owner SMS understands all/status-filtered lead lists and counts with durable MORE pages.
-
-All visible scrollbar paint/geometry comes from the shared runtime; page CSS may
-only hide intentional navigation tracks. Runtime v2 removes native-width/theme
-conflicts. Tests measure actual gutter and Save propagation across served pages.
-Public health reports Ads configuration presence only. Private server diagnostics
-remain available for troubleshooting; the dashboard renders no operational reports.
-
-Current drawer/scrollbar/segment controls: every hamburger uses the MAYA drawer
-material, with its own shared Edit/Restore preview. Scrollbars default to 4px,
-half-length painted handles and idle hiding. Brief and Fabrics keep one viewport.
-Global (formerly Sourceable) uses worldwide image-led search and exactly the
-existing In House gallery: same dimensions, scrolling, photos and two caption rows.
-The sole Fabric preview in Aesthetic Control locks this parity. Saved-look Brief/
-Operations have no Dictate, Find fabric, refinement field or shop/details strip.
-Explicit retailer APIs remain separate compatibility paths. Card Save/Use remains
-removed; historical Favorites stay readable/removable.
-
-Tables share Aesthetic Control settings across MAYA; their records remain separate.
-WR starts with its own empty gallery/applicants and does not import Admin data.
-
-Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
-Aesthetic Control groups Visuals (Glass pills, Panels and Tables) before single-preview
-Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.
-
-Immediate Wix/Gmail event activation and OpenAI latency audit: [EVENT-TRIGGERS.md](EVENT-TRIGGERS.md).
-
-Callback owner SMS/call setup and incident verification: [CALLBACK-ALERTS.md](CALLBACK-ALERTS.md).
-
-See [REPO-MAP.md](REPO-MAP.md) for the folder map and cleanup decisions.
-
-The whole system, written for a fresh conversation. If you are an assistant
-picking this up with no memory of what came before, read this file first and
-then `AI-HANDOFF.md` for the current task and `history.txt` for the older
-narrative.
-
-Owner: Fromsa, founder of Mana Siyo.
-Live site: https://maya.manasiyo.com
-Also read, all beside this file in `docs/`: `AI-HANDOFF.md` (the current Codex handoff), `history.txt` (the story), `fixes.txt` (fix attempts,
-especially ones outside git), `requests.txt` (Fromsa's own asks and noticed
-bugs, with status marks; re-verify its entries every session), and
-`MAYA-AI-ARCHITECTURE.md` (the provider-neutral intelligence and production
-boundary).
-
-v13.37: Firebase still publishes from the repository root, but the app lives
-in `frontend/`, the back rooms live in `backend/`, pictures stay in
-`aesthetics/`, and `docs/firebase.json` maps every old URL to its current file.
-Every note, the server and the rules live in `docs/`.
-Google project: `pro-maya`
-Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Live display version: **14.40**. On September 30, Hosting published
-`f66e7c13486f3d2ff260495ff0bbfb71b2514d4c` at 2026-10-01 04:29:16 UTC.
-The display version can stay the same across pushes; `/release.json` identifies
-the actual published commit. Check that endpoint before treating a push as live.
-`node tests/verify-live.mjs` requires release.json, App/Admin build stamps and the
-API health commit to match Git HEAD; `--wait` waits for that exact commit, not
-the display version.
-
----
-
-
-> v14.02 (Aug 27 2026): Maya has a door (`POST /mcp`, `docs/server/maya-mcp.mjs`)
-> and a character (`docs/server/maya-character.md`). Roadmap:
-> `docs/MAYA-INDEPENDENCE.md`. Historical audits were moved to `_to_delete/`.
-
-## 1. What MAYA is
-
-MAYA means Most Advanced Yet Acceptable. It is Mana Siyo's intelligence layer:
-a client talks to it, MAYA turns the conversation into a moodboard and then
-into rendered garment visions, explainable construction, real fabric options
-and a pattern-ready production brief. Mana Siyo remains the physical workflow:
-consultation, Pinterest and tape measurements, CLO base asset and pattern
-modification, SVG export, LightBurn review, laser cutting and sewing.
-
-MAYA is free and stays free. Fromsa is firm on this: the Canva and Fortnite
-model, the core tool costs nothing and money comes later from enhancement, not
-from a paywall. Do not propose subscriptions or credit gates as the headline
-plan. A tip button exists purely as proof that payment plumbing works.
-
----
-
-## 2. The served screens
-
-Standalone Marketing, Playground, Affiliates and Outbound are retired. Marketing/Affiliates/Outbound
-URLs redirect to Admin; Playground URLs redirect to MAYA. No staged experiments
-were promoted. Admin owns the marketing charts and lead station.
-
-| File | What it is | Who sees it |
-|---|---|---|
-| `frontend/index.html` | The MAYA app. Moodboard, community wall, favorites and the approved filing cabinet. | Clients |
-| `backend/status.html` | Admin. Command briefing, health, traffic, Marketing, submissions, feature requests and changelog. | Admins only |
-| `backend/backend.html` | The Brief, fabric assistant and a submission-preserving link to the Operation Room. | Admins only |
-| `backend/operations.html` | The standalone Operation Room, the beta bench for pattern experiments. | Admins only |
-
-`aesthetics/` holds everything visual, including shared pattern knowledge and CLO library assets. Legacy Operations
-page URLs redirect to the one current Operation Room.
-The Brief embeds Operation Room as its second vertical screen; the fixed brand switches with the screen and its hamburger opens the active workspace settings. The standalone route remains available.
-`docs/` holds everything else: the server source,
-`firebase.json`, `design.md`, current runbooks, `Vision.pdf`, and `Strategy-A.md`.
-Retired reports and prototype research are in root `_to_delete/`, excluded from Hosting.
-
-### The MAYA app is three vertical screens
-
-Since v13.3 the app scroll-snaps between three sections stacked top to bottom:
-
-```
-  screen 0   COMMUNITY   everyone's hearted visions, drifting left forever
-  screen 1   MAYA        the moodboard, the home screen, where MAYA opens
-  screen 2   FAVORITES   this client's hearted visions
-```
-
-`currentScreen` starts at 1, and `_bootScreenObserver` scrolls `#screens` down
-by one viewport height before the first paint so the moodboard is what you
-land on. Anything that used to test `currentScreen === 1` for favorites now
-tests `=== 2`. Swiping right from any of them opens the drawer, which is a
-separate horizontal scroll-snap pane, not an overlay.
-
----
-
-## 3. How a deploy happens
-
-**One action: push `maya-v2` to origin.** Google reads `cloudbuild.yaml` at the
-repo root and runs seven steps. The latest full release took about 18 minutes:
-
-1. Refuse the build unless the branch is exactly `maya-v2`
-2. Install pinned test dependencies and Chromium, then run every release contract;
-   dependency or browser installation failures block deployment
-3. Build server (Docker, from `docs/server`)
-4. Push image
-5. Deploy server to Cloud Run (`maya-api`, region `us-west1`)
-6. Stamp the commit and deploy the website (Firebase Hosting, `--only hosting`)
-7. Deploy rules (`--only firestore:rules,storage`)
-
-Steps 6 and 7 are deliberately separate. When they were one command a rules
-problem took the whole website down with it. Now the site always ships first
-and a rules failure is loud but harmless to what is already live.
-
-**Do not conclude a push succeeded because GitHub shows a green Vercel check.**
-The Google Cloud Build check is separate. The September 30 `f38b2fe` and
-`0d0ec66` builds failed at browser contracts before server or Hosting deployment;
-a later release published `f1a36b5`. After a successful release, check the
-published commit and API health:
-
-```
-curl -fsS https://maya.manasiyo.com/release.json
-curl -s https://maya.manasiyo.com/api/healthz
-```
-
-`/api/healthz` is public and reports the server's baked `commit` as well as
-`configured: {openai, submissions, fal, stripe}`. `/api/healthz/deep` is admin
-gated and verifies that the submission bucket answers.
-
-The Cloud Build trigger still reads the root `cloudbuild.yaml` (Autodetected)
-with branch regex `.*`, but the first build step now blocks every branch except
-`maya-v2`. `docs/Deploy MAYA.command` still works as a website-only backup but
-should never be needed.
-
----
-
-## 4. The server
-
-`docs/server/server.js`, Express 4, ESM, deployed to Cloud Run as `maya-api`.
-Firebase Hosting rewrites `/api/**` to it, so the browser only ever talks to
-`maya.manasiyo.com` and never sees a key.
-
-**Routes**
-
-| Route | Purpose |
+| Location | Purpose |
 |---|---|
-| `/api/healthz`, `/api/healthz/deep` | health, the second is admin gated with a 5s timeout |
-| `/api/openai/*` | proxy to OpenAI, allowlisted paths only |
-| `/api/source-fabric` | admin-only real retailer inventory search |
-| `/api/rank-fabric` | admin-only garment-to-thumbnail visual ranking through the task router |
-| `/api/admin/fabrics/search` | admin-only conversational photo/text discovery with streamed seller results |
-| `/api/admin/fabrics/lookbook` | account/submission-scoped saved fabrics and material selection |
-| `/api/fal/*`, `/api/falstorage/*` | fal.ai proxy, dormant, no key set |
-| `/api/runway` | Runway proxy, dormant on purpose |
-| `/api/submit` | client submission into MAYA's Storage bucket, filename allowlist |
-| `/api/admin/submissions` | the submission feed behind the Systems Map strip |
-| `/api/admin/subfile` | stream one submission file (Brief) |
-| `/api/admin/subthumb` | thumbnail for one submission picture (added v13.3) |
-| `/api/admin/savepieces` | write `pieces.json` so a dissection is never repeated |
-| `/api/admin/analytics` | Google Analytics numbers |
-| `/api/admin/marketing` | canonical Wix, Analytics and advertising data for Marketing and Admin |
-| `/api/admin/command-snapshot` | bounded Admin briefing data for the visible command center and voice |
-| `/api/admin/lead-lookup` | exact, ambiguity-safe Lead Station identity lookup |
-| `/api/admin/maya-remember`, `/api/admin/maya-forget` | confirmation-gated internal Maya memory writes |
-| `/api/admin/lead-note`, `/api/admin/lead-draft` | confirmation-gated lead note and reviewable email draft actions |
-| `/api/admin/voice-token` | short-lived Admin-only OpenAI Realtime session |
-| `/api/tip` | Stripe Checkout Session |
+| frontend/index.html | Client app: Inspo → Favorites → Community, drawer and sharing |
+| backend/status.html | Admin at /status.html |
+| backend/backend.html | Brief at /backend.html |
+| backend/operation-workspace.html | Brief's embedded pattern workspace; direct visits return to Brief |
+| backend/privacy.html | Privacy and Terms; old Terms URLs redirect to #terms |
+| backend/verify.html | Public deployment check page |
+| backend/server | Cloud Run API, storage rules and Maya's runtime instructions |
+| docs/aesthetics | Shared visuals, fabric photos, UI modules and Aesthetic Control |
+| docs/AGENTS.md, design.md | Working rules and visual canon |
+| docs/CHANGELOG.md | The only maintained history |
+| docs/check.mjs | One release-check command, with runtime/UI helpers |
+| docs/build-site.mjs, firebase.json | Explicit public build and Hosting route map |
+| _to_delete/2026-11-05-cleanup | Retired docs/tests/headshots/pages, kept for owner review |
 
-**Environment variables on Cloud Run**
+Root cloudbuild.yaml and .firebaserc remain because the existing Google deployment
+uses them. node_modules is dependency software, retained. .hosting is generated,
+ignored output; it is safe to rebuild. Browser asset addresses remain
+/aesthetics/* even though their sources moved into docs. Private documentation,
+server code, test helpers and dependencies never enter .hosting.
 
-```
-OPENAI_API_KEY          STRIPE_SECRET_KEY       FAL_API_KEY (unset)
-SUBMISSIONS_BUCKET      RUNWAY_API_KEY (unset)  GOOGLE_CLIENT_ID
-ADMIN_EMAILS            RL_PER_DAY / RL_PER_MIN / RL_ADMIN_PER_DAY / RL_ADMIN_PER_MIN
-```
+## Hosting and deployment
 
-Admin emails default in code to
-`fromsa@manasiyo.com, worldofsiyo@gmail.com`.
-Rate limit is 50 calls per person per day, images counting as 4, admins 6000.
+Project **pro-maya**, Firebase Hosting **maya.manasiyo.com** and **pro-maya.web.app**.
+/api/** and /mcp rewrite to Cloud Run **maya-api**, region **us-west1**. Storage is
+**pro-maya.firebasestorage.app**. The API uses its Cloud Run service account through
+the metadata server; no personal browser session is needed for server Storage.
 
-Tests install with root `npm ci`; the container installs production dependencies
-with its own committed lockfile and `npm ci --omit=dev --ignore-scripts`.
-Cloud Build passes its commit as a Docker build argument, without changing
-production environment settings. Release verification rejects a current website
-served with an older API commit.
+An owner Push of **maya-v2** starts the existing Cloud Build trigger. The branch
+guard rejects other branches. The build installs pinned dependencies and
+Chromium, runs `node docs/check.mjs`, builds backend/server with its locked
+production dependencies, pushes the container, deploys Cloud Run, builds the
+public tree with the commit stamp, deploys Hosting, then deploys Firestore/Storage
+rules separately. No credentials or provider environment settings are changed.
 
-**Auth** is Google Identity Services. Client id
-`90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com`.
-ID tokens expire after one hour, so both `index.html` and `status.html` renew
-silently five minutes before expiry via `google.accounts.id.prompt()` with
-`auto_select: true`. This was the cause of "it tells me to sign in even though
-I have signed in."
-
----
-
-## 5. Where data lives
-
-Nothing is stored on Fromsa's Mac. Everything is online. This was a hard
-requirement and the v12.5 cutover exists to enforce it.
-
-**Firestore**
+Local commands (Node20 or newer):
 
 ```
-users/{uid}/projects/{pid}          one project, everything on its screen
-users/{uid}/projectTombstones/{pid} deleted means deleted, permanently
-users/{uid}/settings/projectIndex   a small index so listing projects is fast
-users/{uid}/settings/avatars, migration
-users/{uid}/sessions, favorites     LEGACY, read only, nothing writes here
-config/prompting                    shared prompt text, admins write
-community/{postId}                  the community wall, added v13.3
+npm ci --prefix docs
+npm ci --prefix backend/server
+cd docs && npx playwright install chromium && cd ..
+node docs/check.mjs
+MAYA_BROWSER=webkit node docs/check-ui.mjs
+node docs/build-site.mjs
 ```
 
-**Firebase Storage**
+After Push, compare the full intended commit in `/release.json`, the frontend and
+Admin `maya-build` metadata, and `/api/healthz`. Health's configured flags indicate
+configuration, not successful inference/delivery. `/api/healthz/deep` is admin-only.
 
-```
-users/{uid}/projects/{pid}/images/  every picture in a project
-projects/avatars/                   client faces, survives a project delete
-community/{uid}/                    wall copies of unsaved pictures, added v13.3
-submissions/{submissionId}/         current client submission package
-```
+## APIs and providers
 
-The current server writes client submissions to the `SUBMISSIONS_BUCKET`
-(MAYA's Firebase Storage bucket by default), one prefix per submission with
-`one-pager`, `dream-garment`, `summary.json`, `pieces.json`, `moodboard.json`,
-`hero.*` and `face.*`. Google Drive is a legacy migration source only; do not
-delete its compatibility paths until every older submission is confirmed moved.
+- **Google Identity / Firebase Auth:** verified identity and account isolation.
+  Firestore owns client projects, private avatars and share records; Storage owns
+  independent images and submissions. Admin access uses the server allowlist.
+- **OpenAI:** text/vision via the protected allowlisted proxy, image generation and
+  edits using **gpt-image-2.6-flare**, text default **gpt-6-luna**; Realtime voice
+  uses modality-specific configuration. Defaults are in server/model-config.mjs.
+  Global Fabrics uses image-led web search with source/citation evidence. Sourcing
+  photographs are independent of the generated-image model.
+- **Twilio:** SMS and calls, inbound signature validation, durable delivery/send
+  claims. Messages sends and calls require explicit reviewed actions; accepted is
+  not delivered. A text AI budget does not cap voice/images/provider invoices.
+- **Wix / Google Cloud Tasks / Scheduler:** durable callback lead ingress and
+  independent callback alerts. Wix JWT verification, exact installation/form
+  scope, queue audience and OIDC identity remain enforced. Code deploy does not
+  activate providers. OUTBOUND_SCHEDULER_* still authenticates callback workers.
+- **Google Analytics / Google Ads / ChatGPT Ads / Meta:** Admin data integrations
+  retain their existing account scope and configuration. No on-page setup dumps.
+- **Stripe:** existing tips/checkout integration; billing unchanged.
+- **Pinterest, fal.ai and Runway:** existing integration paths retained. Availability
+  depends on owner-managed provider configuration; no paid call is retried silently.
 
-Rules live at `docs/server/firestore.rules` and `docs/server/storage.rules`
-and publish with every deploy.
+Owner-only setup remains in provider consoles/Cloud Run: API keys, Twilio account
+and phone, GOOGLE_CLIENT_ID / ADMIN_EMAILS, Wix verification settings, Task/Scheduler
+identity and callback recipients. Do not print or change secret values. Callback
+alerts use separate durable SMS/call claims; reconcile uncertain provider outcomes
+before retrying. Retired Outbound OAuth/Scheduler/private objects and WR stored data
+are not deleted by this cleanup.
 
----
+## Data contracts
 
-## 6. `projectStore`, the part that matters most
+Client projects are users/{uid}/projects/{id}; avatars and indexes are private
+user settings. Save/open/upload pin account generation and board identity. Project
+flush reports failure before navigation; generation/revision checks prevent stale
+writes. Shared images are copied into shares/{uid}/{token}; importing makes another
+independent copy. Deleting the source cannot break the share or recipient project.
 
-Fromsa lost a client's project once. The cause: naming a project from Save
-wrote to IndexedDB only, while the screen said "Saved". Everything about
-`projectStore` in `index.html` now exists to make that impossible.
+Atelier submissions live under submissions/{id}/ with submission.json ownership,
+summary.json, dream-garment, one-pager and optional pieces.json. Admin-only deletion
+writes deleted-submissions/{id}.json before removing that exact prefix. Read/write
+barriers and late-upload cleanup prevent resurrection. Client originals and public
+community designs are separate and are not deleted. A failed physical cleanup
+remains hidden and can be retried through the same authenticated API. Warm feed
+caches recheck tombstones across server instances before returning old cards.
 
-Key members: `currentId, revision, _lastWrote, _openSeq, _flushing, _flushP,
-autoName, _chain, _unsub, _dirty, _t, _idxCache, _idxTs`.
+Exact duplicates are presentation-grouped only when complete authored content and
+owner/client/project evidence agree. No approximate destructive deduplication.
+Fabrics lookbooks remain private to account/submission/garment, generation-checked,
+and respect client exclusions. Saved dissection reads never generate missing work.
 
-- `flush()` is the barrier before leaving a project. It **returns whether the
-  save succeeded**, and callers must respect that answer.
-- `open(id)` claims `_openSeq` **before** flushing, so a second open cannot
-  race the first, and if the flush failed it asks before discarding work.
-- `_commit(myId)` clears `_dirty` on the stale-revision path and returns early
-  when already flushing. Without this, `open -> flush -> save -> stale ->
-  open` recursed forever.
-- `_cardSig(c)` dedupes by content, deliberately reading
-  `String(c.imageUrl || c.image || '')` in that order. Card ids are reassigned
-  on every restore and are useless for identity.
-- `_paintItems(list)` is the single painter used by both `open` and the
-  realtime listener. It skips duplicate signatures and ghosts.
-- `_boardEpoch` guards every delayed placement so cards scheduled before a
-  clear cannot land after it.
-- `_opContext()` / `_opStillValid(ctx)` reject any async result whose project,
-  board epoch or auth session changed while it was in flight.
-- Asset deletes queue as `{path, project}` and drain only for their own
-  project, after a successful save.
+Lead stores use generation checks, deletion tombstones and bounded request receipts.
+Private Messages overflow is archived before trimming; archive failure blocks trim.
+Owner commands verify binding, recipient/STOP status and explicit SEND receipts.
+The retained maya-character.md is useful: it supplies conversational behavior and
+tool guidance, while server authorization is enforced separately. It cannot grant
+itself permissions, reveal secrets or override send/account safeguards.
 
-Anything that mutates the board must persist. `pinterestLayout`,
-`stackInspirationImages` and the resize handle all used to change the canvas
-silently and were fixed.
+## Current work
 
----
+November 5 cleanup and UI corrections pass the consolidated local release checks. Includes Admin
+and Brief submission deletion/captions; corrected page dots and circular logo;
+shared Glass icons/dialog; immediate, deduplicated sharing with three concurrent
+image copies; landscape row containment and phone header alignment; retired WR, standalone Operations and
+preset headshots; merged legal page and reorganized source/deployment packaging.
 
-## 7. The community wall (v13.3, newest work)
+Active files are reduced by about 51%; maintained documentation by 97% in bytes.
+The core runtime is retained; total active text/code is reduced by about 40%.
+Retired files are moved, not erased from disk. The archive is ignored by Git and
+stays on this Mac; prior commits retain the original versions.
 
-Hearting a vision publishes it to a shared collection; taking the heart back
-removes it, document and picture both.
+Node20 and Node24 checks pass in about 30 seconds locally. Chromium and WebKit
+cover phone/landscape/tablet/desktop, shared dialog Save propagation, explicit
+submission deletion, independent sharing, and Global/In House parity with image
+failure/recovery. Sharing's dialog opens in 1–3 ms in the fake-network browser
+checks; six image copies use three workers and three clicks publish one share.
+This is UI timing, not a live AI-generation benchmark. `MAYA_CAPTURE=1` enables
+review screenshots separately from the mandatory behavior/style assertions.
 
-- Screen 0, above the moodboard. Drifts left forever at 26 px per second,
-  paced by the clock, pausing while the pointer is over it and for 2.5s after
-  a touch.
-- The list is painted at least twice and the scroll position wraps at a
-  measured period, so there is no seam. On a wide screen with few posts more
-  copies are appended until a full period is actually scrollable.
-- **Browsers round `scrollLeft` to whole pixels.** Reading it back and adding
-  a fraction each frame moves nothing at all, forever. The true position is
-  kept as a float in `_pos` and written out; the reading is only consulted to
-  notice a manual scroll. This cost an hour, do not undo it.
-- Pictures: a saved render already lives in Storage and its download URL
-  carries its own access token, so any signed in account can display it with
-  no copy. An unsaved render is still a `data:` URL, so that one is shrunk to
-  900 px and uploaded to `community/{uid}/`.
-- `card._communityId` remembers the document id **on the card**, which is
-  saved with the project. Without it the id would be recomputed from the
-  picture's address, and that address changes the first time a project is
-  saved, so un-hearting a day later would delete nothing.
+Live checks on November 5 still show b7ccf5d in Hosting, app/Admin and API. Public
+responses measured roughly 0.44s for the marker, 0.58–0.66s for pages and 1.69s for
+health in one sample. f6426d6's Cloud Build failed while capturing a test screenshot
+(waiting 30 seconds), before deployment. The consolidated suite keeps the Fabric
+behavior/style assertions and separates optional captures from release acceptance.
 
-**Open question Fromsa has not answered:** every heart is now public. Only the
-picture and a first name go up, no client name, but a real client's garment
-does reach a wall other people can see. If he wants hearting to stay private,
-split publishing into a separate "share to community" action.
-
----
-
-## 8. Everything fixed, by symptom
-
-Written this way because Fromsa reports symptoms, not causes.
-
-**"Twenty four copies of the same card"** Four separate causes. Orphan items
-with no DOM element were saved and restored as real cards. Nothing deduped on
-save. Nothing deduped on load. And `setTimeout` placements survived a clear.
-
-**"The same fabric over and over"** `placeItemUnique` checked for a duplicate
-title synchronously but placed on a delay of up to seconds, so a whole batch
-checked against a board none of them had landed on. Fixed with `_pendingTitles`
-claimed at queue time.
-
-**"The heart never works"** The drag guard used
-`e.target.classList.contains('fav-btn')`, but the heart is a button containing
-an SVG, so clicking its middle hit the SVG, the guard missed, a drag started,
-pointer capture ate the click. All five guards now use `closest()`.
-
-**"The X on a stacked group does nothing"** Stacking gave later siblings a
-higher z-index, covering the top right corner of each card where the X lives.
-Reversed to `100 - idx`.
-
-**"The screen refreshes every five seconds"** A broken image retried forever,
-hiding and re-showing its card and rebuilding the favourites strip each time.
-Also the Firestore listener did not check `metadata.hasPendingWrites`, so MAYA
-reacted to its own saves as though a second device had made them.
-
-**"Drag and drop is janky"** `transition: all 0.2s` on cards animated position
-and the backdrop blur on every pointer move. Now only colour and shadow, and
-nothing at all while dragging.
-
-**"It asks me to sign in when I am signed in"** Google ID tokens last one hour
-and nothing renewed them.
-
-**"Dissection costs credits every time I open a client"** Opening a submission
-used to spend six image calls before anyone asked. It is now a deliberate
-"Begin Dissection" button beside Full view, and the result is written to
-`pieces.json` in Drive so a client is never dissected twice.
-
-**"The latest submission is missing from the Systems Map"** Two rounds. First
-the empty state was hidden before the signature guard and restored after it.
-Then in v13.3, the tiles pointed straight at `drive.google.com/thumbnail`,
-which only draws a picture for files shared publicly, so every private
-submission left an empty square. They now come through `/api/admin/subthumb`
-with the admin token in a header and a blob URL on the `<img>`.
-
-**The one that would have killed everything.** In `server.js`,
-`const isImage = ...upstreamPath...` was written one line **before**
-`const upstreamPath = ...`. A temporal dead zone throw on every OpenAI call,
-and because Express 4 does not catch async rejections, every request would
-have hung until a 504 rather than erroring. It was found only by booting the
-server. That is why `tests/smoke.mjs` exists.
-
----
-
-## 9. Testing
-
-```
-cd docs/server && npm install && node ../../tests/smoke.mjs
-node tests/ai-routing.mjs       # provider routing, safe telemetry, evals
-node tests/fabric-sourcing.mjs  # retailer ranking and fallback contracts
-node tests/app-regression.mjs      # from the repo root, needs Playwright
-```
-
-`app-regression.mjs` boots index.html and status.html headlessly and asserts
-every behavior Fromsa has signed off in `requests.txt` (stacking, layering,
-fabric tabs, fold order). Add an assertion whenever a request is completed.
-Run BOTH before telling Fromsa to push.
-
-Boots the real server and asserts status codes on 16 routes. It cannot prove
-the app is correct but it catches the class of mistake above. **Run it before
-telling Fromsa to push.**
-
-For the app itself, a headless Chromium pass catches boot errors, screen
-homing, drift, wrap, hover pause and the Escape chain. Serve the folder on a
-port and drive it with Playwright. Firebase auth will not complete, but a
-sign-in overlay covers the page, so drive the UI by calling functions directly
-rather than by clicking.
-
----
-
-## 10. Money
-
-- **Stripe is live and configured.** `/api/tip` creates a Checkout Session
-  through the REST API, no npm dependency. Account `acct_1QEOw7FMo6M3sCBh`.
-- Fromsa is on **`sk_live_` / `pk_live_` keys**, so the tip button moves real
-  money. `sk_test_` would not. A publishable `pk_` key is safe to show; the
-  `sk_` key must never leave Cloud Run.
-- Stripe takes 2.9% plus 30 cents per transaction. On a $1 tip that is a third
-  of it.
-- A render on `gpt-image-2` at quality `medium`, size `1536x1024`, costs about
-  6.5 cents including the anchor inputs. Do not conflate that with the Stripe
-  fee; that mistake was made once and corrected.
-- Written up in `MAYA-money-plan.md` and `MAYA-cost-economics.md` if those are
-  still in the folder.
-
----
-
-## 11. How to work with Fromsa
-
-These are not preferences, they are conditions.
-
-- **Never touch his credentials.** Not GitHub passwords, not API keys, not
-  tokens. If a prompt asks for one, tell him to press Ctrl+C and paste it
-  himself.
-- **Never take over his screen.** He rejected full computer control
-  explicitly. In-browser JavaScript through Control_Chrome is the accepted
-  channel; `computer_*` takeover is not.
-- **Mark every action he has to take with a green circle 🟢.** He scans for it.
-- **Keep replies short.** He has said "I'm not reading this, what's the next
-  step?" Lead with the answer.
-- **No em dashes or en dashes in anything that appears on the site.**
-- Codex uses root `AGENTS.md` and `docs/AI-HANDOFF.md` and
-  Git commits as shared memory; never depend on private chat history alone.
-- Push only when Fromsa explicitly asks. He may push through GitHub Desktop, or
-  an assistant may push when specifically instructed and after validation.
-- **Verify every edit landed.** A Python edit block once ended in `print`
-  instead of writing the file, and a parameter was declared on callers but
-  never added to the function. Codex caught it. Grep after every edit.
-
----
-
-## 12. Still open
-
-- The rules deploy step has never been confirmed green in front of an
-  assistant. If the community wall loads empty with a permission error, that
-  is where to look.
-- My Fabrics, a cloud backed personal fabric library.
-- A single overlay and surface controller instead of scattered modal state.
-- Persistent card `z` layering with deterministic version ordering.
-- A Stripe credits ledger with an idempotent webhook, if monetization ever
-  moves past the tip.
-- Front, back and side renders for each dissected piece.
-- Fabric sourcing that actually shops, real purchasable matches.
-- `projectStore.reconcile()` still downloads every project in full. It is
-  gated to drawer-open and once every two minutes, but a metadata-only index
-  would be better.
-- `dedupeSweep` is an O(n squared) title comparison every ten seconds during a
-  consultation.
-- No emulator tests cover New, save failure, two devices, delete, or sign out.
-  Those would have caught most of section 8.
-- Make the GitHub repo private. Advised, not confirmed done.
-- There are stale `.git/lock-*.stale` files in the repo from a tool that
-  could not delete them. Harmless, delete when convenient.
-
-Aesthetic Control (October 5): Panels groups Outer panel, Inner panel and Table material editors using the shared numeric/select dropdown grid, including blur, saturation and X/Y padding. Table cell formatting stays in its own fixed toolbar following Inner material. Column edges resize saved semantic widths for preview/live Leads. Runtime v21/gallery v32 preserve old design saves. Save locks editing around an immutable payload; Restore changes only after successful acknowledgement. Leads includes Completed; icons always center on their rows, with separately saved inside-pill and beside-text gaps in Icons and dropdown. Notes edit inline; Messages keeps its original H2 heading above the plain H3 contact name, circular Share/Phone actions and a bottom voice dock. Systems Automations stores owner-scoped first/follow-up draft rules and grounded AI message ideas; it does not schedule client sends. Live Save still requires authenticated Admin and records its audit trail.
+Production acceptance remains separate: owner Push, verify matching website/API
+commits, then check a real share, iPad interaction and Global Fabrics on the saved
+hooded-tailcoat submission. The previously reported empty Global gallery and Twilio
+configuration failure are not established as resolved by this cleanup. No live
+submission has been deleted and no real message/call sent during these checks.

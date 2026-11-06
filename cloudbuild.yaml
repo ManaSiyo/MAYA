@@ -25,112 +25,10 @@ steps:
     args:
       - '-ceu'
       - |
-        # A failed late suite must remain visible in GitHub's bounded excerpt.
-        # Each command keeps its full local log and its original exit status.
-        node() {
-          local maya_check_log maya_check_started=$$SECONDS
-          printf 'START node %s\n' "$$1"
-          maya_check_log=$$(mktemp /tmp/maya-release-check.XXXXXX)
-          if command node "$$@" >"$$maya_check_log" 2>&1; then
-            printf 'PASS node %s (%ss)\n' "$$1" "$$((SECONDS-maya_check_started))"
-          else
-            local maya_check_status=$$?
-            printf 'FAIL node %s (exit %s)\n' "$$1" "$$maya_check_status"
-            grep -E 'FAIL|THREW|HANG|Error:' "$$maya_check_log" || true
-            tail -100 "$$maya_check_log"
-            return "$$maya_check_status"
-          fi
-        }
-        npm ci --ignore-scripts --no-audit --no-fund
-        # Keep dependency chatter out of GitHub's bounded build-log excerpt.
-        npx --no-install playwright install --with-deps chromium > /tmp/maya-browser-install.log 2>&1 || { tail -80 /tmp/maya-browser-install.log; exit 1; }
-        node tests/domain-boundaries.mjs
-        node tests/container-contract.mjs
-        node tests/release-contract.mjs
-        node tests/lead-store.mjs
-        node tests/admin-storage.mjs
-        node tests/submission-list.mjs
-        node tests/submission-cards-ui.mjs
-        node tests/admin-prompt-saves.mjs
-        node tests/retired-workspaces.mjs
-        node tests/retired-workspaces-ui.mjs
-        node tests/admin-status-preferences.mjs
-        node tests/input-controls-ui.mjs
-        node tests/project-lifecycle.mjs
-        node tests/brief-operation-races.mjs
-        node tests/release-stamp.mjs
-        node tests/verify-release.mjs
-        node tests/design-config.mjs
-        node tests/component-gallery.mjs
-        node tests/design-contract.mjs
-        node tests/lead-note-persistence.mjs
-        node tests/text-automations.mjs
-        node tests/canon-contract.mjs
-        node tests/ad-reporting.mjs
-        node tests/admin-notifications.mjs
-        node tests/admin-notifications-ui.mjs
-        node tests/ai-routing.mjs
-        node tests/fabric-sourcing.mjs
-        node tests/fabric-search.mjs
-        node tests/fabric-search-gc.mjs
-        node tests/admin-command.mjs
-        node tests/admin-ui-contract.mjs
-        node tests/admin-wake.mjs
-        node tests/proxy-policy.mjs
-        node tests/image-models.mjs
-        node tests/avatar-autosave.mjs
-        node tests/visualize-preparation.mjs
-        node tests/mobile-visualize-ui.mjs
-        node tests/pattern-decisions.mjs
-        node tests/refresh-efficiency.mjs
-        node tests/owner-crm.mjs
-        node tests/owner-conversation.mjs
-        node tests/owner-sms-access.mjs
-        node tests/booking-link.mjs
-        node tests/lead-alerts.mjs
-        node tests/event-triggers.mjs
-        node tests/lead-feed-latency.mjs
-        node tests/profile-crm.mjs
-        node tests/maya-mcp.mjs
-        node tests/maya-feedback.mjs
-        # Browser and communications contracts are mandatory release gates.
-        node tests/maya-hands-smoke.mjs
-        node tests/leads-ui.mjs
-        node tests/lead-notes-ui.mjs
-        node tests/admin-state-races.mjs
-        node tests/message-races.mjs
-        node tests/fabric-search-ui.mjs
-        node tests/fabric-images-ui.mjs
-        node tests/fabric-gallery-ui.mjs
-        node tests/fabric-workflow-ui.mjs
-        node tests/operation-save-failures.mjs
-        node tests/operation-controls.mjs
-        node tests/canon-ui.mjs
-        node tests/maya-phone.mjs
-        node tests/maya-messages.mjs
-        node tests/maya-transfer.mjs
-        node --check docs/server/maya-phone.mjs
-        node --check docs/server/maya-messages.mjs
-        node --check docs/server/maya-mcp.mjs
-        node --check docs/server/admin-command.mjs
-        node --check docs/server/proxy-policy.mjs
-        node --check docs/server/server.js
-        # Governing rule: Aesthetic Control is the final completion gate.
-        node tests/voice-preparation.mjs
-        node tests/client-account-races.mjs
-        node tests/client-voice-ui.mjs
-        node tests/admin-voice-ui.mjs
-        node tests/admin-automation-examples.mjs
-        node tests/brief-workspace-ui.mjs
-        node tests/workspace-authority.mjs
-        node tests/realtime-voice.mjs
-        node tests/message-stress.mjs
-        node tests/founder-conversation-stress.mjs
-        node tests/message-compose-ui.mjs
-        node tests/wr-store.mjs
-        node tests/wr-ui.mjs
-        node tests/avatar-camera-ui.mjs
-        node tests/aesthetic-authority.mjs
+        npm ci --prefix docs --ignore-scripts --no-audit --no-fund
+        npm ci --prefix backend/server --ignore-scripts --no-audit --no-fund
+        (cd docs && npx --no-install playwright install --with-deps chromium)
+        node docs/check.mjs
   - id: Build server
     name: gcr.io/cloud-builders/docker
     args:
@@ -139,7 +37,7 @@ steps:
       - 'MAYA_BUILD_COMMIT=$COMMIT_SHA'
       - '-t'
       - 'us-west1-docker.pkg.dev/pro-maya/cloud-run-source-deploy/maya-api:$COMMIT_SHA'
-      - docs/server
+      - backend/server
   - id: Push image
     name: gcr.io/cloud-builders/docker
     args:
@@ -164,7 +62,7 @@ steps:
       - '-ceu'
       - |
         cp docs/firebase.json ./firebase.json
-        node docs/release-stamp.mjs "$COMMIT_SHA"
+        node docs/build-site.mjs "$COMMIT_SHA"
         npx -y firebase-tools@latest deploy --only hosting --project pro-maya --non-interactive
   - id: Deploy rules
     name: node:20

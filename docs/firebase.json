@@ -1,17 +1,9 @@
 {
   "hosting": {
-    "public": ".",
+    "public": ".hosting",
     "ignore": [
-      "firebase.json",
-      "AGENTS.md",
-      "cloudbuild.yaml",
-      "package.json",
-      "package-lock.json",
-      "tests/**",
-      "docs/**",
       "**/.*",
-      "**/node_modules/**",
-      "_to_delete/**"
+      "**/node_modules/**"
     ],
     "redirects": [
       {
@@ -31,7 +23,7 @@
       },
       {
         "source": "/operations{,/**}",
-        "destination": "/operations.html",
+        "destination": "/backend.html",
         "type": 301
       },
       {
@@ -86,17 +78,17 @@
       },
       {
         "source": "/aesthetics/operations",
-        "destination": "/operations.html",
+        "destination": "/backend.html",
         "type": 301
       },
       {
         "source": "/aesthetics/operations/",
-        "destination": "/operations.html",
+        "destination": "/backend.html",
         "type": 301
       },
       {
         "source": "/aesthetics/operations/index.html",
-        "destination": "/operations.html",
+        "destination": "/backend.html",
         "type": 301
       },
       {
@@ -107,6 +99,36 @@
       {
         "source": "/backend/outbound.html",
         "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/operations.html",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/operations.html",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/wr.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/wr.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/terms.html",
+        "destination": "/privacy.html#terms",
+        "type": 301
+      },
+      {
+        "source": "/backend/terms.html",
+        "destination": "/privacy.html#terms",
         "type": 301
       }
     ],
@@ -126,16 +148,8 @@
         }
       },
       {
-        "source": "/wr.html",
-        "destination": "/backend/wr.html"
-      },
-      {
         "source": "/status.html",
         "destination": "/backend/status.html"
-      },
-      {
-        "source": "/operations.html",
-        "destination": "/backend/operations.html"
       },
       {
         "source": "/backend.html",
@@ -144,10 +158,6 @@
       {
         "source": "/privacy.html",
         "destination": "/backend/privacy.html"
-      },
-      {
-        "source": "/terms.html",
-        "destination": "/backend/terms.html"
       },
       {
         "source": "/verify.html",
@@ -363,9 +373,9 @@
     ]
   },
   "firestore": {
-    "rules": "docs/server/firestore.rules"
+    "rules": "backend/server/firestore.rules"
   },
   "storage": {
-    "rules": "docs/server/storage.rules"
+    "rules": "backend/server/storage.rules"
   }
 }

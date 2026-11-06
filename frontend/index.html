@@ -798,32 +798,9 @@
     opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
   }
   #share-link-modal.open { opacity: 1; pointer-events: auto; }
-  #share-link-modal .share-card {
-    width: min(440px, 92vw);
-    padding: 20px 22px;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 16px;
-    background: rgba(10,14,24,0.9);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-    display: flex; flex-direction: column; gap: 12px; text-align: center;
-  }
-  #share-link-modal .share-title {
-    font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 300;
-    letter-spacing: 0.22em; text-transform: uppercase; color: rgba(240,244,252,0.95);
-  }
-  #share-link-modal .share-link-input {
-    width: 100%; box-sizing: border-box;
-    background: rgba(255,255,255,0.05);
-    border: 0.5px solid rgba(255,255,255,0.18); border-radius: 10px;
-    padding: 9px 11px; color: rgba(230,236,248,0.95);
-    font-family: Menlo, monospace; font-size: 11px;
-  }
-  #share-link-modal .share-row { display: flex; gap: 10px; justify-content: center; }
-  #share-link-modal .share-note {
-    font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 300;
-    letter-spacing: 0.06em; color: rgba(200,210,230,0.55); line-height: 1.6;
-  }
+  #share-link-modal .share-card { width:min(440px,92vw);max-inline-size:min(440px,92vw)!important;max-height:85dvh;overflow:auto;display:flex;flex-direction:column;gap:var(--maya-form-field-gap,12px);text-align:center; }
+  #share-link-modal .share-link-input {width:100%;box-sizing:border-box;min-width:0;}
+  #share-link-modal .share-row {display:flex;gap:var(--maya-icon-pill-gap,10px);justify-content:center;flex-wrap:wrap;}
   .input-link:hover { color: rgba(220,225,240,0.7); }
   /* v10: .input-link .sep removed, no <span class="sep"> ever rendered. */
 
@@ -3273,7 +3250,7 @@
     display: flex; flex-direction: column;
     align-items: stretch; justify-content: center;
     gap: 18px;
-    padding: 54px 0;
+    padding: max(70px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom));
     overflow: hidden;
   }
   .community-row {
@@ -3341,7 +3318,8 @@
      the pictures whenever a render did not fill its frame. */
   .community-card {
     flex: 0 0 auto;
-    width: 320px;
+    width: auto; height: calc(100% - 12px); max-height: 100%;
+    aspect-ratio: var(--cc-ar, 3 / 2);
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
@@ -3363,9 +3341,9 @@
     outline: none;
     border-color: rgba(220,232,255,0.55);
   }
-  .community-card .cc-image { overflow: hidden; border-radius: inherit; }
+  .community-card .cc-image { overflow: hidden; border-radius: inherit; height:100%; }
   .community-card img.cc-img {
-    width: 100%; height: auto;
+    width: 100%; height: 100%;
     /* CONTAIN, not cover: the three view sheet arrives whole, side, front
        and back, exactly as it was rendered.
        v13.24: the frame takes the PICTURE's own shape the moment it loads
@@ -3427,9 +3405,9 @@
     max-width: 640px; text-align: center;
   }
   @media (max-width: 640px) {
-    #community-scroller { padding: 44px 0; gap: 12px; }
+    #community-scroller { padding: max(70px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom)); gap: 12px; }
     .community-track { padding: 0 22px; gap: 18px; }
-    .community-card { width: 250px; }
+    .community-card { width: auto; }
   }
 
   /* v9.5: 20% smaller (480 → 384). Glass + soft starlight glow added ,
@@ -3452,8 +3430,8 @@
     scroll-snap-align: center;
     /* v11.25: vertical favorite cards, a touch wider; image aspect meets the
        512×1024 panel halfway so head+feet aren't clipped. */
-    width: 280px;
-    max-height: 82vh;
+    width: min(280px, calc((100dvh - 140px) * .54));
+    max-height: 100%;
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
@@ -4154,7 +4132,7 @@
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=2"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=3"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=25"></script>
 </head>
 <body>
@@ -4338,8 +4316,8 @@
                     padding: 18px 16px 16px; border-radius: 20px; }
     #notes-drawer .drawer-avatar-row { margin-top: 6px; }
     /* favorites: reclaim the side padding, size cards to the hand */
-    #favorites-scroller { padding: 24px 14px calc(24px + env(safe-area-inset-bottom)); }
-    .favorite-card { width: min(80vw, 300px); }
+    #favorites-scroller { padding: 80px 14px calc(28px + env(safe-area-inset-bottom)); }
+    .favorite-card { width: min(80vw, 300px, calc((100dvh - 140px) * .54)); }
     /* v11.39: cards a touch smaller per Fromsa, and kept clear of the
        page-dot pill on the left. v13.45: smaller again, and a pinch with
        two fingers resizes any card (see the pinch block in makeDraggable). */
@@ -4850,7 +4828,7 @@
      Clicking the wordmark toggles to the other screen. -->
 <div id="top-bar">
   <div id="top-left-brand">
-    <img class="maya-logo-mark tiny" src="/aesthetics/ui/logo-208.png" alt="" onclick="location.reload()" style="cursor:pointer" title="Tap to refresh MAYA" />
+    <img class="maya-logo-mark tiny" src="/aesthetics/ui/logo-circle.png" alt="" onclick="location.reload()" style="cursor:pointer" title="Tap to refresh MAYA" />
     <div class="brand-text-wrap">
       <span class="brand-title" id="brand-title" onclick="brandTitleClick()" title="Click to organize canvas (Pinterest layout)">MAYA</span>
       <span class="brand-status" id="brand-status"></span>
@@ -4869,9 +4847,9 @@
 
 <!-- v13.3: 3-dot page indicator, community / inspo / favorites -->
 <div id="page-indicator">
-  <button class="page-dot" id="dot-1" onclick="setScreen(0)" title="Community"></button>
-  <button class="page-dot active" id="dot-2" onclick="setScreen(1)" title="Inspo"></button>
-  <button class="page-dot" id="dot-3" onclick="setScreen(2)" title="Favorites"></button>
+  <button class="page-dot active" id="dot-2" onclick="setScreen(1)" title="Inspo" aria-label="Inspo"></button>
+  <button class="page-dot" id="dot-3" onclick="setScreen(2)" title="Favorites" aria-label="Favorites"></button>
+  <button class="page-dot" id="dot-1" onclick="setScreen(0)" title="Community" aria-label="Community"></button>
 </div>
 
 <!-- v9.13: thank-you overlay, full screen after Submit.
@@ -5059,7 +5037,7 @@
     <div class="drawer-actions-bottom">
       <!-- v7.4: Randomize, fills measurements with random values and picks
            a random headshot from MAYA/uploads/headshots/. v9.2: no closet render. -->
-      <button class="drawer-action" onclick="randomizeAvatar()" title="Random measurements + random headshot from MAYA/uploads/headshots/">Randomize</button>
+
     </div>
   </div>
 </div>
@@ -6690,18 +6668,14 @@ async function newConsultation() {
 // set on the container). An IntersectionObserver keeps the page-dot +
 // body class in sync with whichever section is in view.
 // ════════════════════════════════════════════════════════════
-// v13.3: three screens now. 0=community (above), 1=inspo/moodboard (home),
-// 2=favorites (below). The moodboard is still what MAYA opens on, so this
-// starts at 1 and the boot code scrolls there before the first paint.
-let currentScreen = 1;
+// Logical IDs remain stable; physical order is Inspo, Favorites, Community.
+let currentScreen = 1, _brandSwapTimer = null;
 function setScreen(n) {
   n = Math.max(0, Math.min(2, n));
   const host = document.getElementById('screens');
   if (!host) return;
-  // v11.30: visualViewport height tracks the real visible area on mobile
-  // (Safari's collapsing URL bar makes innerHeight lie).
-  const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-  host.scrollTo({ top: ((((window._pgScreenPos || {})[n]) ?? n)) * vh, behavior: 'smooth' });
+  const screen=host.querySelector('[data-screen="'+n+'"]');
+  if(screen)host.scrollTo({top:screen.offsetTop,behavior:'smooth'});
 }
 function _syncScreenUI(n) {
   // v12.7: the observer fires at three thresholds, so one swipe used to run
@@ -6726,14 +6700,17 @@ function _syncScreenUI(n) {
   const brand = document.getElementById('brand-title');
   if (brand) {
     const next = n === 0 ? 'COMMUNITY' : (n === 2 ? 'FAVORITES' : 'MAYA');
+    clearTimeout(_brandSwapTimer);
     if (brand.textContent !== next) {
       brand.classList.add('swapping');
-      setTimeout(() => {
+      _brandSwapTimer = setTimeout(() => {
+        if(currentScreen!==n)return;
         brand.textContent = next;
         brand.classList.toggle('is-favorites', n !== 1);
         brand.classList.remove('swapping');
       }, 220);
     } else {
+      brand.classList.remove('swapping');
       brand.classList.toggle('is-favorites', n !== 1);
     }
   }
@@ -6839,27 +6816,23 @@ function _bootScreenObserver() {
     };
     home();
     requestAnimationFrame(home);
-    setTimeout(home, 60);
-    setTimeout(home, 260);
+
     let _rt = null;
     window.addEventListener('resize', () => {
       clearTimeout(_rt);
       _rt = setTimeout(() => {
         const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-        host.scrollTop = ((((window._pgScreenPos || {})[currentScreen]) ?? currentScreen)) * vh;
+        const screen=host.querySelector('[data-screen="'+currentScreen+'"]');
+        if(screen)host.scrollTop=screen.offsetTop;
       }, 180);
     }, { passive: true });
   }
   const sections = host.querySelectorAll('section[data-screen]');
-  const io = new IntersectionObserver((entries) => {
-    let best = null;
-    for (const e of entries) {
-      if (!best || e.intersectionRatio > best.intersectionRatio) best = e;
-    }
-    if (best && best.isIntersecting) {
-      const n = parseInt(best.target.dataset.screen, 10);
-      _syncScreenUI(n);
-    }
+  const io = new IntersectionObserver(() => {
+    const bounds=host.getBoundingClientRect();
+    let best=null,area=-1;
+    for(const section of sections){const r=section.getBoundingClientRect();const visible=Math.max(0,Math.min(r.bottom,bounds.bottom)-Math.max(r.top,bounds.top));if(visible>area){best=section;area=visible;}}
+    if(best&&area>0)_syncScreenUI(Number(best.dataset.screen));
   }, { root: host, threshold: [0.25, 0.5, 0.75] });
   sections.forEach(s => io.observe(s));
 
@@ -7392,8 +7365,6 @@ const communityBoard = {
         row.copies++;
       }
       if (row.period > 0) {
-        track.insertAdjacentHTML('beforeend', row.copy);
-        row.copies++;
         if (row.pos >= row.period) row.pos = row.pos % row.period;
         track.style.transform = 'translate3d(' + (-row.pos) + 'px,0,0)';
       } else {
@@ -7436,6 +7407,7 @@ const communityBoard = {
     wrap.addEventListener('touchend', () => release(2500), { passive: true });
     if (!this._wired) {
       this._wired = true;
+      window.addEventListener('resize',()=>{cancelAnimationFrame(this._fitFrame);this._fitFrame=requestAnimationFrame(()=>this._measure());});
       window.addEventListener('pointerup', () => { (this._rows || []).forEach(r => {
         clearTimeout(r._resumeT); r._resumeT = setTimeout(() => { r.paused = false; }, 1200); }); });
     }
@@ -7560,7 +7532,8 @@ const communityBoard = {
     try {
       const c = img.closest('.community-card');
       if (!c || !img.naturalWidth || !img.naturalHeight) return;
-      c.style.setProperty('--cc-ar', img.naturalWidth + ' / ' + img.naturalHeight);
+      const ratio=img.naturalWidth+' / '+img.naturalHeight;
+      if(c.style.getPropertyValue('--cc-ar')!==ratio){c.style.setProperty('--cc-ar',ratio);cancelAnimationFrame(this._fitFrame);this._fitFrame=requestAnimationFrame(()=>this._measure());}
     } catch (_) {}
   },
 };
@@ -7946,7 +7919,7 @@ let _firebaseAuthTransitionPending = false;
       const nextUid = u ? u.uid : null;
       const previousUid = _firebaseAuthUid;
       const transitionSeq = ++_authSeq;
-      if (nextUid !== previousUid) window.MayaAvatarCamera?.close();
+      if (nextUid !== previousUid) { window.MayaAvatarCamera?.close();try{closeShareModal();}catch{} }
       else window.MayaAvatarCamera?.renew();
       _firebaseAuthUid = nextUid;
       if (nextUid !== previousUid) { _firebaseAuthTransitionPending = true; try { _pgVoiceScopeChanged(); } catch (_) {} }
@@ -8595,7 +8568,6 @@ async function toggleAvatarSwitcher() {
   // beside the photo they act on, whether or not the list has anyone in it.
   // Upload, camera and avatar edits save automatically; naming remains optional.
   const actions = '<div class="avatar-switch-actions">' +
-    '<button class="drawer-action" type="button" onclick="randomizeAvatar()" title="Random measurements and a random face">Randomize</button>' +
     '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace</button>' +
     '<button class="drawer-action" data-maya-type="P3" type="button" onclick="MayaAvatarCamera.open()">Camera</button>' +
     '</div>';
@@ -8789,66 +8761,11 @@ async function analyzeFacePhoto(dataUrl) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// v7.4 RANDOMIZE, fills random measurements + a random headshot from
-// MAYA/uploads/headshots/. v9.2: closet render call removed; just refreshes
-// the sub-menu in place.
 // ─────────────────────────────────────────────────────────────────────
-const RANDOM_RANGES = {
-  // Body
-  height:              [62, 74],
-  // Arms
-  arm_hole:            [16, 22],
-  sleeve:              [22, 27],
-  sleeve_inseam:       [16, 20],
-  bicep:               [10, 16],
-  wrist:               [6, 8],
-  // X-axis
-  neck_base:           [13, 17],
-  full_shoulder:       [15, 19],
-  neck_to_shoulder:    [5, 7],
-  bust_chest:          [32, 44],
-  under_bust:          [28, 38],
-  waist_narrowest:     [24, 38],
-  hip:                 [34, 44],
-  low_hip_widest:      [35, 46],
-  thigh:               [20, 26],
-  calves:              [13, 17],
-  // Y-axis
-  f_neck_to_bust:      [9, 12],
-  f_neck_to_waist:     [15, 19],
-  f_neck_to_hip:       [22, 28],
-  b_neck_to_waist:     [15, 19],
-  hip_to_ankle:        [37, 44],
-  knee_to_ankle:       [15, 18],
-  inseam:              [28, 34],
-  crotch_f_to_b:       [25, 30],
-  // Garment dependant
-  jacket_length_front: [22, 30],
-  jacket_length_back:  [22, 30],
-  pant_length:         [38, 46],
-};
-function _randInt(lo, hi) { return Math.round(lo + Math.random() * (hi - lo)); }
-function _biasedRange(key, range, gender) {
-  const [lo, hi] = range;
-  const w = hi - lo;
-  if (gender && /female|feminine|woman/i.test(gender)) {
-    if (/full_shoulder|bicep|chest_back/.test(key))   return [lo, lo + w * 0.55];
-    if (/bust_chest|hip|low_hip|thigh/.test(key))     return [lo + w * 0.30, hi];
-    if (/height/.test(key))                            return [lo, lo + w * 0.65];
-  } else if (gender && /male|masculine|man\b/i.test(gender)) {
-    if (/full_shoulder|bicep/.test(key))              return [lo + w * 0.45, hi];
-    if (/bust_chest/.test(key))                       return [lo, lo + w * 0.55];
-    if (/hip|low_hip/.test(key))                      return [lo, lo + w * 0.60];
-    if (/height/.test(key))                            return [lo + w * 0.30, hi];
-  }
-  return range;
-}
-
-let headshotsFolderHandle = null;
 let uploadsFolderHandle = null;
 // v0.14: MAYA root now contains an `uploads/` subfolder that houses
-// `headshots/`, `fabrics/`, and `ui/`. _getUploadsFolder traverses
-// MAYA -> uploads once and caches the handle so the headshots and
+// Local fabrics and UI. _getUploadsFolder traverses
+// MAYA -> uploads once and caches the handle so the
 // fabrics accessors can share it.
 async function _getUploadsFolder() {
   if (uploadsFolderHandle) return uploadsFolderHandle;
@@ -8863,132 +8780,6 @@ async function _getUploadsFolder() {
     return null;
   }
 }
-async function _getHeadshotsFolder() {
-  if (headshotsFolderHandle) return headshotsFolderHandle;
-  const uploads = await _getUploadsFolder();
-  if (!uploads) return null;
-  try {
-    headshotsFolderHandle = await uploads.getDirectoryHandle('headshots', { create: true });
-    return headshotsFolderHandle;
-  } catch (e) {
-    console.warn('[Maya] could not open headshots folder', e);
-    return null;
-  }
-}
-// v0.13.2: inline headshot filename list (matches what's uploaded under
-// /aesthetics/headshots/). Add new filenames here
-// when you drop new portraits into the folder.
-const MAYA_PUBLIC_HEADSHOTS = [
-  '1.png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (1).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (2).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (3).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (4).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (5).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (6).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (7).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (8).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (9).png',
-  'ChatGPT Image May 16, 2026, 09_05_16 PM (10).png',
-];
-
-async function pickRandomHeadshot() {
-  // v0.13: public deploy, fetch directly from /aesthetics/headshots/.
-  // v13.98: the source files are 2MB+ PNGs, and turning one into a full-size
-  // base64 string froze Randomize for everyone but Fromsa on fiber. Downscale
-  // to 640px JPEG the moment it arrives, BEFORE anything paints or persists.
-  if (typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC) {
-    try {
-      if (!MAYA_PUBLIC_HEADSHOTS.length) { showToast('No headshots configured.'); return null; }
-      const pick = MAYA_PUBLIC_HEADSHOTS[Math.floor(Math.random() * MAYA_PUBLIC_HEADSHOTS.length)];
-      const blob = await (await fetch('/aesthetics/headshots/' + encodeURIComponent(pick))).blob();
-      try {
-        const bmp = await createImageBitmap(blob);
-        const s = Math.min(1, 640 / Math.max(bmp.width, bmp.height));
-        const c = document.createElement('canvas');
-        c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
-        c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-        bmp.close && bmp.close();
-        return c.toDataURL('image/jpeg', 0.85);
-      } catch (_) { /* older browser: fall through to the raw read */ }
-      return await new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload = () => resolve(fr.result);
-        fr.onerror = () => reject(fr.error);
-        fr.readAsDataURL(blob);
-      });
-    } catch (e) {
-      console.warn('[Maya headshots assets]', e);
-      showToast('Could not load headshots.');
-      return null;
-    }
-  }
-  // Local (atelier) path, read from MAYA/uploads/headshots/ via File System Access.
-  const dir = await _getHeadshotsFolder();
-  if (!dir) return null;
-  const files = [];
-  for await (const [name, handle] of dir.entries()) {
-    if (handle.kind !== 'file') continue;
-    if (!/\.(jpe?g|png|webp)$/i.test(name)) continue;
-    files.push(handle);
-  }
-  if (!files.length) {
-    showToast('Drop some photos into MAYA / uploads / headshots first.');
-    return null;
-  }
-  const pick = files[Math.floor(Math.random() * files.length)];
-  const file = await pick.getFile();
-  return await new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result);
-    fr.onerror = () => reject(fr.error);
-    fr.readAsDataURL(file);
-  });
-}
-async function randomizeAvatar() {
-  _facePhotoVersion++;
-  window.MayaAvatarCamera?.close();
-  // v9.2: fill-only, populate measurements + face photo, then refresh the
-  // sub-menu in place. No closet render (closet screen is gone).
-  if (!lastSummary) lastSummary = { client: { name: null } };
-  const randomContext = _opContext(), randomSummary = lastSummary, randomVersion = _facePhotoVersion;
-  const currentRandom = () => _opStillValid(randomContext) && lastSummary === randomSummary && _facePhotoVersion === randomVersion;
-  if (!lastSummary._measurements) lastSummary._measurements = {};
-  const gender = lastSummary._face_descriptors && lastSummary._face_descriptors.gender_presentation;
-  for (const [key, range] of Object.entries(RANDOM_RANGES)) {
-    const [lo, hi] = _biasedRange(key, range, gender);
-    lastSummary._measurements[key] = String(_randInt(lo, hi));
-  }
-  try {
-    const dataUrl = await pickRandomHeadshot();
-    if (!currentRandom()) return;
-    if (dataUrl) {
-      lastSummary._face_photo = dataUrl;
-      delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
-      const small = await _shrinkFace(dataUrl);
-      if (!currentRandom()) return;
-      lastSummary._face_photo = small || dataUrl;
-      const _faceCtx = _opContext();
-      lastSummary._face_descriptors = null;
-      analyzeFacePhoto(lastSummary._face_photo).then(d => {
-          // v13.0: do not write one client's face onto another's project
-          if (!_opStillValid(_faceCtx) || !currentRandom()) return;
-          if (lastSummary) lastSummary._face_descriptors = d;
-          _persistSession(); _queueAvatarSave();
-        })
-        .catch(e => console.warn('[Maya face analysis]', e));
-    }
-  } catch (e) {
-    console.warn('[Maya randomize]', e);
-  }
-  if (!currentRandom()) return;
-  _refreshActiveAvatarView();
-  _persistSession();
-  try { _queueAvatarSave(true); } catch (_) {}
-  try { if (typeof projectStore !== 'undefined' && projectStore.currentId) projectStore.queueSave(); } catch (_) {}
-  showToast('Randomized.');
-}
-
 // v5.19: two-column measurements layout for the one-pager, X-axis on
 // the left, Y-axis on the right; Body + Garment-Dependent stack below
 // in a single row each, compact.
@@ -13238,7 +13029,7 @@ async function analyzeFabricWithVision(dataUrl, hintName) {
   catch { return {}; }
 }
 
-// v0.13: public deploy, fabrics + headshots ship as static assets in the
+// Public deploy: fabrics ship as static assets in the
 // folder under /aesthetics/. Frontend fetches them from same-origin instead of
 // trying to read the visitor's local file system (which they don't have).
 async function scanFabricsFromAssets() {
@@ -13478,54 +13269,39 @@ let _myFabricsEpoch = 0;
 // v13.29: Share now belongs to a PROJECT, not to whatever happens to be open.
 // The row in the projects list carries it, so a project can be shared without
 // opening it and losing your place.
-async function shareProjectById(id) {
-  if (typeof projectStore === 'undefined' || !projectStore.ready()) {
-    showError('Sign in to share a project.');
-    return;
+// One publication per account/project at a time. Opening the dialog never waits
+// for cloud reads or image copies, and closing it prevents late completion reopening it.
+const _shareJobs=new Map();
+let _shareModalTurn=0;
+async function _shareProject(id,current=false){
+  if(!projectStore.ready()||!id){showError('Sign in and open a project first.');return;}
+  const ctx=projectStore._accountContext(),board=_opContext(),key=ctx.uid+':'+ctx.auth+':'+id;
+  const turn=++_shareModalTurn;
+  _showShareModal('', 'this project');
+  let job=_shareJobs.get(key);
+  if(!job){
+    job=(async()=>{
+      if(current){const flushed=await projectStore.flush();projectStore._requireAccount(ctx);if(!_opStillValid(board)||projectStore.currentId!==id)throw Error('The open project changed. Please share again.');if(flushed===false)throw Error('Could not save the project. Check the connection.');}
+      const doc=await projectStore._col(ctx.uid).doc(id).get();projectStore._requireAccount(ctx);
+      if(!doc.exists)throw Error('That project no longer exists.');
+      const v=doc.data()||{},name=v.name||'A MAYA project';
+      const link=await _publishShare(id,JSON.parse(JSON.stringify(v.items||[])),v.lastSummary?JSON.parse(JSON.stringify(v.lastSummary)):null,v.lastTranscript||null,name,ctx);
+      return {link,name};
+    })();
+    _shareJobs.set(key,job);
+    job.finally(()=>{if(_shareJobs.get(key)===job)_shareJobs.delete(key);}).catch(()=>{});
   }
-  if (!id || id === projectStore.currentId) return shareCurrentProject();
-  try {
-    showToast('Making the link…');
-    const ctx = projectStore._accountContext();
-    const doc = await projectStore._col(ctx.uid).doc(id).get();
-    projectStore._requireAccount(ctx);
-    if (!doc.exists) { showError('That project no longer exists.'); return; }
-    const v = doc.data() || {};
-    const name = (v.name && String(v.name).trim()) || 'A MAYA project';
-    await _publishShare(id, JSON.parse(JSON.stringify(v.items || [])),
-      v.lastSummary ? JSON.parse(JSON.stringify(v.lastSummary)) : null,
-      v.lastTranscript || null, name, ctx);
-  } catch (e) {
-    console.warn('[share]', e);
-    showError('Could not make the link. ' + ((e && e.message) || 'Try again.'));
-  }
+  try{const result=await job;projectStore._requireAccount(ctx);if(turn===_shareModalTurn)_showShareModal(result.link,result.name);return result.link;}
+  catch(e){if(turn===_shareModalTurn){if(projectStore._accountValid(ctx))_showShareModal('', 'this project',e.message||'Could not make the link.');else closeShareModal();}}
 }
-
-async function shareCurrentProject() {
-  try {
-    if (typeof projectStore === 'undefined' || !projectStore.ready() || !projectStore.currentId) {
-      showError('Put something on the board first.');
-      return;
-    }
-    const ctx = projectStore._accountContext(), board = _opContext();
-    const pid = projectStore.currentId;
-    showToast('Making the link…');
-    const flushed = await projectStore.flush();
-    projectStore._requireAccount(ctx);
-    if (!_opStillValid(board) || projectStore.currentId !== pid) throw new Error('The open project changed. Please share again.');
-    if (flushed === false) { showError('Could not save first, so no link was made. Check the connection.'); return; }
-    // Publish the acknowledged snapshot, never a moving board during uploads.
-    const doc = await projectStore._col(ctx.uid).doc(pid).get();
-    projectStore._requireAccount(ctx);
-    if (!doc.exists) throw new Error('That project no longer exists.');
-    const v = doc.data() || {};
-    await _publishShare(pid, JSON.parse(JSON.stringify(v.items || [])),
-      v.lastSummary ? JSON.parse(JSON.stringify(v.lastSummary)) : null,
-      v.lastTranscript || null, v.name || 'A MAYA project', ctx);
-  } catch (e) {
-    console.warn('[share]', e);
-    showError('Could not make the link. ' + ((e && e.message) || 'Try again.'));
-  }
+function shareProjectById(id){return _shareProject(id||projectStore.currentId,!id||id===projectStore.currentId);}
+function shareCurrentProject(){return _shareProject(projectStore.currentId,true);}
+// Wait for every started worker before cleanup on failure. No upload can finish
+// after its failed share's cleanup and leave an orphan behind.
+async function _shareParallel(jobs,limit=3){
+  let next=0,failure;
+  await Promise.all(Array.from({length:Math.min(limit,jobs.length)},async()=>{while(next<jobs.length&&!failure){const job=jobs[next++];try{await job();}catch(e){failure ||= e;}}}));
+  if(failure)throw failure;
 }
 
 // Every share owns its copied pictures. Source URLs and paths never remain as
@@ -13554,19 +13330,22 @@ async function _publishShare(pid, items, cloudSum, notes, shareName, ctx = proje
       projectStore._requireAccount(ctx);
       return url;
     };
+    const copies=[],bySource=new Map();
+    const copy=(src,key)=>{if(!bySource.has(src))bySource.set(src,_publish(src,key));return bySource.get(src);};
     for (let i = 0; i < items.length; i++) {
       const c = items[i] && items[i].card;
       if (!c) continue;
       const src = c.imageUrl || c.image;
       delete c.image; delete c.imageUrl; delete c.storagePath;
       delete c._uploadedToCloud; delete c._communityId; delete c._imgId;
-      if (src) c.imageUrl = await _publish(src, 'i' + i);
+      if (src) copies.push(async()=>{c.imageUrl=await copy(src,'i'+i);});
     }
     if (cloudSum) {
       const face = cloudSum._face_photo || cloudSum._face_photo_url;
       delete cloudSum._face_photo; delete cloudSum._face_photo_url; delete cloudSum._face_photo_path;
-      if (face) cloudSum._face_photo = await _publish(face, 'face');
+      if (face) copies.push(async()=>{cloudSum._face_photo=await copy(face,'face');});
     }
+    await _shareParallel(copies);
     projectStore._requireAccount(ctx);
     const share = firebase.firestore().collection('shares').doc(token);
     const project = projectStore._col(ctx.uid).doc(pid);
@@ -13589,10 +13368,6 @@ async function _publishShare(pid, items, cloudSum, notes, shareName, ctx = proje
     projectStore._requireAccount(ctx);
     projectStore._idxTs = 0;
     const link = location.origin + '/?share=' + token;
-    let copied = false;
-    try { await navigator.clipboard.writeText(link); copied = true; } catch (_) {}
-    projectStore._requireAccount(ctx);
-    _showShareModal(link, shareName, copied);
     if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
     return link;
   } catch (e) {
@@ -13632,48 +13407,24 @@ function _copyToClipboard(text) {
   })();
 }
 
-function _showShareModal(link, name, alreadyCopied) {
-  let m = document.getElementById('share-link-modal');
-  if (!m) {
-    m = document.createElement('div');
-    m.id = 'share-link-modal';
-    m.innerHTML =
-      '<div class="share-card">' +
-        '<div class="share-title"></div>' +
-        '<input class="share-link-input" readonly onclick="this.select()">' +
-        '<div class="share-row">' +
-          '<button class="upload-choose-btn" id="share-copy-btn">Copy to clipboard</button>' +
-          '<button class="upload-choose-btn" onclick="closeShareModal()">Done</button>' +
-        '</div>' +
-        '<div class="share-note">Anyone with this link can open the project and keep their own copy. Yours is untouched.</div>' +
-      '</div>';
-    m.addEventListener('click', e => { if (e.target === m) closeShareModal(); });
+function _showShareModal(link,name,error=''){
+  let m=document.getElementById('share-link-modal');
+  if(!m){
+    m=document.createElement('div');m.id='share-link-modal';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','share-dialog-title');
+    m.innerHTML='<div class="share-card" data-maya-panel="inner"><div class="share-title" id="share-dialog-title" data-maya-type="H3"></div><input class="share-link-input" data-maya-type="P1" data-maya-control="field" aria-label="Project link" readonly><div class="share-status" data-maya-type="P1" role="status"></div><div class="share-row"><button class="maya-glass-button" data-maya-type="P3" id="share-copy-btn">Copy</button><button class="maya-glass-button" data-maya-type="P3" onclick="closeShareModal()">Done</button></div><div class="share-note" data-maya-type="P3">Anyone with this link can open the project and keep their own copy. Yours is untouched.</div></div>';
+    m.addEventListener('click',e=>{if(e.target===m)closeShareModal();});
+    m.addEventListener('keydown',e=>{if(e.key==='Escape')closeShareModal();if(e.key==='Tab'){const nodes=[...m.querySelectorAll('input:not([hidden]),button:not(:disabled)')];const first=nodes[0],last=nodes.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
     document.body.appendChild(m);
   }
-  m.querySelector('.share-title').textContent = 'Share "' + (name || 'this project') + '"';
-  const inp = m.querySelector('.share-link-input');
-  inp.value = link;
-  const btn = m.querySelector('#share-copy-btn');
-  let resetT = null;
-  const say = (word) => {
-    btn.textContent = word;
-    clearTimeout(resetT);
-    resetT = setTimeout(() => { btn.textContent = 'Copy to clipboard'; }, 2200);
-  };
-  btn.textContent = 'Copy to clipboard';
-  if (alreadyCopied) say('Copied');
-  btn.onclick = async () => {
-    const ok = await _copyToClipboard(link);
-    if (ok) say('Copied');
-    else { inp.focus(); inp.select(); say('Press Cmd C'); }
-  };
-  m.classList.add('open');
+  const wasOpen=m.classList.contains('open');if(!wasOpen)m._returnFocus=document.activeElement;
+  m.querySelector('.share-title').textContent='Share '+(name||'this project');
+  const input=m.querySelector('input'),status=m.querySelector('.share-status'),button=m.querySelector('#share-copy-btn');
+  input.value=link;input.hidden=!link;input.onclick=()=>input.select();status.textContent=error||(!link?'Making the link…':'');
+  button.disabled=!link;button.textContent='Copy';
+  button.onclick=async()=>{const turn=_shareModalTurn;const ok=await _copyToClipboard(link);if(turn!==_shareModalTurn)return;if(ok)button.textContent='Copied';else{input.focus();input.select();status.textContent='Select and copy the link.';}};
+  m.classList.add('open');if(!wasOpen)m.querySelector('.share-row button:last-child').focus();
 }
-
-function closeShareModal() {
-  const m = document.getElementById('share-link-modal');
-  if (m) m.classList.remove('open');
-}
+function closeShareModal(){_shareModalTurn++;const m=document.getElementById('share-link-modal');if(m){m.classList.remove('open');m._returnFocus?.focus();}}
 
 async function _urlToDataUrl(u) {
   const response = await fetch(u, { cache: 'no-store' });
@@ -13753,7 +13504,10 @@ function _maybeOpenShare() {
       return;
     }
     try {
+      const ctx=projectStore._accountContext(),board=_opContext();
+      const valid=()=>{projectStore._requireAccount(ctx);if(!_opStillValid(board))throw Error('The open project changed. Open the link again.');};
       const d = await firebase.firestore().collection('shares').doc(token).get();
+      valid();
       if (!d.exists) { showError('This share link is no longer active.'); return; }
       const s = d.data() || {};
       if (!confirm('Save "' + (s.name || 'this project') + '" to your projects?\n\nIt becomes yours, with its own pictures.')) return;
@@ -13766,36 +13520,42 @@ function _maybeOpenShare() {
       // this, a single unreadable address ended the whole import with an error,
       // which is what Fromsa's friend hit.
       let _missed = 0;
-      for (const it of items) {
-        const c = it && it.card; if (!c) continue;
-        const src = c.image;
-        if (!src || !String(src).startsWith('https://')) continue;
-        try { c.image = await _urlToDataUrl(src); }
-        catch (e) { console.warn('[share open] picture skipped,', e && e.message); delete c.image; _missed++; }
-      }
+      await _shareParallel(items.map(it=>async()=>{
+        const c=it?.card,src=c?.image;if(!src||!String(src).startsWith('https://'))return;
+        try{c.image=await _urlToDataUrl(src);}catch(e){delete c.image;_missed++;}
+      }));
+      valid();
       const sum = s.lastSummary ? _sanitizeSharedValue(s.lastSummary, 0) : null;
       if (sum && typeof sum._face_photo === 'string' && sum._face_photo.startsWith('http')) {
         try { sum._face_photo = await _urlToDataUrl(_safeImgSrc(sum._face_photo)); }
         catch (_) { delete sum._face_photo; }
         delete sum._face_photo_url; delete sum._face_photo_path;
       }
+      valid();
       const okFlush = await projectStore.flush();
+      valid();
       if (okFlush === false && !confirm('Your last changes are not saved. Open the shared project anyway?')) return;
       projectStore.detach();
-      await _hydrate(async () => { _doClear(); });
+      let importedBoard;
+      await _hydrate(async () => { _doClear();importedBoard=_opContext(); });
+      const requireImport=()=>{projectStore._requireAccount(ctx);if(!_opStillValid(importedBoard))throw Error('The open project changed. Open the link again.');};
+      requireImport();
       lastSummary = sum;
       if (s.notes) { try { const n = document.getElementById('notes-area'); if (n) n.value = _shareText(s.notes, 50000); } catch (_) {} }
       await _hydrate(async () => { _paintItems(items); });
       // Card mounting is deferred (placement runs on timeouts), and the save
       // only snapshots cards that are actually on the canvas. Wait for them.
+      requireImport();
       const _want = items.filter(x => x && x.card).length;
       for (let w = 0; w < 100; w++) {
         const mounted = (window.items || []).filter(i => i && i.el).length;
         if (mounted >= _want) break;
         await new Promise(r => setTimeout(r, 100));
       }
+      requireImport();
       currentClientName = s.name || null;
       await projectStore.createFromCanvas(s.name || null);
+      projectStore._requireAccount(ctx);
       if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
       if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
       showToast(_missed
@@ -16503,7 +16263,7 @@ async function doSaveToCloud() {
   const initPromise = fetch('/api/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    body: JSON.stringify({ action: 'init', client_name: slug }),
+    body: JSON.stringify({ action: 'init', client_name: slug, description: _buildPieceSummaryLine(items.find(i=>i.id===viewerItemId)).split(/\s+/).slice(0,4).join(' ') }),
   }).then(async r => {
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
@@ -17490,11 +17250,6 @@ loadFolderHandle().then(h => { if (h) folderHandle = h; }).catch(()=>{});
     const body = document.getElementById('avatar-body');
     const actions = document.querySelector('#drawer-avatar .drawer-actions-bottom');
     if (host && body) host.appendChild(body);
-    // v13.75: Randomize joins Replace and Remove in the avatar row; Save stays
-    // with the measurements it saves.
-    const rnd = actions && actions.querySelector('button[onclick="randomizeAvatar()"]');
-    const avActions = document.querySelector('#pg-avatar-row .pg-avatar-actions');
-    if (rnd && avActions) avActions.insertBefore(rnd, avActions.firstChild);
     if (host && actions) host.appendChild(actions);
     // v14.20: the project list lives inside the Projects fold, always shown.
     const sess = document.querySelector('#pg-pane-avatar .drawer-sessions');
@@ -19116,9 +18871,9 @@ async function _pgTool(name, a, dc) {
       } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
     }
     case 'randomize_avatar': {
-      try { const p = randomizeAvatar(); if (p && p.then) p.catch(() => {}); }
+      try { showToast('Upload an avatar photo or use the camera.'); }
       catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
-      return { ok: true, note: 'a new face is on its way' };
+      return { ok: false, reason: 'Preset avatars are retired. Upload a photo or use the camera.' };
     }
     case 'set_measurement': {
       const val = Number(a.value);

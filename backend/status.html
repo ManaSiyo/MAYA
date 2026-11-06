@@ -817,10 +817,10 @@ try {
 #admin-design{outline:none!important;box-sizing:border-box;position:fixed;inset:0;width:100vw;height:100dvh!important;max-width:100vw!important;max-height:100dvh!important;margin:0!important;padding:0!important;border:0!important;background:#000}#admin-design::backdrop{background:#000}#admin-design iframe{display:block;width:100%;height:100%;border:0;outline:none}
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
-<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=1"><script src="/aesthetics/ui/submission-cards.js?v=1"></script>
+<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=2"><script src="/aesthetics/ui/submission-cards.js?v=2"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=2"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=3"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=25"></script>
 <script src="/aesthetics/ui/voice-preparation.js?v=3"></script>
 
@@ -919,7 +919,7 @@ try {
     </div>
   </div>
   <div id="drawer-systems">
-  <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button" href="/wr.html">WR</a><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
+  <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
   <button data-maya-type="P3" class="maya-glass-button design-quicklink" onclick="admTab('automations')">Automations</button></div>
   <h3 data-maya-type="H3">Vault</h3>
   <a data-maya-type="P2" href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small data-maya-type="P1">Data and hosting</small></a>
@@ -1024,10 +1024,7 @@ try {
     <span class="card card-maya" role="link" tabindex="0"
           onclick="window.open('https://maya.manasiyo.com','_blank')"
           onkeydown="if(event.key==='Enter')window.open('https://maya.manasiyo.com','_blank')"><b>MAYA</b>
-      <span class="pg-chips">
-        <a class="pg-chip" href="/operations.html" target="_blank"
-           onclick="event.stopPropagation()" title="The test bench.">operation room</a>
-      </span></span>
+</span>
   </div>
 
 
@@ -1642,6 +1639,10 @@ function _subsNote(html,empty=false) {
 
 }
 let _subsSeq = 0;
+function deleteAdminSubmission(folder){
+  const context=_adminContext(),token=_idTok;
+  MayaSubmissionCards.requestDelete(folder,{token,valid:()=>_adminContextCurrent(context),onDeleted:async()=>{++_subsSeq;const strip=document.getElementById('subs-strip');strip.dataset.sig='';strip.querySelectorAll('[data-submission-id]').forEach(card=>{if(card.dataset.submissionId===folder.id)card.closest('.submission-card-frame')?.remove();});await loadSubmissions();}});
+}
 async function loadSubmissions() {
   const requestSeq = ++_subsSeq,context=_adminContext(),auth=_idTok;
   const strip = document.getElementById('subs-strip');
@@ -1719,10 +1720,10 @@ async function loadSubmissions() {
   }
   document.getElementById('subs-note-inline').style.display = 'none';
   strip.style.display = '';
-  const stripSig = visible.map(x => x.f.id + ':' + (x.thumbId || x.state)).join(',');
+  const stripSig = visible.map(x => x.f.id + ':' + (x.f.description||'') + ':' + (x.thumbId || x.state)).join(',');
   if (strip.dataset.sig === stripSig) return;      // nothing new, leave it alone
   strip.dataset.sig = stripSig;
-  strip.replaceChildren(...visible.map(({f})=>{const frame=document.createElement('div');frame.className='submission-card-frame';frame.append(MayaSubmissionCards.create(f,{newTab:true}));return frame;}));
+  strip.replaceChildren(...visible.map(({f})=>{const frame=document.createElement('div');frame.className='submission-card-frame';frame.append(MayaSubmissionCards.create(f,{newTab:true,onDelete:folder=>deleteAdminSubmission(folder)}));return frame;}));
   _paintThumbs();
 }
 

@@ -346,7 +346,11 @@
   .op-identity .op-hero { margin:0; }
   #brand a { min-width:0; }
   #workspace-title { overflow-wrap:anywhere; letter-spacing:inherit; }
-  #brand { min-width:0; max-width:calc(100% - 50px); }
+  #brand { min-width:0; flex:1; max-width:none; }
+  #brand>a{min-width:0;}
+  #brand>a img{flex:none;}
+  #workspace-title{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  #top-actions{display:flex;align-items:center;gap:var(--maya-icon-pill-gap,6px);flex:none;}
   .piece-swiper { flex-direction:row; flex-wrap:wrap; justify-content:center; }
   @media(max-width:768px) {
     .screen { padding-inline:16px; }
@@ -1389,10 +1393,10 @@
   #page-indicator { /* visible on boot */ }
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
-<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=1"><script src="/aesthetics/ui/submission-cards.js?v=1"></script>
+<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=2"><script src="/aesthetics/ui/submission-cards.js?v=2"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=2"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=3"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=25"></script>
 <link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=14">
 <script defer src="/aesthetics/ui/fabric-search-details.js?v=2"></script>
@@ -1409,6 +1413,7 @@
     <span class="status-pill" id="dissect-status" style="display:none">Dissecting…</span>
   </div>
   <div id="top-actions">
+    <button id="delete-open-submission" class="maya-icon-button" data-maya-shape="circle" data-maya-type="P3" title="Delete submission" aria-label="Delete submission" onclick="deleteBriefSubmission()" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <!-- v10.15: hamburger drawer toggle, same as Maya. -->
     <button class="top-btn hamburger" onclick="toggleWorkspaceDrawer()" title="Workspace menu" aria-expanded="false" aria-controls="clients-drawer">
       <span class="hamburger-icon"><span></span><span></span><span></span></span>
@@ -1416,7 +1421,7 @@
   </div>
 </div>
 
-<!-- One submission, two native vertical screens. The standalone room stays available. -->
+<!-- One submission, two native vertical screens. The operation workspace belongs to this Brief. -->
 
 <div id="screens">
   <!-- Screen 1: One-pager in horizontal view -->
@@ -1460,7 +1465,7 @@
     </div>
   </section>
   <section class="screen" id="screen-operating" data-screen="1" aria-label="Operation Room">
-    <iframe id="operations-embed" src="/operations.html?embedded=brief" title="Operation Room for this submission"></iframe>
+    <iframe id="operations-embed" src="/backend/operation-workspace.html?embedded=brief" title="Operation Room for this submission"></iframe>
   </section>
 </div>
 
@@ -2113,7 +2118,7 @@ async function openClientsDrawer() {
           if(!valid())return;
           const folders = MayaSubmissionCards.unique(data.folders).slice(0,24);
           if (countEl) countEl.textContent = folders.length === 1 ? '1 submission' : folders.length + ' submissions';
-          listEl.replaceChildren(...folders.map(folder=>MayaSubmissionCards.create(folder)));
+          listEl.replaceChildren(...folders.map(folder=>MayaSubmissionCards.create(folder,{onDelete:deleteBriefSubmission})));
           if(!folders.length)listEl.textContent='No submissions yet.';
           void paintSubmissionDrawerPhotos(listEl,tok,valid);
 
@@ -2508,6 +2513,16 @@ window.addEventListener('message',event=>{
   if(event.data?.maya==='ops-brief')goToScreen(0);
 });
 document.addEventListener('DOMContentLoaded',()=>document.getElementById('operations-embed')?.addEventListener('load',_postPiecesToOps));
+function deleteBriefSubmission(folder=window._openedSubmission){
+  if(!folder?.id)return;
+  const token=_subCachedTok(),account=_piecesAccount(token);
+  MayaSubmissionCards.requestDelete(folder,{token,valid:()=>account===_piecesAccount(_subCachedTok()),onDeleted:async()=>{
+    ++_submissionLoadSequence;++_briefLocalSequence;
+    if(window._openedSubmission?.id===folder.id){window._openedSubmission=null;_clearBriefPrivate();history.replaceState(null,'','/backend.html');document.getElementById('delete-open-submission').hidden=true;}
+    await openClientsDrawer();
+  }});
+}
+document.getElementById('delete-open-submission').hidden=!new URLSearchParams(location.search).get('submission');
 let _briefAccount = _piecesAccount(_subCachedTok()||'');
 function _clearBriefPrivate() {
   clearSubmissionDrawer();_drawerOwner=_piecesAccount(_subCachedTok()||'');document.getElementById('clients-count').textContent='';
