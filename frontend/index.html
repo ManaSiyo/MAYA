@@ -405,6 +405,7 @@
   }
 
   #screens {
+    display: flex; flex-direction: column;
     position: absolute; inset: 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -416,6 +417,7 @@
   }
   #screens::-webkit-scrollbar { display: none; }
   #screen-community, #screen-inspo, #screen-favorites {
+    flex: none;
     position: relative;
     height: 100vh; min-height: 100vh; width: 100%;
     scroll-snap-align: start;
@@ -4752,21 +4754,6 @@
 <div id="hscroll">
   <div class="hpane hpane-main">
     <div id="screens">
-      <!-- v13.3: THE COMMUNITY WALL, screen 0, above the moodboard.
-           Swipe up from the canvas to reach it, swipe down for favorites.
-           Everyone's hearted visions, drifting left forever. -->
-      <section id="screen-community" data-screen="0">
-        <!-- v13.11: three rows. Each drifts right to left on its own. -->
-        <div id="community-scroller">
-          <div class="community-row" data-row="0"></div>
-          <div class="community-row" data-row="1"></div>
-          <div class="community-row" data-row="2"></div>
-        </div>
-        <div id="community-empty">
-          <div class="hint-eyebrow">Community</div>
-          <div class="hint-body">Every vision anyone hearts lands here. Heart one of yours and it joins the wall.</div>
-        </div>
-      </section>
       <section id="screen-inspo" data-screen="1">
         <!-- canvas + clouds -->
         <div id="maya-canvas"></div>
@@ -4783,7 +4770,7 @@
           </div>
           <div class="hint-card">
             <div class="hint-eyebrow">Favorites</div>
-            <div class="hint-body">Swipe down for your favorites, swipe up for the community wall. Anything you heart lands in both.</div>
+            <div class="hint-body">Scroll down for Favorites, then Community. Anything you heart lands in both.</div>
           </div>
         </div>
         <div id="transcript-echo"></div>
@@ -4813,6 +4800,18 @@
       </section>
       <section id="screen-favorites" data-screen="2">
         <div id="favorites-scroller"></div>
+      </section>
+      <section id="screen-community" data-screen="0">
+        <!-- v13.11: three rows. Each drifts right to left on its own. -->
+        <div id="community-scroller">
+          <div class="community-row" data-row="0"></div>
+          <div class="community-row" data-row="1"></div>
+          <div class="community-row" data-row="2"></div>
+        </div>
+        <div id="community-empty">
+          <div class="hint-eyebrow">Community</div>
+          <div class="hint-body">Every vision anyone hearts lands here. Heart one of yours and it joins the wall.</div>
+        </div>
       </section>
 
     </div>
@@ -4845,9 +4844,9 @@
   </div>
 </div>
 
-<!-- v13.3: 3-dot page indicator, community / inspo / favorites -->
+<!-- The physical page order is Inspo, Favorites, Community. -->
 <div id="page-indicator">
-  <button class="page-dot active" id="dot-2" onclick="setScreen(1)" title="Inspo" aria-label="Inspo"></button>
+  <button class="page-dot active" id="dot-2" onclick="setScreen(1)" title="Inspo" aria-label="Inspo" aria-current="page"></button>
   <button class="page-dot" id="dot-3" onclick="setScreen(2)" title="Favorites" aria-label="Favorites"></button>
   <button class="page-dot" id="dot-1" onclick="setScreen(0)" title="Community" aria-label="Community"></button>
 </div>
@@ -6678,6 +6677,14 @@ function setScreen(n) {
   if(screen)host.scrollTo({top:screen.offsetTop,behavior:'smooth'});
 }
 function _syncScreenUI(n) {
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('dot-' + i);
+    if (!dot) continue;
+    const active = n === i - 1;
+    dot.classList.toggle('active', active);
+    if (active) dot.setAttribute('aria-current','page'); else dot.removeAttribute('aria-current');
+  }
+
   // v12.7: the observer fires at three thresholds, so one swipe used to run
   // this three times and rebuild the whole favourites strip three times, each
   // rebuild restarting every image download mid animation.
@@ -6689,10 +6696,6 @@ function _syncScreenUI(n) {
   // v11.33: kill the floating "type a reference…" input on screen change, on
   // mobile a tap spawns it, and swiping to favorites stranded it over screen 2.
   try { if (_manualRefInput) { _manualRefInput.remove(); _manualRefInput = null; _manualRefXY = null; } } catch (_) {}
-  for (let i = 1; i <= 3; i++) {
-    const dot = document.getElementById('dot-' + i);
-    if (dot) dot.classList.toggle('active', n === (i - 1));
-  }
   if (n === 2) _renderFavoritesScroller();
   if (n === 0 && typeof communityBoard !== 'undefined') { try { communityBoard.reconcile(); } catch (_) {} communityBoard.enter(); }
   // v10.5/10.6: wordmark text follows the active screen. Crossfade, and
@@ -6805,23 +6808,15 @@ document.addEventListener('visibilitychange', () => {
 function _bootScreenObserver() {
   const host = document.getElementById('screens');
   if (!host) return;
-  // v13.3: the community wall is section 0, so scrollTop 0 is now the wall,
-  // not the moodboard. Land on the moodboard before anything is painted, and
-  // hold it there for a couple of frames while layout settles.
+  // Physical DOM order already starts at Inspo. No deferred reset can
+  // overwrite a dot click or a swipe while the remaining page loads.
   if (!host.dataset.homed) {
     host.dataset.homed = '1';
-    const home = () => {
-      // PLAYGROUND: the order is inspo, favorites, community wall; land on inspo.
-      host.scrollTop = 0;
-    };
-    home();
-    requestAnimationFrame(home);
-
+    host.scrollTop = 0;
     let _rt = null;
     window.addEventListener('resize', () => {
       clearTimeout(_rt);
       _rt = setTimeout(() => {
-        const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
         const screen=host.querySelector('[data-screen="'+currentScreen+'"]');
         if(screen)host.scrollTop=screen.offsetTop;
       }, 180);
@@ -17841,21 +17836,6 @@ if (typeof toggleNotesDrawer === 'function') {
     }
   } catch (_) {}
 })();
-</script>
-
-<style>
-  /* PLAYGROUND: screen order is inspo, favorites, community wall. The sections
-     keep their data-screen numbers (all the wall/favorites logic is keyed to
-     them); flex order changes only where each one sits. */
-  #screens { display: flex; flex-direction: column; }
-  #screens > section[data-screen] { flex: none; }
-  #screen-inspo { order: 1; }
-  #screen-favorites { order: 2; }
-  #screen-community { order: 3; }
-</style>
-<script>
-  /* semantic screen number -> physical position in the playground order */
-  window._pgScreenPos = { 1: 0, 2: 1, 0: 2 };
 </script>
 
 <!-- v14.21: the amber label script stayed on the Playground. -->

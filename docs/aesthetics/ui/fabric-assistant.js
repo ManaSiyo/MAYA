@@ -1,3 +1,37 @@
+// Fabric-only presentation shared with the active Aesthetic Control preview.
+(function(){
+ 'use strict';
+ let sequence=0;
+ window.MayaFabricSearchDetails={create({parent,hoverTargets=[],preview=false}){
+  const trigger=document.createElement('button');trigger.type='button';trigger.className='maya-pill fa-search-details-trigger';trigger.dataset.mayaType='P3';if(preview)trigger.dataset.previewCategory='P3';trigger.textContent='Search details';trigger.setAttribute('aria-expanded','false');
+  const panel=document.createElement('section');panel.className='fa-search-details';panel.dataset.mayaScrollbar='visible';const content=document.createElement('div');content.dataset.mayaPanel='inner';panel.append(content);panel.id='fabric-search-details-'+(++sequence);panel.popover='manual';panel.setAttribute('role','region');panel.setAttribute('aria-label','Fabric search details');panel.tabIndex=-1;trigger.setAttribute('aria-controls',panel.id);parent.append(panel);
+  let enabled=true,data=null,hideTimer;
+  const line=(label,value)=>{const row=document.createElement('p');row.dataset.mayaType='P3';if(preview)row.dataset.previewCategory='P3';const title=document.createElement('strong');title.textContent=label+': ';row.append(title,document.createTextNode(value));content.append(row);};
+  function close(){clearTimeout(hideTimer);if(panel.matches(':popover-open'))panel.hidePopover();trigger.setAttribute('aria-expanded','false');}
+  function place(){
+   const r=trigger.getBoundingClientRect(),w=Math.min(380,innerWidth-24),top=Math.max(12,Math.min(r.top,innerHeight-12)),bottom=Math.max(12,Math.min(r.bottom,innerHeight-12)),below=innerHeight-bottom-20,above=top-20,useBelow=below>=above;
+   panel.style.width=w+'px';panel.style.maxHeight=Math.max(1,useBelow?below:above)+'px';panel.style.left=Math.max(12,Math.min(r.right-w,innerWidth-w-12))+'px';
+   const height=panel.getBoundingClientRect().height;panel.style.top=Math.max(12,Math.min(useBelow?bottom+8:top-8-height,innerHeight-height-12))+'px';
+  }
+  function show(){clearTimeout(hideTimer);if(!enabled||!data||!trigger.isConnected)return;if(!panel.matches(':popover-open'))panel.showPopover();trigger.setAttribute('aria-expanded','true');place();}
+  function later(){clearTimeout(hideTimer);hideTimer=setTimeout(()=>{if(!panel.matches(':hover')&&!trigger.matches(':hover')&&!panel.contains(document.activeElement)&&document.activeElement!==trigger)close();},160);}
+  trigger.addEventListener('click',()=>{if(panel.matches(':popover-open')){close();return;}show();if(panel.matches(':popover-open'))panel.focus({preventScroll:true});});
+  panel.addEventListener('focusout',later);
+  panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();trigger.focus({preventScroll:true});close();}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panel.matches(':popover-open')){e.preventDefault();e.stopPropagation();const restore=panel.contains(document.activeElement);close();if(restore){trigger.focus({preventScroll:true});close();}}},{capture:true});
+  document.addEventListener('pointerdown',e=>{if(!panel.contains(e.target)&&!trigger.contains(e.target))close();});
+  const reposition=()=>{if(panel.matches(':popover-open'))place();};addEventListener('resize',reposition);addEventListener('scroll',reposition,{capture:true});
+  return {trigger,panel,close,setEnabled(value){enabled=value;trigger.hidden=!value;if(!value)close();},set(value){
+   data=value;content.replaceChildren();trigger.disabled=!value;if(!value){close();return;}
+   const heading=document.createElement('h3');heading.dataset.mayaType='H4';if(preview)heading.dataset.previewCategory='H4';heading.textContent='Fabric search';content.append(heading);
+   line('Looking for',value.query||'Fabric for the selected look');
+   if(value.observation)line('Reference interpretation',value.observation);
+   if(value.stage)line('Status',value.stage);
+   if(panel.matches(':popover-open'))place();
+  }};
+ }};
+})();
+
 /* One fabric conversation for the Brief and Operation Room. Private state is memory-only. */
 (function () {
   'use strict';
@@ -417,7 +451,7 @@
     let finished=false,published=[];
     try {
       const r=await waitForSignal(fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal,
-        body:JSON.stringify({mode:searchMode,submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(searchMode==='retailers'?{storeGroups:[...activeStores]}:{}),history})}),signal);
+        body:JSON.stringify({mode:searchMode,submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(searchMode==='retailers'?{stores:storeGroups.filter(group=>activeStores.has(group.id)).flatMap(group=>group.hosts)}:{}),history})}),signal);
       if(!r.ok){const data=await waitForSignal(r.json().catch(()=>({})),signal);throw Error(data.error || 'Fabric search failed. Try again.');}
       const reader=r.body.getReader(), decoder=new TextDecoder();let buffer='';
       const accept=raw=>{
@@ -431,12 +465,12 @@
           const removed=new Set(Array.isArray(event.removedUrls)?event.removedUrls:[]);
           if(removed.size){retained=retained.filter(p=>!removed.has(p.url));resultCache.delete(resultKey());}
           published=(Array.isArray(event.products)?event.products:[]).filter(p=>!removed.has(p.url));
-          products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-48);paint();rememberResults();
+          products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-10);paint();rememberResults();
         }
         if(event.type==='products' && event.preliminary)status('Searching for Fabrics');
         if(event.type==='done'){
           const confirmed=Array.isArray(event.products)?event.products:[];
-          products=[...new Map([...retained,...confirmed].map(p=>[p.url,p])).values()].slice(-48);
+          products=[...new Map([...retained,...confirmed].map(p=>[p.url,p])).values()].slice(-10);
           finished=true;searchState='complete';history.push({request:submitted,query:event.query});history=history.slice(-6);
           els.observation.textContent=event.observation?'Reference interpretation: '+event.observation:'';
           lastSearchStores=storeKey();completedStatus=event.warning || (retained.length&&!confirmed.length?'No additional matches. Previously loaded fabrics are kept.':event.message) || '';status(completedStatus);rememberResults();
@@ -448,7 +482,7 @@
       } finally { void reader.cancel().catch(()=>{}); }
       if(!finished)throw Error('Search ended early. You can retry your request.');
     } catch(e) {
-      if(valid()){ searchState='interrupted';products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()];autoStarted=products.length>0;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}rememberResults();if(!filterOnly&&!els.input.value)els.input.value=request; }
+      if(valid()){ searchState='interrupted';products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-10);autoStarted=products.length>0;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}rememberResults();if(!filterOnly&&!els.input.value)els.input.value=request; }
     } finally { if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;paint();} }
   }
   async function open(next={}) {

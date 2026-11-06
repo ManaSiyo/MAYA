@@ -21,7 +21,7 @@ Fabrics; there is no separate public Operation Room or WR workspace.
 | docs/CHANGELOG.md | The only maintained history |
 | docs/check.mjs | One release-check command, with runtime/UI helpers |
 | docs/build-site.mjs, firebase.json | Explicit public build and Hosting route map |
-| _to_delete/2026-11-05-cleanup | Retired docs/tests/headshots/pages, kept for owner review |
+| _to_delete | Ignored local copies of retired code, for owner review |
 
 Root cloudbuild.yaml and .firebaserc remain because the existing Google deployment
 uses them. node_modules is dependency software, retained. .hosting is generated,
@@ -66,7 +66,7 @@ configuration, not successful inference/delivery. `/api/healthz/deep` is admin-o
 - **OpenAI:** text/vision via the protected allowlisted proxy, image generation and
   edits using **gpt-image-2.6-flare**, text default **gpt-6-luna**; Realtime voice
   uses modality-specific configuration. Defaults are in server/model-config.mjs.
-  Global Fabrics uses image-led web search with source/citation evidence. Sourcing
+  Fabrics uses one Responses API image search through server/fabrics.mjs. Sourcing
   photographs are independent of the generated-image model.
 - **Twilio:** SMS and calls, inbound signature validation, durable delivery/send
   claims. Messages sends and calls require explicit reviewed actions; accepted is
@@ -116,35 +116,53 @@ The retained maya-character.md is useful: it supplies conversational behavior an
 tool guidance, while server authorization is enforced separately. It cannot grant
 itself permissions, reveal secrets or override send/account safeguards.
 
+## Fabrics: one OpenAI search
+
+backend/server/fabrics.mjs replaces five fabric modules and the fabric-only AI
+router. MAYA sends the selected saved garment photo and client fabric preferences
+to OpenAI's Responses API with web_search, image/text results, max_results: 10,
+and include: ["web_search_call.results"]. One provider request, one tool call;
+there are no retailer feeds, seller-page fetches, second ranking pass or paid retry.
+The gallery reads image_result.image_url, thumbnail_url and source_website_url
+from that tool payload directly. Assistant-written links cannot become photos.
+
+This follows the [documented OpenAI image-search API](https://developers.openai.com/api/docs/guides/tools-web-search).
+It does not reproduce ChatGPT's private implementation or promise identical speed.
+OpenAI chooses the search and matches. MAYA keeps authentication, canonical saved
+context, cancellation, source links and private favorites. Explicit excluded
+materials discovered in later captions retract earlier cards and cached results.
+Price, composition and stock remain unknown; results are suggestions. Up to ten
+cards are displayed, using the unchanged In House gallery layout and two captions.
+Named-shop searches use the same API with an explicit domain filter; they do not
+constrain or replace the Global cache. Legacy feed/rank/generated-swatch APIs
+return 410. Photo hosts can still fail; their sourced thumbnail is the fallback.
+
 ## Current work
 
-November 5 cleanup and UI corrections pass the consolidated local release checks. Includes Admin
-and Brief submission deletion/captions; corrected page dots and circular logo;
-shared Glass icons/dialog; immediate, deduplicated sharing with three concurrent
-image copies; landscape row containment and phone header alignment; retired WR, standalone Operations and
-preset headshots; merged legal page and reorganized source/deployment packaging.
+November 5/6: simplified Fabrics, bundled its small Search details helper into the
+existing display script, flattened the single-file operations/kb directory and
+removed the empty CLO manifest. The six old backend search/ranking files totalled
+about 111 KB; one module is about 23 KB, with private storage guards retained.
+Retired files are in the ignored local _to_delete/2026-11-06-fabrics archive; Git
+history also retains them. No unrelated services or credentials were changed.
 
-Active files are reduced by about 51%; maintained documentation by 97% in bytes.
-The core runtime is retained; total active text/code is reduced by about 40%.
-Retired files are moved, not erased from disk. The archive is ignored by Git and
-stays on this Mac; prior commits retain the original versions.
+Frontend pages now physically occur in Inspo → Favorites → Community order.
+Removed the late CSS reorder and deferred initial scroll reset. Dot clicks,
+natural scrolling and aria-current follow the visible page. Existing appearance
+and saved design settings remain in place. Tests use actual clicks and wait for
+scroll/indicator state, rather than forcing a UI state and sleeping 100 ms.
 
-Node20 and Node24 checks pass in about 30 seconds locally. Chromium and WebKit
-cover phone/landscape/tablet/desktop, shared dialog Save propagation, explicit
-submission deletion, independent sharing, and Global/In House parity with image
-failure/recovery. Sharing's dialog opens in 1–3 ms in the fake-network browser
-checks; six image copies use three workers and three clicks publish one share.
-This is UI timing, not a live AI-generation benchmark. `MAYA_CAPTURE=1` enables
-review screenshots separately from the mandatory behavior/style assertions.
+Validation: fake-provider server startup with Cloud Run configuration,
+consolidated release checks on Node20 and Node24, forced-GC request
+cancellation, and Chromium/WebKit responsive checks. Fabric checks exercise the
+real adapter with documented OpenAI payload fixtures through the browser, exact
+Global/In House geometry and scrolling, two caption rows, saved styles, photo
+failure/recovery, account resets and explicit Refresh. These are controlled tests,
+not a live OpenAI or physical iPad speed benchmark.
 
-Live checks on November 5 still show b7ccf5d in Hosting, app/Admin and API. Public
-responses measured roughly 0.44s for the marker, 0.58–0.66s for pages and 1.69s for
-health in one sample. f6426d6's Cloud Build failed while capturing a test screenshot
-(waiting 30 seconds), before deployment. The consolidated suite keeps the Fabric
-behavior/style assertions and separates optional captures from release acceptance.
-
-Production acceptance remains separate: owner Push, verify matching website/API
-commits, then check a real share, iPad interaction and Global Fabrics on the saved
-hooded-tailcoat submission. The previously reported empty Global gallery and Twilio
-configuration failure are not established as resolved by this cleanup. No live
-submission has been deleted and no real message/call sent during these checks.
+Production was still b7ccf5d when this work started. f8eadbd's Cloud Build failed
+its page-indicator synchronization assertion before deployment; f6426d6 had failed
+a screenshot capture earlier. This explains why the previous frontend fixes were
+not visible. The requested Push must be followed by matching release.json, page
+build stamps and API health, then a real Global search on a saved submission.
+Twilio configuration remains owner-managed. No real messages or calls were sent.

@@ -8,9 +8,7 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MAYA · Operation Room</title>
-<script src="/aesthetics/operations/kb/kb.js"></script>
-<!-- Plan B: the CLO reference manifest, empty until real projects are listed -->
-<script src="/aesthetics/operations/clo-library.js"></script>
+<script src="/aesthetics/operations/kb.js"></script>
 <!-- raster→vector tracer for the Trace → SVG button (MIT, single file) -->
 <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 <style>
@@ -267,8 +265,7 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
 <script src="/aesthetics/ui/pill-runtime.js?v=3"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=25"></script>
 <link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=14">
-<script defer src="/aesthetics/ui/fabric-search-details.js?v=2"></script>
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=14"></script>
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=15"></script>
 </head>
 <body>
 <!-- Front End drawer model: horizontal scroll-snap with a main pane + a drawer pane.
@@ -928,7 +925,7 @@ async function startCloMatch(){
     return {item,score};
   }).sort((x,y)=>y.score-x.score).slice(0,3).filter(r=>r.score>0);
   if(!ranked.length){
-    out.innerHTML=head+'No CLO reference matches this garment yet ('+lib.length+' on file). Add one whose types or tags cover it to clo-library.js.</div>';
+    out.innerHTML=head+'No CLO reference matches this garment yet ('+lib.length+' on file).</div>';
     return;
   }
   out.innerHTML=head+ranked.map((r,i)=>

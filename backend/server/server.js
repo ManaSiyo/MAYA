@@ -31,7 +31,7 @@ import express from 'express';
 import { TEXT_MODEL, IMAGE_MODEL, chatBody } from './model-config.mjs';
 import {createEventQueue,mountEventTriggers} from './event-triggers.mjs';
 import {createTextAutomations} from './text-automations.mjs';
-import { mountFabricSearch } from './fabric-search.mjs';
+import { mountFabricSearch } from './fabrics.mjs';
 import { createCrmAI } from './crm-ai.mjs';
 import { createMessageArchive } from './message-archive.mjs';
 import { createOwnerSMSAccess } from './owner-sms-access.mjs';
@@ -58,62 +58,6 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname as pathDirname, join as pathJoin } from 'node:path';
 import dns from 'node:dns/promises';
-import {
-  applyVisualRankings,
-  buildVisualRankingRequest,
-  collectRetailerResults,
-} from './fabric-sourcing.js';
-import {
-  AI_TASKS,
-  AiRouteError,
-  createConsoleAiTelemetry,
-  createTaskRouter,
-} from './ai-router.js';
-
-function openAiFailureCategory(status, body) {
-  const code = String(body?.error?.code || body?.error?.type || '').toLowerCase();
-  if (/safety|policy|moderation/.test(code)) return 'safety';
-  if (status >= 500) return 'provider_5xx';
-  if (status === 408 || status === 409 || status === 429) return 'provider_overloaded';
-  if (status === 401 || status === 403) return 'provider_auth';
-  return 'provider_4xx';
-}
-
-const aiTaskRouter = createTaskRouter({
-  tasks: AI_TASKS,
-  providers: {
-    openai: {
-      async execute({ route, input, signal }) {
-        const key = process.env.OPENAI_API_KEY;
-        if (!key) {
-          throw new AiRouteError('OpenAI is not configured', {
-            category: 'provider_config', provider: 'openai',
-          });
-        }
-        const upstream = await fetch('https://api.openai.com/' + route.endpoint, {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + key,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(chatBody(input.body || {}, route.model)),
-          signal,
-        });
-        const body = await upstream.json().catch(() => ({}));
-        if (!upstream.ok) {
-          throw new AiRouteError('OpenAI task failed', {
-            category: openAiFailureCategory(upstream.status, body),
-            provider: 'openai',
-            status: upstream.status,
-          });
-        }
-        return body;
-      },
-    },
-  },
-  telemetry: createConsoleAiTelemetry(),
-});
-
 const app = express();
 app.disable('x-powered-by');
 
@@ -2338,130 +2282,15 @@ app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb
 
 mountFabricSearch(app, { requireAdmin, requireAuthHeader, json: express.json,
   rateLimit, read: async path=>{if(path.startsWith(SUB_PREFIX))await submissionDeletion.assertActive(path.split('/')[1]);return gcsGet(path);}, write: async(path,...args)=>{const match=path.match(/^private\/fabrics\/[^/]+\/([^/]+)\//);if(match)await submissionDeletion.assertActive(match[1]);return gcsPut(path,...args);}, apiKey: () => process.env.OPENAI_API_KEY,
-  model: process.env.MODEL_TERRA || TEXT_MODEL,
-  rank: async ({garmentImage,traits,products,signal}) => {
-    const ranking=buildVisualRankingRequest({garmentImage,traits,products:products.slice(0,8)});
-    const routed=await aiTaskRouter.run('fabric.visual_rank',{body:ranking.requestBody},{
-      signal,maxAttempts:1,timeoutMs:8000,
-      validate:body=>applyVisualRankings(body,ranking.candidates)
-    });
-    noteSpend('v1/chat/completions',{body:ranking.requestBody});
-    return routed.output;
-  } });
-
-// ── v13.50: /api/source-fabric, the legacy merchant window ────────────────
-// The Brief asks with the dissected fabric string; this endpoint asks a
-// handful of retail fabric merchants' own public Shopify search feeds, in
-// parallel, and returns real products with real prices and pictures. A
-// merchant that fails to answer is skipped, never fatal. Results are cached
-// briefly per account/query. Private search phrases are never seeded into a
-// shared catalog. The conversational fabric assistant uses /admin/fabrics/search.
-const SOURCE_MERCHANTS = [
-  { name: 'Britex Fabrics', place: 'San Francisco', host: 'https://britexfabrics.com', eta: 0, currency: 'USD' },
-  { name: 'Mood Fabrics', place: 'New York', host: 'https://www.moodfabrics.com', eta: 5, currency: 'USD' },
-  { name: 'Blackbird Fabrics', place: 'Vancouver', host: 'https://www.blackbirdfabrics.com', eta: 7, currency: 'CAD' },
-  { name: 'Miss Matatabi', place: 'Tokyo', host: 'https://shop.missmatatabi.com', eta: 9, currency: 'JPY' },
-  { name: 'The Fabric Sales', place: 'Antwerp', host: 'https://thefabricsales.com', eta: 8, currency: 'EUR' },
-  { name: 'The Fabric Store', place: 'New Zealand', host: 'https://thefabricstore.com', eta: 10, currency: 'USD' },
-  { name: 'Tessuti Fabrics', place: 'Sydney', host: 'https://www.tessuti.com.au', eta: 11, currency: 'AUD' },
-];
-const _sourceCache = new Map();
-app.get('/api/source-fabric', async (req, res) => {
-  let user;
-  try { user = await requireAdmin(req); }
-  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
-  const q = String(req.query.q || '').trim().slice(0, 120);
-  if (!q) return res.status(400).json({ error: 'missing_q' });
-  const key = user.sub + '|' + q.toLowerCase();
-  const hit = _sourceCache.get(key);
-  res.set('Cache-Control', 'no-store');
-  if (hit && Date.now() - hit.ts < 5 * 60 * 1000) return res.json(hit.body);
-  const enc = encodeURIComponent(q);
-  const results = await Promise.all(SOURCE_MERCHANTS.map(async (m) => {
-    try {
-      const r = await fetch(m.host + '/search/suggest.json?q=' + enc +
-        '&resources%5Btype%5D=product&resources%5Blimit%5D=6', {
-        headers: { 'User-Agent': 'MAYA fabric sourcing (maya.manasiyo.com)' },
-        signal: AbortSignal.timeout(6000),
-      });
-      if (!r.ok) throw new Error('http ' + r.status);
-      const j = await r.json();
-      const ps = (((j || {}).resources || {}).results || {}).products || [];
-      return ps.filter(p => p && p.available !== false).map(p => ({
-        merchant: m.name, place: m.place, etaDays: m.eta, currency: m.currency,
-        title: String(p.title || '').slice(0, 140),
-        price: p.price != null ? String(p.price) : '',
-        url: /^https?:/.test(p.url || '') ? p.url : (m.host + (p.url || '')),
-        image: (p.featured_image && p.featured_image.url) || p.image || '',
-      }));
-    } catch (e) { return { _miss: m.name, why: String(e.message).slice(0, 80) }; }
-  }));
-  const { products, misses } = collectRetailerResults(results);
-  const body = { ok: true, q, products: products.slice(0, 60), misses,
-    fetchedAt: new Date().toISOString() };
-  if (products.length) {
-    if (_sourceCache.size >= 250) _sourceCache.clear();
-    _sourceCache.set(key, { ts: Date.now(), body });
-  }
-  res.json(body);
 });
 
-// ── v13.51: /api/rank-fabric, garment-to-swatch visual ranking ─────────────
-// Retrieval and ranking stay separate on purpose. The retailer window can
-// fail without spending a vision call, and the Brief can keep its immediate
-// static cards whenever either stage fails. Only products with real thumbnail
-// images enter the comparison. The model sees the garment first, then each
-// retailer image alongside the fabric traits inferred during dissection.
-app.post('/api/rank-fabric', requireAuthHeader, express.json({ limit: '8mb' }), async (req, res) => {
-  let user;
-  try { user = await requireAdmin(req); }
-  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
-  if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'ranking_unavailable' });
-  const rl = rateLimit(user.sub, user.email);
-  if (!rl.ok) {
-    res.setHeader('Retry-After', String(rl.retry));
-    return res.status(429).json({ error: 'rate_limited', scope: rl.scope });
-  }
+// Retired merchant feeds, extra ranking and synthetic fabric previews.
+for (const route of ['/api/source-fabric','/api/rank-fabric','/api/visualize-fabric']) {
+  app.all(route, (_req,res) => res.status(410).json({error:'retired'}));
+}
 
-  let ranking;
-  try {
-    ranking = buildVisualRankingRequest({
-      garmentImage: (req.body || {}).garment_image,
-      traits: (req.body || {}).traits,
-      products: (req.body || {}).products,
-    });
-  } catch (e) {
-    return res.status(e.status || 400).json({ error: e.message || 'bad_ranking_request' });
-  }
-
-  try {
-    const routed = await aiTaskRouter.run('fabric.visual_rank', {
-      body: ranking.requestBody,
-    }, {
-      requestId: req.headers['x-request-id'] || crypto.randomUUID(),
-      validate: body => applyVisualRankings(body, ranking.candidates),
-    });
-    const matches = routed.output;
-    noteSpend('v1/chat/completions', req);
-    return res.json({ ok: true, label: 'closest visual matches', matches });
-  } catch (e) {
-    console.error('[fabric-rank] failed request=' + (e.requestId || 'unknown') +
-      ' category=' + (e.category || 'unknown'));
-    return res.status(502).json({ error: 'ranking_failed' });
-  }
-});
-
-// ═══════════════════════════════════════════════════════════════════════════
-// v13.53: Nano Banana. POST /api/visualize-fabric renders a GENERATED
-// illustration for a fabric card that has no real photograph, using Google's
-// image model on Vertex AI inside this same Google Cloud project, so the
-// request never leaves Google's network. Atelier only, image-weighted on the
-// allowance. The answer is always labeled GENERATED: it is an illustration
-// of the dissected traits, never a photograph of purchasable fabric, and it
-// must never be presented as sourcing truth.
-// Requires the Vertex AI API (aiplatform.googleapis.com) enabled on the
-// project; until then the endpoint answers 503 vertex_not_enabled.
-// ═══════════════════════════════════════════════════════════════════════════
+// Shared Vertex configuration still serves CRM text fallback and provider
+// inventory; it is independent of the retired generated-fabric endpoint.
 const NANO_BANANA_MODEL = process.env.NANO_BANANA_MODEL || 'gemini-3.1-flash-image';
 const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'us-central1';
 let _vertexProject = '';
@@ -2474,70 +2303,6 @@ async function vertexProject() {
   _vertexProject = (await r.text()).trim();
   return _vertexProject;
 }
-
-app.post('/api/visualize-fabric', requireAuthHeader, express.json({ limit: '1mb' }), async (req, res) => {
-  let user;
-  try { user = await requireAdmin(req); }
-  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
-  const rl = rateLimit(user.sub, user.email, 4);   // priced like an image, because it is one
-  if (!rl.ok) {
-    res.setHeader('Retry-After', String(rl.retry));
-    return res.status(429).json({ error: 'rate_limited', scope: rl.scope });
-  }
-
-  const f = (req.body || {}).fabric || {};
-  const clean = (v, n) => String(v || '').replace(/[^\w\s#.,%-]/g, '').slice(0, n).trim();
-  const bits = [clean(f.color, 40), clean(f.fiber, 60), clean(f.weave, 60)].filter(Boolean);
-  if (!bits.length) return res.status(400).json({ error: 'missing_fabric_traits' });
-  const extra = [clean(f.texture, 60), f.sheen ? clean(f.sheen, 24) + ' sheen' : '',
-                 Number(f.weight_gsm) > 0 ? Math.round(Number(f.weight_gsm)) + ' gsm weight class' : '']
-                .filter(Boolean).join(', ');
-  const hex = /^#[0-9a-fA-F]{6}$/.test(String(f.hex || '')) ? String(f.hex) : '';
-  const prompt = 'A flat, evenly lit macro photograph style illustration of a single fabric swatch filling the whole frame: '
-    + bits.join(' ') + (extra ? ', ' + extra : '') + (hex ? '. The dominant color is exactly ' + hex + '.' : '.')
-    + ' Show the weave texture clearly. No garments, no hands, no props, no text.';
-
-  try {
-    const [tok, project] = await Promise.all([
-      serviceToken('https://www.googleapis.com/auth/cloud-platform'), vertexProject(),
-    ]);
-    const url = 'https://' + VERTEX_LOCATION + '-aiplatform.googleapis.com/v1/projects/' + project +
-      '/locations/' + VERTEX_LOCATION + '/publishers/google/models/' + NANO_BANANA_MODEL + ':generateContent';
-    const t0 = Date.now();
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { responseModalities: ['IMAGE'] },
-      }),
-      signal: AbortSignal.timeout(60000),
-    });
-    if (!r.ok) {
-      const txt = (await r.text()).slice(0, 600);
-      console.error('[visualize] vertex', r.status, '—', txt);
-      if (r.status === 403 && /aiplatform|SERVICE_DISABLED|has not been used/i.test(txt)) {
-        return res.status(503).json({ error: 'vertex_not_enabled',
-          detail: 'Enable the Vertex AI API (aiplatform.googleapis.com) on this Google Cloud project, then try again.' });
-      }
-      if (r.status === 404) {
-        return res.status(503).json({ error: 'vertex_model_unavailable', detail: NANO_BANANA_MODEL });
-      }
-      return res.status(502).json({ error: 'visualize_failed' });
-    }
-    const j = await r.json();
-    const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
-    const img = parts.find(p => p.inlineData && /^image\//.test(p.inlineData.mimeType || ''));
-    if (!img || !img.inlineData.data) return res.status(502).json({ error: 'no_image_returned' });
-    console.log('[ai]', JSON.stringify({ path: 'vertex:' + NANO_BANANA_MODEL, model: NANO_BANANA_MODEL,
-      ms: Date.now() - t0, user: user.email }));
-    return res.json({ ok: true, label: 'GENERATED',
-      image: 'data:' + img.inlineData.mimeType + ';base64,' + img.inlineData.data });
-  } catch (e) {
-    console.error('[visualize] exception —', e.message);
-    return res.status(502).json({ error: 'visualize_failed', detail: e.message });
-  }
-});
 
 // ── Google Analytics (GA4 Data API) via the Cloud Run service account ──────
 async function gaMeta(path) {

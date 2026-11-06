@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {chromium,webkit} from 'playwright';
 import {readFileSync,existsSync} from 'node:fs';
 import {validDesign} from '../backend/server/design-config.mjs';
+import {createFabricSearch} from '../backend/server/fabrics.mjs';
 import {resolve,extname} from 'node:path';
 const root=resolve(new URL('../',import.meta.url).pathname);
 const assets=existsSync(root+'/docs/aesthetics')?'/docs':'';
@@ -29,10 +30,11 @@ try{
    items=[{id:1,card:{favorited:true,image:'/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',caption:'Midnight velvet tailored coat'}}];_renderFavoritesScroller();
   });
   assert.deepEqual(await page.locator('#page-indicator button').evaluateAll(nodes=>nodes.map(n=>n.title)),['Inspo','Favorites','Community']);
+  assert.deepEqual(await page.locator('#screens > section').evaluateAll(nodes=>nodes.map(n=>n.id)),['screen-inspo','screen-favorites','screen-community']);
+  await page.waitForFunction(()=>document.querySelector('#page-indicator button.active')?.title==='Inspo');
   for(const [screen,dot,selector] of [[2,'dot-3','.favorite-card'],[0,'dot-1','.community-card']]){
-   await page.evaluate(screen=>{const host=document.getElementById('screens');host.scrollTop=host.querySelector('[data-screen="'+screen+'"]').offsetTop;_syncScreenUI(screen);},screen);
-   await page.waitForTimeout(100);
-   assert.ok(await page.locator('#'+dot).evaluate(e=>e.classList.contains('active')));
+   await page.locator('#'+dot).click();
+   await page.waitForFunction(({screen,dot})=>{const host=document.getElementById('screens'),section=host.querySelector('[data-screen="'+screen+'"]');return Math.abs(host.scrollTop-section.offsetTop)<2&&document.getElementById(dot).getAttribute('aria-current')==='page';},{screen,dot});
    await page.waitForFunction(label=>document.getElementById('brand-title').textContent===label,screen===0?'COMMUNITY':'FAVORITES');
    const bounds=await page.locator(selector).evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return [r.top,r.bottom];}));
    if(bounds.some(([t,b])=>b===0))console.log(await page.evaluate(()=>({body:document.body.className,screen:currentScreen,rows:[...document.querySelectorAll('#screens>section')].map(e=>({id:e.id,display:getComputedStyle(e).display,top:e.offsetTop,height:e.offsetHeight})),host:document.getElementById('screens').scrollTop,card:document.querySelector('.favorite-card')?.outerHTML})));
@@ -40,6 +42,9 @@ try{
   }
   await page.evaluate(()=>{_syncScreenUI(2);_syncScreenUI(0);});
   await page.waitForTimeout(250);assert.equal(await page.locator('#brand-title').textContent(),'COMMUNITY','A late title transition must not overwrite the current screen');
+  // Natural scroll must update the indicator without a UI synchronization call.
+  await page.evaluate(()=>document.getElementById('screens').scrollTop=0);
+  await page.waitForFunction(()=>document.querySelector('#page-indicator button.active')?.title==='Inspo'&&document.getElementById('brand-title').textContent==='MAYA');
   assert.match(await page.locator('#top-left-brand img').getAttribute('src'),/logo-circle/);
   if(process.env.MAYA_CAPTURE&&(width===1194||width===390))await page.screenshot({path:`/private/tmp/maya-cleanup-${width}-community.png`,animations:'disabled'});
   await page.evaluate(()=>{
@@ -126,7 +131,17 @@ await page.route('**/*',async route=>{
  if(u.hostname!=='maya-gallery.test')return route.abort();
  if(u.pathname==='/api/design')return route.fulfill({json:saved});
  if(u.pathname==='/api/admin/design'){saved=route.request().postDataJSON();assert.ok(validDesign(saved));return route.fulfill({json:{ok:true,savedAt:'2026-11-04'}});}
- if(u.pathname==='/api/admin/fabrics/search'){calls++;if(holdSearch)await new Promise(resolve=>{releaseSearch=resolve;});return route.fulfill({contentType:'application/x-ndjson',body:JSON.stringify({type:'done',products:products.map(p=>({...p,image:p.image+(failed?'?failure=1':'')})),observation:'Long interpretation must stay outside the photo layout.',message:'Fabric photographs.',searchDetails:{query:'Green apparel fabric',observation:'Qualified reference interpretation.'}})+'\n'});}
+ if(u.pathname==='/api/admin/fabrics/search'){
+  calls++;if(holdSearch)await new Promise(resolve=>{releaseSearch=resolve;});
+  // Exercise the real adapter from the documented OpenAI payload to the browser.
+  const events=[],service=createFabricSearch({apiKey:()=> 'fixture',fetchImpl:async target=>{
+   assert.equal(target,'https://api.openai.com/v1/responses');
+   const results=products.map(p=>({type:'image_result',source_website_url:p.url,image_url:p.image+(failed?'?failure=1':''),caption:p.title}));
+   return new Response('data: '+JSON.stringify({type:'response.completed',response:{status:'completed',output:[{type:'web_search_call',results}]}})+'\n\n');
+  }});
+  await service.search({sub:'gallery-owner'},{request:'Green apparel fabric',image:reference},event=>events.push(event));
+  return route.fulfill({contentType:'application/x-ndjson',body:events.map(e=>JSON.stringify(e)).join('\n')+'\n'});
+ }
  if(u.pathname.startsWith('/api/'))return route.fulfill({json:{items:[],generation:'0'}});
  try{return route.fulfill({body:readFileSync(resolve(root,'.'+(u.pathname.startsWith('/aesthetics/')?'/docs':'')+decodeURIComponent(u.pathname))),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.JPG':'image/jpeg'})[extname(u.pathname)]||'text/plain'});}catch{return route.abort();}
 });
@@ -157,7 +172,15 @@ try{
     assert.deepEqual(global.controls,['In House','Global','Favorites','Refresh fabrics',mode==='inline'?'Expand':'Collapse']);
     assert.ok(global.title.height<=(parseFloat(global.title.line)||parseFloat(global.title.size)*1.5)+1);assert.ok(global.caption.height<=(parseFloat(global.caption.line)||parseFloat(global.caption.size)*1.5)+1);
     await page.locator('.fa-results').evaluate(el=>el.scrollTop=190);const globalScroll=await page.locator('.fa-results').evaluate(el=>el.scrollTop);await tab('In House').click();await page.locator('.fa-results').evaluate(el=>el.scrollTop=190);assert.equal(await page.locator('.fa-results').evaluate(el=>el.scrollTop),globalScroll);
-    if(mode==='inline'&&(width===390||width===1440)){await page.locator('.fa-results').evaluate(el=>el.scrollTop=0);process.env.MAYA_CAPTURE&&await page.screenshot({path:'/private/tmp/maya-inhouse-'+design+'-'+width+'.png'});await tab('Global').click();process.env.MAYA_CAPTURE&&await page.screenshot({path:'/private/tmp/maya-global-'+design+'-'+width+'.png'});}
+    if(mode==='inline'&&(width===390||width===1440)){
+     await page.locator('.fa-results').evaluate(el=>el.scrollTop=0);
+     for(const [name,file] of [['In House','inhouse'],['Global','global']]){
+      await tab(name).click();
+      await page.locator('.fa-product-image').evaluateAll(images=>Promise.all(images.map(image=>image.decode())));
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      process.env.MAYA_CAPTURE&&await page.screenshot({path:'/private/tmp/maya-'+file+'-'+design+'-'+width+'.png'});
+     }
+    }
    }
    if(mode==='expanded')await page.getByRole('button',{name:'Collapse',exact:true}).click();
   }

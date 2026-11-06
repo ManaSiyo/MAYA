@@ -19,9 +19,11 @@ The owner requested this location and the November 5 repository consolidation.
 - Keep necessary legacy migration/Storage cleanup code until migration is proven.
   Retired files live under _to_delete for the owner's final removal; do not restore
   them as active features. Node dependencies are intentionally retained.
-- Global Fabrics uses sourced worldwide images; require provider citations and
-  page-linked image URLs. No invented URLs/facts, arbitrary server fetches or
-  automatic paid retry. In House and Global use exactly the same gallery layout.
+- Fabrics has one backend module, server/fabrics.mjs: one OpenAI Responses image
+  search, up to ten source-linked photos. Do not restore the retired retailer feeds,
+  scraping, custom candidate ranking or generated swatch paths. No invented
+  URLs/facts, arbitrary server fetches or automatic paid retry. In House and Global
+  use exactly the same gallery layout.
   Known exclusions retract results and private caches. Preserve cancellation and
   the WeakMap holding Node20 combined abort-signal sources.
 - Uploaded/camera avatars save automatically; a photo can visualize without

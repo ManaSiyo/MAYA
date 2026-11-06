@@ -2,6 +2,26 @@
 // Each named check has its own scope; run all through node docs/check.mjs.
 export const checks = {};
 
+checks['server-startup']=async function(){
+ const {spawnSync}=await import('node:child_process');
+ const result=spawnSync(process.execPath,['--input-type=module','-e',`
+  import assert from 'node:assert/strict';
+  import http from 'node:http';
+  const listen=http.Server.prototype.listen;let server;
+  http.Server.prototype.listen=function(_port,callback){server=this;return listen.call(this,0,'127.0.0.1',callback);};
+  globalThis.fetch=async()=>{throw Error('External provider access is disabled in startup tests');};
+  globalThis.setInterval=()=>({unref(){}});
+  await import('./backend/server/server.js');
+  if(!server.listening)await new Promise(resolve=>server.once('listening',resolve));
+  const request=path=>new Promise((resolve,reject)=>http.get({hostname:'127.0.0.1',port:server.address().port,path},res=>{res.resume();res.once('end',()=>resolve(res.statusCode));}).once('error',reject));
+  assert.equal(await request('/api/healthz'),200);
+  for(const path of ['/api/source-fabric','/api/rank-fabric','/api/visualize-fabric'])assert.equal(await request(path),410);
+  assert.equal(await request('/api/admin/models'),401);
+  server.close();process.exit(0);
+ `],{cwd:new URL('../',import.meta.url),env:{PATH:process.env.PATH,K_SERVICE:'fixture-cloud-run',PORT:'0'},encoding:'utf8',timeout:10000});
+ const {default:assert}=await import('node:assert/strict');assert.equal(result.status,0,result.stdout+result.stderr);
+};
+
 checks['lead-store']=async function(){
 const {default:assert}=await import('node:assert/strict');
 const {readFileSync}=await import('node:fs');
@@ -1564,614 +1584,104 @@ console.log('realtime-voice: '+passed+' checks passed; no production audio or la
 
 };
 
-checks['fabric-search']=async function(){
-// Behavioral evidence for conversational fabric discovery. No live AI or merchant calls.
-const {default:assert}=await import('node:assert/strict');
-const { readFileSync }=await import('node:fs');
-const {default:vm}=await import('node:vm');
-const { FABRIC_SHOPS, FABRIC_STORE_GROUPS, merchantURL, normalizeFabricRequest : normalizeRequest, requestedShops, webSearchBody, readDiscovery, parseListing, applyShopifyVariant, createFabricSearch : createSearch, mountFabricSearch }=await import('../backend/server/fabric-search.mjs');
-
-// These legacy seller/visual/storage contracts now belong to the explicit
-// optional retailer path. Worldwide default behavior is exercised separately.
-const normalizeFabricRequest=body=>normalizeRequest({mode:'retailers',...body});
-function createFabricSearch(options){const service=createSearch(options);return {...service,search:(user,body,...rest)=>service.search(user,{mode:'retailers',...body},...rest)};}
-
-const user={sub:'owner-A',email:'owner@example.test'}, second={sub:'owner-B',email:'other@example.test'};
-const url='https://britexfabrics.com/products/crimson-wool';
-const other='https://stonemountainfabric.com/product/wool-twill/';
-const image='data:image/png;base64,iVBORw0KGgo=';
-const seller=(overrides={})=>'<html><script type="application/ld+json">'+JSON.stringify({
-  '@type':'Product',name:'Crimson wool twill',description:'100% wool. 61 inches wide. Sold by the yard.',
-  image:'https://cdn.shopify.com/wool.jpg',material:'100% wool',url,
-  offers:{'@type':'Offer',price:'69.99',priceCurrency:'USD',availability:'https://schema.org/InStock',url},...overrides,
-})+'</script></html>';
-const response=(data={})=>({status:'completed',output:[{type:'web_search_call',action:{sources:[{url},{url:other}]}},
-  {type:'message',content:[{type:'output_text',text:JSON.stringify({query:'burgundy matte wool twill',observation:'Burgundy, matte and twill-like; composition cannot be confirmed from the image.',candidates:[{url,reason:'May suit the requested matte wool.'}],...data})}]}]});
-let count=0;
-async function test(name,run){await run();count++;console.log('  ok '+name);}
+checks['fabrics']=async function(){
+const {createFabricSearch,normalizeFabricRequest,fabricSearchBody,sourceURL,mountFabricSearch}=await import('../backend/server/fabrics.mjs');
+const user={sub:'owner-A'},second={sub:'owner-B'},image='data:image/png;base64,aW1hZ2U=',url='https://cloth.example/product/red',other='https://cloth.example/product/other';
+let count=0;const test=async(name,run)=>{await run();count++;console.log('  ok '+name);};
+const entry=(i=0,extra={})=>({type:'image_result',source_website_url:'https://cloth.example/product/'+i,image_url:'https://photo.example/'+i+'.jpg',thumbnail_url:'https://photo.example/'+i+'-thumb.jpg',caption:'Red apparel fabric',...extra});
+const item=results=>({type:'web_search_call',status:'completed',results});
+const done=output=>({type:'response.completed',response:{status:'completed',output}});
+const wire=events=>events.map(event=>'data: '+JSON.stringify(event)+'\r\n\r\n').join('');
+const response=results=>new Response(wire([done([item(results)])]),{headers:{'Content-Type':'text/event-stream'}});
 function store(){
-  const records=new Map([['submissions/project-A/submission.json',{buf:Buffer.from('{}'),generation:'1'}],['submissions/project-B/submission.json',{buf:Buffer.from('{}'),generation:'1'}],['submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({client:{name:'PRIVATE NAME'},fabric_preferences:'100% wool, no polyester'})),generation:'1'}]]);
-  return {records,read:async key=>records.has(key)?{ok:true,...records.get(key)}:{ok:false,status:404},write:async(key,buf,type,generation)=>{assert.equal(type,'application/json');if(String(records.get(key)?.generation||'0')!==generation)throw Object.assign(Error('conflict'),{status:412});records.set(key,{buf,generation:String(Number(generation)+1)});}};
+ const records=new Map(['project-A','project-B'].map(id=>['submissions/'+id+'/submission.json',{buf:Buffer.from('{}'),generation:'1'}]));
+ return {records,read:async key=>records.has(key)?{ok:true,...records.get(key)}:{ok:false,status:404},write:async(key,buf,type,generation)=>{assert.equal(type,'application/json');if(String(records.get(key)?.generation||'0')!==generation)throw Object.assign(Error('conflict'),{status:412});records.set(key,{buf,generation:String(Number(generation)+1)});}};
 }
-await test('a tracksuit sources separate body, panels, inserts and textile trim in one checked search',async()=>{
-  const s=store(),events=[],pieces=['Track jacket','Track pants'].map((name,i)=>({id:'track-'+i,name,fabric:'Green synthetic-looking knit, possibly polyester tricot',fabric_spec:{weave:'knit-like',texture:'smooth'}}));
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
-  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{"fabric_preferences":[]}'),generation:'1'});
-  const materials=[
-    {id:'body',role:'body',label:'Green body',fabric:'Green tricot knit',garmentIds:['track-0','track-1']},
-    {id:'gold',role:'panel',label:'Gold shoulder panels',fabric:'Gold satin',garmentIds:['track-0']},
-    {id:'ivory',role:'panel',label:'Ivory inserts',fabric:'Ivory knit',garmentIds:['track-0','track-1']},
-    {id:'trim',role:'trim',label:'Gold laurel textile trim',fabric:'Gold ivory jacquard trim',garmentIds:['track-0','track-1']},
-    {id:'rib',role:'ribbing',label:'Green cuffs and waistband',fabric:'Green rib knit',garmentIds:['track-0','track-1']},
-  ];
-  const listings=[['body','Forest Green Polyester Tricot Fabric','Smooth polyester tricot knit fabric, sold by the yard.'],['gold','Champagne Gold Satin Fabric','Polyester satin fabric sold by the yard.'],['ivory','Ivory Cotton Interlock Knit Fabric','Cotton interlock knit fabric sold by the yard.'],['trim','Gold Leaf Jacquard Textile Trim','Gold leaves woven on ivory cotton jacquard trim fabric, sold by the yard.']].map(([id,name,description])=>({id,name,description,url:'https://www.moodfabrics.com/products/'+id}));
-  const answer=response({materials,candidates:listings.map(p=>({url:p.url,materialId:p.id,reason:'For this part of the reference.'}))});
-  answer.output[0].action.sources=listings.map(p=>({url:p.url}));
-  let webCalls=0,rankCalls=0,visualOutcome='accept';
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
-    if(target.includes('openai.com')){webCalls++;assert.match(JSON.parse(options.body).instructions,/panels/i);return Response.json(answer);}
-    if(target.includes('/search/suggest.json'))return Response.json({resources:{results:{products:[]}}});
-    const p=listings.find(p=>p.url===target);assert.ok(p,'Only evidenced approved listings are fetched');
-    return new Response(seller({name:p.name,description:p.description,url:p.url,material:'',image:'https://seller.example/'+p.id+'.jpg'}));
-  },rank:async({products,traits})=>{rankCalls++;assert.ok(products.length<=8);assert.equal(traits.materials.length,5);assert.equal(products.find(p=>p.materialId==='gold').garmentId,'track-0');assert.equal(products.find(p=>p.materialId==='ivory').garmentId,undefined);if(visualOutcome==='error')throw Error('fake visual failure');return visualOutcome==='accept'?products:[];}});
-  await service.search(user,{submissionId:'project-A',automatic:true,image},event=>events.push(event));
-  assert.equal(webCalls,1);assert.equal(rankCalls,1);
-  assert.deepEqual(events.at(-1).products.map(p=>p.materialId).sort(),['body','gold','ivory','trim']);
-  assert.match(events.at(-1).searchDetails.stage,/Green cuffs and waistband/,'Missing components remain explicit instead of claiming the look is covered');
-  assert.equal(events.at(-1).products.find(p=>p.materialId==='gold').price,'69.99','Facts still come from the fetched seller, never the planner');
-  for(const outcome of ['reject','error']){visualOutcome=outcome;const beforeCalls=webCalls;await service.search(user,{submissionId:'project-A',automatic:true,image},event=>events.push(event));assert.deepEqual(events.at(-1).products,[],'Component hints never bypass failed or rejecting photo comparison');assert.equal(webCalls,beforeCalls+1,'No automatic paid retry');}
-});
-await test('component plans stay scoped and distinct textiles share the eight candidate slots',()=>{
-  const materials=['body','gold','ivory','trim'].map((id,i)=>({id,role:i?'panel':'body',label:id,fabric:i?'Gold satin':'Green knit',garmentIds:['track']}));
-  const candidates=Array.from({length:6},(_,i)=>({url:'https://www.moodfabrics.com/products/body-'+i,materialId:'body'})).concat(materials.slice(1).map(m=>({url:'https://www.moodfabrics.com/products/'+m.id,materialId:m.id})));
-  const answer=response({materials,candidates});answer.output[0].action.sources=candidates.map(c=>({url:c.url}));
-  const input={pieces:[{id:'track',name:'Track jacket'}]};
-  const parsed=readDiscovery(answer,input);assert.equal(parsed.candidates.length,8);assert.deepEqual(parsed.candidates.slice(0,4).map(c=>c.materialId),['body','gold','ivory','trim'],'Body alternatives cannot consume every slot');
-  const stale=readDiscovery(answer,{pieces:[{id:'different',name:'Track jacket'}]});assert.deepEqual(stale.materials,[]);assert.deepEqual(stale.candidates,[],'A matching name cannot override a stale/foreign garment ID');
-  const duplicate=response({materials:[materials[0],{...materials[0],fabric:'Red velvet'}],candidates:[candidates[0]]});duplicate.output[0].action.sources=[{url:candidates[0].url}];
-  assert.deepEqual(readDiscovery(duplicate,input).candidates,[],'Ambiguous component IDs fail closed');
-  const unsupported=response({materials:[{...materials[0],role:'zipper'}],candidates:[candidates[0]]});unsupported.output[0].action.sources=[{url:candidates[0].url}];
-  assert.deepEqual(readDiscovery(unsupported,input).candidates,[],'The fabric plan cannot turn hardware into a textile');
-});
-await test('full-look matching keeps a verified shared fabric without inventing a garment ID',async()=>{
-  const s=store(),events=[];s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'jacket',name:'Jacket',fabric:'Crimson wool twill'},{id:'pants',name:'Pants',fabric:'Crimson wool twill'}]})),generation:'1'});
-  let rankCalls=0;const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async target=>target.includes('openai.com')?Response.json(response()):target.includes('/search/suggest.json')?Response.json({resources:{results:{products:[]}}}):new Response(seller()),rank:async ({products})=>{rankCalls++;return products;}});
-  await service.search(user,{submissionId:'project-A',automatic:true,image},e=>events.push(e));
-  assert.equal(rankCalls,1);assert.equal(events.at(-1).products.length,1);assert.equal(events.at(-1).products[0].garment,'Jacket & Pants');assert.equal(events.at(-1).products[0].garmentId,undefined);
-});
-await test('saved tracksuit and qualified tailcoat fabrics reach one visual check with seller facts intact',async()=>{
-  const cases=[
-    {names:['Track jacket','Track pants'],fabric:'Green synthetic-looking knit, possibly polyester tricot',fabric_spec:{weave:'knit-like',sheen:'subtle sheen',texture:'smooth'},name:'Forest Green Polyester Tricot Fabric',description:'Smooth warp knitted fabric with a satin finish. Sold by the yard.'},
-    {names:['Tailcoat','Slim trousers'],fabric:'Green embroidered satin-sheen woven',fabric_spec:{weave:'smooth woven, possibly twill-like',sheen:'moderate satin sheen',texture:'smooth'},name:'Forest Green Polyester Satin Fabric',description:'Smooth polyester satin, sold by the yard.'},
-  ];
-  for(const sample of cases){
-    const pieces=sample.names.map((name,i)=>({id:'piece-'+i,name,fabric:sample.fabric,fabric_spec:{fiber:'',stretch:'',...sample.fabric_spec}}));
-    for(const outcome of ['match','reject','error','unavailable','excluded']){
-      const s=store(),events=[];let rankCalls=0,webCalls=0;
-      s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
-      s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:outcome==='excluded'?'No polyester':[]})),generation:'1'});
-      const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
-        if(target.includes('openai.com')){
-          webCalls++;const sent=JSON.parse(JSON.parse(options.body).input[0].content[0].text);
-          assert.deepEqual(sent.garments.map(({id,name,fabric,fabric_spec})=>({id,name,fabric,fabric_spec})),pieces,'Original saved descriptions must reach discovery unchanged');
-          return Response.json(response());
-        }
-        if(target.includes('/search/suggest.json'))return Response.json({resources:{results:{products:[]}}});
-        return new Response(seller({name:sample.name,description:sample.description,material:'100% polyester'}));
-      },...(outcome==='unavailable'?{}:{rank:async ({products,traits,garmentImage})=>{
-        rankCalls++;assert.equal(products.length,1);assert.equal(products[0].url,url);
-        assert.equal(products[0].price,'69.99');assert.equal(products[0].unit,'yard');
-        assert.equal(products[0].garment,sample.names.join(' & '));assert.equal(products[0].garmentId,undefined);
-        assert.equal(garmentImage,image);assert.deepEqual(traits.garments.map(({id,name,fabric,fabric_spec})=>({id,name,fabric,fabric_spec})),pieces);
-        if(outcome==='error')throw Error('comparison unavailable');
-        return outcome==='match'?products:[];
-      }})});
-      await service.search(user,{submissionId:'project-A',automatic:true,image},e=>events.push(e));
-      assert.equal(webCalls,1,'No extra paid discovery attempts');
-      assert.equal(rankCalls,['match','reject','error'].includes(outcome)?1:0,outcome+' / '+sample.names[0]);
-      // Without a ranker the factual tricot listing still matches the saved
-      // knit family, but the alternative to a guessed twill cannot be confirmed.
-      const count=outcome==='match'||outcome==='unavailable'&&sample===cases[0]?1:0;
-      assert.equal(events.at(-1).products.length,count,outcome+' / '+sample.names[0]);
-    }
-  }
-});
-await test('only approved seller product URLs can become candidates',()=>{
-  for(const bad of ['http://britexfabrics.com/products/a','https://britexfabrics.com.evil.test/products/a','https://127.0.0.1/a','https://user@britexfabrics.com/products/a','https://britexfabrics.com:8443/products/a','https://britexfabrics.com/search?q=wool'])assert.equal(merchantURL(bad,true),null);
-  assert.equal(merchantURL(url+'?utm_source=test',true).url,url);
-  assert.ok(merchantURL('https://amazon.com/dp/B000000001',true));
-  assert.ok(FABRIC_SHOPS.some(s=>s.name==='Harts Fabric'));
-});
-await test('photo, words and refinements use one search with bounded tools and no server storage',()=>{
-  const input=normalizeFabricRequest({request:'less shiny, only Britex',image,history:[{request:'red wool',query:'red wool twill'}],piece:{fabric_spec:{fiber:'wool',weave:'twill'}},preferences:'no polyester'});
-  const body=webSearchBody(input,'configured-model');
-  assert.equal(body.model,'configured-model');assert.equal(body.store,false);assert.equal(body.max_tool_calls,3);assert.equal(body.tool_choice,'required');
+const put=(s,key,data)=>s.records.set(key,{buf:Buffer.from(JSON.stringify(data)),generation:'1'});
+const create=(options={})=>createFabricSearch({apiKey:()=> 'fixture',fetchImpl:async()=>response([entry()]),...options});
+await test('one direct OpenAI request returns up to ten source-linked photos without a second engine',async()=>{
+ let calls=0;const events=[];
+ const service=create({fetchImpl:async(target,options)=>{
+  calls++;assert.equal(target,'https://api.openai.com/v1/responses');const body=JSON.parse(options.body);
+  assert.equal(body.max_tool_calls,1);assert.equal(body.store,false);assert.equal(body.stream,true);assert.equal(body.max_output_tokens,800);
+  assert.deepEqual(body.include,['web_search_call.results']);assert.deepEqual(body.tools[0].search_content_types,['image','text']);assert.equal(body.tools[0].image_settings.max_results,10);assert.equal(body.tools[0].filters,undefined);
   assert.equal(body.input[0].content[1].image_url,image);
-  assert.match(body.input[0].content[0].text,/less shiny, only Britex/);assert.match(body.input[0].content[0].text,/no polyester/);
-  assert.deepEqual(body.tools[0].filters.allowed_domains,['britexfabrics.com']);
-  const broad=webSearchBody(normalizeFabricRequest({request:'red wool'}),'configured-model');
-  assert.ok(broad.tools[0].filters.allowed_domains.includes('amazon.com'));assert.ok(broad.tools[0].filters.allowed_domains.includes('stonemountainfabric.com'));
-  assert.equal(requestedShops(normalizeFabricRequest({request:'less shiny',history:[{request:'only Brightex'}]}))[0].name,'Britex Fabrics');
-  assert.deepEqual(requestedShops(normalizeFabricRequest({request:'only local'})).map(s=>s.place),['San Francisco','Berkeley','Santa Cruz']);
-  assert.throws(()=>normalizeFabricRequest({request:'x',image:'https://private.test/photo'}));
-  assert.throws(()=>normalizeFabricRequest({request:'x',submissionId:'../project'}));
+  return new Response(wire([done([{type:'message',content:[{type:'output_text',text:'{"image_url":"https://invented.example/a.jpg","url":"https://invented.example"}'}]},item([entry(0),entry(0),entry(1,{caption:''}),...Array.from({length:14},(_,i)=>entry(i+2))])])]));
+ }});
+ await service.search(user,{request:'red fabric',image,stores:['ignored.example']},event=>events.push(event));
+ assert.equal(calls,1);assert.equal(events.at(-1).products.length,10);assert.equal(events.at(-1).type,'done');
+ const products=events.at(-1).products;assert.equal(products[1].title,'Fabric suggestion');assert.ok(products.every(p=>p.price===''&&p.composition===''&&p.availability==='unknown'&&p.imageCandidates.length===2));assert.doesNotMatch(JSON.stringify(products),/invented/);
+ const scoped=fabricSearchBody(normalizeFabricRequest({request:'wool',mode:'retailers',stores:['moodfabrics.com']}));assert.deepEqual(scoped.tools[0].filters.allowed_domains,['moodfabrics.com']);
+ for(const stores of [[],['bad host'],['moodfabrics.com','bad host']])assert.throws(()=>normalizeFabricRequest({request:'wool',mode:'retailers',stores}));
 });
-await test('five explicit store groups replace stale merchant-only history without broadening invalid filters',()=>{
-  assert.deepEqual(FABRIC_STORE_GROUPS.map(group=>group.label),['Local (Bay Area)','Mood','Swatchon','Amazon','Others']);
-  const ui=readFileSync(new URL('../docs/aesthetics/ui/fabric-assistant.js',import.meta.url),'utf8');
-  const browserGroups=JSON.parse(vm.runInNewContext(ui.slice(ui.indexOf('const storeGroups='),ui.indexOf('let searchSeq='))+'JSON.stringify(storeGroups)'));
-  assert.deepEqual(browserGroups,FABRIC_STORE_GROUPS.map(group=>({...group,hosts:group.hosts.map(host=>host.replace(/^www\./,''))})),'Browser and server classify every approved merchant identically');
-  for(const group of FABRIC_STORE_GROUPS){
-    const input=normalizeFabricRequest({request:'less shiny, only Britex',history:[{request:'only Britex red wool'}],storeGroups:[group.id]});
-    assert.deepEqual(requestedShops(input).map(shop=>shop.host).sort(),[...group.hosts].sort());
-    const payload=webSearchBody(input,'fixture');assert.match(payload.input[0].content[0].text,/less shiny/);assert.match(payload.instructions,/never confirms pickup/);
-  }
-  assert.deepEqual(requestedShops(normalizeFabricRequest({request:'red wool',stores:['moodfabrics.com']})).map(shop=>shop.name),['Mood Fabrics']);
-  for(const storeGroups of [[],['unknown'],['local','unknown'],'mood'])assert.throws(()=>normalizeFabricRequest({request:'wool',storeGroups}),/supported store/);
-  assert.throws(()=>normalizeFabricRequest({request:'wool',stores:['evil.test']}),/supported fabric store/);
-  assert.equal(requestedShops(normalizeFabricRequest({request:'wool'})).length,FABRIC_SHOPS.length,'No silent local-only default');
+await test('source links reject unsafe addresses and never invent photographs from text',async()=>{
+ for(const value of ['javascript:alert(1)','http://example.com','https://user:pass@example.com','https://127.0.0.1','https://x.internal','https://[::1]','https://example.com:123'])assert.equal(sourceURL(value),'');
+ const events=[];await create({fetchImpl:async()=>response([entry(0,{image_url:'javascript:1',thumbnail_url:''}),entry(1,{source_website_url:'https://127.0.0.1'}),entry(2,{image_url:'',thumbnail_url:'https://photos.example/2.jpg'})])}).search(user,{request:'fabric'},e=>events.push(e));
+ assert.equal(events.at(-1).products.length,1);assert.equal(events.at(-1).products[0].image,'https://photos.example/2.jpg');
 });
-await test('Swatchon uses exact sourced product paths and SKU photos, never aggregate or swatch prices',()=>{
-  const link='https://www.swatchon.com/fabric/QL-061078';
-  for(const good of [link,'https://swatchon.com/wholesale-fabric/14620'])assert.equal(merchantURL(good,true).shop.name,'Swatchon');
-  for(const bad of ['https://www.swatchon.com/fabric','https://www.swatchon.com/products/invented','https://www.swatchon.com/fabric/wool','https://www.swatchon.com/help/articles/how-swatchon-works','https://swatchon.com.evil.test/fabric/QL-061078'])assert.equal(merchantURL(bad,true),null);
-  const html=seller({name:'Enzyme Cotton Twill',url:link,sku:'QL-061078',image:[],description:'Cotton 100%. Order from 1 yard, ships from Korea.',offers:{'@type':'AggregateOffer',lowPrice:7.48,highPrice:12.47,priceCurrency:'USD',url:link}})+'<meta property="og:image" content="https://www.swatchon.com/images/og-default.png"><img src="https://seller.test/unrelated.jpg" alt="QL-000001 1"><img src="https://seller.test/QL-061078.jpg" alt="QL-061078 1">';
-  const p=parseListing(html,link);assert.equal(p.image,'https://seller.test/QL-061078.jpg');assert.equal(p.price,'');assert.equal(p.unit,'');assert.equal(p.availability,'unknown');assert.equal(p.place,'Online');
-  assert.equal(parseListing(html.replace(/<img[^>]+>/g,''),link).image,'','A site logo cannot become a fabric photo');
-  assert.equal(parseListing(seller({name:'Cotton Swatch',url:link,description:'Sold by the yard.'}),link).isSwatch,true);
+await test('photos stream before completion; later explicit exclusions retract even on failure',async()=>{
+ let controller;const events=[],service=create({fetchImpl:async()=>new Response(new ReadableStream({start(c){controller=c;}}))});
+ const pending=service.search(user,{request:'red fabric',preferences:'no polyester'},e=>events.push(e));
+ while(!controller)await new Promise(r=>setImmediate(r));
+ const send=e=>controller.enqueue(new TextEncoder().encode(wire([e])));
+ send({type:'response.output_item.done',item:item([entry()])});
+ while(!events.some(e=>e.type==='products'))await new Promise(r=>setImmediate(r));
+ assert.equal(events.some(e=>e.type==='done'),false);
+ send({type:'response.output_item.done',item:item([entry(0,{caption:'Red polyester apparel fabric'})])});
+ send({type:'response.failed'});await assert.rejects(pending,/stopped/);
+ assert.deepEqual(events.at(-1).products,[]);assert.deepEqual(events.at(-1).removedUrls,[entry().source_website_url]);assert.equal(events.some(e=>e.type==='done'),false);
 });
-await test('Swatchon-only discovery keeps refinements, verifies seller facts and rejects other approved merchants',async()=>{
-  const link='https://www.swatchon.com/fabric/QL-061078',events=[],visits=[];
-  const discovery=response({candidates:[{url:link,price:'1.00',reason:'Wool twill.'},{url}]});discovery.output[0].action.sources.push({url:link});
-  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
-    if(target.includes('openai.com'))return Response.json(discovery);
-    visits.push(target);assert.equal(target,link);return new Response(seller({url:link,offers:{'@type':'AggregateOffer',lowPrice:7,highPrice:20,priceCurrency:'USD'}}));
-  }});
-  await service.search(user,{request:'less shiny crimson wool',history:[{request:'only Britex wool'}],storeGroups:['swatchon']},event=>events.push(event));
-  assert.deepEqual(visits,[link]);assert.deepEqual(events.at(-1).products.map(p=>p.url),[link]);assert.equal(events.at(-1).products[0].price,'');
-  const redirected=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>target.includes('openai.com')?Response.json(discovery):target===link?new Response('',{status:302,headers:{location:url}}):new Response(seller())});
-  const redirectedEvents=[];await redirected.search(user,{request:'crimson wool',storeGroups:['swatchon'],history:[{request:'wool'}]},event=>redirectedEvents.push(event));
-  assert.deepEqual(redirectedEvents.at(-1).products,[],'An approved host redirect must still respect the selected group');
+await test('SSE handles Unicode split across every byte and truncated streams fail',async()=>{
+ const data=new TextEncoder().encode(wire([done([item([entry(0,{caption:'Rouge café fabric'})])])]));
+ const events=[];await create({fetchImpl:async()=>new Response(new ReadableStream({start(c){for(const byte of data)c.enqueue(Uint8Array.of(byte));c.close();}}))}).search(user,{request:'fabric'},e=>events.push(e));assert.equal(events.at(-1).products[0].title,'Rouge café fabric');
+ const partial=[];await assert.rejects(create({fetchImpl:async()=>new Response(wire([{type:'response.output_item.done',item:item([entry()])}]))}).search(user,{request:'fabric'},e=>partial.push(e)),/stopped/);assert.equal(partial.at(-1).products.length,1);assert.equal(partial.some(e=>e.type==='done'),false);
 });
-await test('ungrounded URLs, invented prices and unapproved sellers from AI are discarded',()=>{
-  const found=readDiscovery(response({candidates:[{url,price:'1.00',reason:'Close texture'},{url:'https://britexfabrics.com/products/invented'},{url:'https://evil.test/p'},{url}]}));
-  assert.equal(found.candidates.length,1);assert.equal(found.candidates[0].price,undefined);
-  assert.throws(()=>readDiscovery({status:'incomplete'}));
+await test('canonical saved garment and preferences replace browser guesses without sending contact data',async()=>{
+ const s=store();let body,calls=0;const service=create({...s,fetchImpl:async(_url,options)=>{calls++;body=JSON.parse(options.body);return response([entry()]);}});
+ await assert.rejects(service.search(user,{submissionId:'project-A',automatic:true},()=>{}),e=>e.status===409);
+ put(s,'submissions/project-A/summary.json',{fabric_preferences:'no polyester',client:{name:'PRIVATE CONTACT'}});
+ put(s,'submissions/project-A/pieces.json',{pieces:[{id:'coat',name:'Coat',fabric:'Red wool',_image:image},{id:'boots',name:'Boots',category:'footwear'}]});
+ await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'coat',fabric:'FORGED'},preferences:'FORGED'},()=>{});
+ assert.equal(calls,1);assert.equal(body.input[0].content[1].image_url,image);const context=JSON.parse(body.input[0].content[0].text);assert.equal(context.selectedGarment.fabric,'Red wool');assert.equal(context.clientFabricPreferences,'no polyester');assert.doesNotMatch(JSON.stringify(body),/FORGED|PRIVATE CONTACT/);
+ await assert.rejects(service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'unknown'}},()=>{}),e=>e.status===409);
+ put(s,'submissions/project-A/pieces.json',{pieces:[{id:'a',name:'Coat'},{id:'b',name:'Coat'}]});await assert.rejects(service.search(user,{submissionId:'project-A',automatic:true,piece:{name:'Coat'}},()=>{}),e=>e.status===409);
+ s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{'),generation:'2'});await assert.rejects(service.search(user,{submissionId:'project-A',automatic:true},()=>{}),e=>e.status===503);assert.equal(calls,1);
 });
-await test('seller facts, price unit and stock are extracted independently of AI',()=>{
-  const p=parseListing(seller(),url,0);
-  assert.equal(p.price,'69.99');assert.equal(p.unit,'yard');assert.equal(p.composition,'100% wool');assert.equal(p.availability,'in_stock');assert.equal(p.checkedAt,'1970-01-01T00:00:00.000Z');
-  const half=parseListing(seller({description:'Sold in half yard increments.'}),url);assert.equal(half.unit,'half yard');
-  assert.equal(parseListing(seller({description:'Drapey wool'}),url).price,'','Unknown selling unit hides price');
+await test('lookbooks are private bookmarks with generation and garment checks, no seller fetch',async()=>{
+ const s=store();put(s,'submissions/project-A/pieces.json',{pieces:[{id:'coat',name:'Coat',fabric:'wool'},{id:'pants',name:'Pants',fabric:'cotton'}]});
+ const service=create({...s,fetchImpl:async()=>{throw Error('Saving must not search or fetch a seller');}}),product={url,title:'Red cloth',image:'https://photos.example/red.jpg',price:'0.01',composition:'Invented',availability:'in_stock'};
+ let book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:'coat',product});
+ assert.equal(book.items[0].price,'');assert.equal(book.items[0].composition,'');assert.equal(book.items[0].availability,'unknown');assert.deepEqual(book.selectedByGarment,{coat:url});
+ assert.equal((await service.loadBook(second,'project-A')).items.length,0);assert.equal((await service.loadBook(user,'project-B')).items.length,0);
+ await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'0',action:'save',product}),e=>e.status===409);
+ await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'unknown',product}),e=>e.status===409);
+ book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'pants',product});assert.deepEqual(book.selectedByGarment,{coat:url,pants:url});
+ book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'remove',product});assert.deepEqual(book.selectedByGarment,{});assert.equal(book.items.length,0);
+ const results=await Promise.allSettled([1,2].map(()=>service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product})));assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal(results.find(r=>r.status==='rejected').reason.status,409);
 });
-await test('seller images require a real URL and choose the first valid structured or metadata fallback',()=>{
-  for(const image of [undefined,'',{},null,[],{url:null},'undefined','null'])assert.equal(parseListing(seller({image}),url).image,'','Missing image never becomes a fabricated relative URL');
-  assert.equal(parseListing(seller({image:['',{},'http://cdn.example/insecure.jpg','//cdn.example/denim.jpg']}),url).image,'https://cdn.example/denim.jpg');
-  assert.equal(parseListing(seller({image:{contentUrl:'/images/denim.jpg'}}),url).image,'https://britexfabrics.com/images/denim.jpg');
-  const metadata='<meta property="og:image" content="https://cdn.example/fallback.webp?width=800&amp;quality=80">';
-  assert.equal(parseListing(seller({image:[{},'http://cdn.example/insecure.jpg']})+metadata,url).image,'https://cdn.example/fallback.webp?width=800&quality=80');
+await test('deadlines and parent cancellation settle even when fetch or body ignores abort',async()=>{
+ const keepAlive=setInterval(()=>{},1000);
+ try{
+  let signal;const service=create({timeoutMs:35,fetchImpl:async(_url,options)=>{signal=options.signal;return new Promise(()=>{});}});
+  await assert.rejects(service.search(user,{request:'fabric'},()=>{}),e=>e.name==='TimeoutError');assert.equal(signal.aborted,true);
+  const parent=new AbortController(),events=[];let release;
+  const pending=create({fetchImpl:async()=>new Promise(r=>release=r)}).search(user,{request:'fabric'},e=>events.push(e),parent.signal);
+  parent.abort();await assert.rejects(pending,e=>e.name==='AbortError');const before=events.length;release(response([entry()]));await new Promise(r=>setImmediate(r));assert.equal(events.length,before);
+  let cancelled=0;await assert.rejects(create({timeoutMs:35,fetchImpl:async()=>({ok:true,body:{getReader:()=>({read:()=>new Promise(()=>{}),cancel:()=>{cancelled++;return new Promise(()=>{});}})}})}).search(user,{request:'fabric'},()=>{}),e=>e.name==='TimeoutError');assert.ok(cancelled>0);
+  let resolveRead,calls=0;const s=store();const late=create({...s,timeoutMs:35,read:async key=>{await new Promise(r=>resolveRead=r);return s.read(key);},fetchImpl:async()=>{calls++;return response([]);}});
+  await assert.rejects(late.search(user,{request:'fabric',submissionId:'project-A'},()=>{}),e=>e.name==='TimeoutError');resolveRead();await new Promise(r=>setImmediate(r));assert.equal(calls,0);
+ }finally{clearInterval(keepAlive);}
 });
-await test('listings without a source image never enter recommendations or the paid visual pass',async()=>{
-  let rankCalls=0;const events=[];
-  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async u=>u.includes('openai')?Response.json(response()):new Response(seller({image:undefined})),rank:async input=>{rankCalls++;return input.products;}});
-  await service.search(user,{request:'crimson wool',image,history:[{request:'wool'}]},event=>events.push(event));
-  assert.equal(rankCalls,0);assert.deepEqual(events.at(-1).products,[]);
+await test('provider failures stay brief and never trigger retries or reveal provider messages',async()=>{
+ let calls=0;await assert.rejects(create({fetchImpl:async()=>{calls++;return new Response('private provider detail',{status:429});}}).search(user,{request:'fabric'},()=>{}),e=>e.status===502&&!e.message.includes('private'));assert.equal(calls,1);
+ await assert.rejects(create({apiKey:()=>''}).search(user,{request:'fabric'},()=>{}),e=>e.status===503);
 });
-await test('swatch/yardage variants and aggregate price are never conflated',()=>{
-  const swatch={price:'3',priceCurrency:'USD',url:url+'?variant=swatch',availability:'https://schema.org/InStock'};
-  const yard={price:'69.99',priceCurrency:'USD',url:url+'?variant=yard',availability:'https://schema.org/InStock'};
-  assert.equal(parseListing(seller({offers:[swatch,yard]}),url).price,'');
-  assert.equal(parseListing(seller({offers:[swatch,yard]}),url+'?variant=yard').price,'','Variant identifier alone does not establish the selling unit');
-  assert.equal(parseListing(seller({offers:{'@type':'AggregateOffer',lowPrice:'3',highPrice:'69.99',priceCurrency:'USD'}}),url).price,'');
-  assert.equal(parseListing(seller({name:'Wool swatch'}),url).isSwatch,true);
-  const data={handle:'crimson-wool',price:300,variants:[{id:1,title:'Default Title',price:6999,available:true},{id:2,title:'Swatch',price:300,available:true}]};
-  const html=seller()+'<span>$69.99 / yard</span>';
-  assert.equal(applyShopifyVariant(parseListing(html,url),data,html).price,'69.99');
-  assert.equal(applyShopifyVariant(parseListing(html,url+'?variant=2'),data,html).isSwatch,true);
-});
-await test('out of stock is rejected, unknown stock remains explicit and redirects cannot escape',async()=>{
-  let visits=[];
-  const service=createFabricSearch({...store(),fetchImpl:async u=>{visits.push(u);return new Response(seller({offers:{price:'20',priceCurrency:'USD',availability:'https://schema.org/OutOfStock'}}));}});
-  assert.equal(await service.verify({url}),null);
-  const redirected=createFabricSearch({...store(),fetchImpl:async u=>{visits.push(u);return new Response('',{status:302,headers:{location:'http://169.254.169.254/latest/meta-data'}});}});
-  const p=await redirected.verify({url});assert.equal(p.evidence,'search_link');assert.equal(p.price,'');assert.equal(p.availability,'unknown');assert.equal(visits.length,2);
-  const blocked=createFabricSearch({...store(),fetchImpl:async()=>new Response('<html>Robot check</html>')});
-  const amazon=await blocked.verify({url:'https://amazon.com/dp/B000000001'});assert.equal(amazon.evidence,'search_link');assert.equal(amazon.image,'');
-});
-await test('early seller results arrive while web reasoning is still pending',async()=>{
-  let finish, called;const pending=new Promise(r=>finish=r), started=new Promise(r=>called=r);const events=[];
-  const s=store();let sent;
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',model:'configured',fetchImpl:async(u,o)=>{
-    if(u.includes('api.openai.com')){sent=JSON.parse(o.body);called();await pending;return Response.json(response());}
-    if(u.includes('suggest.json'))return Response.json({resources:{results:{products:[{url,available:true}]}}});
-    return new Response(seller());
-  }});
-  const run=service.search(user,{submissionId:'project-A',request:'crimson wool',image},e=>events.push(e));
-  await started;
-  for(let i=0;i<20&&!events.some(e=>e.type==='products');i++)await new Promise(r=>setTimeout(r,5));
-  assert.ok(events.some(e=>e.type==='products'&&e.preliminary));assert.ok(!events.some(e=>e.type==='done'));
-  assert.match(sent.input[0].content[0].text,/100% wool, no polyester/);assert.doesNotMatch(JSON.stringify(sent),/PRIVATE NAME/);
-  finish();await run;assert.equal(events.at(-1).products.length,1);assert.ok(events.at(-1).timings.firstResultsMs!==null);assert.match(events.at(-1).warning,/photos have not been compared/);
-});
-await test('saved dissection and preferences load in parallel after submission validation',async()=>{
-  const s=store(),started=[],events=[];let release,providerCalls=0;
-  const gate=new Promise(resolve=>release=resolve);
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Coat',fabric:'crimson wool'}]})),generation:'1'});
-  const service=createFabricSearch({...s,read:async key=>{if(key.endsWith('/summary.json')||key.endsWith('/pieces.json')){started.push(key);await gate;}return s.read(key);},fetchImpl:async()=>{providerCalls++;return new Response('',{status:503});}});
-  const run=service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'coat'},image},e=>events.push(e));
-  for(let i=0;i<30&&started.length<2;i++)await new Promise(resolve=>setTimeout(resolve,5));
-  assert.equal(started.length,2,'Both private reads start before either completes');assert.equal(providerCalls,0,'No provider starts before saved context is validated');
-  release();await run;assert.ok(events.some(event=>event.type==='done'));
-});
-await test('third seller-feed result reaches verification and visual review',async()=>{
-  const links=['https://www.moodfabrics.com/products/white-faux-fur','https://www.moodfabrics.com/products/blue-faux-fur','https://www.moodfabrics.com/products/red-faux-fur'];
-  const events=[],visited=[];let ranks=0;
-  const service=createFabricSearch({...store(),fetchImpl:async target=>{
-    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:links.map((url,i)=>({url,title:['White faux fur fabric','Blue faux fur fabric','Red faux fur fabric'][i]}))}}});
-    visited.push(target);const i=links.indexOf(target);assert.ok(i>=0);return new Response(seller({url:target,name:['White faux fur fabric','Blue faux fur fabric','Red faux fur fabric'][i],description:['White faux fur sold by the yard.','Blue faux fur sold by the yard.','Red faux fur sold by the yard.'][i]}));
-  },rank:async({products})=>{ranks++;return products;}});
-  await service.search(user,{request:'red faux fur',piece:{name:'Coat',fabric:'red faux fur'},storeGroups:['mood'],image},event=>events.push(event));
-  assert.ok(visited.includes(links[2]),'The third feed item is verified');assert.equal(ranks,1);
-  assert.deepEqual(events.at(-1).products.map(p=>p.url),[links[2]],'Only the matching third item survives qualification and visual review');
-});
-await test('retailer expansion stays balanced and capped at eight visual candidates',async()=>{
-  const events=[],visited=[];let ranks=0;
-  const service=createFabricSearch({...store(),fetchImpl:async target=>{
-    const host=new URL(target).hostname;
-    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[1,2,3].map(n=>({url:'https://'+host+'/products/red-wool-'+n,title:'Red wool fabric '+n}))}}});
-    visited.push(target);return new Response(seller({url:target,name:'Red wool fabric',description:'Red wool fabric sold by the yard.'}));
-  },rank:async({products})=>{ranks++;assert.equal(products.length,8);return products;}});
-  await service.search(user,{request:'red wool',piece:{name:'Coat',fabric:'red wool'},image},event=>events.push(event));
-  assert.equal(visited.length,8);assert.equal(new Set(visited.map(link=>new URL(link).hostname)).size,5,'One seller cannot occupy the whole verification budget');
-  assert.equal(ranks,1);assert.equal(events.at(-1).products.length,8);
-});
-await test('cited online merchants survive a local-heavy discovery list',async()=>{
- const urls=[...Array.from({length:9},(_,i)=>'https://britexfabrics.com/products/red-wool-'+i),'https://www.moodfabrics.com/products/red-wool','https://www.swatchon.com/fabric/QL-061078','https://amazon.com/dp/B000000001','https://www.tessuti.com.au/products/red-wool'];
- const discovery=response({candidates:urls.map(url=>({url,reason:'Red wool fabric'}))});discovery.output[0].action.sources=urls.map(url=>({url}));
- const found=readDiscovery(discovery);assert.equal(found.candidates.length,8);for(const host of ['www.moodfabrics.com','www.swatchon.com','amazon.com','www.tessuti.com.au'])assert.ok(found.candidates.some(c=>new URL(c.url).hostname===host),'Online merchant preserved: '+host);
- const req=webSearchBody(normalizeFabricRequest({request:'wool',storeGroups:['local','mood','swatchon','amazon','others']}),'fixture');assert.equal(req.tools[0].filters.allowed_domains.length,9);
-});
-await test('empty/error searches retry and never populate a shared private query cache',async()=>{
-  const s=store();let calls=0;const events=[];
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',model:'configured',fetchImpl:async u=>{if(u.includes('openai')){calls++;return new Response('',{status:503});}return new Response('',{status:503});}});
-  for(let n=0;n<2;n++)await service.search(user,{request:'matte wool',history:[{request:'red wool'}]},e=>events.push(e));
-  assert.equal(calls,2);assert.ok(events.at(-1).warning);assert.equal(events.at(-1).products.length,0);
-  assert.equal([...s.records.keys()].some(k=>k.startsWith('catalog/')),false);
-});
-await test('lookbooks isolate accounts and submissions, persist selection and reject stale writes',async()=>{
-  const s=store(),service=createFabricSearch({...s,model:'configured',fetchImpl:async()=>new Response(seller())}),product=parseListing(seller(),url);
-  const b=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',product});assert.equal(b.selectedUrl,url);
-  assert.equal((await service.loadBook(second,'project-A')).items.length,0);assert.equal((await service.loadBook(user,'project-B')).items.length,0);
-  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'0',action:'save',product}),e=>e.status===409);
-  const removed=await service.saveBook(user,{submissionId:'project-A',generation:b.generation,action:'remove',product});assert.equal(removed.items.length,0);assert.equal(removed.selectedUrl,'');
-  await assert.rejects(service.loadBook(user,'does-not-exist'),e=>e.status===404);
-});
-await test('automatic searches require saved dissection and trust saved garment context over supplied guesses',async()=>{
-  const s=store();let sent;
-  const denim='https://britexfabrics.com/products/indigo-denim';
-  const shirt='https://stonemountainfabric.com/product/white-cotton-poplin/';
-  const scissors='https://britexfabrics.com/products/fabric-scissors';
-  const leather='https://britexfabrics.com/products/black-leather';
-  const pages=new Map([[denim,{name:'Indigo cotton denim',description:'Cotton denim, sold by the yard.'}],[shirt,{name:'White cotton poplin',description:'100% cotton, sold by the yard.'}],[scissors,{name:'Fabric scissors',description:'Scissors for denim and cotton fabric.'}],[leather,{name:'Black leather',description:'Black leather, sold by the hide.'}]]);
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',model:'configured',fetchImpl:async(u,o)=>{
-    if(u.includes('api.openai.com')){sent=JSON.parse(o.body);return Response.json({output:[{type:'web_search_call',action:{sources:[...pages.keys()].map(url=>({url}))}},{type:'message',content:[{type:'output_text',text:JSON.stringify({candidates:[...pages.keys()].map(url=>({url,reason:'model suggestion',garment:'Incorrect model garment'}))})}]}]});}
-    if(u.includes('suggest.json'))return Response.json({resources:{results:{products:[]}}});
-    return new Response(seller({...pages.get(u),url:u}));
-  }});
-  await assert.rejects(service.search(user,{submissionId:'project-A',automatic:true},()=>{}),e=>e.status===409);
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{name:'Denim top',fabric:'indigo denim'},{name:'White shirt',fabric:'white cotton poplin'},{name:'Black boots',fabric:'black leather',category:'footwear'}]})),generation:'1'});
-  // These preferences are for the earlier wool fixture, not this saved look.
-  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:'Natural fabrics preferred'})),generation:'2'});
-  const events=[];await service.search(user,{submissionId:'project-A',automatic:true,image,pieces:[{name:'Wrong',fabric:'leather'}]},e=>events.push(e));
-  assert.deepEqual(events.at(-1).products.map(p=>[p.title,p.garment]),[['Indigo cotton denim','Denim top'],['White cotton poplin','White shirt']]);
-  const input=JSON.parse(sent.input[0].content[0].text);assert.equal(input.garments.length,2);assert.doesNotMatch(JSON.stringify(input),/Wrong|boots|leather/);assert.equal(sent.input[0].content[1].image_url,image);
-  await assert.rejects(service.search(user,{submissionId:'project-A',automatic:true,piece:{name:'Wrong'}},()=>{}),e=>e.status===409);
-  const selected=[];await service.search(user,{submissionId:'project-A',automatic:true,piece:{name:'Denim top',fabric:'leather'},stores:['britexfabrics.com']},e=>selected.push(e));
-  assert.deepEqual(selected.at(-1).products.map(p=>p.title),['Indigo cotton denim']);assert.deepEqual(sent.tools[0].filters.allowed_domains,['britexfabrics.com']);
-});
-await test('local in-house photo favorites share the sealed book without invented inventory or arrival',async()=>{
-  const s=store(),service=createFabricSearch({...s,model:'configured'});
-  const product={url:'/aesthetics/fabrics/Midnight%20Velvet.JPG',title:'Midnight Velvet',price:'in stock',etaDays:7,availability:'in_stock',garment:'Evening jacket'};
-  const book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',product});
-  assert.equal(book.items[0].image,product.url);assert.equal(book.items[0].availability,'unknown');assert.equal(book.items[0].etaDays,undefined);assert.equal(book.items[0].price,undefined);
-  assert.equal((await service.loadBook(second,'project-A')).items.length,0);
-  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{...product,url:'/aesthetics/fabrics/%2e%2e/private.png'}}));
-});
-await test('real dissection handoff preserves traits and active search uses saved material context',async()=>{
-  const source=readFileSync(new URL('../backend/backend.html',import.meta.url),'utf8');
-  const extract=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
-  const code=extract('const _pieceSources = new WeakMap()', '// v0.9: focusPiece');
-  const crop='data:image/png;base64,c2F2ZWQtY29hdA==';
-  const piece={name:'Coat',fabric:'Crimson wool',fabric_hex:'#991b2a',fabric_spec:{fiber:'wool',weave:'twill',sheen:'matte',stretch:'none',texture:'brushed',weight_gsm:null},fabric_source:{url},_image:crop,jacket_construction:'double-breasted'};
-  const sandbox={};vm.createContext(sandbox);vm.runInContext(code,sandbox);
-  const normalized=sandbox.inferPieces({_dissection:{pieces:[piece]}})[0];
-  assert.equal(normalized.fabric_spec.weave,'twill');assert.equal(normalized.fabric_hex,'#991b2a');assert.equal(normalized.jacket_construction,'double-breasted');assert.equal(normalized.fabric_source.url,url);
-  const s=store(),events=[];let discovered,ranked;
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[normalized]})),generation:'1'});
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(u,o)=>{
-    if(u.includes('openai')){discovered=JSON.parse(o.body);return Response.json(response());}
-    return new Response(seller());
-  },rank:async input=>{ranked=input;return input.products;}});
-  await service.search(user,{submissionId:'project-A',automatic:true,image,piece:{id:normalized.id,fabric:'Forged polyester'},preferences:'Forged preference'},event=>events.push(event));
-  const context=JSON.parse(discovered.input[0].content[0].text);
-  assert.equal(discovered.input[0].content[1].image_url,image);assert.equal(context.garment.fabric_hex,'#991b2a');assert.equal(context.garment.fabric_spec.weave,'twill');assert.match(context.clientFabricPreferences,/100% wool, no polyester/);
-  assert.equal(ranked.garmentImage,crop);assert.equal(ranked.traits.weave,'twill');assert.equal(ranked.traits.texture,'brushed');assert.equal(ranked.traits.garments[0].fabric_hex,'#991b2a');assert.match(ranked.traits.preferences,/no polyester/);
-  assert.doesNotMatch(JSON.stringify([discovered,ranked]),/Forged/);assert.equal(events.at(-1).products[0].garmentId,normalized.id);
-});
-await test('routes authenticate before search or lookbook IO and limit search requests',async()=>{
-  const routes=[];const app={post:(...a)=>routes.push(a),get:(...a)=>routes.push(a)};let reads=0;
-  mountFabricSearch(app,{requireAdmin:async()=>{throw Object.assign(Error('denied'),{status:403});},requireAuthHeader(){},json:()=>()=>{},rateLimit:()=>({ok:true}),read:async()=>{reads++;},write:async()=>{},model:'fake'});
-  for(const route of routes){let code;const res={on(){},status(n){code=n;return this;},json(){},set(){return this;}};await route.at(-1)({body:{},query:{}},res);assert.equal(code,403);}
-  assert.equal(reads,0);
-});
-await test('duplicate garment names require stable saved identity instead of selecting the first',async()=>{
-  const s=store();s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{}'),generation:'1'});
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{name:'Shirt',fabric:'red wool'},{name:'Shirt',fabric:'white cotton poplin'}]})),generation:'1'});
-  let sent;
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(u,o)=>{if(u.includes('openai')){sent=JSON.parse(JSON.parse(o.body).input[0].content[0].text);return Response.json(response());}return new Response(seller({name:'White cotton poplin fabric',description:'100% cotton. Sold by the yard.',material:'100% cotton'}));}});
-  await assert.rejects(service.search(user,{submissionId:'project-A',automatic:true,piece:{name:'Shirt'}},()=>{}),e=>e.status===409);
-  const events=[];await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'saved-piece-1',name:'Shirt'}},e=>events.push(e));
-  assert.equal(sent.garment.fabric,'white cotton poplin');assert.equal(events.at(-1).products[0].garmentId,'saved-piece-1');
-});
-await test('one visual pass only sees eligible seller products and cannot introduce a URL or weak fallback',async()=>{
-  const s=store(),events=[];let calls=0,seen;
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async u=>u.includes('openai')?Response.json(response()):new Response(seller()),rank:async input=>{calls++;seen=input;return [{url,reason:'Closer brushed surface',matchScore:88},{url:'https://britexfabrics.com/products/invented'}];}});
-  await service.search(user,{submissionId:'project-A',request:'crimson wool twill',image,history:[{request:'wool'}]},e=>events.push(e));
-  assert.equal(calls,1);assert.equal(seen.garmentImage,image);assert.match(seen.traits.request,/crimson wool/);assert.equal(seen.products.length,1);
-  assert.equal(events.at(-1).products.length,1);assert.equal(events.at(-1).products[0].matchScore,undefined);assert.equal(events.at(-1).products[0].price,'69.99');
-  const unavailable=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async u=>u.includes('openai')?Response.json(response()):new Response(seller()),rank:async()=>{throw Error('timeout');}});
-  const failed=[];await unavailable.search(user,{request:'wool twill',image,history:[{request:'wool'}]},e=>failed.push(e));
-  assert.deepEqual(failed.at(-1).products,[]);assert.match(failed.at(-1).warning,/comparison was unavailable/);
-  const rejected=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async u=>u.includes('openai')?Response.json(response()):new Response(seller()),rank:async()=>[]});
-  const weak=[];await rejected.search(user,{request:'wool twill',image,history:[{request:'wool'}]},e=>weak.push(e));assert.deepEqual(weak.at(-1).products,[]);
-});
-await test('uncertain saved fiber requires a successful visual check and never a keyword fallback',async()=>{
-  const s=store();s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{}'),generation:'1'});
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{name:'Jacket',fabric:'Unknown fiber, matte structured surface'}]})),generation:'1'});
-  const common={...s,apiKey:()=> 'fake',fetchImpl:async u=>u.includes('openai')?Response.json(response()):new Response(seller())};
-  let count=0;const events=[];await createFabricSearch({...common,rank:async ({products})=>{count++;return products;}}).search(user,{automatic:true,submissionId:'project-A',image},e=>events.push(e));
-  assert.equal(count,1);assert.equal(events.at(-1).products.length,1);
-  const without=[];await createFabricSearch(common).search(user,{automatic:true,submissionId:'project-A',image},e=>without.push(e));assert.deepEqual(without.at(-1).products,[]);
-});
-await test('selected garment ranks its saved crop while discovery keeps the original whole look',async()=>{
-  const s=store(),crop='data:image/png;base64,c2F2ZWQtZGVuaW0=';let ranked,discovered;
-  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{}'),generation:'1'});
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'denim',name:'Denim jacket',fabric:'indigo denim',_image:crop},{id:'shirt',name:'White shirt',fabric:'white cotton poplin',_image:image}]})),generation:'1'});
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(u,o)=>{if(u.includes('openai')){discovered=JSON.parse(o.body);return Response.json(response());}return new Response(seller({name:'Indigo denim fabric',description:'100% cotton denim. Sold by the yard.',material:'100% cotton'}));},rank:async input=>{ranked=input;return input.products;}});
-  const events=[];await service.search(user,{submissionId:'project-A',automatic:true,image,piece:{id:'denim',_image:'untrusted-client-crop'}},e=>events.push(e));
-  assert.equal(discovered.input[0].content[1].image_url,image);assert.equal(ranked.garmentImage,crop);assert.equal(ranked.traits.garmentId,'denim');assert.equal(ranked.products[0].garmentId,'denim');
-  assert.equal(events.at(-1).products[0].garment,'Denim jacket');assert.doesNotMatch(JSON.stringify(discovered),/untrusted-client-crop/);
-});
-await test('supplementary seller results cannot bypass a failed visual check when web search fails',async()=>{
-  const events=[];let calls=0;
-  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async u=>{
-    if(u.includes('openai'))return new Response('',{status:503});
-    if(u.includes('suggest.json'))return Response.json({resources:{results:{products:[{url,available:true}]}}});
-    return new Response(seller());
-  },rank:async()=>{calls++;throw Error('visual unavailable');}});
-  await service.search(user,{request:'crimson wool',image},event=>events.push(event));
-  assert.ok(events.some(event=>event.preliminary&&event.products.length));assert.equal(calls,1);
-  assert.deepEqual(events.at(-1).products,[]);assert.match(events.at(-1).warning,/comparison was unavailable/);
-});
-await test('lookbook selections bind to canonical garments, preserve reuse and remove every assignment',async()=>{
-  const s=store(),pieces=[{id:'coat',name:'Coat',fabric:'wool'},{id:'pants',name:'Pants',fabric:'cotton'}];
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
-  let fetches=0,pieceReads=0;const service=createFabricSearch({...s,read:async key=>{if(key.endsWith('/pieces.json'))pieceReads++;return s.read(key);},fetchImpl:async()=>{fetches++;return new Response(seller());}});
-  const product={...parseListing(seller(),url),garmentId:'coat',garment:'Forged name'};
-  let book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:'coat',product});
-  assert.deepEqual(book.selectedByGarment,{coat:url});assert.equal(book.items[0].garment,'Coat');assert.equal(fetches,1);
-  assert.equal(pieceReads,1,'A mutation reads and parses the private dissection once, including its response');
-  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'pants',product}),e=>e.status===409);
-  const before=pieceReads;book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'pants',product:{url,title:'Client edit ignored',price:'0.01'}});
-  assert.deepEqual(book.selectedByGarment,{coat:url,pants:url});assert.equal(book.items[0].title,'Crimson wool twill');assert.equal(fetches,1,'Reselecting a stored URL needs no retailer or paid request');
-  assert.equal(pieceReads-before,1,'Lookbook read, validation and acknowledgement share one request-local dissection');
-  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'unknown',product:{url}}),e=>e.status===409);
-  const otherAccount=await service.loadBook(second,'project-A');assert.deepEqual(otherAccount.selectedByGarment,{});
-  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'remove',product:{url}});
-  assert.deepEqual(book.selectedByGarment,{});assert.equal(book.selectedUrl,'');assert.equal(book.items.length,0);assert.equal(fetches,1);
-});
-await test('legacy lookbook reads only infer unambiguous garment selections and never write migrations',async()=>{
-  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json';let writes=0;
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{name:'Coat',fabric:'wool'},{name:'Shirt',fabric:'cotton'},{name:'Shirt',fabric:'linen'}]})),generation:'1'});
-  const service=createFabricSearch({...s,write:async()=>{writes++;}}),product=parseListing(seller(),url);
-  for(const [attribution,expected]of [[{garment:'Coat'},{'saved-piece-0':url}],[{garment:'Shirt'},{}],[{},{}],[{garmentId:'saved-piece-2',garment:'Shirt'},{}],[{garmentId:'saved-piece-0',garment:'Coat'},{'saved-piece-0':url}],[{garmentId:'saved-piece-0',garment:'Old jacket'},{}],[{garmentId:'saved-piece-0'},{}]]){
-    s.records.set(key,{buf:Buffer.from(JSON.stringify({items:[{...product,...attribution}],selectedUrl:url})),generation:'7'});
-    assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,expected);
-    if(attribution.garmentId){
-      const raw=JSON.stringify({items:[{...product,...attribution}],selectedUrl:url,selectedByGarment:{[attribution.garmentId]:url}});s.records.set(key,{buf:Buffer.from(raw),generation:'7'});
-      assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,expected);assert.equal(s.records.get(key).buf.toString(),raw,'Legacy maps obey the same identity evidence without migration writes');
-    }
-  }
-  assert.equal(writes,0);
-  for(const selectedByGarment of [null,[],{'bad id':url},{'saved-piece-0':other},{'saved-piece-0':null}]){
-    s.records.set(key,{buf:Buffer.from(JSON.stringify({items:[product],selectedUrl:url,selectedByGarment})),generation:'7'});
-    await assert.rejects(service.loadBook(user,'project-A'),e=>e.status===503);
-    await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'7',action:'remove',product:{url}}),e=>e.status===503);
-  }
-  assert.equal(writes,0,'Malformed selection storage must not be silently replaced');
-});
-await test('redissection hides only orphan selections and prunes them on an explicit CAS mutation',async()=>{
-  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',pieceKey='submissions/project-A/pieces.json',product={...parseListing(seller(),url),garment:'Coat',garmentId:'kept'};
-  s.records.set(pieceKey,{buf:Buffer.from(JSON.stringify({pieces:[{id:'kept',name:'Coat',fabric:'wool'}]})),generation:'2'});
-  const raw=JSON.stringify({items:[product],selectedUrl:url,selectedByGarment:{kept:url,removed:url}});
-  s.records.set(key,{buf:Buffer.from(raw),generation:'4'});
-  const service=createFabricSearch({...s,fetchImpl:async()=>{throw Error('Stored selections do not need retailer access');}});
-  const book=await service.loadBook(user,'project-A');assert.deepEqual(book.selectedByGarment,{kept:url});assert.equal(book.items.length,1);assert.equal(s.records.get(key).buf.toString(),raw,'Read does not write a migration');
-  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'3',action:'select',garmentId:'kept',product:{url}}),e=>e.status===409);assert.equal(s.records.get(key).buf.toString(),raw);
-  const updated=await service.saveBook(user,{submissionId:'project-A',generation:'4',action:'select',garmentId:'kept',product:{url}});
-  assert.deepEqual(updated.selectedByGarment,{kept:url});assert.deepEqual(JSON.parse(s.records.get(key).buf).selectedByGarment,{kept:url});
-});
-await test('selection fingerprints reject reused IDs but preserve stable garments through reorder and production work',async()=>{
-  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',pieceKey='submissions/project-A/pieces.json';
-  const coat={id:'saved-piece-0',name:'Coat',fabric:'Crimson wool',fabric_spec:{fiber:'wool',weave:'twill'}},pants={id:'pants',name:'Pants',fabric:'cotton'};
-  const writePieces=pieces=>s.records.set(pieceKey,{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
-  writePieces([coat,pants]);
-  const service=createFabricSearch({...s,fetchImpl:async()=>new Response(seller())});
-  let book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:coat.id,product:{url}});
-  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:pants.id,product:{url}});
-  const raw=s.records.get(key).buf.toString(),stored=JSON.parse(raw);
-  assert.match(stored.selectedGarmentFingerprints[coat.id],/^v1:[a-f0-9]{64}$/);assert.equal(book.selectedGarmentFingerprints,undefined,'Fingerprint storage is server owned; client schema stays compatible');
-  writePieces([pants,{...coat,_image:image,_pattern:'new generated pattern',_technical:'production update'}]);
-  assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,{[coat.id]:url,pants:url});
-  for(const replacement of [{...coat,name:'New jacket'},{...coat,fabric:'White cotton'},{...coat,fabric_spec:{fiber:'cotton',weave:'poplin'}},{...coat,fabric_hex:'#ffffff'}]){
-    writePieces([replacement,pants]);const current=await service.loadBook(user,'project-A');
-    assert.deepEqual(current.selectedByGarment,{pants:url});assert.equal(current.items.length,1);assert.equal(s.records.get(key).buf.toString(),raw,'Changed identity is hidden without a migration write');
-  }
-  const replacement={...coat,name:'New jacket',fabric:'White cotton'};writePieces([replacement,pants]);
-  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:coat.id,product:{url}}),error=>error.status===409);assert.equal(s.records.get(key).buf.toString(),raw);
-  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{url}});
-  assert.deepEqual(book.selectedByGarment,{pants:url});assert.deepEqual(Object.keys(JSON.parse(s.records.get(key).buf).selectedGarmentFingerprints),['pants'],'Explicit CAS mutation prunes stale identity and its fingerprint');
-  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:replacement.id,product:{url}});
-  assert.deepEqual(book.selectedByGarment,{pants:url,[replacement.id]:url});assert.notEqual(JSON.parse(s.records.get(key).buf).selectedGarmentFingerprints[replacement.id],stored.selectedGarmentFingerprints[coat.id],'Explicit review binds the reused ID to its new garment');
-});
-await test('malformed garment identity storage cannot be silently overwritten',async()=>{
-  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',product={...parseListing(seller(),url),garment:'Coat',garmentId:'coat'};
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Coat',fabric:'wool'}]})),generation:'1'});
-  const service=createFabricSearch({...s});
-  for(const selectedGarmentFingerprints of [null,[],{}, {coat:'invalid'}, {coat:'v1:'+'a'.repeat(64),extra:'v1:'+'b'.repeat(64)}]){
-    const raw=JSON.stringify({items:[product],selectedUrl:url,selectedByGarment:{coat:url},selectedGarmentFingerprints});s.records.set(key,{buf:Buffer.from(raw),generation:'5'});
-    await assert.rejects(service.loadBook(user,'project-A'),error=>error.status===503);
-    await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'5',action:'remove',product:{url}}),error=>error.status===503);assert.equal(s.records.get(key).buf.toString(),raw);
-  }
-});
-await test('new saved seller facts are verified server-side; failures preserve the book and retries',async()=>{
-  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json';let calls=0;
-  const service=createFabricSearch({...s,fetchImpl:async target=>{calls++;assert.ok(!target.includes('openai'),'Saving never searches or ranks');return target===url?new Response(seller()):new Response('',{status:503});}});
-  const tampered={url,title:'Fake leather',price:'0.01',unit:'yard',currency:'USD',availability:'in_stock',evidence:'atelier_inventory',composition:'100% silk',image:'https://bad.example/fake.png'};
-  const book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'save',product:tampered});
-  assert.equal(book.items[0].title,'Crimson wool twill');assert.equal(book.items[0].price,'69.99');assert.equal(book.items[0].composition,'100% wool');assert.equal(book.items[0].image,'https://cdn.shopify.com/wool.jpg');assert.equal(book.items[0].evidence,'seller_listing');
-  const previous=s.records.get(key).buf.toString();
-  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{...tampered,url:'https://evil.example/products/fabric'}}),e=>e.status===400);
-  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{...tampered,url:other}}),e=>e.status===422);
-  assert.equal(s.records.get(key).buf.toString(),previous);assert.equal(calls,2);
-  const unavailable=createFabricSearch({...s,fetchImpl:async()=>{throw Error('Retailer offline');}});
-  const selected=await unavailable.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',product:{url}});
-  assert.equal(selected.selectedUrl,url,'An already stored source remains selectable when its retailer is unavailable');
-});
-await test('canonical full-look preferences and selected scopes survive the service request boundary',async()=>{
-  const s=store(),furUrl='https://britexfabrics.com/products/faux-fur',leatherUrl='https://britexfabrics.com/products/leather';let discovery;
-  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:{coat:'Brown faux fur',pants:'Green alligator leather',exclude:['polyester']}})),generation:'1'});
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Fur coat',fabric:'Brown faux fur',fabric_spec:{fiber:'acrylic'}},{id:'pants',name:'Green pants',fabric:'Green leather'}]})),generation:'1'});
-  const pages={[furUrl]:{name:'Brown faux fur fabric',description:'100% acrylic long pile. Sold by the yard.',material:'100% acrylic'},[leatherUrl]:{name:'Green alligator leather fabric',description:'Green leather. Sold by the yard.',material:'Leather'}};
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{if(target.includes('openai')){discovery=JSON.parse(options.body);return Response.json({output:[{type:'web_search_call',action:{sources:Object.keys(pages).map(url=>({url}))}},{type:'message',content:[{type:'output_text',text:JSON.stringify({candidates:Object.keys(pages).map(url=>({url}))})}]}]});}return new Response(seller({...pages[target],url:target}));}});
-  const full=[];await service.search(user,{automatic:true,submissionId:'project-A',image},event=>full.push(event));
-  assert.deepEqual(full.at(-1).products.map(p=>[p.url,p.garmentId]),[[furUrl,'coat'],[leatherUrl,'pants']]);
-  const selected=[];await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'coat'},image},event=>selected.push(event));
-  assert.deepEqual(selected.at(-1).products.map(p=>p.url),[furUrl]);assert.match(JSON.stringify(discovery),/Green alligator leather/,'Original client preferences remain in discovery');
-  const normalized=normalizeFabricRequest({request:'fabric',preferences:{coat:'brown faux fur',exclude:['polyester']}});assert.match(normalized.preferences,/brown faux fur/);assert.doesNotMatch(normalized.preferences,/object Object/);
-});
-await test('duplicate literal seller links are verified once and published once',async()=>{
-  let pages=0;const service=createFabricSearch({...store(),fetchImpl:async target=>{if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url},{url}]}}});pages++;return new Response(seller());}});
-  const events=[];await service.search(user,{request:'crimson wool'},event=>events.push(event));
-  assert.equal(pages,1);assert.equal(events.at(-1).products.length,1);
-});
-await test('collection and direct Shopify aliases produce one ranked card without rewriting sources or variants',async()=>{
-  const alias='https://britexfabrics.com/collections/fabrics/products/crimson-wool',seen=[],events=[];let ranks=0;
-  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
-    if(target.includes('openai'))return Response.json(response());
-    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url:alias}]}}});
-    seen.push(target);return new Response(seller());
-  },rank:async({products})=>{ranks++;assert.equal(products.length,1,'Retailer and web aliases consume one visual slot');return products;}});
-  await service.search(user,{request:'crimson wool',image},e=>events.push(e));
-  assert.equal(ranks,1);assert.equal(events.at(-1).products.length,1);
-  assert.equal(seen.length,1,'Concurrent web/feed aliases share one actual seller read');
-  assert.ok([url,alias].includes(events.at(-1).products[0].url));assert.ok(seen.includes(events.at(-1).products[0].url),'The returned source is an actual fetched destination, never a rewritten URL');
-  await service.verify({url:alias});assert.ok(seen.includes(alias),'An explicit alias read must preserve its literal fetch/source destination');
-  const answer=response({candidates:[{url:alias},{url},{url:url+'?variant=2'}]});answer.output[0].action.sources.push({url:alias},{url:url+'?variant=2'});
-  assert.deepEqual(readDiscovery(answer).candidates.map(p=>p.url),[alias,url+'?variant=2'],'Aliases deduplicate while distinct selected variants remain distinct');
-});
-await test('stored preference parse failures stop before providers and structured exclusions are not truncated',async()=>{
-  const s=store();let providers=0;const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async()=>{providers++;throw Error('must not call');}});
-  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{broken'),generation:'1'});
-  await assert.rejects(service.search(user,{submissionId:'project-A',request:'wool',preferences:'client fallback'},()=>{}),e=>e.status===503);assert.equal(providers,0);
-  const preferences={notes:'neutral '.repeat(180),coat:'Brown faux fur',exclude:['polyester']};
-  assert.deepEqual(JSON.parse(normalizeFabricRequest({request:'fabric',preferences}).preferences),preferences,'Longer structured preferences keep their final exclusion and valid structure');
-  assert.throws(()=>normalizeFabricRequest({request:'fabric',preferences:'x'.repeat(12001)}),e=>e.status===400);
-});
-await test('store-only constraints survive a redirect to another approved merchant',async()=>{
-  const events=[],service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
-    if(target.includes('openai'))return Response.json(response());
-    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url}]}}});
-    if(target===url)return new Response('',{status:302,headers:{location:other}});
-    return new Response(seller({url:other}));
-  }});
-  await service.search(user,{request:'crimson wool, only Britex',stores:['britexfabrics.com'],image},event=>events.push(event));
-  assert.ok(events.every(event=>!event.products?.length),'Neither preliminary nor final results bypass the store filter after a redirect');
-});
-await test('concurrent garment selections cannot both acknowledge an overwrite',async()=>{
-  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json';
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Coat'},{id:'pants',name:'Pants'}]})),generation:'1'});
-  const service=createFabricSearch({...s,fetchImpl:async()=>new Response(seller())});
-  const results=await Promise.allSettled(['coat','pants'].map(garmentId=>service.saveBook(user,{submissionId:'project-A',generation:'0',garmentId,action:'select',product:{url}})));
-  assert.equal(results.filter(result=>result.status==='fulfilled').length,1);assert.equal(results.find(result=>result.status==='rejected').reason.status,409);
-  assert.equal(Object.keys(JSON.parse(s.records.get(key).buf).selectedByGarment).length,1);
-});
-await test('saved garment retailer results survive an empty web answer and still pass visual review',async()=>{
-  const s=store(),feeds=[],events=[];let ranks=0;
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'PRIVATE PERSON coat',fabric:'Crimson wool twill'}]})),generation:'1'});
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
-    if(target.includes('openai'))return Response.json(response({candidates:[]}));
-    if(target.includes('suggest.json')){feeds.push(new URL(target).searchParams.get('q'));return Response.json({resources:{results:{products:[{url}]}}});}
-    return new Response(seller());
-  },rank:async({products})=>{ranks++;return products;}});
-  await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'coat'},image},e=>events.push(e));
-  assert.ok(feeds.length&&feeds.length<=10,'Automatic saved garments get bounded direct retailer queries');
-  assert.ok(feeds.every(q=>/wool|twill/.test(q)&&!q.includes('PRIVATE')),'Public queries contain material vocabulary only');
-  assert.equal(ranks,1);assert.deepEqual(events.at(-1).products.map(p=>p.url),[url]);
-  assert.ok(events.find(e=>e.type==='context')?.searchDetails.retailerQueries.length);
-});
-await test('discovery exposes actual tool queries and rejects malformed result objects',()=>{
-  const body=response();body.output[0].action.queries=['burgundy wool fabric site:britexfabrics.com'];
-  assert.deepEqual(readDiscovery(body).webQueries,body.output[0].action.queries);
-  const colored=response({garmentColors:[{garmentId:'jacket',colors:['red','red','not a color',{},'white','blue']},null,{garmentId:{},colors:['red']}]});
-  assert.deepEqual(readDiscovery(colored).garmentColors,[{garmentId:'jacket',colors:['red','white']}]);
-  assert.deepEqual(readDiscovery(response({garmentColors:[{garmentId:'jacket',colors:['red']},{garmentId:'jacket',colors:['white']}]})).garmentColors,[],'Ambiguous repeated garment observations cannot pick an arbitrary last color');
-  for(const value of [null,[],{}, {candidates:'invalid'}]){
-    const broken=response();broken.output[1].content[0].text=JSON.stringify(value);
-    assert.throws(()=>readDiscovery(broken),/unreadable|invalid|incomplete/i);
-  }
-});
-await test('www source aliases retain evidence identity without accepting unrelated source paths',()=>{
-  const result=response({candidates:[{url:'https://www.britexfabrics.com/products/crimson-wool'},null,{url:'https://britexfabrics.com/products/uncited'}]});
-  assert.deepEqual(readDiscovery(result).candidates.map(c=>c.url),['https://www.britexfabrics.com/products/crimson-wool']);
-  const input=normalizeFabricRequest({request:'black wool fabric',image});
-  assert.deepEqual(webSearchBody(input,'gpt-6-luna').reasoning,{effort:'low'});
-  assert.equal(webSearchBody(input,'configured-legacy').reasoning,undefined);assert.equal(webSearchBody(input,'gpt-5-pro').reasoning,undefined);
-});
-await test('canonical mixed-material garments keep original words but qualify their base cloth independently',async()=>{
-  const s=store(),piece={id:'coat',name:'Embellished coat',fabric:'Black brushed wool blend with cognac suede leather appliqué',fabric_spec:{fiber:'wool blend with leather appliqué',weave:'Dense brushed twill',texture:'brushed'},_image:image};
-  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:['Denim','Leather']})),generation:'1'});
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[piece]})),generation:'1'});
-  for(const comparisonAvailable of [true,false]){
-    const events=[];let ranked=0,sent;
-    const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
-      if(target.includes('openai')){sent=JSON.parse(options.body);return Response.json(response());}
-      if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url}]}}});
-      return new Response(seller({name:'Black brushed wool coating',description:'100% wool coating, sold by the yard.'}));
-    },rank:async({products})=>{ranked++;assert.equal(products.length,1);if(!comparisonAvailable)throw Error('unavailable');return products;}});
-    await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'coat'},image},e=>events.push(e));
-    assert.equal(ranked,1);assert.equal(events.at(-1).products.length,comparisonAvailable?1:0);
-    assert.equal(events.at(-1).searchDetails.preferences,JSON.stringify(['Denim','Leather']));
-    assert.doesNotMatch(events.at(-1).searchDetails.retailerQueries.join(' '),/denim|leather/);
-    const context=JSON.parse(sent.input[0].content[0].text);assert.match(context.garment.fabric,/leather appliqué/);assert.equal(context.clientFabricPreferences,JSON.stringify(['Denim','Leather']),'Original words remain intact for discovery');
-  }
-});
-await test('saved burgundy fur rejects ivory and retailer notions cannot crowd out the third fabric listing',async()=>{
-  const s=store(),piece={id:'jacket',name:'Shag jacket',fabric:'Long-pile faux fur',fabric_hex:'#991b2a',fabric_spec:{fiber:'polyester',texture:'long-pile'},_image:image};
-  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:['Leather','Denim']})),generation:'1'});
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[piece]})),generation:'1'});
-  const ivory='https://britexfabrics.com/products/ivory-fur',red='https://britexfabrics.com/products/burgundy-fur',events=[],visited=[];let ranked=0;
-  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
-    if(target.includes('openai')){const answer=response({garmentColors:[{garmentId:'jacket',colors:['red']}],candidates:[{url:ivory}]});answer.output[0].action.sources.push({url:ivory});return Response.json(answer);}
-    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{title:'Leather button',url:'https://britexfabrics.com/products/button-a'},{title:'Sewing needles',url:'https://britexfabrics.com/products/needles'},{title:'Burgundy long pile polyester faux fur',url:red}]}}});
-    visited.push(target);return new Response(seller(target.includes('burgundy-fur')?{name:'Burgundy long pile polyester faux fur',description:'Burgundy polyester faux fur. Sold by the yard.',url:red,material:'polyester'}:{name:'Ivory polyester faux fur',description:'Creamy eggshell ivory polyester. Sold by the yard.',url:ivory,material:'polyester'}));
-  },rank:async({products})=>{ranked++;assert.deepEqual(products.map(p=>p.url),[red]);return products;}});
-  await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'jacket'},image},e=>events.push(e));
-  assert.equal(ranked,1);assert.deepEqual(events.at(-1).products.map(p=>p.url),[red]);assert.match(events.at(-1).searchDetails.retailerQueries[0],/red/);
-  assert.ok(!visited.some(u=>/button-a|needles/.test(u)),'Known notions are discarded before the bounded verification budget');
-  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{...piece,fabric_hex:''}]})),generation:'2'});
-  const legacy=[];await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'jacket'},image},e=>legacy.push(e));
-  assert.equal(ranked,2);assert.deepEqual(legacy.at(-1).products.map(p=>p.url),[red],'Legacy garments without hex use the scoped qualified observation, never accept opposite seller colors on a high rank alone');
+await test('all routes authenticate before IO and search is rate limited',async()=>{
+ for(const denied of [true,false]){
+  const routes=[];let reads=0,code;mountFabricSearch({post:(...a)=>routes.push(a),get:(...a)=>routes.push(a)},{requireAdmin:async()=>{if(denied)throw Object.assign(Error('denied'),{status:403});return user;},requireAuthHeader(){},json:()=>()=>{},rateLimit:()=>({ok:false}),read:async()=>{reads++;},write:async()=>{}});
+  const res={on(){},status(n){code=n;return this;},json(){},set(){return this;}};
+  for(const route of denied?routes:routes.slice(0,1)){await route.at(-1)({body:{request:'fabric'},query:{}},res);assert.equal(code,denied?403:429);}assert.equal(reads,0);
+ }
 });
 await test('a stalled streamed search terminates before the browser deadline and cannot publish late products',async()=>{
   const nativeTimeout=AbortSignal.timeout,routes=[],events=[];let release,lateSignal;
@@ -2182,7 +1692,7 @@ await test('a stalled streamed search terminates before the browser deadline and
     mountFabricSearch(app,{...store(),requireAdmin:async()=>user,requireAuthHeader(){},json:()=>()=>{},rateLimit:()=>({ok:true}),apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
       if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[]}}});
       assert.ok(target.includes('openai.com'));lateSignal=options.signal;
-      return new Promise(resolve=>{release=()=>resolve(Response.json(response()));});
+      return new Promise(resolve=>{release=()=>resolve(response([entry()]));});
     }});
     let ended=false,code;
     const res={on(){},set(){return this;},flushHeaders(){this.headersSent=true;},write(raw){events.push(JSON.parse(raw));},end(raw){if(raw)events.push(JSON.parse(raw));ended=true;},status(n){code=n;return this;},json(value){events.push(value);ended=true;}};
@@ -2203,409 +1713,80 @@ await test('a late private storage read cannot launch providers after the route 
     assert.equal(code,503);assert.match(error,/timed out/);release();await new Promise(resolve=>setTimeout(resolve,20));assert.equal(providers,0);
   }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);release?.();}
 });
-await test('seller redirects and variant facts share one total verification budget',async()=>{
-  const nativeTimeout=AbortSignal.timeout;let attempts=0,budget;
-  AbortSignal.timeout=ms=>{const signal=nativeTimeout.call(AbortSignal,ms===8000?55:ms);if(ms===8000)budget=signal;return signal;};
-  const keepAlive=setInterval(()=>{},1000);
-  try{
-    const service=createFabricSearch({...store(),fetchImpl:async(target,options)=>{
-      attempts++;
-      if(attempts===2)await new Promise((resolve,reject)=>{if(options.signal.aborted)reject(options.signal.reason);else options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true});});
-      return new Response('',{status:302,headers:{location:url+'?variant='+attempts}});
-    }});
-    const result=await service.verify({url});assert.equal(result.evidence,'search_link');assert.equal(budget?.aborted,true,'The shared budget expires before a fresh six-second hop deadline');assert.equal(attempts,2,'No fresh third-hop timeout after the listing budget expires');
-  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);}
-});
-await test('a non-cooperative web search cannot block reviewed retailer results',async()=>{
-  const nativeTimeout=AbortSignal.timeout,events=[];let release,ranks=0;
-  const keepAlive=setInterval(()=>{},1000);
-  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===20000?40:ms);
-  try{
-    const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
-      if(target.includes('api.openai.com'))return new Promise(resolve=>release=()=>resolve(Response.json(response())));
-      if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url,title:'Crimson wool fabric'}]}}});
-      return new Response(seller());
-    },rank:async({products})=>{ranks++;return products;}});
-    await service.search(user,{request:'crimson wool',image},event=>events.push(event));
-    assert.equal(ranks,1);assert.deepEqual(events.at(-1).products.map(product=>product.url),[url]);assert.match(events.at(-1).warning,/interrupted|too long/i);
-    const n=events.length;release();await new Promise(resolve=>setTimeout(resolve,15));assert.equal(events.length,n,'Late discovery cannot replace completed results');
-  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);release?.();}
-});
-await test('non-cooperative retailer responses respect their independent budgets',async()=>{
-  const nativeTimeout=AbortSignal.timeout,events=[];let release,attempts=0;
-  const keepAlive=setInterval(()=>{},1000);
-  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===4500||ms===8000?40:ms);
-  try{
-    const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
-      if(target.includes('api.openai.com'))return Response.json(response());
-      if(target.includes('suggest.json'))return new Promise(()=>{});
-      return new Response(seller());
-    }});
-    await service.search(user,{request:'crimson wool'},event=>events.push(event));
-    assert.deepEqual(events.at(-1).products.map(product=>product.url),[url],'A stalled feed does not block a verified web result');
-    const redirecting=createFabricSearch({...store(),fetchImpl:async()=>{attempts++;return new Promise(resolve=>{release=()=>resolve(new Response('',{status:302,headers:{location:url}}));});}});
-    const result=await redirecting.verify({url});assert.equal(result.evidence,'search_link');release();await new Promise(resolve=>setTimeout(resolve,15));
-    assert.equal(attempts,1,'A late response cannot launch another redirect after the budget');
-  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);release?.();}
-});
-await test('web seller checks start while keyword feeds are still pending and share duplicate checks',async()=>{
-  let releaseFeeds,releaseSeller,feedCalls=0,sellerCalls=0,webCalls=0,ranks=0;
-  const feeds=new Promise(resolve=>releaseFeeds=resolve),sellerGate=new Promise(resolve=>releaseSeller=resolve);
-  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
-    if(target.includes('openai.com')){webCalls++;return Response.json(response());}
-    if(target.includes('suggest.json')){feedCalls++;await feeds;return Response.json({resources:{results:{products:[{url,title:'Crimson wool fabric'}]}}});}
-    sellerCalls++;await sellerGate;return new Response(seller());
-  },rank:async({products})=>{ranks++;return products;}});
-  const events=[],pending=service.search(user,{request:'crimson wool, only Britex',image},event=>events.push(event));
-  try{
-    for(let i=0;i<20&&(!feedCalls||!webCalls||!sellerCalls);i++)await new Promise(resolve=>setImmediate(resolve));
-    assert.equal(sellerCalls,1,'Web listing verification must not wait for the slowest seed feed');
-    releaseFeeds();for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));
-    assert.equal(sellerCalls,1,'The same listing is fetched once across discovery and direct seeds');
-    releaseSeller();await pending;assert.equal(ranks,1);assert.equal(webCalls,1);assert.equal(events.at(-1).products.length,1);assert.ok(events.at(-1).timings.firstResultsMs<=events.at(-1).timings.totalMs,'Timings reflect completed checks');
-  }finally{releaseFeeds();releaseSeller();await pending;}
-});
-await test('a ready retailer starts seller checks before an unrelated slow feed settles',async()=>{
-  let releaseFeeds,releaseSeller,sellerCalls=0,rankCalls=0;
-  const feeds=new Promise(resolve=>releaseFeeds=resolve),sellerGate=new Promise(resolve=>releaseSeller=resolve);
-  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
-    if(target.includes('openai.com'))return Response.json(response({candidates:[]}));
-    if(target.includes('suggest.json')){
-      if(target.includes('moodfabrics.com'))await feeds;
-      return Response.json({resources:{results:{products:target.includes('britexfabrics.com')?[{url,title:'Crimson wool fabric'}]:[]}}});
+// Existing private-store compatibility checks continue below.
+await test('legacy lookbook reads only infer unambiguous garment selections and never write migrations',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json';let writes=0;
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{name:'Coat',fabric:'wool'},{name:'Shirt',fabric:'cotton'},{name:'Shirt',fabric:'linen'}]})),generation:'1'});
+  const service=createFabricSearch({...s,write:async()=>{writes++;}}),product={url,title:'Crimson wool twill'};
+  for(const [attribution,expected]of [[{garment:'Coat'},{'saved-piece-0':url}],[{garment:'Shirt'},{}],[{},{}],[{garmentId:'saved-piece-2',garment:'Shirt'},{}],[{garmentId:'saved-piece-0',garment:'Coat'},{'saved-piece-0':url}],[{garmentId:'saved-piece-0',garment:'Old jacket'},{}],[{garmentId:'saved-piece-0'},{}]]){
+    s.records.set(key,{buf:Buffer.from(JSON.stringify({items:[{...product,...attribution}],selectedUrl:url})),generation:'7'});
+    assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,expected);
+    if(attribution.garmentId){
+      const raw=JSON.stringify({items:[{...product,...attribution}],selectedUrl:url,selectedByGarment:{[attribution.garmentId]:url}});s.records.set(key,{buf:Buffer.from(raw),generation:'7'});
+      assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,expected);assert.equal(s.records.get(key).buf.toString(),raw,'Legacy maps obey the same identity evidence without migration writes');
     }
-    sellerCalls++;await sellerGate;return new Response(seller());
-  },rank:async({products})=>{rankCalls++;return products;}});
-  const events=[],pending=service.search(user,{request:'crimson wool',image},event=>events.push(event));
-  try{
-    for(let i=0;i<30&&!sellerCalls;i++)await new Promise(resolve=>setImmediate(resolve));
-    assert.equal(sellerCalls,1,'A slow unrelated feed must not postpone the ready listing verification');
-    assert.equal(events.some(event=>event.type==='done'),false,'No unchecked early results');
-    releaseSeller();releaseFeeds();const stats=await pending;
-    assert.equal(sellerCalls,1,'Final selection reuses the same seller check');assert.equal(rankCalls,1);assert.deepEqual(events.at(-1).products.map(p=>p.url),[url]);
-    assert.deepEqual(Object.keys(stats).sort(),['contextMs','count','firstResultsMs','retailerMs','totalMs','visualMs','webMs','webSellerMs'].sort(),'Logs contain only fixed aggregate timing names and counts');
-    for(const key of ['contextMs','webMs','retailerMs','webSellerMs','visualMs']){assert.ok(Number.isFinite(stats[key])&&stats[key]>=0);assert.equal(events.at(-1).timings[key],stats[key]);}
-  }finally{releaseSeller();releaseFeeds();await pending;}
-});
-await test('early retailer checks stay within the same eight balanced seller slots',async()=>{
-  const visits=[],events=[];
-  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
-    if(target.includes('openai.com'))return Response.json(response({candidates:[]}));
-    if(target.includes('suggest.json')){const u=new URL(target),q=u.searchParams.get('q');return Response.json({resources:{results:{products:Array.from({length:3},(_,i)=>({url:u.hostname==='britexfabrics.com'&&i===0?(q.includes('twill')?'/collections/cloth/products/shared-red-wool':'/products/shared-red-wool'):'/products/'+encodeURIComponent(q)+'-'+i,title:'Crimson wool fabric'}))}}});}
-    visits.push(target);return new Response(seller({url:target}));
-  },rank:async({products})=>products});
-  await service.search(user,{request:'red wool twill',piece:{fabric:'Red wool twill'},image},event=>events.push(event));
-  assert.equal(visits.length,8,'Early work cannot add seller requests beyond the selected eight');
-  assert.equal(new Set(visits).size,8);assert.equal(events.at(-1).products.length,8);
-  assert.equal(new Set(events.at(-1).products.map(p=>new URL(p.url).hostname)).size,5,'All five eligible feed merchants retain their slots');
-});
-await test('optional variant metadata has a short deadline without dropping valid seller listings',async()=>{
-  const nativeTimeout=AbortSignal.timeout,keepAlive=setInterval(()=>{},1000);let variantSignal;
-  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===1200?35:ms);
-  try{
-    const service=createFabricSearch({...store(),fetchImpl:async(target,options)=>{
-      if(target.endsWith('.js')){variantSignal=options.signal;return new Promise(()=>{});}
-      return new Response(seller({offers:{'@type':'Offer',priceCurrency:'USD',availability:'https://schema.org/InStock'}}));
-    }});
-    const pending=service.verify({url});
-    const result=await Promise.race([pending,new Promise((_,reject)=>setTimeout(()=>reject(Error('Optional price lookup blocked the eligible fabric')),180))]);
-    assert.equal(result.evidence,'seller_listing');assert.equal(result.price,'');assert.equal(variantSignal.aborted,true,'Variant lookup has its own short deadline');
-    const variants={handle:'crimson-wool',variants:[{id:1,title:'Default Title',price:6999,available:true},{id:2,title:'Swatch',price:300,available:true}]};
-    const html=seller({offers:{'@type':'AggregateOffer',priceCurrency:'USD',lowPrice:3,highPrice:69.99}})+'<p>69.99 per yard</p>';
-    const fast=createFabricSearch({...store(),fetchImpl:async target=>target.endsWith('.js')?Response.json(variants):new Response(html)});
-    assert.equal((await fast.verify({url})).price,'69.99','Fast seller variant facts remain available');
-    assert.equal(await fast.verify({url:url+'?variant=2'}),null,'A selected swatch cannot become yardage');
-    let visits=0;const unavailable=createFabricSearch({...store(),fetchImpl:async()=>{visits++;return new Response(seller({offers:{'@type':'Offer',priceCurrency:'USD',availability:'https://schema.org/OutOfStock'}}));}});
-    assert.equal(await unavailable.verify({url}),null);assert.equal(visits,1,'Known unavailable products do not spend time fetching optional prices');
-
-  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);}
-});
-// Worldwide scenarios run as their own named check.
-console.log(`Fabric search: ${count} behavioral checks passed.`);
-
-};
-
-checks['fabric-worldwide']=async function(){
-// Worldwide main search: fake OpenAI evidence only; no external seller traffic.
-const {default:assert}=await import('node:assert/strict');
-const {createFabricSearch,normalizeFabricRequest}=await import('../backend/server/fabric-search.mjs');
-const {sourceURL,worldwideSearchBody,isColorFabricPhoto}=await import('../backend/server/fabric-worldwide.mjs');
-const image='data:image/png;base64,iVBORw0KGgo=',url='https://global-textiles.example.net/item/forest-tricot';
-const candidate={type:'candidate',url,title:'Forest green tricot fabric',material:'Green jacket and pants body',reason:'A possible smooth knit for the green body.',price:'1.00',image:'https://invented.example/fake.jpg'};
-const interpretation={type:'interpretation',observation:'Green body knit, gold panels and ivory inserts; exact fiber is uncertain.',query:'green tracksuit textiles'};
-const evidence={type:'web_search_call',action:{sources:[{url}]},results:[{type:'image_result',source_website_url:url,image_url:'https://seller-images.example.net/green.jpg',thumbnail_url:'https://seller-images.example.net/thumb.jpg',caption:'Forest green tricot fabric'}]};
-const content=objects=>({type:'message',content:[{type:'output_text',text:objects.map(object=>JSON.stringify(object)).join('\n')}]});
-const user={sub:'fixture-owner'};
-let count=0;
-async function test(name,run){await run();count++;console.log('  ok worldwide '+name);}
-await test('default requires worldwide image results, optional legacy groups cannot scope it',()=>{
-  const input=normalizeFabricRequest({request:'Find fabrics for this look',image,storeGroups:['local'],stores:['evil.invalid']});
-  assert.equal(input.mode,'worldwide');assert.equal(input.storeGroups,undefined);assert.deepEqual(input.stores,[]);
-  const body=worldwideSearchBody(input,'gpt-6-luna');assert.equal(body.stream,true);assert.equal(body.store,false);
-  assert.equal(body.max_tool_calls,5);assert.equal(body.max_output_tokens,6000);assert.equal(body.tools[0].image_settings.max_results,32);
-  assert.match(body.instructions,/first image-search query broad/);assert.match(body.instructions,/sewing\/knitting patterns/);assert.match(body.instructions,/dominant color/);assert.match(body.instructions,/Solid color body-cloth alternatives are useful/);
-  assert.equal(body.tools[0].filters,undefined);assert.deepEqual(body.tools[0].search_content_types,['image']);
-  assert.match(body.instructions,/Use image search to find photographs/);
-  assert.match(body.instructions,/source_website_url/);
-  assert.ok(body.include.includes('web_search_call.results'));assert.equal(body.input[0].content[1].image_url,image);
-  assert.throws(()=>normalizeFabricRequest({request:'wool',mode:'unknown'}));
-});
-await test('patterned apparel yardage is not mistaken for a sewing pattern',async()=>{
-  for(const title of ['Forest green floral pattern brocade', 'Forest green floral pattern jacquard fabric','Black floral pattern on forest green apparel fabric by the yard']){
-    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:[{...evidence.results[0],caption:title}]},content([{...interpretation,colorFamily:'green'},{...candidate,title}])]})});
-    await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));
-    assert.equal(events.at(-1).products.length,1,title);assert.ok(events.at(-1).products[0].image);assert.equal(events.at(-1).searchDetails.diagnostics.imagePages,1);assert.equal(events.at(-1).searchDetails.diagnostics.photoProducts,1);
   }
-  for(const title of ['PDF sewing pattern for green fabric coat','Knitting pattern for wool sweater','Digital pattern download with fabric guide','Dress pattern for green stretch fabrics','Pattern for a shirt using cotton fabric']){
-    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([interpretation,{...candidate,title}])]})});
-    await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));assert.deepEqual(events.at(-1).products,[]);
+  assert.equal(writes,0);
+  for(const selectedByGarment of [null,[],{'bad id':url},{'saved-piece-0':other},{'saved-piece-0':null}]){
+    s.records.set(key,{buf:Buffer.from(JSON.stringify({items:[product],selectedUrl:url,selectedByGarment})),generation:'7'});
+    await assert.rejects(service.loadBook(user,'project-A'),e=>e.status===503);
+    await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'7',action:'remove',product:{url}}),e=>e.status===503);
+  }
+  assert.equal(writes,0,'Malformed selection storage must not be silently replaced');
+});
+await test('redissection hides only orphan selections and prunes them on an explicit CAS mutation',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',pieceKey='submissions/project-A/pieces.json',product={...{url,title:'Crimson wool twill'},garment:'Coat',garmentId:'kept'};
+  s.records.set(pieceKey,{buf:Buffer.from(JSON.stringify({pieces:[{id:'kept',name:'Coat',fabric:'wool'}]})),generation:'2'});
+  const raw=JSON.stringify({items:[product],selectedUrl:url,selectedByGarment:{kept:url,removed:url}});
+  s.records.set(key,{buf:Buffer.from(raw),generation:'4'});
+  const service=createFabricSearch({...s,fetchImpl:async()=>{throw Error('Stored selections do not need retailer access');}});
+  const book=await service.loadBook(user,'project-A');assert.deepEqual(book.selectedByGarment,{kept:url});assert.equal(book.items.length,1);assert.equal(s.records.get(key).buf.toString(),raw,'Read does not write a migration');
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'3',action:'select',garmentId:'kept',product:{url}}),e=>e.status===409);assert.equal(s.records.get(key).buf.toString(),raw);
+  const updated=await service.saveBook(user,{submissionId:'project-A',generation:'4',action:'select',garmentId:'kept',product:{url}});
+  assert.deepEqual(updated.selectedByGarment,{kept:url});assert.deepEqual(JSON.parse(s.records.get(key).buf).selectedByGarment,{kept:url});
+});
+await test('selection fingerprints reject reused IDs but preserve stable garments through reorder and production work',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',pieceKey='submissions/project-A/pieces.json';
+  const coat={id:'saved-piece-0',name:'Coat',fabric:'Crimson wool',fabric_spec:{fiber:'wool',weave:'twill'}},pants={id:'pants',name:'Pants',fabric:'cotton'};
+  const writePieces=pieces=>s.records.set(pieceKey,{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
+  writePieces([coat,pants]);
+  const service=createFabricSearch({...s,fetchImpl:async()=>response([entry()])});
+  let book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:coat.id,product:{url}});
+  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:pants.id,product:{url}});
+  const raw=s.records.get(key).buf.toString(),stored=JSON.parse(raw);
+  assert.match(stored.selectedGarmentFingerprints[coat.id],/^v1:[a-f0-9]{64}$/);assert.equal(book.selectedGarmentFingerprints,undefined,'Fingerprint storage is server owned; client schema stays compatible');
+  writePieces([pants,{...coat,_image:image,_pattern:'new generated pattern',_technical:'production update'}]);
+  assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,{[coat.id]:url,pants:url});
+  for(const replacement of [{...coat,name:'New jacket'},{...coat,fabric:'White cotton'},{...coat,fabric_spec:{fiber:'cotton',weave:'poplin'}},{...coat,fabric_hex:'#ffffff'}]){
+    writePieces([replacement,pants]);const current=await service.loadBook(user,'project-A');
+    assert.deepEqual(current.selectedByGarment,{pants:url});assert.equal(current.items.length,1);assert.equal(s.records.get(key).buf.toString(),raw,'Changed identity is hidden without a migration write');
+  }
+  const replacement={...coat,name:'New jacket',fabric:'White cotton'};writePieces([replacement,pants]);
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:coat.id,product:{url}}),error=>error.status===409);assert.equal(s.records.get(key).buf.toString(),raw);
+  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{url}});
+  assert.deepEqual(book.selectedByGarment,{pants:url});assert.deepEqual(Object.keys(JSON.parse(s.records.get(key).buf).selectedGarmentFingerprints),['pants'],'Explicit CAS mutation prunes stale identity and its fingerprint');
+  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:replacement.id,product:{url}});
+  assert.deepEqual(book.selectedByGarment,{pants:url,[replacement.id]:url});assert.notEqual(JSON.parse(s.records.get(key).buf).selectedGarmentFingerprints[replacement.id],stored.selectedGarmentFingerprints[coat.id],'Explicit review binds the reused ID to its new garment');
+});
+await test('malformed garment identity storage cannot be silently overwritten',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',product={...{url,title:'Crimson wool twill'},garment:'Coat',garmentId:'coat'};
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Coat',fabric:'wool'}]})),generation:'1'});
+  const service=createFabricSearch({...s});
+  for(const selectedGarmentFingerprints of [null,[],{}, {coat:'invalid'}, {coat:'v1:'+'a'.repeat(64),extra:'v1:'+'b'.repeat(64)}]){
+    const raw=JSON.stringify({items:[product],selectedUrl:url,selectedByGarment:{coat:url},selectedGarmentFingerprints});s.records.set(key,{buf:Buffer.from(raw),generation:'5'});
+    await assert.rejects(service.loadBook(user,'project-A'),error=>error.status===503);
+    await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'5',action:'remove',product:{url}}),error=>error.status===503);assert.equal(s.records.get(key).buf.toString(),raw);
   }
 });
-await test('modeled links cannot disguise upholstery, furnishing or decor evidence',async()=>{
-  for(const change of [{url:'https://cloth.example/green-jacquard-upholstery-fabric'},{title:'Green furnishing fabric'},{reason:'Green brocade, though some options are furnishing-weight.'},{caption:'Green upholstery fabric by the yard'},{caption:'Green decor fabric by the yard'},{url:'https://cloth.example/products/green-%75pholstery-fabric'}]){
-    const item={...candidate,...change},page=item.url;
-    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,action:{sources:[{url:page}]},results:[{...evidence.results[0],source_website_url:page,caption:change.caption||'Green fabric'}]},content([interpretation,item])]})});
-    await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));
-    assert.deepEqual(events.at(-1).products,[],JSON.stringify(change));
-  }
+await test('local in-house photo favorites share the sealed book without invented inventory or arrival',async()=>{
+  const s=store(),service=createFabricSearch({...s,model:'configured'});
+  const product={url:'/aesthetics/fabrics/Midnight%20Velvet.JPG',title:'Midnight Velvet',price:'in stock',etaDays:7,availability:'in_stock',garment:'Evening jacket'};
+  const book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',product});
+  assert.equal(book.items[0].image,product.url);assert.equal(book.items[0].availability,'unknown');assert.equal(book.items[0].etaDays,undefined);assert.equal(book.items[0].price,undefined);
+  assert.equal((await service.loadBook(second,'project-A')).items.length,0);
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{...product,url:'/aesthetics/fabrics/%2e%2e/private.png'}}));
 });
-await test('late upholstery evidence retracts a modeled card even if the stream then fails',async()=>{
-  const frames=[{type:'response.output_item.done',item:evidence},{type:'response.output_text.delta',delta:JSON.stringify(candidate)+'\n'},{type:'response.output_item.done',item:{...evidence,results:[{...evidence.results[0],caption:'Green upholstery fabric by the yard'}]}},{type:'response.failed'}];
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(frames.map(event=>'data: '+JSON.stringify(event)+'\n\n').join(''),{headers:{'Content-Type':'text/event-stream'}})});
-  await assert.rejects(service.search(user,{request:'Green apparel fabric',image},event=>events.push(structuredClone(event))),/interrupted/);
-  assert.ok(events.some(event=>event.products?.[0]?.url===url));
-  assert.ok(events.some(event=>event.removedUrls?.includes(url)));
-  assert.deepEqual(events.filter(event=>event.products).at(-1).products,[]);
-});
-await test('a text-only provider response reports missing photographs without a paid retry',async()=>{
-  let calls=0;const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>{calls++;return Response.json({status:'completed',output:[{...evidence,results:[]},content([interpretation,candidate])]});}});
-  await service.search(user,{request:'Green apparel fabric',image},event=>events.push(event));
-  assert.equal(calls,1);assert.equal(events.at(-1).products.length,1);
-  assert.match(events.at(-1).message,/no fabric photographs/i);
-  assert.match(events.at(-1).searchDetails.stage,/source links only/i);
-});
-await test('public source links reject private addresses, credentials and unsafe schemes',()=>{
-  for(const bad of ['http://shop.example/a','https://127.0.0.1/a','https://2130706433/a','https://[::1]/a','https://10.0.0.2/a','https://user:secret@shop.example/a','https://shop.local/a','https://shop.local./a','https://localhost/a','file:///etc/passwd'])assert.equal(sourceURL(bad),'',bad);
-  assert.equal(sourceURL(url+'?variant=2&utm_source=ad#top'),url+'?variant=2');
-});
-await test('one call streams a global product before completion, with tool-backed image and no invented facts',async()=>{
-  let controller,calls=0,cancelled=false;
-  const stream=new ReadableStream({start(value){controller=value;},cancel(){cancelled=true;}}),events=[];
-  const service=createFabricSearch({apiKey:()=> 'fake',model:'gpt-6-luna',rank:()=>{throw Error('Main search must not call a second ranker');},fetchImpl:async(target,options)=>{
-    calls++;assert.equal(target,'https://api.openai.com/v1/responses');assert.equal(JSON.parse(options.body).tools[0].filters,undefined);
-    return new Response(stream,{headers:{'Content-Type':'text/event-stream'}});
-  }});
-  const pending=service.search(user,{request:'Find fabrics',image},event=>events.push(event));
-  const push=event=>controller.enqueue(new TextEncoder().encode('data: '+JSON.stringify(event)+'\n\n'));
-  push({type:'response.output_item.done',item:evidence});push({type:'response.output_text.delta',delta:JSON.stringify(interpretation)+'\n'+JSON.stringify(candidate)+'\n'});
-  for(let i=0;i<50&&!events.some(event=>event.incremental);i++)await new Promise(resolve=>setImmediate(resolve));
-  const early=events.find(event=>event.incremental);assert.ok(early,'Useful source-backed products arrive before response.completed');assert.equal(events.some(e=>e.type==='done'),false);
-  assert.equal(early.products[0].url,url);assert.equal(early.products[0].image,evidence.results[0].image_url);
-  for(const field of ['price','unit','currency','composition'])assert.equal(early.products[0][field],'');assert.equal(early.products[0].availability,'unknown');
-  assert.equal(early.products[0].evidence,'web_suggestion');
-  push({type:'response.completed',response:{status:'completed',output:[evidence,content([interpretation,candidate])]}});
-  const stats=await pending;assert.equal(calls,1);assert.equal(stats.count,1);assert.ok(cancelled,'Completion does not wait for EOF');assert.equal(stats.visualMs,0);assert.equal(stats.retailerMs,0);
-});
-await test('ungrounded links/images and stale garment IDs cannot become suggestions',async()=>{
-  const objects=[interpretation,candidate,{...candidate,url:'https://invented-shop.example/product/red-fabric'},{...candidate,url:url+'?variant=bad',garmentIds:['foreign']}];
-  const response={status:'completed',output:[{...evidence,results:[]},content(objects)]},events=[];
-  const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async target=>{assert.equal(target,'https://api.openai.com/v1/responses');return Response.json(response);}});
-  await service.search(user,{request:'green knit',image},event=>events.push(event));
-  assert.equal(events.at(-1).products.length,1);assert.equal(events.at(-1).products[0].image,'','Model image URL is ignored when search did not supply a page-linked image');
-});
-await test('missing key and provider failure never fall back to retailer feeds or echo provider errors',async()=>{
-  let calls=0;const service=createFabricSearch({fetchImpl:async()=>{calls++;throw Error('Unexpected feed');}});
-  await assert.rejects(service.search(user,{request:'green knit',image},()=>{}),/Worldwide fabric search is unavailable/);assert.equal(calls,0);
-  const failed=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response('secret-provider-message',{status:403})});
-  await assert.rejects(failed.search(user,{request:'green knit',image},()=>{}),error=>!error.message.includes('secret-provider-message')&&error.status===502);
-});
-await test('known client exclusions remain strict without imposing saved-body guesses',async()=>{
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([interpretation,{...candidate,title:'Green polyester tricot fabric'}])]})});
-  await service.search(user,{request:'green fabric',preferences:'No polyester',image},event=>events.push(event));assert.deepEqual(events.at(-1).products,[]);
-});
-await test('late source evidence retracts an initially unknown client-excluded material',async()=>{
-  let controller;const events=[];
-  const stream=new ReadableStream({start(value){controller=value;}});
-  const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(stream,{headers:{'Content-Type':'text/event-stream'}})});
-  const task=service.search(user,{request:'green knit',preferences:'No polyester',image},event=>events.push(event));
-  const push=event=>controller.enqueue(new TextEncoder().encode('data: '+JSON.stringify(event)+'\n\n'));
-  push({type:'response.output_item.done',item:{...evidence,results:[]}});
-  push({type:'response.output_text.delta',delta:JSON.stringify(candidate)+'\n'});
-  for(let i=0;i<50&&!events.some(event=>event.incremental);i++)await new Promise(resolve=>setImmediate(resolve));
-  assert.equal(events.find(event=>event.incremental)?.products[0]?.url,url,'Unknown fiber may initially be a qualified suggestion');
-  push({type:'response.output_item.done',item:{...evidence,results:[{...evidence.results[0],caption:'Green polyester tricot fabric'}]}});
-  push({type:'response.completed',response:{status:'completed',output:[evidence,content([candidate])]}});
-  await task;
-  const removal=events.find(event=>event.removedUrls?.includes(url));
-  assert.ok(removal,'Later known client contradiction must retract the existing card');
-  assert.deepEqual(removal.products,[]);assert.deepEqual(events.at(-1).products,[]);
-});
-await test('SSE handles CRLF and Unicode split across every byte without inventing a photo',async()=>{
-  const product={...candidate,title:'Green crêpe fabric'};
-  const events=[{type:'response.output_item.done',item:evidence},{type:'response.output_text.delta',delta:JSON.stringify(interpretation)+'\n'+JSON.stringify(product)+'\n'},{type:'response.completed',response:{status:'completed',output:[]}}];
-  const bytes=new TextEncoder().encode(events.map(event=>'event: '+event.type+'\r\ndata: '+JSON.stringify(event)+'\r\n\r\n').join(''));
-  const stream=new ReadableStream({start(controller){for(const byte of bytes)controller.enqueue(Uint8Array.of(byte));controller.close();}}),out=[];
-  const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(stream,{headers:{'Content-Type':'text/event-stream'}})});
-  await service.search(user,{request:'green fabric',image},event=>out.push(event));assert.equal(out.at(-1).products[0].title,'Green crêpe fabric');
-});
-await test('stalled worldwide fetch settles on parent cancellation even if transport ignores it',async()=>{
-  const keepAlive=setInterval(()=>{},1000);let calls=0;
-  try{const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>{calls++;return new Promise(()=>{});}});await assert.rejects(service.search(user,{request:'green knit',image},()=>{},AbortSignal.timeout(30)));assert.equal(calls,1);}finally{clearInterval(keepAlive);}
-});
-await test('worldwide own deadline survives GC and a stalled body cancels cleanly',async()=>{
-  const native=AbortSignal.timeout,keepAlive=setInterval(()=>{},1000);AbortSignal.timeout=ms=>native.call(AbortSignal,ms===50000?35:ms);
-  try{
-    const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Promise(()=>{})});
-    await assert.rejects(service.search(user,{request:'green knit',image},()=>{}),error=>error.name==='TimeoutError');
-    let cancelled=false;const body=new ReadableStream({cancel(){cancelled=true;}});
-    const stalled=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(body,{headers:{'Content-Type':'text/event-stream'}})});
-    await assert.rejects(stalled.search(user,{request:'green knit',image},()=>{}),error=>error.name==='TimeoutError');assert.ok(cancelled);
-  }finally{AbortSignal.timeout=native;clearInterval(keepAlive);}
-});
-await test('saved context is canonical before the single worldwide call starts',async()=>{
-  const piece={id:'jacket',name:'Track jacket',fabric:'Green knit',_image:image};let calls=0;const events=[];
-  const service=createFabricSearch({apiKey:()=> 'fake',read:async path=>({ok:true,buf:Buffer.from(JSON.stringify(path.endsWith('pieces.json')?{pieces:[piece]}:path.endsWith('summary.json')?{fabric_preferences:'No polyester'}:{}))}),fetchImpl:async(target,options)=>{
-    calls++;assert.equal(target,'https://api.openai.com/v1/responses');const sent=JSON.parse(JSON.parse(options.body).input[0].content[0].text);
-    assert.equal(sent.selectedGarment.name,'Track jacket');assert.equal(sent.clientFabricPreferences,'No polyester');assert.doesNotMatch(JSON.stringify(sent),/forged/);
-    return Response.json({status:'completed',output:[evidence,content([interpretation,{...candidate,garmentIds:['jacket']}])]});
-  }});
-  await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'jacket',name:'forged'},image},event=>events.push(event));assert.equal(calls,1);assert.equal(events.at(-1).products[0].garmentId,'jacket');
-});
-
-await test('three written recommendations retain source photographs from up to twelve different websites',async()=>{
-  const photos=Array.from({length:14},(_,i)=>({type:'image_result',source_website_url:`https://cloth-${i}.example/products/green-twill-${i}`,image_url:`https://photos.example/green-${i}.jpg`,thumbnail_url:`https://photos.example/thumb-${i}.jpg`,caption:`Forest green cotton twill apparel fabric by the yard ${i}`}));
-  const unsafe=[['upholstery','Green upholstery fabric by the yard'],['shirt','Green shirt made of premium fabric size M'],['pattern','Green sewing pattern for apparel fabric'],['orange','Orange fabric by the yard with green variants'],['sample','Green cotton apparel fabric sample'],['blog','Green apparel fabric by the yard']].map(([id,caption])=>({...photos[0],source_website_url:'https://cloth.example/'+(id==='blog'?'blog/green-fabric':'products/'+id),caption}));
-  const written=photos.slice(0,3).map(p=>({...candidate,url:p.source_website_url,title:p.caption}));
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{type:'web_search_call',action:{queries:['forest green suiting fabric','hunter green cotton twill by the yard']},results:[...photos,...unsafe]},content([{...interpretation,colorFamily:'green'},...written])]})});
-  await service.search(user,{request:'green apparel fabric',image},e=>events.push(e));
-  const done=events.at(-1);assert.equal(done.products.length,12,'Search photographs fill the twelve-site viewer beyond the written shortlist');
-  assert.ok(done.products.every(p=>p.image&&p.imageCandidates.length===2));assert.equal(done.products[0].image,photos[0].image_url);
-  assert.ok(done.products.slice(3).every(p=>!p.garmentId&&!p.garment&&p.reason.includes('Approximate')),'Raw photo suggestions invent no garment identity or exact suitability');
-  assert.deepEqual(done.searchDetails.webQueries,['forest green suiting fabric','hunter green cotton twill by the yard']);
-  for(const field of ['price','unit','currency','composition'])assert.ok(done.products.every(p=>p[field]===''));
-});
-await test('unknown colors and non-yardage/editorial/variant mentions cannot auto-add photographs',()=>{
-  const photo={url:'https://cloth.example/products/green',caption:'Green cotton apparel fabric by the yard',imageCandidates:['https://photos.example/green.jpg']};
-  assert.equal(isColorFabricPhoto(photo,'green'),true);
-  for(const family of ['unknown','chartreuse','GREEN',null])assert.equal(isColorFabricPhoto(photo,family),false);
-  for(const caption of ['Green shirt made of cotton fabric','Green fabric inspiration','Red apparel fabric by the yard, also green','Green upholstery fabric by the yard','Green fabric by the yard available in other colors','Green fabric by the yard available in blue and red','Green sewing pattern for dressmaking','Green fabric swatch','Green craft fabric by the yard'])assert.equal(isColorFabricPhoto({...photo,caption},'green'),false,caption);
-  for(const path of ['collections/green','category/green','search/green','blog/green','guides/green'])assert.equal(isColorFabricPhoto({...photo,url:'https://cloth.example/'+path},'green'),false,path);
-});
-await test('image association tolerates only trailing slash spelling and keeps variants and hosts separate',async()=>{
-  for(const [source,hasPhoto]of [[url+'/',true],[url+'?variant=red',false],[url.replace('global-textiles.','www.global-textiles.'),false]]){
-    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:[{...evidence.results[0],source_website_url:source}]},content([candidate])]})});
-    await service.search(user,{request:'fabric',image},e=>events.push(e));assert.equal(!!events.at(-1).products[0].image,hasPhoto,source);
-  }
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([candidate,{...candidate,url:url+'/'}])]})});
-  await service.search(user,{request:'fabric',image},e=>events.push(e));assert.equal(events.at(-1).products.length,1,'Slash aliases are not duplicate products');
-});
-await test('photo suggestions displace photo-less links at the bounded display limit',async()=>{
-  const links=Array.from({length:24},(_,i)=>({...candidate,url:`https://link-${i}.example/products/green`}));
-  const photos=Array.from({length:30},(_,i)=>({...evidence.results[0],source_website_url:`https://photo-${i}.example/products/green`,caption:`Green suiting fabric by the yard ${i}`}));
-  const frames=[{type:'response.output_item.done',item:{type:'web_search_call',action:{sources:links.map(({url})=>({url}))}}},{type:'response.output_text.delta',delta:[{...interpretation,colorFamily:'green'},...links].map(value=>JSON.stringify(value)).join('\n')+'\n'},{type:'response.output_item.done',item:{type:'web_search_call',results:photos}},{type:'response.completed',response:{status:'completed',output:[]}}];
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(frames.map(event=>'data: '+JSON.stringify(event)+'\n\n').join(''),{headers:{'Content-Type':'text/event-stream'}})});
-  await service.search(user,{request:'green fabric',preferences:'No polyester',image},e=>events.push(e));
-  assert.equal(events.at(-1).products.length,12);assert.ok(events.at(-1).products.every(p=>p.image));
-  assert.ok(events.some(e=>e.removedUrls?.length),'Earlier link-only cards are removed from retained client results when photo results take their slots');
-});
-await test('extra photographs still respect client exclusions and need a resolved color',async()=>{
-  for(const colorFamily of ['green','unknown']){
-    const photos=[{...evidence.results[0],caption:'Green polyester suiting fabric by the yard'}];
-    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:photos},content([{...interpretation,colorFamily}])]})});
-    await service.search(user,{request:'green fabric',preferences:'No polyester',image},e=>events.push(e));assert.deepEqual(events.at(-1).products,[]);
-  }
-});
-await test('automatic worldwide keeps explicit refinements while using canonical saved garments',async()=>{
-  let sent;const piece={id:'coat',name:'Hooded tailcoat',fabric:'Dense ornate brocade with embroidery'};
-  const service=createFabricSearch({apiKey:()=> 'fake',read:async path=>({ok:true,buf:Buffer.from(JSON.stringify(path.endsWith('pieces.json')?{pieces:[piece]}:{}))}),fetchImpl:async(_,options)=>{sent=JSON.parse(JSON.parse(options.body).input[0].content[0].text);return Response.json({status:'completed',output:[]});}});
-  await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'coat',name:'forged'},request:'Main green color, solid cloth is fine; no polyester',history:[{request:'less shiny'}],image},()=>{});
-  assert.equal(sent.request,'Main green color, solid cloth is fine; no polyester');assert.equal(sent.selectedGarment.name,'Hooded tailcoat');assert.equal(sent.earlierRequests[0].request,'less shiny');
-});
-
-
-await test('same-page variant photos cannot mix known colors in raw or modeled fallback URLs',async()=>{
-  const green={...evidence.results[0],caption:'Green cotton apparel fabric by the yard'},orange={...evidence.results[0],image_url:'https://photos.example/orange.jpg',thumbnail_url:'https://photos.example/orange-thumb.jpg',caption:'Orange cotton apparel fabric by the yard'};
-  for(const modeled of [false,true])for(const results of [[green,orange],[orange,green]]){
-    const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results},content([{...interpretation,colorFamily:'green'},...(modeled?[candidate]:[])])]})});
-    await service.search(user,{request:'green fabric',image},e=>events.push(e));
-    if(!modeled)assert.deepEqual(events.at(-1).products,[],'Ambiguous same-page color evidence is not an automatic addition');
-    else {assert.deepEqual(events.at(-1).products[0].imageCandidates,[green.image_url,green.thumbnail_url],'Only explicitly green source images can back this green card');assert.deepEqual(events.at(-1).products[0].rejectedImageURLs,[orange.image_url,orange.thumbnail_url],'Previously mounted photos can be explicitly revoked by later color evidence');}
-  }
-});
-await test('fifth and later source captions cannot hide a known material exclusion',async()=>{
-  const photos=Array.from({length:6},(_,i)=>({...evidence.results[0],caption:i===4?'Green polyester apparel fabric by the yard':'Green cotton apparel fabric by the yard '+i}));
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:photos},content([{...interpretation,colorFamily:'green'},candidate])]})});
-  await service.search(user,{request:'green fabric',preferences:'No polyester',image},e=>events.push(e));assert.deepEqual(events.at(-1).products,[]);
-});
-
-
-await test('uncolored model titles can still use page-linked fabric photos without a guessed color',async()=>{
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[evidence,content([{...candidate,title:'Cotton tricot fabric'}])]})});
-  await service.search(user,{request:'fabric',image},e=>events.push(e));assert.equal(events.at(-1).products[0].image,evidence.results[0].image_url);
-});
-
-
-await test('automatic worldwide refinements enforce exclusions from actual client request words',async()=>{
-  const piece={id:'coat',name:'Green coat',fabric:'Green cloth'},events=[];
-  const service=createFabricSearch({apiKey:()=> 'fake',read:async path=>({ok:true,buf:Buffer.from(JSON.stringify(path.endsWith('pieces.json')?{pieces:[piece]}:{}))}),fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:[{...evidence.results[0],caption:'Green polyester suiting fabric by the yard'}]},content([{...interpretation,colorFamily:'green'},candidate])]})});
-  await service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'coat'},request:'Green body cloth, no polyester',image},e=>events.push(e));assert.deepEqual(events.at(-1).products,[]);
-});
-
-
-await test('late color interpretation revokes an earlier uncolored-title photo with known different color',async()=>{
-  const source={...evidence,results:[{...evidence.results[0],caption:'Orange cotton apparel fabric by the yard'}]};
-  const records=[{...candidate,title:'Cotton apparel fabric'}, {...interpretation,colorFamily:'green'}];
-  const frames=[{type:'response.output_item.done',item:source},...records.map(record=>({type:'response.output_text.delta',delta:JSON.stringify(record)+'\n'})),{type:'response.completed',response:{status:'completed',output:[]}}];
-  const stream=new ReadableStream({start(controller){for(const event of frames)controller.enqueue(new TextEncoder().encode('data: '+JSON.stringify(event)+'\n\n'));controller.close();}}),events=[];
-  const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(stream,{headers:{'Content-Type':'text/event-stream'}})});
-  await service.search(user,{request:'fabric',image},event=>events.push(structuredClone(event)));
-  assert.ok(events.some(e=>e.products?.[0]?.image),'An early source-backed image may precede interpretation');
-  assert.equal(events.at(-1).products[0].image,'');assert.deepEqual(events.at(-1).products[0].rejectedImageURLs,[source.results[0].image_url,source.results[0].thumbnail_url]);
-});
-
-await test('selected dissected image leads a short request without saved fabric guesses',()=>{
-  const pieceImage='data:image/png;base64,cGllY2U=';
-  const body=worldwideSearchBody({request:'Darker green, no polyester',history:[{request:'Less shiny'}],preferences:'No polyester',image,selectedReference:pieceImage,piece:{name:'Coat',fabric:'Mandatory ornate brocade',fabric_spec:{weave:'brocade'}},pieces:[{name:'Coat',fabric:'Mandatory ornate brocade'}]},'gpt-6-luna');
-  const parts=body.input[0].content;
-  assert.equal(parts[1].image_url,pieceImage);assert.equal(parts.at(-1).image_url,image,'Original look remains available as context');
-  assert.doesNotMatch(JSON.stringify(parts),/Mandatory ornate brocade/);
-  assert.match(parts[0].text,/Darker green, no polyester/);assert.match(body.instructions,/up to 12 different websites/);
-  assert.ok(body.instructions.split(/\s+/).length<300,'The provider receives a concise sourcing task');
-});
-await test('tool photos stream before any written shortlist, accent-first captions survive, and late exclusions retract',async()=>{
-  let controller;const events=[];
-  const stream=new ReadableStream({start(value){controller=value;}});
-  const service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(stream,{headers:{'Content-Type':'text/event-stream'}})});
-  const task=service.search(user,{request:'Green body fabric, no polyester',image},event=>events.push(structuredClone(event)));
-  const push=event=>controller.enqueue(new TextEncoder().encode('data: '+JSON.stringify(event)+'\n\n'));
-  push({type:'response.output_text.delta',delta:JSON.stringify({...interpretation,colorFamily:'green'})+'\n'});
-  const photo={...evidence.results[0],caption:'Black embroidery on forest green apparel fabric by the yard'};
-  push({type:'response.output_item.done',item:{...evidence,results:[photo]}});
-  for(let i=0;i<50&&!events.some(event=>event.products?.length);i++)await new Promise(resolve=>setImmediate(resolve));
-  assert.equal(events.find(event=>event.products?.length)?.products[0].image,photo.image_url,'No model candidate or completion is needed for a qualified tool photograph');
-  assert.equal(events.some(event=>event.type==='done'),false);
-  push({type:'response.output_item.done',item:{...evidence,results:[{...photo,caption:'Forest green polyester apparel fabric by the yard'}]}});
-  push({type:'response.failed'});
-  await assert.rejects(task,/interrupted/);
-  assert.ok(events.some(event=>event.removedUrls?.includes(url)));assert.equal(events.filter(event=>event.products).at(-1).products.length,0);
-});
-await test('later ambiguous variant evidence retracts an early raw photograph before stream failure',async()=>{
-  const green={...evidence.results[0],caption:'Green suiting fabric by the yard'},orange={...green,image_url:'https://seller-images.example.net/orange.jpg',caption:'Orange suiting fabric by the yard'};
-  const frames=[{type:'response.output_text.delta',delta:JSON.stringify({...interpretation,colorFamily:'green'})+'\n'},{type:'response.output_item.done',item:{...evidence,results:[green]}},{type:'response.output_item.done',item:{...evidence,results:[orange]}},{type:'response.failed'}];
-  const events=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>new Response(frames.map(event=>'data: '+JSON.stringify(event)+'\n\n').join(''),{headers:{'Content-Type':'text/event-stream'}})});
-  await assert.rejects(service.search(user,{request:'Green fabric',image},event=>events.push(structuredClone(event))),/interrupted/);
-  assert.ok(events.some(event=>event.products?.[0]?.image===green.image_url));assert.ok(events.some(event=>event.removedUrls?.includes(url)));assert.equal(events.filter(event=>event.products).at(-1).products.length,0);
-});
-await test('one merchant cannot crowd out twelve other source websites',async()=>{
-  const photos=Array.from({length:20},(_,i)=>({...evidence.results[0],source_website_url:'https://one-shop.example/products/green-'+i,caption:'Green suiting fabric by the yard'}));
-  for(let i=0;i<11;i++)photos.push({...photos[0],source_website_url:'https://shop-'+i+'.example/products/green'});
-  const out=[],service=createFabricSearch({apiKey:()=> 'fake',fetchImpl:async()=>Response.json({status:'completed',output:[{...evidence,results:photos},content([{...interpretation,colorFamily:'green'}])]})});
-  await service.search(user,{request:'Green fabric',image},event=>out.push(event));
-  const products=out.at(-1).products;assert.equal(products.length,12);assert.equal(new Set(products.map(p=>new URL(p.url).hostname)).size,12);
-});
-
-console.log('Worldwide fabric: '+count+' global/default/evidence/stream/cancellation checks passed.');
-
+console.log('Fabrics: '+count+' direct-search, cancellation, privacy and storage checks passed.');
 };
 
 checks['proxy-policy']=async function(){

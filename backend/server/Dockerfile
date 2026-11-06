@@ -14,10 +14,7 @@ COPY owner-crm.mjs owner-conversation.mjs owner-sms-access.mjs message-archive.m
 COPY booking-link.mjs lead-alerts.mjs text-automations.mjs event-triggers.mjs ./
 COPY proxy-policy.mjs ./
 COPY admin-command.mjs ./
-COPY fabric-sourcing.js ./
-COPY fabric-search.mjs ./
-COPY fabric-retailers.mjs fabric-discovery.mjs fabric-worldwide.mjs ./
-COPY ai-router.js ./
+COPY fabrics.mjs ./
 COPY design-config.mjs ./
 COPY maya-mcp.mjs ./
 COPY maya-phone.mjs realtime-voice.mjs ./

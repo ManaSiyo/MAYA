@@ -335,15 +335,6 @@
         ]
       },
       {
-        "source": "/aesthetics/ui/fabric-search-details.js",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache"
-          }
-        ]
-      },
-      {
         "source": "/aesthetics/ui/admin-notifications.js",
         "headers": [
           {

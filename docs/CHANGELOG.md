@@ -4,13 +4,19 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
-- **November 5, verified locally; awaiting owner Push:** submission delete controls and
+- **November 5/6, prepared for requested Push:** replaced five Fabric modules and
+  the fabric-only router with one direct OpenAI image-search adapter, up to ten
+  source-linked photographs; preserved private favorites and cancellation. Bundled
+  Fabric details, flattened knowledge assets, retired empty CLO manifest and old
+  feed/rank/generated-swatch APIs. Corrected physical page order and removed the
+  deferred home reset; browser checks now exercise actual navigation.
+- **November 5 — f8eadbd, pushed; deployment failed the indicator test:** submission delete controls and
   captions, page-dot ordering, circular frontend logo, Glass controls/share dialog,
   immediate single-flight sharing and parallel image copies, iPad gallery sizing
   and phone header alignment. Deleted submissions stay hidden across server caches.
   Consolidated repository/docs/checks, moved assets under docs and API under backend,
   merged Privacy/Terms, retired WR and standalone Operations (Brief retains it),
-  removed preset headshots. Owner Push/deployment acceptance still required.
+  removed preset headshots. Deployment acceptance was not reached.
 - **November 5 — f6426d6:** automatic avatar persistence, photo-only visualization,
   shared larger touch controls, shorter speech-tail handling, bounded image-reference
   preparation and phone/iPad layout checks.
