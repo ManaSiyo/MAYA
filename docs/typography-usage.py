@@ -49,6 +49,11 @@ for path in files:
  # JS createElement headings/paragraphs are separate authored locations.
  for m in re.finditer(r'createElement\(\s*[\'"](h[1-6]|p|small|code|pre|button|label|td|th)[\'"]\s*\)',clean):
   tag=m[1];category='H1' if tag=='h1' else 'H3' if tag.startswith('h') else 'P1' if tag in ['code','pre'] else 'P3' if tag in ['small','button','label'] else 'P1';role='headline' if tag=='h1' else 'subheadline' if tag.startswith('h') else 'technical' if tag in ['code','pre'] else 'caption' if tag=='small' else 'pill' if tag in ['button','label'] else 'paragraph'
+  variable=re.search(r'([\w$]+)\s*=\s*document\.$',clean[max(0,m.start()-120):m.start()])
+  if variable:
+   assigned=re.search(r'\b'+re.escape(variable[1])+r"\.dataset\.mayaType\s*=\s*['\"](H[0-5]|P[1-3])['\"]",clean[m.end():m.end()+800])
+   if assigned:
+    category=assigned[1];role='drawer' if category=='H2' else 'subheadline' if category.startswith('H') else role
   categories[category]['locations'].append({'page':str(path.relative_to(root)),'line':clean[:m.start()].count('\n')+1,'tag':tag,'id':None,'class':'','reason':'JavaScript-created '+tag,'role':role,'snippet':m[0]})
  # The second bottom-line number is assembled with an interpolated class and
  # cannot be parsed as a static opening tag. Count its authored template once.

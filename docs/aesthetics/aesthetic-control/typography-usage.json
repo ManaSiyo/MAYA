@@ -11,6 +11,7 @@
     "docs/aesthetics/ui/admin-systems.js",
     "docs/aesthetics/ui/avatar-camera.js",
     "docs/aesthetics/ui/fabric-assistant.js",
+    "docs/aesthetics/ui/image-viewer.js",
     "docs/aesthetics/ui/lead-stage-menu.js",
     "docs/aesthetics/ui/pill-runtime.js",
     "docs/aesthetics/ui/presentation-runtime.js",
@@ -25,7 +26,7 @@
       "locations": [
         {
           "page": "frontend/index.html",
-          "line": 4465,
+          "line": 4344,
           "tag": "div",
           "id": null,
           "class": "signin-wordmark maya-signin-h0",
@@ -40,7 +41,7 @@
           "locations": [
             {
               "page": "frontend/index.html",
-              "line": 4465
+              "line": 4344
             }
           ]
         }
@@ -51,7 +52,7 @@
       "locations": [
         {
           "page": "backend/backend.html",
-          "line": 1411,
+          "line": 1412,
           "tag": "span",
           "id": "workspace-title",
           "class": "",
@@ -61,7 +62,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 277,
+          "line": 278,
           "tag": "h1",
           "id": null,
           "class": "",
@@ -101,7 +102,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4832,
+          "line": 4711,
           "tag": "span",
           "id": "brand-title",
           "class": "brand-title",
@@ -111,7 +112,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5089,
+          "line": 4968,
           "tag": "h2",
           "id": "client-name-modal-title",
           "class": "",
@@ -126,7 +127,7 @@
           "locations": [
             {
               "page": "backend/backend.html",
-              "line": 1411
+              "line": 1412
             }
           ]
         },
@@ -135,7 +136,7 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 277
+              "line": 278
             },
             {
               "page": "backend/verify.html",
@@ -161,7 +162,7 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 4832
+              "line": 4711
             }
           ]
         },
@@ -170,14 +171,14 @@
           "locations": [
             {
               "page": "frontend/index.html",
-              "line": 5089
+              "line": 4968
             }
           ]
         }
       }
     },
     "H2": {
-      "count": 5,
+      "count": 6,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -191,7 +192,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 398,
+          "line": 399,
           "tag": "h2",
           "id": "operation-settings-title",
           "class": "",
@@ -210,8 +211,18 @@
           "snippet": "<span id=\"adm-tabtitle\" data-maya-type=\"H2\">Settings</span>"
         },
         {
+          "page": "docs/aesthetics/ui/image-viewer.js",
+          "line": 47,
+          "tag": "h2",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created h2",
+          "role": "drawer",
+          "snippet": "createElement('h2')"
+        },
+        {
           "page": "frontend/index.html",
-          "line": 4900,
+          "line": 4779,
           "tag": "span",
           "id": "pg-tabtitle",
           "class": "pg-tabtitle",
@@ -221,7 +232,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5239,
+          "line": 5118,
           "tag": "div",
           "id": "pin-drawer-title",
           "class": "drawer-head-title",
@@ -232,7 +243,7 @@
       ],
       "roles": {
         "drawer": {
-          "count": 4,
+          "count": 5,
           "locations": [
             {
               "page": "backend/backend.html",
@@ -243,12 +254,16 @@
               "line": 891
             },
             {
-              "page": "frontend/index.html",
-              "line": 4900
+              "page": "docs/aesthetics/ui/image-viewer.js",
+              "line": 47
             },
             {
               "page": "frontend/index.html",
-              "line": 5239
+              "line": 4779
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 5118
             }
           ]
         },
@@ -257,14 +272,14 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 398
+              "line": 399
             }
           ]
         }
       }
     },
     "H3": {
-      "count": 71,
+      "count": 70,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -288,7 +303,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 307,
+          "line": 308,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -727,16 +742,6 @@
           "snippet": "<div class=\"grp\">' + g + '</div>' + list.map(r =>"
         },
         {
-          "page": "docs/aesthetics/ui/fabric-assistant.js",
-          "line": 26,
-          "tag": "h3",
-          "id": null,
-          "class": "",
-          "reason": "JavaScript-created h3",
-          "role": "subheadline",
-          "snippet": "createElement('h3')"
-        },
-        {
           "page": "docs/aesthetics/ui/submission-cards.js",
           "line": 21,
           "tag": "div",
@@ -748,7 +753,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4484,
+          "line": 4363,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -758,7 +763,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4486,
+          "line": 4365,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -768,7 +773,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4488,
+          "line": 4367,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -778,7 +783,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4490,
+          "line": 4369,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -788,7 +793,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4492,
+          "line": 4371,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -798,7 +803,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4494,
+          "line": 4373,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -808,7 +813,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4496,
+          "line": 4375,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -818,7 +823,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4498,
+          "line": 4377,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -828,7 +833,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4500,
+          "line": 4379,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -838,7 +843,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4502,
+          "line": 4381,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -848,7 +853,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4504,
+          "line": 4383,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -858,7 +863,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5048,
+          "line": 4927,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -868,7 +873,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5058,
+          "line": 4937,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -878,7 +883,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5072,
+          "line": 4951,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -888,7 +893,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5106,
+          "line": 4985,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -898,7 +903,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5275,
+          "line": 5154,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -908,7 +913,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5310,
+          "line": 5189,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -918,7 +923,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5333,
+          "line": 5212,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -928,7 +933,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5346,
+          "line": 5225,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -938,7 +943,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5365,
+          "line": 5244,
           "tag": "h2",
           "id": "image-ref-title",
           "class": "",
@@ -948,7 +953,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5388,
+          "line": 5267,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -958,7 +963,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13409,
+          "line": 13162,
           "tag": "div",
           "id": "share-dialog-title",
           "class": "share-title",
@@ -968,7 +973,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19417,
+          "line": 19172,
           "tag": "h2",
           "id": "avatar-camera-title",
           "class": "",
@@ -991,7 +996,7 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 307
+              "line": 308
             },
             {
               "page": "backend/status.html",
@@ -1003,12 +1008,12 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 13409
+              "line": 13162
             }
           ]
         },
         "subheadline": {
-          "count": 63,
+          "count": 62,
           "locations": [
             {
               "page": "backend/privacy.html",
@@ -1171,96 +1176,92 @@
               "line": 3962
             },
             {
-              "page": "docs/aesthetics/ui/fabric-assistant.js",
-              "line": 26
+              "page": "frontend/index.html",
+              "line": 4363
             },
             {
               "page": "frontend/index.html",
-              "line": 4484
+              "line": 4365
             },
             {
               "page": "frontend/index.html",
-              "line": 4486
+              "line": 4367
             },
             {
               "page": "frontend/index.html",
-              "line": 4488
+              "line": 4369
             },
             {
               "page": "frontend/index.html",
-              "line": 4490
+              "line": 4371
             },
             {
               "page": "frontend/index.html",
-              "line": 4492
+              "line": 4373
             },
             {
               "page": "frontend/index.html",
-              "line": 4494
+              "line": 4375
             },
             {
               "page": "frontend/index.html",
-              "line": 4496
+              "line": 4377
             },
             {
               "page": "frontend/index.html",
-              "line": 4498
+              "line": 4379
             },
             {
               "page": "frontend/index.html",
-              "line": 4500
+              "line": 4381
             },
             {
               "page": "frontend/index.html",
-              "line": 4502
+              "line": 4383
             },
             {
               "page": "frontend/index.html",
-              "line": 4504
+              "line": 4927
             },
             {
               "page": "frontend/index.html",
-              "line": 5048
+              "line": 4937
             },
             {
               "page": "frontend/index.html",
-              "line": 5058
+              "line": 4951
             },
             {
               "page": "frontend/index.html",
-              "line": 5072
+              "line": 4985
             },
             {
               "page": "frontend/index.html",
-              "line": 5106
+              "line": 5154
             },
             {
               "page": "frontend/index.html",
-              "line": 5275
+              "line": 5189
             },
             {
               "page": "frontend/index.html",
-              "line": 5310
+              "line": 5212
             },
             {
               "page": "frontend/index.html",
-              "line": 5333
+              "line": 5225
             },
             {
               "page": "frontend/index.html",
-              "line": 5346
+              "line": 5244
             },
             {
               "page": "frontend/index.html",
-              "line": 5365
+              "line": 5267
             },
             {
               "page": "frontend/index.html",
-              "line": 5388
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 19417
+              "line": 19172
             }
           ]
         },
@@ -1285,7 +1286,7 @@
       }
     },
     "H4": {
-      "count": 3,
+      "count": 5,
       "locations": [
         {
           "page": "backend/status.html",
@@ -1316,6 +1317,26 @@
           "reason": "dashboard",
           "role": "dashboard",
           "snippet": "const tile = (v, k, cls) =>"
+        },
+        {
+          "page": "docs/aesthetics/ui/fabric-assistant.js",
+          "line": 26,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created h3",
+          "role": "subheadline",
+          "snippet": "createElement('h3')"
+        },
+        {
+          "page": "docs/aesthetics/ui/image-viewer.js",
+          "line": 36,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created h3",
+          "role": "subheadline",
+          "snippet": "createElement('h3')"
         }
       ],
       "roles": {
@@ -1338,6 +1359,19 @@
             {
               "page": "backend/status.html",
               "line": 2742
+            }
+          ]
+        },
+        "subheadline": {
+          "count": 2,
+          "locations": [
+            {
+              "page": "docs/aesthetics/ui/fabric-assistant.js",
+              "line": 26
+            },
+            {
+              "page": "docs/aesthetics/ui/image-viewer.js",
+              "line": 36
             }
           ]
         }
@@ -1370,7 +1404,7 @@
       }
     },
     "P1": {
-      "count": 169,
+      "count": 170,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -1394,7 +1428,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 284,
+          "line": 285,
           "tag": "p",
           "id": "operation-fabric-selection",
           "class": "",
@@ -1404,7 +1438,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 309,
+          "line": 310,
           "tag": "input",
           "id": "m-waist",
           "class": "",
@@ -1414,7 +1448,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 310,
+          "line": 311,
           "tag": "input",
           "id": "m-hip",
           "class": "",
@@ -1424,7 +1458,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 313,
+          "line": 314,
           "tag": "input",
           "id": "m-crotch",
           "class": "",
@@ -1434,7 +1468,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 314,
+          "line": 315,
           "tag": "input",
           "id": "m-inseam",
           "class": "",
@@ -1444,7 +1478,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 317,
+          "line": 318,
           "tag": "input",
           "id": "m-length",
           "class": "",
@@ -1454,7 +1488,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 341,
+          "line": 342,
           "tag": "pre",
           "id": "live-log",
           "class": "",
@@ -1464,7 +1498,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 356,
+          "line": 357,
           "tag": "pre",
           "id": "t-prompt",
           "class": "",
@@ -1474,7 +1508,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 408,
+          "line": 409,
           "tag": "div",
           "id": null,
           "class": "kb-status",
@@ -1484,7 +1518,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 413,
+          "line": 414,
           "tag": "div",
           "id": null,
           "class": "kb-status",
@@ -1494,7 +1528,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 422,
+          "line": 423,
           "tag": "textarea",
           "id": "logic-edit",
           "class": "",
@@ -2753,8 +2787,18 @@
           "snippet": "createElement('p')"
         },
         {
-          "page": "docs/aesthetics/ui/fabric-assistant.js",
-          "line": 9,
+          "page": "docs/aesthetics/ui/image-viewer.js",
+          "line": 36,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created p",
+          "role": "paragraph",
+          "snippet": "createElement('p')"
+        },
+        {
+          "page": "docs/aesthetics/ui/image-viewer.js",
+          "line": 40,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2774,7 +2818,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4485,
+          "line": 4364,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2784,7 +2828,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4487,
+          "line": 4366,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2794,7 +2838,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4489,
+          "line": 4368,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2804,7 +2848,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4491,
+          "line": 4370,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2814,7 +2858,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4493,
+          "line": 4372,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2824,7 +2868,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4495,
+          "line": 4374,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2834,7 +2878,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4497,
+          "line": 4376,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2844,7 +2888,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4499,
+          "line": 4378,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2854,7 +2898,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4501,
+          "line": 4380,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2864,7 +2908,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4503,
+          "line": 4382,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2874,7 +2918,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4505,
+          "line": 4384,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2884,7 +2928,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5049,
+          "line": 4928,
           "tag": "div",
           "id": null,
           "class": "modal-hint",
@@ -2894,7 +2938,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5059,
+          "line": 4938,
           "tag": "div",
           "id": null,
           "class": "modal-hint",
@@ -2904,7 +2948,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5073,
+          "line": 4952,
           "tag": "div",
           "id": null,
           "class": "modal-hint",
@@ -2914,7 +2958,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5090,
+          "line": 4969,
           "tag": "div",
           "id": "client-name-modal-hint",
           "class": "modal-hint",
@@ -2924,7 +2968,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5107,
+          "line": 4986,
           "tag": "p",
           "id": null,
           "class": "modal-help",
@@ -2934,7 +2978,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5276,
+          "line": 5155,
           "tag": "div",
           "id": null,
           "class": "modal-hint",
@@ -2944,7 +2988,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5278,
+          "line": 5157,
           "tag": "div",
           "id": "fb-consent",
           "class": "modal-hint",
@@ -2954,7 +2998,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5287,
+          "line": 5166,
           "tag": "div",
           "id": "fb-maya-note",
           "class": "modal-hint",
@@ -2964,7 +3008,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5311,
+          "line": 5190,
           "tag": "div",
           "id": null,
           "class": "modal-hint",
@@ -2974,7 +3018,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5318,
+          "line": 5197,
           "tag": "div",
           "id": null,
           "class": "modal-hint",
@@ -2984,7 +3028,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5334,
+          "line": 5213,
           "tag": "div",
           "id": "avatar-check-hint",
           "class": "modal-hint",
@@ -2994,7 +3038,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5366,
+          "line": 5245,
           "tag": "div",
           "id": "image-ref-hint",
           "class": "modal-hint",
@@ -3004,7 +3048,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5389,
+          "line": 5268,
           "tag": "div",
           "id": null,
           "class": "modal-hint",
@@ -3014,7 +3058,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13409,
+          "line": 13162,
           "tag": "input",
           "id": null,
           "class": "share-link-input",
@@ -3024,7 +3068,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13409,
+          "line": 13162,
           "tag": "div",
           "id": null,
           "class": "share-status",
@@ -3034,7 +3078,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16923,
+          "line": 16676,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3044,7 +3088,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16929,
+          "line": 16682,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3054,7 +3098,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19418,
+          "line": 19173,
           "tag": "p",
           "id": "avatar-camera-status",
           "class": "",
@@ -3065,7 +3109,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 110,
+          "count": 111,
           "locations": [
             {
               "page": "backend/backend.html",
@@ -3077,15 +3121,15 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 284
+              "line": 285
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 408
+              "line": 409
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 413
+              "line": 414
             },
             {
               "page": "backend/privacy.html",
@@ -3388,8 +3432,12 @@
               "line": 28
             },
             {
-              "page": "docs/aesthetics/ui/fabric-assistant.js",
-              "line": 9
+              "page": "docs/aesthetics/ui/image-viewer.js",
+              "line": 36
+            },
+            {
+              "page": "docs/aesthetics/ui/image-viewer.js",
+              "line": 40
             },
             {
               "page": "docs/aesthetics/ui/submission-cards.js",
@@ -3397,115 +3445,115 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 4485
+              "line": 4364
             },
             {
               "page": "frontend/index.html",
-              "line": 4487
+              "line": 4366
             },
             {
               "page": "frontend/index.html",
-              "line": 4489
+              "line": 4368
             },
             {
               "page": "frontend/index.html",
-              "line": 4491
+              "line": 4370
             },
             {
               "page": "frontend/index.html",
-              "line": 4493
+              "line": 4372
             },
             {
               "page": "frontend/index.html",
-              "line": 4495
+              "line": 4374
             },
             {
               "page": "frontend/index.html",
-              "line": 4497
+              "line": 4376
             },
             {
               "page": "frontend/index.html",
-              "line": 4499
+              "line": 4378
             },
             {
               "page": "frontend/index.html",
-              "line": 4501
+              "line": 4380
             },
             {
               "page": "frontend/index.html",
-              "line": 4503
+              "line": 4382
             },
             {
               "page": "frontend/index.html",
-              "line": 4505
+              "line": 4384
             },
             {
               "page": "frontend/index.html",
-              "line": 5049
+              "line": 4928
             },
             {
               "page": "frontend/index.html",
-              "line": 5059
+              "line": 4938
             },
             {
               "page": "frontend/index.html",
-              "line": 5073
+              "line": 4952
             },
             {
               "page": "frontend/index.html",
-              "line": 5090
+              "line": 4969
             },
             {
               "page": "frontend/index.html",
-              "line": 5107
+              "line": 4986
             },
             {
               "page": "frontend/index.html",
-              "line": 5276
+              "line": 5155
             },
             {
               "page": "frontend/index.html",
-              "line": 5278
+              "line": 5157
             },
             {
               "page": "frontend/index.html",
-              "line": 5287
+              "line": 5166
             },
             {
               "page": "frontend/index.html",
-              "line": 5311
+              "line": 5190
             },
             {
               "page": "frontend/index.html",
-              "line": 5318
+              "line": 5197
             },
             {
               "page": "frontend/index.html",
-              "line": 5334
+              "line": 5213
             },
             {
               "page": "frontend/index.html",
-              "line": 5366
+              "line": 5245
             },
             {
               "page": "frontend/index.html",
-              "line": 5389
+              "line": 5268
             },
             {
               "page": "frontend/index.html",
-              "line": 13409
+              "line": 13162
             },
             {
               "page": "frontend/index.html",
-              "line": 16923
+              "line": 16676
             },
             {
               "page": "frontend/index.html",
-              "line": 16929
+              "line": 16682
             },
             {
               "page": "frontend/index.html",
-              "line": 19418
+              "line": 19173
             }
           ]
         },
@@ -3514,15 +3562,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 309
-            },
-            {
-              "page": "backend/operation-workspace.html",
               "line": 310
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 313
+              "line": 311
             },
             {
               "page": "backend/operation-workspace.html",
@@ -3530,11 +3574,15 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 317
+              "line": 315
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 422
+              "line": 318
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 423
             },
             {
               "page": "backend/status.html",
@@ -3574,7 +3622,7 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 13409
+              "line": 13162
             }
           ]
         },
@@ -3583,11 +3631,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 341
+              "line": 342
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 356
+              "line": 357
             },
             {
               "page": "backend/status.html",
@@ -3797,7 +3845,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 403,
+          "line": 404,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -3807,7 +3855,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 412,
+          "line": 413,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -3817,7 +3865,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 418,
+          "line": 419,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -3827,7 +3875,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 433,
+          "line": 434,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -3837,7 +3885,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 442,
+          "line": 443,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -3990,23 +4038,23 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 403
+              "line": 404
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 412
+              "line": 413
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 418
+              "line": 419
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 433
+              "line": 434
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 442
+              "line": 443
             },
             {
               "page": "backend/status.html",
@@ -4065,27 +4113,17 @@
       }
     },
     "P3": {
-      "count": 307,
+      "count": 308,
       "locations": [
         {
           "page": "backend/backend.html",
-          "line": 1412,
+          "line": 1413,
           "tag": "span",
           "id": "dissect-status",
           "class": "status-pill",
           "reason": "pill",
           "role": "pill",
           "snippet": "<span class=\"status-pill\" id=\"dissect-status\" style=\"display:none\">Dissecting\u2026</span>"
-        },
-        {
-          "page": "backend/backend.html",
-          "line": 1415,
-          "tag": "button",
-          "id": "delete-open-submission",
-          "class": "maya-icon-button",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button id=\"delete-open-submission\" class=\"maya-icon-button\" data-maya-shape=\"circle\" data-maya-type=\"P3\" title=\"Delete submission\" aria-label=\"Delete submissio"
         },
         {
           "page": "backend/backend.html",
@@ -4419,7 +4457,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 279,
+          "line": 280,
           "tag": "button",
           "id": null,
           "class": "icon-btn hamburger",
@@ -4429,7 +4467,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 291,
+          "line": 292,
           "tag": "select",
           "id": "test-picker",
           "class": "head-select",
@@ -4439,7 +4477,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 302,
+          "line": 303,
           "tag": "button",
           "id": "operation-fabrics",
           "class": "pill maya-pill",
@@ -4449,7 +4487,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 309,
+          "line": 310,
           "tag": "label",
           "id": null,
           "class": "",
@@ -4459,7 +4497,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 310,
+          "line": 311,
           "tag": "label",
           "id": null,
           "class": "",
@@ -4469,7 +4507,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 313,
+          "line": 314,
           "tag": "label",
           "id": null,
           "class": "",
@@ -4479,7 +4517,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 314,
+          "line": 315,
           "tag": "label",
           "id": null,
           "class": "",
@@ -4489,7 +4527,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 317,
+          "line": 318,
           "tag": "label",
           "id": null,
           "class": "",
@@ -4499,7 +4537,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 320,
+          "line": 321,
           "tag": "div",
           "id": "dim-derived",
           "class": "kb-status",
@@ -4509,7 +4547,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 350,
+          "line": 351,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -4519,7 +4557,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 351,
+          "line": 352,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -4529,7 +4567,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 352,
+          "line": 353,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -4539,7 +4577,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 353,
+          "line": 354,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -4549,7 +4587,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 395,
+          "line": 396,
           "tag": "button",
           "id": null,
           "class": "maya-icon-button drawer-burger",
@@ -4559,7 +4597,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 405,
+          "line": 406,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -4569,7 +4607,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 406,
+          "line": 407,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -4579,7 +4617,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 424,
+          "line": 425,
           "tag": "button",
           "id": "logic-edit-btn",
           "class": "pill sm",
@@ -4589,7 +4627,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 425,
+          "line": 426,
           "tag": "button",
           "id": "logic-save-btn",
           "class": "pill sm",
@@ -4599,7 +4637,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 426,
+          "line": 427,
           "tag": "button",
           "id": "logic-reset-btn",
           "class": "pill sm",
@@ -4609,7 +4647,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 427,
+          "line": 428,
           "tag": "button",
           "id": "logic-lock-btn",
           "class": "pill sm",
@@ -4619,7 +4657,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 435,
+          "line": 436,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -4629,7 +4667,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 436,
+          "line": 437,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -4639,7 +4677,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 437,
+          "line": 438,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -4649,7 +4687,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 446,
+          "line": 447,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -4659,7 +4697,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 447,
+          "line": 448,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -4669,7 +4707,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 455,
+          "line": 456,
           "tag": "div",
           "id": "toast",
           "class": "",
@@ -4679,7 +4717,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 993,
+          "line": 994,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='rd'?'active':''}",
@@ -4689,7 +4727,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 996,
+          "line": 997,
           "tag": "button",
           "id": null,
           "class": "pill sm ${act}",
@@ -4699,7 +4737,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 998,
+          "line": 999,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='grounded'?'active':''}",
@@ -4709,7 +4747,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1000,
+          "line": 1001,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='svg'?'active':''}",
@@ -5678,6 +5716,36 @@
           "snippet": "createElement('button')"
         },
         {
+          "page": "docs/aesthetics/ui/fabric-assistant.js",
+          "line": 9,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created p",
+          "role": "paragraph",
+          "snippet": "createElement('p')"
+        },
+        {
+          "page": "docs/aesthetics/ui/image-viewer.js",
+          "line": 44,
+          "tag": "button",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created button",
+          "role": "pill",
+          "snippet": "createElement('button')"
+        },
+        {
+          "page": "docs/aesthetics/ui/image-viewer.js",
+          "line": 100,
+          "tag": "button",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created button",
+          "role": "pill",
+          "snippet": "createElement('button')"
+        },
+        {
           "page": "docs/aesthetics/ui/lead-stage-menu.js",
           "line": 15,
           "tag": "button",
@@ -5719,7 +5787,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4508,
+          "line": 4387,
           "tag": "button",
           "id": null,
           "class": "tos-decline",
@@ -5729,7 +5797,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4509,
+          "line": 4388,
           "tag": "button",
           "id": "tos-agree",
           "class": "tos-agree",
@@ -5739,7 +5807,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4783,
+          "line": 4662,
           "tag": "button",
           "id": null,
           "class": "input-link upload-link",
@@ -5749,7 +5817,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4787,
+          "line": 4666,
           "tag": "button",
           "id": "visualize-btn",
           "class": "action-btn",
@@ -5759,7 +5827,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4833,
+          "line": 4712,
           "tag": "span",
           "id": "brand-status",
           "class": "brand-status",
@@ -5769,7 +5837,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4839,
+          "line": 4718,
           "tag": "button",
           "id": "hamburger-toggle",
           "class": "top-btn hamburger",
@@ -5779,7 +5847,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4849,
+          "line": 4728,
           "tag": "button",
           "id": "dot-2",
           "class": "page-dot active",
@@ -5789,7 +5857,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4850,
+          "line": 4729,
           "tag": "button",
           "id": "dot-3",
           "class": "page-dot",
@@ -5799,7 +5867,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4851,
+          "line": 4730,
           "tag": "button",
           "id": "dot-1",
           "class": "page-dot",
@@ -5809,7 +5877,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4889,
+          "line": 4768,
           "tag": "button",
           "id": "pg-tab-pinterest",
           "class": "pg-tab",
@@ -5819,7 +5887,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4892,
+          "line": 4771,
           "tag": "button",
           "id": "pg-tab-fabrics",
           "class": "pg-tab",
@@ -5829,7 +5897,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4895,
+          "line": 4774,
           "tag": "button",
           "id": "pg-tab-avatar",
           "class": "pg-tab on",
@@ -5839,7 +5907,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4906,
+          "line": 4785,
           "tag": "button",
           "id": "drawer-avatar-button",
           "class": "pg-avatar-hit",
@@ -5849,7 +5917,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4915,
+          "line": 4794,
           "tag": "button",
           "id": "drawer-avatar-caret",
           "class": "drawer-avatar-caret",
@@ -5859,7 +5927,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4917,
+          "line": 4796,
           "tag": "button",
           "id": "drawer-avatar-rename",
           "class": "drawer-avatar-rename",
@@ -5869,7 +5937,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4921,
+          "line": 4800,
           "tag": "button",
           "id": "pg-project-beside",
           "class": "pg-project-beside",
@@ -5879,7 +5947,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4924,
+          "line": 4803,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -5889,7 +5957,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4925,
+          "line": 4804,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -5899,7 +5967,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4926,
+          "line": 4805,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -5909,7 +5977,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4932,
+          "line": 4811,
           "tag": "button",
           "id": null,
           "class": "drawer-sessions-toggle",
@@ -5919,7 +5987,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4968,
+          "line": 4847,
           "tag": "button",
           "id": null,
           "class": "pg-try-popup",
@@ -5929,7 +5997,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4983,
+          "line": 4862,
           "tag": "button",
           "id": "pg-bg-star",
           "class": "pg-bg-thumb on",
@@ -5939,7 +6007,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4991,
+          "line": 4870,
           "tag": "button",
           "id": "pg-bg-upload",
           "class": "pg-bg-gen",
@@ -5949,7 +6017,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 4992,
+          "line": 4871,
           "tag": "button",
           "id": "pg-bg-gen",
           "class": "pg-bg-gen",
@@ -5959,7 +6027,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5019,
+          "line": 4898,
           "tag": "button",
           "id": null,
           "class": "drawer-settings-link",
@@ -5969,7 +6037,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5020,
+          "line": 4899,
           "tag": "button",
           "id": null,
           "class": "drawer-settings-link",
@@ -5979,7 +6047,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5024,
+          "line": 4903,
           "tag": "button",
           "id": null,
           "class": "drawer-settings-link",
@@ -5989,7 +6057,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5025,
+          "line": 4904,
           "tag": "button",
           "id": "pg-maya-toggle",
           "class": "drawer-settings-link",
@@ -5999,7 +6067,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5034,
+          "line": 4913,
           "tag": "button",
           "id": null,
           "class": "drawer-back",
@@ -6009,7 +6077,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5046,
+          "line": 4925,
           "tag": "button",
           "id": null,
           "class": "modal-close icon",
@@ -6019,7 +6087,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5056,
+          "line": 4935,
           "tag": "button",
           "id": null,
           "class": "modal-close icon",
@@ -6029,7 +6097,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5062,
+          "line": 4941,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -6039,7 +6107,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5063,
+          "line": 4942,
           "tag": "button",
           "id": "favorite-inspo-confirm",
           "class": "top-btn violet",
@@ -6049,7 +6117,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5070,
+          "line": 4949,
           "tag": "button",
           "id": null,
           "class": "modal-close",
@@ -6059,7 +6127,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5080,
+          "line": 4959,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -6069,7 +6137,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5081,
+          "line": 4960,
           "tag": "button",
           "id": null,
           "class": "top-btn violet",
@@ -6079,7 +6147,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5093,
+          "line": 4972,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -6089,7 +6157,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5094,
+          "line": 4973,
           "tag": "button",
           "id": "client-name-modal-confirm",
           "class": "top-btn violet",
@@ -6099,7 +6167,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5104,
+          "line": 4983,
           "tag": "button",
           "id": null,
           "class": "modal-close",
@@ -6109,7 +6177,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5113,
+          "line": 4992,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6119,7 +6187,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5117,
+          "line": 4996,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6129,7 +6197,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5123,
+          "line": 5002,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -6139,7 +6207,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5124,
+          "line": 5003,
           "tag": "button",
           "id": null,
           "class": "top-btn violet",
@@ -6149,17 +6217,17 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5137,
+          "line": 5016,
           "tag": "button",
           "id": null,
           "class": "viewer-close",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button class=\"viewer-close\" onclick=\"closeGarmentModal()\" title=\"Close (Esc)\" aria-label=\"Close\">&#215;</button>"
+          "snippet": "<button class=\"viewer-close\" data-maya-dismiss onclick=\"closeGarmentModal()\" title=\"Close (Esc)\" aria-label=\"Close\">&#215;</button>"
         },
         {
           "page": "frontend/index.html",
-          "line": 5140,
+          "line": 5019,
           "tag": "button",
           "id": "viewer-heart",
           "class": "viewer-heart",
@@ -6169,7 +6237,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5150,
+          "line": 5029,
           "tag": "button",
           "id": "viewer-prev",
           "class": "nav-arrow",
@@ -6179,7 +6247,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5152,
+          "line": 5031,
           "tag": "button",
           "id": "viewer-next",
           "class": "nav-arrow",
@@ -6189,7 +6257,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5160,
+          "line": 5039,
           "tag": "button",
           "id": "attributes-toggle",
           "class": "attributes-toggle",
@@ -6199,7 +6267,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5163,
+          "line": 5042,
           "tag": "button",
           "id": "modify-submit",
           "class": "modal-text-btn viewer-modify-submit",
@@ -6209,7 +6277,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5179,
+          "line": 5058,
           "tag": "button",
           "id": "modify-listen-toggle",
           "class": "modal-text-btn viewer-modify-btn",
@@ -6219,7 +6287,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5180,
+          "line": 5059,
           "tag": "button",
           "id": "modify-switch-fabric",
           "class": "modal-text-btn viewer-modify-btn",
@@ -6229,7 +6297,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5181,
+          "line": 5060,
           "tag": "button",
           "id": "modify-add-ref",
           "class": "modal-text-btn viewer-modify-btn",
@@ -6239,7 +6307,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5187,
+          "line": 5066,
           "tag": "button",
           "id": "submit-community",
           "class": "modal-text-btn viewer-submit-btn",
@@ -6249,7 +6317,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5188,
+          "line": 5067,
           "tag": "button",
           "id": "submit-manasiyo",
           "class": "modal-text-btn viewer-submit-btn",
@@ -6259,7 +6327,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5195,
+          "line": 5074,
           "tag": "button",
           "id": null,
           "class": "modal-close",
@@ -6269,7 +6337,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5205,
+          "line": 5084,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn violet",
@@ -6279,7 +6347,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5206,
+          "line": 5085,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn violet",
@@ -6289,7 +6357,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5207,
+          "line": 5086,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn violet",
@@ -6299,7 +6367,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5223,
+          "line": 5102,
           "tag": "button",
           "id": null,
           "class": "fabrics-back",
@@ -6309,7 +6377,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5225,
+          "line": 5104,
           "tag": "button",
           "id": "fabrics-tab-house",
           "class": "fabrics-tab active",
@@ -6319,7 +6387,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5226,
+          "line": 5105,
           "tag": "button",
           "id": "fabrics-tab-mine",
           "class": "fabrics-tab",
@@ -6329,7 +6397,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5238,
+          "line": 5117,
           "tag": "button",
           "id": null,
           "class": "fabrics-back",
@@ -6339,7 +6407,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5242,
+          "line": 5121,
           "tag": "button",
           "id": "pin-tab-all",
           "class": "fabrics-tab active",
@@ -6349,7 +6417,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5243,
+          "line": 5122,
           "tag": "button",
           "id": "pin-tab-boards",
           "class": "fabrics-tab",
@@ -6359,7 +6427,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5244,
+          "line": 5123,
           "tag": "button",
           "id": "pin-search-btn",
           "class": "pin-search-btn",
@@ -6369,7 +6437,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5249,
+          "line": 5128,
           "tag": "button",
           "id": "pin-import-btn",
           "class": "drawer-fabrics",
@@ -6379,7 +6447,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5256,
+          "line": 5135,
           "tag": "button",
           "id": null,
           "class": "upload-choose-btn",
@@ -6389,7 +6457,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5257,
+          "line": 5136,
           "tag": "button",
           "id": null,
           "class": "upload-choose-btn",
@@ -6399,7 +6467,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5261,
+          "line": 5140,
           "tag": "button",
           "id": "upload-choose-pinterest",
           "class": "upload-choose-btn",
@@ -6409,7 +6477,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5274,
+          "line": 5153,
           "tag": "button",
           "id": null,
           "class": "modal-close icon pg-fb-x",
@@ -6419,7 +6487,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5282,
+          "line": 5161,
           "tag": "button",
           "id": "fb-tab-note",
           "class": "fb-kind on",
@@ -6429,7 +6497,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5283,
+          "line": 5162,
           "tag": "button",
           "id": "fb-tab-maya",
           "class": "fb-kind",
@@ -6439,7 +6507,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5297,
+          "line": 5176,
           "tag": "button",
           "id": "feedback-send",
           "class": "modal-text-btn",
@@ -6449,7 +6517,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5308,
+          "line": 5187,
           "tag": "button",
           "id": null,
           "class": "modal-close",
@@ -6459,7 +6527,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5322,
+          "line": 5201,
           "tag": "button",
           "id": "link-import-go",
           "class": "top-btn",
@@ -6469,7 +6537,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5331,
+          "line": 5210,
           "tag": "button",
           "id": null,
           "class": "modal-close",
@@ -6479,7 +6547,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5336,
+          "line": 5215,
           "tag": "button",
           "id": null,
           "class": "top-btn",
@@ -6489,7 +6557,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5337,
+          "line": 5216,
           "tag": "button",
           "id": null,
           "class": "top-btn",
@@ -6499,7 +6567,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5344,
+          "line": 5223,
           "tag": "button",
           "id": null,
           "class": "modal-close",
@@ -6509,7 +6577,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5348,
+          "line": 5227,
           "tag": "button",
           "id": null,
           "class": "mode-choose",
@@ -6519,7 +6587,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5351,
+          "line": 5230,
           "tag": "button",
           "id": null,
           "class": "mode-choose",
@@ -6529,7 +6597,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5362,
+          "line": 5241,
           "tag": "button",
           "id": null,
           "class": "modal-close",
@@ -6539,7 +6607,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5377,
+          "line": 5256,
           "tag": "button",
           "id": "image-ref-back-btn",
           "class": "top-btn subtle",
@@ -6549,7 +6617,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5378,
+          "line": 5257,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -6559,7 +6627,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5379,
+          "line": 5258,
           "tag": "button",
           "id": "image-ref-confirm",
           "class": "top-btn violet",
@@ -6569,7 +6637,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5386,
+          "line": 5265,
           "tag": "button",
           "id": null,
           "class": "modal-close",
@@ -6579,7 +6647,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5392,
+          "line": 5271,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -6589,7 +6657,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5393,
+          "line": 5272,
           "tag": "button",
           "id": "fabric-pick-confirm",
           "class": "top-btn violet",
@@ -6599,7 +6667,17 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5963,
+          "line": 5816,
+          "tag": "div",
+          "id": null,
+          "class": "item-caption",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<div class=\"item-caption\" data-maya-type=\"P3\">' + escapeHtml(hoverDescription) + '</div>'"
+        },
+        {
+          "page": "frontend/index.html",
+          "line": 5841,
           "tag": "button",
           "id": "' + id + '",
           "class": "stack-btn",
@@ -6609,7 +6687,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5971,
+          "line": 5849,
           "tag": "button",
           "id": "' + id + '",
           "class": "dissect-btn",
@@ -6619,7 +6697,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5982,
+          "line": 5860,
           "tag": "button",
           "id": "' + id + '",
           "class": "fav-btn' + (card.favorited ? ' is-fav' : '') + '",
@@ -6629,17 +6707,17 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 5988,
+          "line": 5866,
           "tag": "button",
           "id": "' + id + '",
           "class": "delete-btn",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button class=\"delete-btn\" data-id=\"' + id + '\">&#215;</button>' +"
+          "snippet": "<button class=\"delete-btn\" data-maya-dismiss aria-label=\"Remove card\" data-id=\"' + id + '\">&#215;</button>' +"
         },
         {
           "page": "frontend/index.html",
-          "line": 7790,
+          "line": 7668,
           "tag": "button",
           "id": "mmp-go",
           "class": "mmp-go",
@@ -6649,7 +6727,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 7791,
+          "line": 7669,
           "tag": "button",
           "id": "mmp-later",
           "class": "mmp-later",
@@ -6659,7 +6737,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8349,
+          "line": 8227,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -6669,7 +6747,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8352,
+          "line": 8230,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -6679,7 +6757,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8367,
+          "line": 8245,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6689,7 +6767,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8558,
+          "line": 8436,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-rename",
@@ -6699,7 +6777,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8559,
+          "line": 8437,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-delete",
@@ -6709,7 +6787,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8566,
+          "line": 8444,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -6719,7 +6797,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8567,
+          "line": 8445,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -6729,7 +6807,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8570,
+          "line": 8448,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-row avatar-switch-new",
@@ -6739,7 +6817,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 9658,
+          "line": 9536,
           "tag": "button",
           "id": "tvf-cancel",
           "class": "",
@@ -6749,7 +6827,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 9659,
+          "line": 9537,
           "tag": "button",
           "id": "tvf-send",
           "class": "",
@@ -6759,7 +6837,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10435,
+          "line": 10313,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -6769,7 +6847,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10441,
+          "line": 10319,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -6779,7 +6857,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10453,
+          "line": 10331,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -6789,7 +6867,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10460,
+          "line": 10338,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -6799,7 +6877,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10493,
+          "line": 10371,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -6809,7 +6887,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10531,
+          "line": 10409,
           "tag": "button",
           "id": null,
           "class": "pin-tile",
@@ -6819,7 +6897,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10545,
+          "line": 10423,
           "tag": "button",
           "id": null,
           "class": "pin-pic",
@@ -6829,7 +6907,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10554,
+          "line": 10432,
           "tag": "button",
           "id": "pin-load-more",
           "class": "drawer-action",
@@ -6839,7 +6917,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 11961,
+          "line": 11833,
           "tag": "button",
           "id": null,
           "class": "chip-x",
@@ -6849,27 +6927,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 12093,
-          "tag": "button",
-          "id": null,
-          "class": "vn-pill-x",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"vn-pill-x\" title=\"Exclude from the next Visualize\">&times;</button></span>'"
-        },
-        {
-          "page": "frontend/index.html",
-          "line": 12143,
-          "tag": "button",
-          "id": null,
-          "class": "chip-x",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"chip-x\" data-idx=\"${idx}\" title=\"Exclude from next modify\">&times;</button>"
-        },
-        {
-          "page": "frontend/index.html",
-          "line": 13183,
+          "line": 12936,
           "tag": "button",
           "id": null,
           "class": "top-btn violet",
@@ -6879,7 +6937,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13193,
+          "line": 12946,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -6889,7 +6947,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13409,
+          "line": 13162,
           "tag": "button",
           "id": "share-copy-btn",
           "class": "maya-glass-button",
@@ -6899,7 +6957,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13409,
+          "line": 13162,
           "tag": "button",
           "id": null,
           "class": "maya-glass-button",
@@ -6909,7 +6967,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13409,
+          "line": 13162,
           "tag": "div",
           "id": null,
           "class": "share-note",
@@ -6919,7 +6977,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13780,
+          "line": 13533,
           "tag": "button",
           "id": null,
           "class": "top-btn violet",
@@ -6929,7 +6987,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13809,
+          "line": 13562,
           "tag": "button",
           "id": null,
           "class": "fabrics-back",
@@ -6939,7 +6997,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13975,
+          "line": 13728,
           "tag": "button",
           "id": null,
           "class": "staged-x",
@@ -6949,7 +7007,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13983,
+          "line": 13736,
           "tag": "button",
           "id": null,
           "class": "staged-x",
@@ -6959,7 +7017,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 14856,
+          "line": 14609,
           "tag": "button",
           "id": null,
           "class": "tip-amt",
@@ -6969,7 +7027,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 14861,
+          "line": 14614,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn violet",
@@ -6979,7 +7037,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 14862,
+          "line": 14615,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn",
@@ -6989,7 +7047,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 15997,
+          "line": 15750,
           "tag": "button",
           "id": null,
           "class": "session-item session-item-new",
@@ -6999,7 +7057,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16007,
+          "line": 15760,
           "tag": "button",
           "id": null,
           "class": "session-item-share",
@@ -7009,7 +7067,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16010,
+          "line": 15763,
           "tag": "button",
           "id": null,
           "class": "session-item-delete",
@@ -7019,7 +7077,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16011,
+          "line": 15764,
           "tag": "button",
           "id": null,
           "class": "session-item-rename",
@@ -7029,7 +7087,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17378,
+          "line": 17131,
           "tag": "button",
           "id": "mcp-upgrade",
           "class": "mcp-upgrade",
@@ -7039,7 +7097,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17379,
+          "line": 17132,
           "tag": "button",
           "id": "mcp-later",
           "class": "mcp-later",
@@ -7049,7 +7107,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17927,
+          "line": 17682,
           "tag": "button",
           "id": "pg-maya-chip",
           "class": "maya-pill",
@@ -7059,7 +7117,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 18261,
+          "line": 18016,
           "tag": "button",
           "id": null,
           "class": "pin-pic",
@@ -7069,7 +7127,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19421,
+          "line": 19176,
           "tag": "button",
           "id": "avatar-camera-capture",
           "class": "drawer-action",
@@ -7079,7 +7137,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19421,
+          "line": 19176,
           "tag": "button",
           "id": "avatar-camera-retake",
           "class": "drawer-action",
@@ -7089,7 +7147,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19421,
+          "line": 19176,
           "tag": "button",
           "id": "avatar-camera-use",
           "class": "maya-glass-button",
@@ -7099,7 +7157,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19421,
+          "line": 19176,
           "tag": "button",
           "id": "avatar-camera-cancel",
           "class": "drawer-action",
@@ -7109,7 +7167,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 7621,
+          "line": 7499,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7119,7 +7177,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17766,
+          "line": 17521,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7129,7 +7187,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 18274,
+          "line": 18029,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7140,15 +7198,11 @@
       ],
       "roles": {
         "pill": {
-          "count": 266,
+          "count": 265,
           "locations": [
             {
               "page": "backend/backend.html",
-              "line": 1412
-            },
-            {
-              "page": "backend/backend.html",
-              "line": 1415
+              "line": 1413
             },
             {
               "page": "backend/backend.html",
@@ -7284,19 +7338,15 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 279
+              "line": 280
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 302
+              "line": 303
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 395
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 405
+              "line": 396
             },
             {
               "page": "backend/operation-workspace.html",
@@ -7304,7 +7354,7 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 424
+              "line": 407
             },
             {
               "page": "backend/operation-workspace.html",
@@ -7320,7 +7370,7 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 435
+              "line": 428
             },
             {
               "page": "backend/operation-workspace.html",
@@ -7332,7 +7382,7 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 446
+              "line": 438
             },
             {
               "page": "backend/operation-workspace.html",
@@ -7340,19 +7390,23 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 993
+              "line": 448
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 996
+              "line": 994
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 998
+              "line": 997
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1000
+              "line": 999
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 1001
             },
             {
               "page": "backend/status.html",
@@ -7631,6 +7685,14 @@
               "line": 6
             },
             {
+              "page": "docs/aesthetics/ui/image-viewer.js",
+              "line": 44
+            },
+            {
+              "page": "docs/aesthetics/ui/image-viewer.js",
+              "line": 100
+            },
+            {
               "page": "docs/aesthetics/ui/lead-stage-menu.js",
               "line": 15
             },
@@ -7648,67 +7710,115 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 4508
+              "line": 4387
             },
             {
               "page": "frontend/index.html",
-              "line": 4509
+              "line": 4388
             },
             {
               "page": "frontend/index.html",
-              "line": 4783
+              "line": 4662
             },
             {
               "page": "frontend/index.html",
-              "line": 4787
+              "line": 4666
             },
             {
               "page": "frontend/index.html",
-              "line": 4839
+              "line": 4718
             },
             {
               "page": "frontend/index.html",
-              "line": 4849
+              "line": 4728
             },
             {
               "page": "frontend/index.html",
-              "line": 4850
+              "line": 4729
             },
             {
               "page": "frontend/index.html",
-              "line": 4851
+              "line": 4730
             },
             {
               "page": "frontend/index.html",
-              "line": 4889
+              "line": 4768
             },
             {
               "page": "frontend/index.html",
-              "line": 4892
+              "line": 4771
             },
             {
               "page": "frontend/index.html",
-              "line": 4895
+              "line": 4774
             },
             {
               "page": "frontend/index.html",
-              "line": 4906
+              "line": 4785
             },
             {
               "page": "frontend/index.html",
-              "line": 4915
+              "line": 4794
             },
             {
               "page": "frontend/index.html",
-              "line": 4917
+              "line": 4796
             },
             {
               "page": "frontend/index.html",
-              "line": 4921
+              "line": 4800
             },
             {
               "page": "frontend/index.html",
-              "line": 4924
+              "line": 4803
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4804
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4805
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4811
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4847
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4862
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4870
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4871
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4898
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4899
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4903
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4904
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4913
             },
             {
               "page": "frontend/index.html",
@@ -7716,15 +7826,35 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 4926
+              "line": 4935
             },
             {
               "page": "frontend/index.html",
-              "line": 4932
+              "line": 4941
             },
             {
               "page": "frontend/index.html",
-              "line": 4968
+              "line": 4942
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4949
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4959
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4960
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4972
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 4973
             },
             {
               "page": "frontend/index.html",
@@ -7732,11 +7862,23 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 4991
+              "line": 4992
             },
             {
               "page": "frontend/index.html",
-              "line": 4992
+              "line": 4996
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 5002
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 5003
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 5016
             },
             {
               "page": "frontend/index.html",
@@ -7744,55 +7886,59 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 5020
+              "line": 5029
             },
             {
               "page": "frontend/index.html",
-              "line": 5024
+              "line": 5031
             },
             {
               "page": "frontend/index.html",
-              "line": 5025
+              "line": 5039
             },
             {
               "page": "frontend/index.html",
-              "line": 5034
+              "line": 5042
             },
             {
               "page": "frontend/index.html",
-              "line": 5046
+              "line": 5058
             },
             {
               "page": "frontend/index.html",
-              "line": 5056
+              "line": 5059
             },
             {
               "page": "frontend/index.html",
-              "line": 5062
+              "line": 5060
             },
             {
               "page": "frontend/index.html",
-              "line": 5063
+              "line": 5066
             },
             {
               "page": "frontend/index.html",
-              "line": 5070
+              "line": 5067
             },
             {
               "page": "frontend/index.html",
-              "line": 5080
+              "line": 5074
             },
             {
               "page": "frontend/index.html",
-              "line": 5081
+              "line": 5084
             },
             {
               "page": "frontend/index.html",
-              "line": 5093
+              "line": 5085
             },
             {
               "page": "frontend/index.html",
-              "line": 5094
+              "line": 5086
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 5102
             },
             {
               "page": "frontend/index.html",
@@ -7800,7 +7946,7 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 5113
+              "line": 5105
             },
             {
               "page": "frontend/index.html",
@@ -7808,15 +7954,27 @@
             },
             {
               "page": "frontend/index.html",
+              "line": 5121
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 5122
+            },
+            {
+              "page": "frontend/index.html",
               "line": 5123
             },
             {
               "page": "frontend/index.html",
-              "line": 5124
+              "line": 5128
             },
             {
               "page": "frontend/index.html",
-              "line": 5137
+              "line": 5135
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 5136
             },
             {
               "page": "frontend/index.html",
@@ -7824,31 +7982,19 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 5150
+              "line": 5153
             },
             {
               "page": "frontend/index.html",
-              "line": 5152
+              "line": 5161
             },
             {
               "page": "frontend/index.html",
-              "line": 5160
+              "line": 5162
             },
             {
               "page": "frontend/index.html",
-              "line": 5163
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 5179
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 5180
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 5181
+              "line": 5176
             },
             {
               "page": "frontend/index.html",
@@ -7856,23 +8002,19 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 5188
+              "line": 5201
             },
             {
               "page": "frontend/index.html",
-              "line": 5195
+              "line": 5210
             },
             {
               "page": "frontend/index.html",
-              "line": 5205
+              "line": 5215
             },
             {
               "page": "frontend/index.html",
-              "line": 5206
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 5207
+              "line": 5216
             },
             {
               "page": "frontend/index.html",
@@ -7880,31 +8022,15 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 5225
+              "line": 5227
             },
             {
               "page": "frontend/index.html",
-              "line": 5226
+              "line": 5230
             },
             {
               "page": "frontend/index.html",
-              "line": 5238
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 5242
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 5243
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 5244
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 5249
+              "line": 5241
             },
             {
               "page": "frontend/index.html",
@@ -7916,295 +8042,223 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 5261
+              "line": 5258
             },
             {
               "page": "frontend/index.html",
-              "line": 5274
+              "line": 5265
             },
             {
               "page": "frontend/index.html",
-              "line": 5282
+              "line": 5271
             },
             {
               "page": "frontend/index.html",
-              "line": 5283
+              "line": 5272
             },
             {
               "page": "frontend/index.html",
-              "line": 5297
+              "line": 5841
             },
             {
               "page": "frontend/index.html",
-              "line": 5308
+              "line": 5849
             },
             {
               "page": "frontend/index.html",
-              "line": 5322
+              "line": 5860
             },
             {
               "page": "frontend/index.html",
-              "line": 5331
+              "line": 5866
             },
             {
               "page": "frontend/index.html",
-              "line": 5336
+              "line": 7668
             },
             {
               "page": "frontend/index.html",
-              "line": 5337
+              "line": 7669
             },
             {
               "page": "frontend/index.html",
-              "line": 5344
+              "line": 8227
             },
             {
               "page": "frontend/index.html",
-              "line": 5348
+              "line": 8230
             },
             {
               "page": "frontend/index.html",
-              "line": 5351
+              "line": 8245
             },
             {
               "page": "frontend/index.html",
-              "line": 5362
+              "line": 8436
             },
             {
               "page": "frontend/index.html",
-              "line": 5377
+              "line": 8437
             },
             {
               "page": "frontend/index.html",
-              "line": 5378
+              "line": 8444
             },
             {
               "page": "frontend/index.html",
-              "line": 5379
+              "line": 8445
             },
             {
               "page": "frontend/index.html",
-              "line": 5386
+              "line": 8448
             },
             {
               "page": "frontend/index.html",
-              "line": 5392
+              "line": 9536
             },
             {
               "page": "frontend/index.html",
-              "line": 5393
+              "line": 9537
             },
             {
               "page": "frontend/index.html",
-              "line": 5963
+              "line": 10313
             },
             {
               "page": "frontend/index.html",
-              "line": 5971
+              "line": 10319
             },
             {
               "page": "frontend/index.html",
-              "line": 5982
+              "line": 10331
             },
             {
               "page": "frontend/index.html",
-              "line": 5988
+              "line": 10338
             },
             {
               "page": "frontend/index.html",
-              "line": 7790
+              "line": 10371
             },
             {
               "page": "frontend/index.html",
-              "line": 7791
+              "line": 10409
             },
             {
               "page": "frontend/index.html",
-              "line": 8349
+              "line": 10423
             },
             {
               "page": "frontend/index.html",
-              "line": 8352
+              "line": 10432
             },
             {
               "page": "frontend/index.html",
-              "line": 8367
+              "line": 11833
             },
             {
               "page": "frontend/index.html",
-              "line": 8558
+              "line": 12936
             },
             {
               "page": "frontend/index.html",
-              "line": 8559
+              "line": 12946
             },
             {
               "page": "frontend/index.html",
-              "line": 8566
+              "line": 13162
             },
             {
               "page": "frontend/index.html",
-              "line": 8567
+              "line": 13162
             },
             {
               "page": "frontend/index.html",
-              "line": 8570
+              "line": 13533
             },
             {
               "page": "frontend/index.html",
-              "line": 9658
+              "line": 13562
             },
             {
               "page": "frontend/index.html",
-              "line": 9659
+              "line": 13728
             },
             {
               "page": "frontend/index.html",
-              "line": 10435
+              "line": 13736
             },
             {
               "page": "frontend/index.html",
-              "line": 10441
+              "line": 14609
             },
             {
               "page": "frontend/index.html",
-              "line": 10453
+              "line": 14614
             },
             {
               "page": "frontend/index.html",
-              "line": 10460
+              "line": 14615
             },
             {
               "page": "frontend/index.html",
-              "line": 10493
+              "line": 15750
             },
             {
               "page": "frontend/index.html",
-              "line": 10531
+              "line": 15760
             },
             {
               "page": "frontend/index.html",
-              "line": 10545
+              "line": 15763
             },
             {
               "page": "frontend/index.html",
-              "line": 10554
+              "line": 15764
             },
             {
               "page": "frontend/index.html",
-              "line": 11961
+              "line": 17131
             },
             {
               "page": "frontend/index.html",
-              "line": 12093
+              "line": 17132
             },
             {
               "page": "frontend/index.html",
-              "line": 12143
+              "line": 17682
             },
             {
               "page": "frontend/index.html",
-              "line": 13183
+              "line": 18016
             },
             {
               "page": "frontend/index.html",
-              "line": 13193
+              "line": 19176
             },
             {
               "page": "frontend/index.html",
-              "line": 13409
+              "line": 19176
             },
             {
               "page": "frontend/index.html",
-              "line": 13409
+              "line": 19176
             },
             {
               "page": "frontend/index.html",
-              "line": 13780
+              "line": 19176
             },
             {
               "page": "frontend/index.html",
-              "line": 13809
+              "line": 7499
             },
             {
               "page": "frontend/index.html",
-              "line": 13975
+              "line": 17521
             },
             {
               "page": "frontend/index.html",
-              "line": 13983
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 14856
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 14861
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 14862
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 15997
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 16007
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 16010
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 16011
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 17378
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 17379
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 17927
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 18261
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 19421
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 19421
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 19421
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 19421
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 7621
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 17766
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 18274
+              "line": 18029
             }
           ]
         },
@@ -8213,7 +8267,7 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 291
+              "line": 292
             }
           ]
         },
@@ -8222,15 +8276,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 309
-            },
-            {
-              "page": "backend/operation-workspace.html",
               "line": 310
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 313
+              "line": 311
             },
             {
               "page": "backend/operation-workspace.html",
@@ -8238,7 +8288,11 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 317
+              "line": 315
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 318
             },
             {
               "page": "backend/status.html",
@@ -8279,15 +8333,15 @@
           ]
         },
         "paragraph": {
-          "count": 7,
+          "count": 9,
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 320
+              "line": 321
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 455
+              "line": 456
             },
             {
               "page": "backend/status.html",
@@ -8306,18 +8360,22 @@
               "line": 1319
             },
             {
+              "page": "docs/aesthetics/ui/fabric-assistant.js",
+              "line": 9
+            },
+            {
               "page": "frontend/index.html",
-              "line": 13409
+              "line": 5816
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 13162
             }
           ]
         },
         "caption": {
           "count": 19,
           "locations": [
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 350
-            },
             {
               "page": "backend/operation-workspace.html",
               "line": 351
@@ -8329,6 +8387,10 @@
             {
               "page": "backend/operation-workspace.html",
               "line": 353
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 354
             },
             {
               "page": "backend/status.html",
@@ -8388,7 +8450,7 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 4833
+              "line": 4712
             }
           ]
         }

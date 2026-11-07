@@ -37,6 +37,9 @@ for(const name of Object.keys(checks)){
 }
 const gc=spawnSync(process.execPath,['--expose-gc','--input-type=module','-e',"const t=setInterval(()=>global.gc(),5);try{const {checks}=await import('./docs/check-runtime.mjs');await checks['fabrics']();}finally{clearInterval(t)}"],{encoding:'utf8',timeout:15000,maxBuffer:2*1024*1024});
 assert.equal(gc.status,0,'Fabric deadline/GC: '+gc.stdout+gc.stderr);console.log('PASS Fabric forced-GC deadlines');
-// Final presentation gate: defaults and visibly different saved settings.
+// The owner reviews live visuals. Local code-only runs never launch a browser;
+// CI retains its existing isolated regression gate.
+if(process.argv.includes('--code-only')){console.log('Code checks passed. Visual and interaction acceptance is pending owner review.');process.exit(0);}
+// Final automated presentation gate: defaults and visibly different saved settings.
 const ui=spawnSync(process.execPath,['docs/check-ui.mjs'],{encoding:'utf8',timeout:120000,maxBuffer:2*1024*1024});process.stdout.write(ui.stdout);assert.equal(ui.status,0,ui.error?.message||ui.stderr);
 console.log('Release checks passed in '+Math.round(performance.now()-started)+' ms. Live provider performance is separate.');

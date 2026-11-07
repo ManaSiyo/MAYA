@@ -97,9 +97,11 @@
     });
   }
   function action(label, fn) { const b = node('button','pill maya-pill',label); b.type = 'button'; b.addEventListener('click',fn); return b; }
-  function status(message) { els.status.textContent = message || ''; }
+  let searchStatus='',inventoryStatus='';
+  function showStatus(){els.status.textContent=view==='search'?searchStatus:view==='inhouse'?inventoryStatus:'';}
+  function status(message){searchStatus=message||'';showStatus();}
   function reset() {
-    epoch++;photoSeq++;searchSeq++;autoStarted=false;searchMode='worldwide';activeStores=new Set();filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
+    searchStatus='';inventoryStatus='';epoch++;photoSeq++;searchSeq++;autoStarted=false;searchMode='worldwide';activeStores=new Set();filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
     const nextProject=projectScope();if(nextProject!==projectIdentity){resultCache.clear();preparedPhotos.clear();bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
     controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
     searchDetails=null;searchState='idle';els?.details.set(null);
@@ -229,7 +231,8 @@
   async function loadInventory(force=false) {
     if(Array.isArray(context.inhouse)&&!force)return;
     if(inventoryRequest&&!force)return inventoryRequest;
-    const stamp=epoch,signal=AbortSignal.any([reads.signal,AbortSignal.timeout(6000)]);
+    const stamp=epoch,signal=AbortSignal.any([reads.signal,AbortSignal.timeout(15000)]);
+    inventoryStatus='';
     const task=(async()=>{
       const response=await fetch('/aesthetics/fabrics/fabrics.json?v=2',{cache:force?'no-store':'default',signal});
       if(!response.ok)throw Error('In-house photos unavailable.');
@@ -240,7 +243,7 @@
         return {title:p.name||p.fileName,url:original,image:thumbnail?'/aesthetics/fabrics/thumbs/'+encodeURIComponent(thumbnail[1]):original,description:[p.weave,p.weight,p.color].filter(Boolean).join(' · ')};
       });
       if(view==='inhouse')paint();
-    })();inventoryRequest=task;try{await task;}finally{if(inventoryRequest===task)inventoryRequest=null;}
+    })();inventoryRequest=task;try{await task;}catch(e){if(current(stamp))inventoryStatus=e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':'In-house photos unavailable. Refresh to retry.';throw e;}finally{if(inventoryRequest===task){inventoryRequest=null;if(current(stamp))paint();}}
   }
   async function loadContext(stamp) {
     if (!context.submissionId || context.referenceImage) return;
@@ -333,7 +336,7 @@
         img.addEventListener('error',()=>{if(disposed||img!==photo||!item.isConnected)return;clearTimer();loading=false;next();});
       }
       attempted.add(source);loading=true;promoteOnLoad=promoteOnLoad||item.classList.contains('has-missing-photo');unavailable?.remove();unavailable=null;item.classList.remove('has-missing-photo');
-      if(!img.isConnected)link.prepend(img);img.src=source;
+      if(!img.isConnected)link.prepend(img);window.MayaImageViewer?.bind(img);img.src=source;
       // Each actual browser request gets a deadline. A hung host must not leave
       // an empty swatch forever; this never retries the paid search.
       timer=setTimeout(()=>{
@@ -375,6 +378,7 @@
     return item;
   }
   function paint() {
+    showStatus();
     els.search.setAttribute('aria-pressed',String(view==='search'));els.saved.setAttribute('aria-pressed',String(view==='saved'));els.inhouse.setAttribute('aria-pressed',String(view==='inhouse'));
     els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=view!=='search'||!!context.automatic;els.sub.hidden=!!context.automatic;
     workspace.classList.toggle('is-automatic',!!context.automatic);els.upload.hidden=!!context.automatic;
@@ -404,7 +408,7 @@
     const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child)){child._fabricDispose?.();child.remove();}
     cards.forEach((el,index)=>{if(els.results.children[index]!==el)els.results.insertBefore(el,els.results.children[index]||null);});
     if(items.length&&cards.every(item=>item.hidden)&&!busy){els.results.append(node('p','fa-empty','No fabric photographs loaded. Refresh to retry.'));}
-    if(!items.length&&!busy&&searchState!=='preparing')els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
+    if(!items.length&&(view!=='search'||(!busy&&searchState!=='preparing'))&&!(view==='inhouse'&&inventoryRequest))els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?(inventoryStatus||'No in-house fabrics yet.'):searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
     els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
   }
   async function chooseSearch(mode,group){
@@ -421,7 +425,7 @@
     // Retry only failed photographs on explicit Refresh; healthy loaded images stay mounted.
     for(const item of els.results.querySelectorAll('.has-missing-photo'))item._fabricSignature='';
     if(view==='saved')return loadBook();
-    if(view==='inhouse'){try{if(context.loadInhouse){const stamp=epoch;const items=await context.loadInhouse();if(current(stamp)){context.inhouse=items;paint();}}else await loadInventory(true);}catch(e){status(e.message);}return;}
+    if(view==='inhouse'){try{if(context.loadInhouse){const stamp=epoch;const items=await context.loadInhouse();if(current(stamp)){context.inhouse=items;paint();}}else await loadInventory(true);}catch(e){inventoryStatus=e.message;showStatus();}return;}
     if(context.automatic&&!context.submissionId&&reopenSaved)return reopenSaved();
     if(searchState==='preparing')return;
     if(context.automatic&&!image)return open({...context,host,forceReset:true});
@@ -510,7 +514,7 @@
     // not cancel its only hydration request.
     if(!restored)void loadBook();
     // Inventory must remain usable even if the private reference photo fails.
-    void loadInventory().catch(e=>{if(current(stamp)&&view==='inhouse')status(e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':e.message);});
+    void loadInventory().catch(()=>{});
     if(changed&&!restored)status(context.automatic?'Searching for Fabrics':'Describe what you need. A photo is optional.');
     els.send.disabled=true;
     try{

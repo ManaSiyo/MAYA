@@ -20,6 +20,10 @@ export function setupSharedSurfaces({parent,design}){
  share.innerHTML='<div data-maya-type="H3">Share project</div><input data-maya-control="field" data-maya-type="P1" aria-label="Project link preview" readonly value="https://maya.manasiyo.com/?share=preview"><div class="share-preview-actions"><button class="maya-glass-button" data-maya-type="P3" data-copy>Copy</button><button class="maya-glass-button" data-maya-type="P3" data-done>Done</button></div><p data-maya-type="P3">Anyone with this link can open the project and keep their own copy. Yours is untouched.</p>';
  share.querySelector('[data-copy]').onclick=event=>event.currentTarget.textContent='Copied';share.querySelector('[data-done]').onclick=()=>share.close();
  host.append(Pill({label:'Share dialog',onClick:()=>{if(!share.isConnected)document.body.append(share);share.querySelector('[data-copy]').textContent='Copy';share.showModal();}}));
+ const photo=document.createElement('img');photo.src='/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg';photo.alt='Midnight velvet';photo.style.cssText='width:100%;height:220px;object-fit:contain';
+ const imagePreview=document.createElement('div');imagePreview.className='maya-notes-preview';imagePreview.dataset.mayaPanel='inner';imagePreview.append(photo);host.append(imagePreview);
+ MayaImageViewer.bind(photo);
+ MayaImageViewer.notesDrawer({parent:imagePreview,id:'preview-design-notes',card:{profile:{bio:'Tailored velvet coat',color:'Midnight blue',silhouette:'Long fitted coat'},refs:[{tag:'color',title:'Midnight blue'},{tag:'visual ref',title:'Evening tailoring'}]}});
  host.append(Pill({label:'Drawer',onClick:event=>drawer.showFrom(event.currentTarget)}));
  const usage=document.createElement('p');usage.dataset.mayaType=usage.dataset.previewCategory='P3';for(const [label,href]of [['MAYA','/'],['Admin','/status.html'],['Brief','/backend.html'],['Brief operations','/backend.html']]){const link=document.createElement('a');link.textContent=label;link.href=href;usage.append(link,document.createTextNode(' · '));}host.append(usage);
  highlightPadding(edit,()=>[drawer],()=>({x:values.paddingX,y:values.paddingY}));

@@ -49,8 +49,7 @@ Local commands (Node20 or newer):
 npm ci --prefix docs
 npm ci --prefix backend/server
 cd docs && npx playwright install chromium && cd ..
-node docs/check.mjs
-MAYA_BROWSER=webkit node docs/check-ui.mjs
+node docs/check.mjs --code-only
 node docs/build-site.mjs
 ```
 
@@ -139,30 +138,39 @@ return 410. Photo hosts can still fail; their sourced thumbnail is the fallback.
 
 ## Current work
 
-November 5/6: simplified Fabrics, bundled its small Search details helper into the
-existing display script, flattened the single-file operations/kb directory and
-removed the empty CLO manifest. The six old backend search/ranking files totalled
-about 111 KB; one module is about 23 KB, with private storage guards retained.
-Retired files are in the ignored local _to_delete/2026-11-06-fabrics archive; Git
-history also retains them. No unrelated services or credentials were changed.
+November 6 owner review: Chrome access and agent visual testing are stopped.
+Fromsa performs the final visual/interaction review after each Push. Local checks
+use `node docs/check.mjs --code-only`; the deployment's existing isolated browser
+regression gate remains. Do not confuse either with a live provider acceptance.
 
-Frontend pages now physically occur in Inspo → Favorites → Community order.
-Removed the late CSS reorder and deferred initial scroll reset. Dot clicks,
-natural scrolling and aria-current follow the visible page. Existing appearance
-and saved design settings remain in place. Tests use actual clicks and wait for
-scroll/indicator state, rather than forcing a UI state and sleeping 100 ms.
+Prepared locally: explicit centering for submission deletion confirmation;
+Brief header deletion removed (drawer deletion retained); shared hover/focus-only
+card controls and adjustable Close icon percentage, default 80%; hover captions;
+plain, deduplicated Design Notes behind a vertical left-edge plus/drawer; shared
+fullscreen photograph inspection with a rectangular magnifier, pinch/wheel zoom
+and pan. App, Brief, fabric images and Aesthetic Control use the same viewer.
+Gesture handling excludes board zoom and version swipes. Source changes/removal
+close private expanded images. Fabric caption/source links still open the source.
 
-Validation: fake-provider server startup with Cloud Run configuration,
-consolidated release checks on Node20 and Node24, forced-GC request
-cancellation, and Chromium/WebKit responsive checks. Fabric checks exercise the
-real adapter with documented OpenAI payload fixtures through the browser, exact
-Global/In House geometry and scrolling, two caption rows, saved styles, photo
-failure/recovery, account resets and explicit Refresh. These are controlled tests,
-not a live OpenAI or physical iPad speed benchmark.
+Fabrics: separate Global and In House status messages, wait for inventory before
+showing an empty state, retain sourced photos from incomplete provider responses,
+and allow 4096 output/reasoning tokens rather than the restrictive 800 cap.
+Provider failures record bounded categories only in server logs. There is still
+one OpenAI image search, no scraping/ranking/retry engine and no invented photos.
+These fix concrete code paths but do **not** establish the cause of the owner's
+live Global failure. Its exact final message/provider failure remains unconfirmed.
+The owner has been asked for the exact Global message; no live search was run.
 
-Production was still b7ccf5d when this work started. f8eadbd's Cloud Build failed
-its page-indicator synchronization assertion before deployment; f6426d6 had failed
-a screenshot capture earlier. This explains why the previous frontend fixes were
-not visible. The requested Push must be followed by matching release.json, page
-build stamps and API health, then a real Global search on a saved submission.
-Twilio configuration remains owner-managed. No real messages or calls were sent.
+Validation: Node20 non-browser packaging, syntax, authorization, storage,
+communications, image/voice/avatar, Fabric request/GC and inspection gesture/note
+checks pass. CI browser assertions were updated for dialog centering, removal of
+the header delete action, notes and fullscreen/lens behavior; not run locally at
+the owner's request. Visual/interaction acceptance, physical iPad gestures and
+Global provider results remain for the owner after deployment.
+
+Production successfully deployed 9a8bfcef20ea19b6d7e48197de1e4bcc6412b9c1 before
+this review (Cloud Build 6ffa411e-3a3f-4a0a-9f61-feaf9e81b9f7). Hosting marker,
+frontend/Admin stamps and Cloud Run health matched it. Current changes are not
+pushed. Exact next step: owner Push, confirm release/API commit through read-only
+HTTP, then owner visual/interaction review and the exact Global Fabrics outcome.
+Twilio configuration remains owner-managed; no messages or calls were sent.

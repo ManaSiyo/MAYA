@@ -4,7 +4,13 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
-- **November 5/6, prepared for requested Push:** replaced five Fabric modules and
+- **November 6, prepared locally:** centered delete confirmation, drawer-only
+  Brief deletion, smaller adjustable hover controls, deduplicated Design Notes
+  drawer and shared fullscreen magnification/pinch zoom. Separated Fabric tab
+  status and retained sourced incomplete results. Non-browser checks passed;
+  Chrome is prohibited and Fromsa owns final visual/interaction acceptance.
+  Global's live failure is still unconfirmed, not declared fixed.
+- **November 6 — 9a8bfce, deployed:** replaced five Fabric modules and
   the fabric-only router with one direct OpenAI image-search adapter, up to ten
   source-linked photographs; preserved private favorites and cancellation. Bundled
   Fabric details, flattened knowledge assets, retired empty CLO manifest and old

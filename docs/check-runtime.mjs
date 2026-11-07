@@ -1603,7 +1603,7 @@ await test('one direct OpenAI request returns up to ten source-linked photos wit
  let calls=0;const events=[];
  const service=create({fetchImpl:async(target,options)=>{
   calls++;assert.equal(target,'https://api.openai.com/v1/responses');const body=JSON.parse(options.body);
-  assert.equal(body.max_tool_calls,1);assert.equal(body.store,false);assert.equal(body.stream,true);assert.equal(body.max_output_tokens,800);
+  assert.equal(body.max_tool_calls,1);assert.equal(body.store,false);assert.equal(body.stream,true);assert.equal(body.max_output_tokens,4096);
   assert.deepEqual(body.include,['web_search_call.results']);assert.deepEqual(body.tools[0].search_content_types,['image','text']);assert.equal(body.tools[0].image_settings.max_results,10);assert.equal(body.tools[0].filters,undefined);
   assert.equal(body.input[0].content[1].image_url,image);
   return new Response(wire([done([{type:'message',content:[{type:'output_text',text:'{"image_url":"https://invented.example/a.jpg","url":"https://invented.example"}'}]},item([entry(0),entry(0),entry(1,{caption:''}),...Array.from({length:14},(_,i)=>entry(i+2))])])]));
@@ -1630,6 +1630,11 @@ await test('photos stream before completion; later explicit exclusions retract e
  send({type:'response.output_item.done',item:item([entry(0,{caption:'Red polyester apparel fabric'})])});
  send({type:'response.failed'});await assert.rejects(pending,/stopped/);
  assert.deepEqual(events.at(-1).products,[]);assert.deepEqual(events.at(-1).removedUrls,[entry().source_website_url]);assert.equal(events.some(e=>e.type==='done'),false);
+});
+await test('terminal incomplete output retains sourced photos without declaring success',async()=>{
+ const events=[];
+ await assert.rejects(create({fetchImpl:async()=>new Response(wire([{type:'response.incomplete',response:{output:[item([entry()])],incomplete_details:{reason:'max_output_tokens'}}}]))}).search(user,{request:'fabric'},e=>events.push(e)),/stopped/);
+ assert.equal(events.at(-1).type,'products');assert.equal(events.at(-1).products.length,1);assert.equal(events.some(e=>e.type==='done'),false);
 });
 await test('SSE handles Unicode split across every byte and truncated streams fail',async()=>{
  const data=new TextEncoder().encode(wire([done([item([entry(0,{caption:'Rouge café fabric'})])])]));
@@ -2009,6 +2014,8 @@ for(const patch of [{iconColor:'red'},{iconOpacity:101},{iconStroke:4},{sectionS
 const canonical=structuredClone(extended);canonical.typeVersion=2;
 canonical.type.H0={...withH0.type.H0};canonical.type.H5={...extended.type.H6};
 delete canonical.type.H6;delete canonical.type.P4;delete canonical.type.P5;
+for(const value of [50,80,100])assert.equal(validDesign({...canonical,dismissScale:value}),true);
+for(const value of [49,101,80.5,'80',null])assert.equal(validDesign({...canonical,dismissScale:value}),false);
 const canonicalBefore=JSON.stringify(canonical),legacyBefore=JSON.stringify(extended);
 assert.equal(validDesign(canonical),true);assert.equal(validDesign(extended),true);assert.equal(validDesign(good),true);
 assert.equal(JSON.stringify(canonical),canonicalBefore);assert.equal(JSON.stringify(extended),legacyBefore,'Validation never migrates or writes a legacy saved design');
@@ -2269,4 +2276,29 @@ checks['submission-deletion']=async function(){
  const feedStart=source.indexOf("app.get('/api/admin/submissions'");runInNewContext(source.slice(feedStart,source.indexOf('// GET /api/admin/subthumb',feedStart)),feed);
  await feedRoutes.get('/api/admin/submissions')({},response);assert.deepEqual(JSON.parse(JSON.stringify(response.value.folders)),[],'A second instance cannot serve a deleted card from its warm feed cache');
  console.log('Submission deletion: durable tombstones, retry, exact-prefix isolation, cross-instance cache and Admin authorization passed.');
+};
+
+
+checks['image-inspection']=async function(){
+ const assert=(await import('node:assert/strict')).default;
+ const {readFileSync}=await import('node:fs');const {runInNewContext}=await import('node:vm');
+ const context={window:{},Date,console};runInNewContext(readFileSync('docs/aesthetics/ui/image-viewer.js','utf8'),context);
+ const api=context.window.MayaImageViewer,plain=value=>JSON.parse(JSON.stringify(value));
+ assert.deepEqual(plain(api.imageBounds(1200,800,600,1200)),{x:400,y:0,width:400,height:800});
+ const origin={scale:1,x:0,y:0};assert.deepEqual(plain(api.zoomAt(origin,2,100,50,600,400)),{scale:2,x:-100,y:-50});
+ assert.deepEqual(plain(api.zoomAt({scale:3,x:300,y:-200},1,400,300,600,400)),origin);
+ assert.equal(api.zoomAt(origin,99,0,0,600,400).scale,6);
+ const rows=plain(api.noteRows({profile:{color:'Midnight blue',bio:'A tailored coat'},refs:[{tag:'colour',title:'midnight BLUE'},{tag:'color',title:'blue'},{tag:'visual_ref',title:'Evening tailoring'},{tag:'visual reference',title:'Evening tailoring'}],fabrics:[{color:'Midnight blue',weave:'Velvet'}]}));
+ assert.deepEqual(rows.find(r=>r.title==='Color').values,['Midnight blue']);assert.equal(rows.filter(r=>r.title==='Visual reference').length,1);
+ const listeners=new Map(),image={parentElement:{getBoundingClientRect:()=>({left:0,top:0,width:600,height:400})},clientWidth:600,clientHeight:400,naturalWidth:1200,naturalHeight:800,style:{},classList:{add(){}},setAttribute(){},setPointerCapture(){},addEventListener:(name,fn)=>{listeners.set(name,fn);}};
+ let expanded=0;const bound=api.bind(image,{expand:()=>expanded++});
+ const fire=(name,props={})=>listeners.get(name)?.({button:0,pointerType:'touch',preventDefault(){},stopPropagation(){},stopImmediatePropagation(){},...props});
+ fire('pointerdown',{pointerId:1,clientX:200,clientY:200});fire('pointerdown',{pointerId:2,clientX:400,clientY:200});fire('pointermove',{pointerId:2,clientX:600,clientY:200});assert.equal(bound.state.scale,2);
+ fire('pointerup',{pointerId:1});fire('pointerup',{pointerId:2});fire('click');assert.equal(expanded,0,'A pinch cannot accidentally expand or close the card');
+ fire('load');assert.deepEqual(plain(bound.state),origin,'A newly selected image starts unzoomed');
+ fire('wheel',{deltaY:-100,clientX:300,clientY:200});assert.ok(bound.state.scale>1);bound.reset();assert.deepEqual(plain(bound.state),origin);
+ assert.equal(api.bind(image),bound,'Rebinding cannot duplicate gesture listeners');
+ const frontend=readFileSync('frontend/index.html','utf8'),brief=readFileSync('backend/backend.html','utf8');
+ assert.ok(!brief.includes('delete-open-submission'));assert.ok(brief.includes('onDelete:deleteBriefSubmission'));assert.ok(frontend.includes('MayaImageViewer.notesDrawer'));assert.ok(!frontend.includes('class="vn-pill'));
+ console.log('Image inspection: anchored zoom, bounds, pinch, reset, click suppression and deduplicated notes passed.');
 };

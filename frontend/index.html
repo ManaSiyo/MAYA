@@ -1000,6 +1000,7 @@
     pointer-events: none;
   }
   .item-card.inspo:hover .item-title { opacity: 1; }
+  .item-card.inspo:has(.item-caption) .item-title { display:none; }
   .item-card.inspo .item-detail { display: none; }
 
   /* v10.18: caption is now an overlay on the bottom of the image (same
@@ -1030,7 +1031,7 @@
     overflow: hidden;
     max-height: 60%;
   }
-  .item-card.inspo:hover .item-caption { opacity: 1; }
+  .item-card.inspo:is(:hover,:focus-within,.touched) .item-caption { opacity: 1; }
 
   /* v10.2: small action buttons, canon glass chrome. Color comes from
      the border (red for delete, white for stack/dissect), not from a
@@ -3558,37 +3559,6 @@
     height: 2.9em; min-height: 2.9em;
     margin: 16px auto 8px;
   }
-  /* v10.11: photo fullscreen mode inside the garment viewer. Click the
-     image → it expands edge-to-edge over the modal. Escape exits back to
-     the normal viewer. All viewer chrome hides while fullscreen. */
-  #garment-modal[data-photo="full"] #viewer-version-nav,
-  #garment-modal[data-photo="full"] #garment-prompt-display,
-  #garment-modal[data-photo="full"] #viewer-fabrics,
-  #garment-modal[data-photo="full"] #viewer-refs,
-  #garment-modal[data-photo="full"] #modifications-bar,
-  #garment-modal[data-photo="full"] #viewer-actions {
-    display: none !important;
-  }
-  #garment-modal[data-photo="full"] #garment-image-wrap {
-    position: fixed; inset: 0;
-    width: 100vw; height: 100vh;
-    padding: 0; margin: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(8,10,18,0.92);
-    z-index: 300;
-  }
-  #garment-modal[data-photo="full"] #garment-image {
-    width: 100%; height: 100%;
-    max-width: 100vw; max-height: 100vh;
-    object-fit: contain;
-    cursor: zoom-out;
-    border-radius: 0;
-  }
-  #garment-modal[data-photo="full"] .viewer-close {
-    position: fixed; top: 22px; right: 22px;
-    z-index: 310;
-  }
-
   /* v13.36: the heart on the picture, opposite the close. */
   /* v13.42: the exact mirror of the close. Same 30px circle, same corner
      offset, opposite side, so the two read as a pair on the picture. */
@@ -3607,101 +3577,9 @@
   .viewer-heart.on svg { fill: rgba(253,164,175,0.92); stroke: rgba(253,164,175,0.95); }
   #garment-modal[data-photo="full"] .viewer-heart { display: none; }
 
-  /* v13.36: the notes column. It sits in the empty space to the left of the
-     picture, which is why the picture shifts right on a wide screen. Below
-     that width there is no empty space to use, so it folds under the picture
-     instead of covering it. */
-  #viewer-notes {
-    position: fixed; left: 26px; top: 104px;
-    width: min(250px, calc(15vw - 20px));
-    max-height: 66vh; overflow-y: auto; z-index: 5;
-    /* v14.06: the column reads centered, per Fromsa, even though it lives left */
-    text-align: center; display: none;
-    scrollbar-width: none;
-  }
-  #viewer-notes .vn-pills { justify-content: center; }
-  /* v14.06: the five-line profile every picture carries: bio, aesthetic,
-     silhouette, color, era. Subheadlines with their answers underneath. */
-  #viewer-notes .vn-profile .note-item { border-bottom: 0.25px solid rgba(255,255,255,0.06); padding: 7px 0; }
-  /* v14.23: the five lines read white. The old rule lost to the generic
-     .note-item .note-detail rule (same specificity, declared later), which
-     is why Bio and friends came out dim and italic. */
-  /* v14.26: reversed, as asked: the title (Aesthetic) bold and bright, the
-     answer under it (futuristic chic) softer. */
-  #viewer-notes .vn-profile .note-item .note-detail { font-style: normal; font-family: 'Cormorant Garamond', serif;
-    font-size: 14px; line-height: 1.4; color: rgba(222,230,245,0.74); }
-  #viewer-notes .vn-profile .note-item .note-group-title { color: rgba(255,255,255,0.98); font-weight: 400; margin: 0 0 3px; }
-  #viewer-notes::-webkit-scrollbar { display: none; }
-  #garment-modal.open:not([data-photo="full"]) #viewer-notes { display: block; }
-  /* Same type, same rhythm, same hairlines as the notes that used to live in
-     the drawer. Only the home changed. */
-  #viewer-notes .vn-head {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9.5px; letter-spacing: 0.28em; text-transform: uppercase;
-    color: rgba(255,255,255,0.96);
-    padding-bottom: 10px; margin-bottom: 4px;
-    border-bottom: 0.5px solid rgba(255,255,255,0.08);
-  }
-  #viewer-notes .note-group { margin: 2px 0 10px; }
-  #viewer-notes .note-group:last-child { margin-bottom: 2px; }
-  #viewer-notes .note-group-title {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 8.5px; letter-spacing: 0.24em; text-transform: uppercase;
-    color: rgba(225,235,250,0.72);
-    margin: 12px 0 4px;
-  }
-  #viewer-notes .note-item {
-    padding: 9px 0;
-    border-bottom: 0.25px solid rgba(255,255,255,0.06);
-    font-size: 12px; font-weight: 300; line-height: 1.55;
-    color: rgba(245,248,255,0.96);
-  }
-  #viewer-notes .note-item:last-child { border-bottom: none; }
-  #viewer-notes .note-item .note-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px; line-height: 1.35;
-    color: rgba(255,255,255,0.97);
-    margin-bottom: 3px;
-  }
-  #viewer-notes .vn-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
-  #viewer-notes .vn-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    border: 0.5px solid rgba(255,255,255,0.24); border-radius: 999px;
-    padding: 3px 9px 3px 11px;
-    font-family: 'Jost', sans-serif; font-size: 9px; font-weight: 300;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: rgba(230,238,252,0.88);
-  }
-  #viewer-notes .vn-pill.deselected { opacity: 0.4; text-decoration: line-through; }
-  #viewer-notes .vn-pill-x {
-    background: none; border: none; padding: 0; margin: 0;
-    color: rgba(238,242,255,0.5); font-size: 11px; line-height: 1; cursor: pointer;
-  }
-  #viewer-notes .vn-pill-x:hover { color: #fff; }
-  /* v13.44: the notes column IS the attributes now. The old toggle and chip
-     row only appear when the column has no room to exist. */
-  @media (min-width: 1280px) {
-    #garment-modal .attributes-toggle, #garment-modal #viewer-refs { display: none !important; }
-  }
-  #viewer-notes .vn-dot {
-    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-    margin-right: 8px; vertical-align: middle;
-  }
-  #viewer-notes .note-item .note-detail {
-    font-style: italic; color: rgba(200,210,230,0.55); font-size: 11px;
-  }
-  #viewer-notes .vn-caption {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 14px; line-height: 1.55; color: rgba(238,244,255,0.86);
-  }
-  #viewer-notes .notes-empty {
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic; font-size: 13px;
-    color: rgba(200,210,230,0.4); padding: 22px 0; text-align: center;
-  }
-  /* v13.39: the picture is centred, as it was. The notes live in the margin
-     the picture leaves behind, so they only appear when there is one. */
-  @media (max-width: 1279px) { #viewer-notes { display: none !important; } }
+  #garment-modal:not(.open) .maya-notes-dock,
+  #garment-modal[data-mode="submit"] .maya-notes-dock { display:none; }
+  #garment-modal #viewer-refs, #garment-modal #attributes-toggle { display:none!important; }
 
   /* v10.3: subtle breathing border on "Listening…", same starlight family
      but quieter than the Submit hero pulse. */
@@ -4134,8 +4012,9 @@
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=3"></script>
-<script src="/aesthetics/ui/typography-controls.js?v=25"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=4"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=26"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=1"><script src="/aesthetics/ui/image-viewer.js?v=1"></script>
 </head>
 <body>
 <!-- v14.21: this is the Playground, promoted whole. The amber badge is the
@@ -5131,16 +5010,16 @@
   <!-- v13.36: what MAYA understands about THIS picture, beside it. Notes used
        to be one pile for a whole project, which said nothing about the vision
        actually on screen. Every version carries its own. -->
-  <div id="viewer-notes"></div>
+
   <div id="garment-image-wrap">
     <!-- v5.22: × icon now hugs the image's top-right corner, not the screen. -->
-    <button class="viewer-close" onclick="closeGarmentModal()" title="Close (Esc)" aria-label="Close">&#215;</button>
+    <button class="viewer-close" data-maya-dismiss onclick="closeGarmentModal()" title="Close (Esc)" aria-label="Close">&#215;</button>
     <!-- v13.36: the heart lives on the picture, opposite the close. One tap
          keeps it, one tap lets it go. No pill at the bottom of the screen. -->
     <button class="viewer-heart" id="viewer-heart" onclick="viewerToggleHeart()" title="Keep in favorites" aria-label="Favorite">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5 C12 20.5 3.5 15.2 3.5 9.4 A4.6 4.6 0 0 1 12 6.8 A4.6 4.6 0 0 1 20.5 9.4 C20.5 15.2 12 20.5 12 20.5 Z"/></svg>
     </button>
-    <img id="garment-image" alt="Generated garment" onclick="enterPhotoFullscreen()" style="cursor: zoom-in" />
+    <img id="garment-image" alt="Generated garment" style="cursor: zoom-in" />
     <div id="garment-spinner">
       <div class="spinner-ring"></div>
       <div id="spinner-text">rendering vision...</div>
@@ -5932,10 +5811,9 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
     // "cartoon inspired cartoonish pants" collapse to "cartoon inspired pants".
     if (card.caption) card.caption = _dedupeStems(card.caption);
 
-    // v10.17: caption HTML only rendered for Maya visions (isVision),
-    // never for uploaded inspos. Their hover overlay uses .item-title.
-    const captionHtml = (card.caption && isVision)
-      ? '<div class="item-caption">' + escapeHtml(card.caption) + '</div>'
+    const hoverDescription=card.caption||card.profile?.bio||card.title||'';
+    const captionHtml = hoverDescription
+      ? '<div class="item-caption" data-maya-type="P3">' + escapeHtml(hoverDescription) + '</div>'
       : '';
 
     const refsHtml = (card.refs && card.refs.length)
@@ -5985,7 +5863,7 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
       stackBtnHtml +
       dissectBtnHtml +
       favBtnHtml +
-      '<button class="delete-btn" data-id="' + id + '">&#215;</button>' +
+      '<button class="delete-btn" data-maya-dismiss aria-label="Remove card" data-id="' + id + '">&#215;</button>' +
       imgHtml +
       '<div class="item-tag">' + tagInner + '</div>' +
       '<div class="item-title">' + escapeHtml(card.title) + '</div>' +
@@ -11658,19 +11536,13 @@ function modifyAddReference() {
 // v10.11: photo fullscreen, click image inside viewer → expand to fill
 // the screen. Click again or press Escape to exit (back one level).
 function enterPhotoFullscreen() {
-  const modal = document.getElementById('garment-modal');
-  if (!modal || !modal.classList.contains('open')) return;
-  modal.dataset.photo = 'full';
-  const img = document.getElementById('garment-image');
-  if (img) img.onclick = exitPhotoFullscreen;
+  const modal=document.getElementById('garment-modal');
+  if(!modal?.classList.contains('open'))return;
+  modal.dataset.photo='full';
+  MayaImageViewer.open(document.getElementById('garment-image'),{onClose:()=>delete modal.dataset.photo});
 }
-function exitPhotoFullscreen() {
-  const modal = document.getElementById('garment-modal');
-  if (!modal) return;
-  if (modal.dataset.photo) delete modal.dataset.photo;
-  const img = document.getElementById('garment-image');
-  if (img) img.onclick = enterPhotoFullscreen;
-}
+function exitPhotoFullscreen(){MayaImageViewer.close();}
+document.addEventListener('DOMContentLoaded',()=>MayaImageViewer.bind(document.getElementById('garment-image'),{expand:enterPhotoFullscreen}));
 
 function modifySecondary() {
   // v11.10: only the default-state branch is left. The secondary button
@@ -12028,136 +11900,14 @@ function viewerStep(delta) {
 // picture. They sit in the empty space beside it, and they change as you step
 // between versions.
 // ════════════════════════════════════════════════════════════
+let viewerNotesDrawer;
 function renderViewerNotes(item) {
-  const host = document.getElementById('viewer-notes');
-  if (!host) return;
-  const c = (item && item.card) || {};
-  // The same shape the drawer used: a group per kind of note, one item per
-  // line, a title and a quieter detail under it. Nothing invented, nothing
-  // shown that this picture does not actually have.
-  const item_ = (title, detail) =>
-    '<div class="note-item"><div class="note-title">' + escapeHtml(title) + '</div>' +
-    (detail ? '<div class="note-detail">' + escapeHtml(detail) + '</div>' : '') + '</div>';
-  const groups = [];
-  // v14.06: EVERY picture carries the same five lines: Bio, Aesthetic,
-  // Silhouette, Color, Era, written once by the profile sweep. Uniform across
-  // every card, old and new; anything else follows below.
-  if (c.profile && typeof c.profile === 'object') {
-    const P = c.profile;
-    const row = (t, v) => v ? '<div class="note-item"><div class="note-group-title">' + escapeHtml(t) + '</div>' +
-      '<div class="note-detail">' + escapeHtml(String(v)) + '</div></div>' : '';
-    const body = row('Bio', P.bio) + row('Aesthetic', P.aesthetic) + row('Silhouette', P.silhouette) +
-                 row('Color', P.color) + row('Era', P.era);
-    if (body) groups.push({ t: '', b: '<div class="vn-profile">' + body + '</div>' });   // v14.23: Design Notes is heading enough
-  } else if (c.caption) {
-    groups.push({ t: 'Notes', b: '<div class="vn-caption">' + escapeHtml(c.caption) + '</div>' });
-  }
-  if (Array.isArray(c.mods) && c.mods.length) {
-    groups.push({ t: 'Design ideas, this version',
-                  b: c.mods.slice(-6).map(m => item_(m, '')).join('') });
-  }
-  const refs = Array.isArray(c.refs) ? c.refs : [];
-  if (refs.length) {
-    // v13.42: the category is the title, what MAYA heard sits under it, the
-    // way the drawer always read. Silhouette first, because the shape is the
-    // garment; then colour, aesthetic, detail; designer and era after.
-    const ORDER = ['silhouette', 'color', 'colour', 'aesthetic', 'detail', 'material', 'fabric', 'era', 'designer'];
-    const byTag = new Map();
-    refs.forEach(r => {
-      const tag = (r && r.tag) ? String(r.tag).replace(/_/g, ' ').toLowerCase() : 'note';
-      if (!byTag.has(tag)) byTag.set(tag, []);
-      if (r && r.title) byTag.get(tag).push(r.title);
-    });
-    const rank = (t) => { const i = ORDER.indexOf(t); return i === -1 ? ORDER.length : i; };
-    const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
-    // v13.43: a blank category fills itself from what the picture DOES know.
-    const fb0 = (Array.isArray(c.fabrics) && c.fabrics[0]) || null;
-    if (fb0 && fb0.color && !byTag.has('color') && !byTag.has('colour')) byTag.set('color', [fb0.color]);
-    if (fb0 && fb0.weave && !byTag.has('material') && !byTag.has('fabric')) byTag.set('material', [fb0.weave]);
-    const DOT = { silhouette: 'rgba(157,184,255,0.9)', color: 'rgba(253,164,175,0.9)',
-                  colour: 'rgba(253,164,175,0.9)', aesthetic: 'rgba(196,181,253,0.9)',
-                  detail: 'rgba(134,239,172,0.85)', material: 'rgba(94,234,212,0.85)',
-                  fabric: 'rgba(94,234,212,0.85)', era: 'rgba(251,191,36,0.85)',
-                  designer: 'rgba(249,168,212,0.85)' };
-    const dot = (t) => '<span class="vn-dot" style="background:' + (DOT[t] || 'rgba(238,242,255,0.5)') + '"></span>';
-    // v13.44/91: the notes live on the inspo screen only (hidden in favorites),
-    // where each value is an exclude-pill: a crossed pill drops from the next
-    // Visualize.
-    const body = [...byTag.entries()]
-      .filter(([, list]) => list.length)
-      .sort((a, b) => rank(a[0]) - rank(b[0]))
-      .map(([tag, list]) =>
-        '<div class="note-item"><div class="note-title">' + dot(tag) + escapeHtml(cap(tag)) + '</div>' +
-        '<div class="vn-pills">' + list.slice(0, 6).map(v =>
-          '<span class="vn-pill' + (viewerDeselected.has(v) ? ' deselected' : '') + '" data-ref="' + escapeHtml(v) + '">' +
-            escapeHtml(v) + '<button class="vn-pill-x" title="Exclude from the next Visualize">&times;</button></span>'
-        ).join('') + '</div></div>')
-      .join('');
-    if (body) groups.push({ t: 'Aesthetics and constraints', b: body });
-  }
-  const fabrics = Array.isArray(c.fabrics) ? c.fabrics : [];
-  if (fabrics.length) {
-    groups.push({ t: 'Cut in',
-      b: fabrics.map(f => item_(f.name || 'fabric',
-           [f.color, f.weave, f.weight].filter(Boolean).join(' \u00b7 '))).join('') });
-  }
-  const head = '<div class="vn-head">Design notes' + (c.version ? ', v' + c.version : '') + '</div>';
-  if (!groups.length) {
-    host.innerHTML = head +
-      '<div class="notes-empty">Nothing written about this one yet. Tap to listen and say what you want changed.</div>';
-    return;
-  }
-  host.innerHTML = head + groups.map(g =>
-    '<div class="note-group">' + (g.t ? '<div class="note-group-title">' + escapeHtml(g.t) + '</div>' : '') + g.b + '</div>').join('');
-  // v13.44: the pills answer their x. Crossed = excluded from the next render.
-  host.querySelectorAll('.vn-pill .vn-pill-x').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const pill = btn.closest('.vn-pill');
-      const title = pill && pill.dataset.ref;
-      if (!title) return;
-      if (viewerDeselected.has(title)) { viewerDeselected.delete(title); pill.classList.remove('deselected'); }
-      else { viewerDeselected.add(title); pill.classList.add('deselected'); }
-    });
-  });
+  viewerNotesDrawer ||= MayaImageViewer.notesDrawer({parent:document.getElementById('garment-modal'),id:'viewer-notes'});
+  viewerNotesDrawer.update(item?.card||{});
 }
-
-// Render the card's refs as chips; clicking × marks them as "deselected"
-// (struck through). Deselected chips are excluded from the next Modify.
-// v11.18: collapsible Attributes toggle.
-function toggleAttributes() {
-  const m = document.getElementById('garment-modal');
-  if (m) m.classList.toggle('attrs-open');
-}
-function renderViewerRefs(item) {
-  const host = document.getElementById('viewer-refs');
-  if (!host) return;
-  const refs = item.card.refs || [];
-  // v11.18: show the "Attributes" toggle only when this card has ref tags.
-  const toggle = document.getElementById('attributes-toggle');
-  if (toggle) toggle.style.display = refs.length ? 'inline-flex' : 'none';
-  if (!refs.length) { host.innerHTML = ''; return; }
-  host.innerHTML = refs.map((r, idx) =>
-    `<span class="viewer-ref-chip" data-idx="${idx}">
-       ${escapeHtml(r.title)}
-       <button class="chip-x" data-idx="${idx}" title="Exclude from next modify">&times;</button>
-     </span>`
-  ).join('');
-  host.querySelectorAll('.chip-x').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const chip = btn.closest('.viewer-ref-chip');
-      const title = refs[parseInt(btn.dataset.idx)].title;
-      if (viewerDeselected.has(title)) {
-        viewerDeselected.delete(title);
-        chip.classList.remove('deselected');
-      } else {
-        viewerDeselected.add(title);
-        chip.classList.add('deselected');
-      }
-    });
-  });
-}
+// Notes are plain text in one place; the old duplicate Attributes pills are retired.
+function toggleAttributes() { viewerNotesDrawer?.set(true); }
+function renderViewerRefs() { document.getElementById('viewer-refs').replaceChildren(); }
 
 // Detect a content/policy rejection from OpenAI image endpoints
 function isSafetyRejection(err) {
@@ -12659,6 +12409,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (m) m.addEventListener('click', (e) => { if (e.target === m) closeGarmentModal(); });
 });
 function closeGarmentModal() {
+  exitPhotoFullscreen();viewerNotesDrawer?.set(false);MayaImageViewer.bind(document.getElementById("garment-image")).reset();
   const _fp = document.getElementById('fav-nav-prev'), _fn = document.getElementById('fav-nav-next');
   if (_fp) _fp.style.display = 'none';
   if (_fn) _fn.style.display = 'none';
@@ -12800,6 +12551,7 @@ document.addEventListener('keydown', e => {
     const SWIPE_THRESH = 50;
     const onStart = (x, y, src) => { startX = x; startY = y; source = src; };
     const onEnd = (x, y) => {
+      if (MayaImageViewer.bind(document.getElementById('garment-image')).gesturing) { startX=null; return; }
       if (startX == null) return;
       const dx = x - startX, dy = y - startY;
       const sx = startX; startX = null; startY = null;
@@ -12809,6 +12561,7 @@ document.addEventListener('keydown', e => {
       else        viewerStep(-1);  // swipe right → previous version
     };
     wrap.addEventListener('touchstart', e => {
+      if(e.touches.length!==1){startX=null;return;}
       if (e.touches && e.touches[0]) onStart(e.touches[0].clientX, e.touches[0].clientY, 'touch');
     }, { passive: true });
     wrap.addEventListener('touchend', e => {
@@ -17727,12 +17480,14 @@ if (typeof toggleNotesDrawer === 'function') {
   }, { passive: false });
   let pinchD = 0, pinchZ = 1;
   document.addEventListener('touchstart', (e) => {
+    if(e.target.closest?.('#garment-modal,.maya-image-viewer,.maya-design-notes'))return;
     if (e.touches.length === 2 && onInspo()) {
       pinchD = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       pinchZ = target;
     }
   }, { passive: true });
   document.addEventListener('touchmove', (e) => {
+    if(e.target.closest?.('#garment-modal,.maya-image-viewer,.maya-design-notes'))return;
     if (e.touches.length === 2 && pinchD && onInspo()) {
       const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       e.preventDefault();

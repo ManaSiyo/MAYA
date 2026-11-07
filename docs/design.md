@@ -40,8 +40,11 @@ Messages keeps H2 above H3 contact, circular reviewed Phone/Share, no auto-sendi
 
 Submission photo cards share Inner material, 3:2 aspect, Drawer scroll behavior and
 width containment. Hover/focus reveals a P3 four-word description over the existing
-Favorites-style gradient. Hover/focus (always on touch) exposes the Glass circular
-X. Confirmation uses Inner/H3/P1/Glass, with a working Drawer preview. Share uses
+Favorites-style gradient. Hover or keyboard focus exposes the Glass circular X; touch reveals controls
+through selection/focus. Close controls use the saved Close icon percentage
+(default 80% on desktop; touch retains the shared minimum hit area). Confirmation is a compact, explicitly centered viewport dialog using
+Inner/H3/P1/Glass, with a working Drawer preview. Brief deletion exists only on
+its drawer cards, never as a second header action. Share uses
 Inner/H3/P1/P3, shared fields and Glass Copy/Done, with a working dialog preview.
 
 In House is the permanent exact layout baseline for Global Fabrics: identical
@@ -56,10 +59,24 @@ without cropping their top/bottom. The frontend uses the backend's circular logo
 Avatar uploads/camera changes save automatically; no Avatar Save or bundled random
 headshots. Operations is a component of the Brief, not a standalone navigation item.
 
-The final check is docs/check-ui.mjs: meaningful interactions, computed styles,
-default and changed saved settings, phone/tablet/desktop, open/focus/error states,
-and visual inspection. Later presentation edits invalidate that check. Local
-checks do not prove the deployed release or an actual device/provider session.
+Image inspection is shared by the app, Brief and fabric photographs. A second
+click from the app card viewer opens a viewport-sized photograph. Hover reveals
+an Inner-material rectangular magnifier; pinch, wheel and drag inspect the image.
+Fabric captions retain their original source links. Pinching must not swipe to
+another version or zoom the board behind the image. Changing/removing a private
+source closes its expanded view.
+
+Design Notes starts closed at the left edge of the app card viewer. Its vertical
+P3 label and Glass plus droplet reveal a sliding Drawer surface. Notes use H4/P1,
+merge repeated color/reference values and contain no attribute pills. A working
+notes/image preview lives beside the existing Drawer preview. Saved Drawer, Inner,
+Glass, icon and typography settings retain authority.
+
+Fromsa's November 6 instruction supersedes local browser/visual acceptance:
+**do not use Chrome; Fromsa performs live visual and interaction checks after
+Push.** Run non-browser code checks locally. The existing CI browser suite remains
+an automated regression check, never owner acceptance. Do not claim a visual pass
+from code checks or fixtures. Record visual acceptance as pending until reviewed.
 
 Regenerate authored role locations with `python3 docs/typography-usage.py` after
 markup changes. Counts are source locations, never invented live usage metrics.

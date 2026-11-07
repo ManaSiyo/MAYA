@@ -88,14 +88,19 @@ try{
  }
  // Real shared card, confirmation, cancel, failure and explicit delete; never a live record.
  const brief=await open('/backend/backend.html',390,844);
- assert.equal(await brief.locator('#delete-open-submission').isVisible(),false,'Circular styling must preserve hidden controls');
- await brief.evaluate(()=>{document.getElementById('delete-open-submission').hidden=false;const d=structuredClone(MayaTypographyControls.defaults);d.type.H1.size=32;d.pillX=18;d.pillY=9;MayaTypographyControls.apply(d);});
+ assert.equal(await brief.locator('#delete-open-submission').count(),0,'Brief deletion belongs only in its drawer');
+ await brief.evaluate(()=>{const d=structuredClone(MayaTypographyControls.defaults);d.type.H1.size=32;d.pillX=18;d.pillY=9;MayaTypographyControls.apply(d);});
  const header=await brief.locator('#top-bar').evaluate(e=>{const buttons=[...e.querySelectorAll('#top-actions button')].map(b=>{const r=b.getBoundingClientRect();return {top:r.top,bottom:r.bottom,right:r.right};});return {buttons,title:getComputedStyle(document.getElementById('workspace-title')).whiteSpace};});
- assert.equal(header.title,'nowrap');assert.ok(Math.abs((header.buttons[0].top+header.buttons[0].bottom)-(header.buttons[1].top+header.buttons[1].bottom))<1,JSON.stringify(header));assert.ok(header.buttons.every(b=>b.top>=0&&b.bottom<=60&&b.right<=390));await brief.close();
+ assert.equal(header.title,'nowrap');assert.ok(header.buttons.every(b=>b.top>=0&&b.bottom<=60&&b.right<=390));await brief.close();
  const page=await open('/backend/status.html');
  await page.evaluate(()=>{document.getElementById('signin-panel').hidden=true;const host=document.getElementById('subs-strip');host.style.display='flex';host.innerHTML='';window.calls=0;host.append(MayaSubmissionCards.create({id:'fixture-submission',name:'Preview',description:'Midnight velvet tailored coat',files:[{id:'photo',name:'dream-garment.jpg'}]},{src:'/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',onDelete:()=>MayaSubmissionCards.confirmDelete(async()=>{calls++;if(calls===1)throw Error('Fixture unavailable');host.replaceChildren();})}));});
  await page.locator('.sub-tile').hover();assert.equal(await page.locator('.submission-caption').textContent(),'Midnight velvet tailored coat');
- await page.locator('.submission-delete').click();await page.locator('[data-cancel]').click();assert.equal(await page.evaluate(()=>calls),0);
+ await page.locator('.submission-delete').click();
+ for(const [width,height] of [[390,844],[768,1024],[1440,900]]){
+  await page.setViewportSize({width,height});
+  const box=await page.locator('.submission-confirm').boundingBox();assert.ok(Math.abs(box.x+box.width/2-width/2)<2&&Math.abs(box.y+box.height/2-height/2)<2,'Delete confirmation must center in both axes');
+ }
+ await page.locator('[data-cancel]').click();assert.equal(await page.evaluate(()=>calls),0);
  await page.locator('.submission-delete').click();await page.locator('[data-delete]').click();assert.equal(await page.locator('.submission-confirm-status').textContent(),'Fixture unavailable');
  await page.locator('[data-delete]').click();assert.equal(await page.locator('.sub-tile').count(),0);assert.deepEqual(page.errors,[]);await page.close();
  const gallery=await open('/aesthetics/aesthetic-control.html');
@@ -105,7 +110,21 @@ try{
  await gallery.locator('[data-editor=inner] summary').click();await gallery.locator('[data-editor=inner] [data-field=paddingX]').fill('23');await gallery.keyboard.press('Escape');
  await gallery.locator('#save').click();await gallery.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved locally'));await gallery.reload();await gallery.locator('#drawer-controls-preview').waitFor();
  await gallery.getByRole('button',{name:'Share dialog',exact:true}).click();assert.equal(await gallery.locator('#share-style-preview').evaluate(e=>getComputedStyle(e).paddingLeft),'23px');await gallery.locator('#share-style-preview [data-done]').click();
- await gallery.getByRole('button',{name:'Drawer',exact:true}).click();await gallery.locator('.submission-delete').click();await gallery.locator('.submission-confirm').waitFor();assert.equal(await gallery.locator('.submission-confirm').evaluate(e=>getComputedStyle(e).paddingLeft),'23px');await gallery.locator('[data-cancel]').click();
+ await gallery.getByRole('button',{name:'Drawer',exact:true}).click();await gallery.locator('.sub-tile').hover();await gallery.locator('.submission-delete').click();await gallery.locator('.submission-confirm').waitFor();assert.equal(await gallery.locator('.submission-confirm').evaluate(e=>getComputedStyle(e).paddingLeft),'23px');await gallery.locator('[data-cancel]').click();
+ await gallery.getByRole('button',{name:'Close Settings',exact:true}).click();
+ const notes=gallery.locator('.maya-notes-preview');
+ assert.equal(await notes.locator('.maya-design-notes').evaluate(e=>e.inert),true);
+ await notes.getByRole('button',{name:'Design Notes',exact:true}).click();
+ assert.equal(await notes.locator('.maya-design-notes').evaluate(e=>e.inert),false);
+ assert.equal(await notes.locator('.maya-notes-content').getByText('Midnight blue',{exact:true}).count(),1);
+ await notes.getByRole('button',{name:'Design Notes',exact:true}).click();
+ await notes.locator('img').click();
+ const expanded=gallery.locator('.maya-image-viewer');assert.ok(await expanded.isVisible());
+ const bounds=await expanded.boundingBox();assert.equal(bounds.width,1194);assert.equal(bounds.height,834);
+ await expanded.locator('img').evaluate(image=>image.decode());
+ await expanded.locator('img').hover();assert.equal(await expanded.locator('.maya-image-lens').isVisible(),true);
+ await expanded.locator('img').press('+');assert.notEqual(await expanded.locator('img').evaluate(e=>e.style.transform),'translate(0px,0px) scale(1)');
+ await gallery.keyboard.press('Escape');await expanded.waitFor({state:'detached'});
  assert.deepEqual(gallery.errors,[]);await gallery.close();
  const deletion=await open('/backend/status.html'),deleteRequests=[];
  await deletion.route('**/api/admin/submissions/fixture-submission',route=>{deleteRequests.push({method:route.request().method(),auth:route.request().headers().authorization});return route.fulfill({json:{ok:true,id:'fixture-submission'}});});

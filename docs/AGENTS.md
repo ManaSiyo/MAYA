@@ -7,8 +7,9 @@ The owner requested this location and the November 5 repository consolidation.
 - Preserve one account → many sealed projects. Pin account, project, garment and
   request identity across async work; stale results never replace current work.
 - Never touch credentials, tokens, billing or production environment settings.
-- Ask for fresh explicit permission before each personal Chrome access session.
-  MAYA and Worldofsiyo profiles are separate. Prefer isolated browser tests.
+- Do not use Chrome, its profiles, or browser UI tests for owner acceptance.
+  Fromsa performs the visual and interaction review after each Push. Use code,
+  unit/integration and packaging checks; never claim those establish live UX.
 - Make the requested change, verify it, update README's current state and the
   single CHANGELOG, then commit completed work locally. Never Push or amend
   without explicit instruction. Production deploys from pushed maya-v2.
@@ -36,9 +37,10 @@ The owner requested this location and the November 5 repository consolidation.
   Drawer, fields, icons and scrollbars. Page CSS controls layout only. Add a
   working preview for new UI; test defaults and changed saved values at phone,
   tablet and desktop widths. Presentation verification is the final gate.
-- Run `node docs/check.mjs` (Node20 in release). It covers packaging, core
+- Run `node docs/check.mjs --code-only` locally (Node20 in release). It covers packaging, core
   authorization/storage/communications, image routing, project races, fabric
-  deadlines, and browser acceptance. Use `MAYA_BROWSER=webkit` locally for iOS.
+  deadlines. The existing automated CI browser gate remains; do not launch it
+  locally. Visual acceptance belongs to Fromsa.
   Extend these consolidated checks for changed behavior; avoid another historical
   test tree. Test dependencies must install successfully; no skipped release gate.
 - Local success does not prove deployment or provider performance. After owner

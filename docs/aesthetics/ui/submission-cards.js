@@ -13,7 +13,7 @@
   const caption=document.createElement('span');caption.className='submission-caption';caption.dataset.mayaType='P3';caption.textContent=String(folder.description||'Submitted garment design').trim().split(/\s+/).slice(0,4).join(' ');link.append(caption);
   if(!thumb){const badge=document.createElement('span');badge.className='badge status-word';badge.dataset.mayaType='P3';const arriving=Date.now()-new Date(folder.createdTime||0).getTime()<180000;badge.textContent=arriving?'Arriving':'No picture';badge.dataset.status=arriving?'in_progress':'pending';if(!arriving)badge.classList.add('stale');link.append(badge);}
   if(onSelect)link.addEventListener('click',event=>{event.preventDefault();onSelect(folder);});
-  if(onDelete){const button=document.createElement('button');button.className='submission-delete maya-icon-button';button.type='button';button.dataset.mayaShape='circle';button.dataset.mayaType='P3';button.setAttribute('aria-label','Delete submission for '+name(folder));button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';button.onclick=()=>onDelete(folder);card.append(button);}
+  if(onDelete){const button=document.createElement('button');button.className='submission-delete maya-icon-button';button.type='button';button.dataset.mayaShape='circle';button.dataset.mayaDismiss='';button.dataset.mayaType='P3';button.setAttribute('aria-label','Delete submission for '+name(folder));button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';button.onclick=()=>onDelete(folder);card.append(button);}
   return card;
  }
  function confirmDelete(action){

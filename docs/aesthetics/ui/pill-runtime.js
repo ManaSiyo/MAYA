@@ -36,6 +36,12 @@
     const touchRule=`min-inline-size:var(--maya-touch-target)!important;min-block-size:var(--maya-touch-target)!important;touch-action:manipulation;`;
     css+=`@media(any-pointer:coarse){${touch}{${touchRule}}}${both}[data-maya-touch-preview]{${touchRule}}`;
     css+=`@media(forced-colors:active){${both}{background:ButtonFace!important;color:ButtonText!important;border-color:ButtonText!important;box-shadow:none!important;backdrop-filter:none!important}}`;
+    // Visibility is separate from the shared inline-flex sizing rule. Favorited
+    // cards keep their color but reveal their controls only on hover/focus/tap.
+    css+=`html body :is(.item-card .fav-btn,.item-card .delete-btn,#garment-image-wrap .viewer-heart,#garment-image-wrap .viewer-close,.sub-tile .submission-delete){opacity:0;pointer-events:none;transition:opacity .18s;}
+    html body :is(.item-card:hover,.item-card:has(:focus-visible),.item-card.touched,#garment-image-wrap:hover,#garment-image-wrap:has(:focus-visible),.sub-tile:hover,.sub-tile:focus-within) :is(.fav-btn,.delete-btn,.viewer-heart,.viewer-close,.submission-delete){opacity:1;pointer-events:auto;}
+    html body :is([data-maya-dismiss],.delete-btn,.viewer-close){scale:var(--maya-dismiss-scale,.8);transform-origin:center;}
+    @media(any-pointer:coarse){html body :is([data-maya-dismiss],.delete-btn,.viewer-close){scale:1;}html body :is([data-maya-dismiss],.delete-btn,.viewer-close)>svg{scale:var(--maya-dismiss-scale,.8);}}`;
     let style=document.getElementById('maya-pill-control-style');if(!style){style=document.createElement('style');style.id='maya-pill-control-style';document.head.append(style);}style.textContent=css;
   }
   window.MayaPillControls={apply,usage,selectors:{glass}};

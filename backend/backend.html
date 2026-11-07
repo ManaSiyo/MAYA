@@ -1393,13 +1393,14 @@
   #page-indicator { /* visible on boot */ }
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
-<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=2"><script src="/aesthetics/ui/submission-cards.js?v=2"></script>
+<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=3"><script src="/aesthetics/ui/submission-cards.js?v=3"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=3"></script>
-<script src="/aesthetics/ui/typography-controls.js?v=25"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=4"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=26"></script>
 <link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=14">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=15"></script>
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=16"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=1"><script src="/aesthetics/ui/image-viewer.js?v=1"></script>
 </head>
 <body>
 
@@ -1412,7 +1413,6 @@
     <span class="status-pill" id="dissect-status" style="display:none">Dissecting…</span>
   </div>
   <div id="top-actions">
-    <button id="delete-open-submission" class="maya-icon-button" data-maya-shape="circle" data-maya-type="P3" title="Delete submission" aria-label="Delete submission" onclick="deleteBriefSubmission()" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <!-- v10.15: hamburger drawer toggle, same as Maya. -->
     <button class="top-btn hamburger" onclick="toggleWorkspaceDrawer()" title="Workspace menu" aria-expanded="false" aria-controls="clients-drawer">
       <span class="hamburger-icon"><span></span><span></span><span></span></span>
@@ -2517,13 +2517,13 @@ function deleteBriefSubmission(folder=window._openedSubmission){
   const token=_subCachedTok(),account=_piecesAccount(token);
   MayaSubmissionCards.requestDelete(folder,{token,valid:()=>account===_piecesAccount(_subCachedTok()),onDeleted:async()=>{
     ++_submissionLoadSequence;++_briefLocalSequence;
-    if(window._openedSubmission?.id===folder.id){window._openedSubmission=null;_clearBriefPrivate();history.replaceState(null,'','/backend.html');document.getElementById('delete-open-submission').hidden=true;}
+    if(window._openedSubmission?.id===folder.id){window._openedSubmission=null;_clearBriefPrivate();history.replaceState(null,'','/backend.html');}
     await openClientsDrawer();
   }});
 }
-document.getElementById('delete-open-submission').hidden=!new URLSearchParams(location.search).get('submission');
 let _briefAccount = _piecesAccount(_subCachedTok()||'');
 function _clearBriefPrivate() {
+  window.MayaImageViewer?.close();
   clearSubmissionDrawer();_drawerOwner=_piecesAccount(_subCachedTok()||'');document.getElementById('clients-count').textContent='';
   window._cachedPieces=null;window._dissectTarget=null;window._currentSnap=null;window.lastSummary=null;currentClientName=null;
   _unsavedDissection=null;_retainedDissection=null;_piecesReview=null;_pieceState={pieces:[],idx:0};window._pieceState=_pieceState;
@@ -5135,5 +5135,6 @@ window.renderActivePiece3D = function() {
   }, { passive: true });
 })();
 </script>
+<script>MayaImageViewer.watch("#op-image-frame img");</script>
 </body>
 </html>
