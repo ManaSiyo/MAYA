@@ -137,9 +137,41 @@ try{
  await deletion.evaluate(()=>{window.deleteValid=false;window.deleted=0;MayaSubmissionCards.requestDelete({id:'fixture-submission'},{token:'fixture-owner',valid:()=>deleteValid,onDeleted:()=>deleted++});});
  await deletion.locator('[data-delete]').click();assert.equal(deleteRequests.length,0);assert.match(await deletion.locator('.submission-confirm-status').textContent(),/account changed/);
  await deletion.evaluate(()=>deleteValid=true);await deletion.locator('[data-delete]').click();await deletion.waitForFunction(()=>deleted===1);assert.deepEqual(deleteRequests,[{method:'DELETE',auth:'Bearer fixture-owner'}]);await deletion.close();
+ await checkOperationLayout();
  await checkFabricGallery();
  console.log('UI, responsive layout, sharing performance and saved aesthetics passed',JSON.stringify(measure));
 }finally{await browser.close();}
+
+
+async function checkOperationLayout(){
+ const page=await open('/backend/backend.html',1440,900);
+ await page.evaluate(()=>{document.getElementById('upload-gate').style.display='none';});
+ const frame=page.frames().find(f=>f.url().includes('operation-workspace.html'));
+ await frame.waitForFunction(()=>window.MayaImageViewer&&window.MayaTypographyControls);
+ await frame.evaluate(()=>{const image=document.getElementById('hero-img');image.style.display='block';image.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400"><rect width="900" height="400" fill="gray"/></svg>');document.getElementById('hero-empty').style.display='none';document.getElementById('test-picker').innerHTML='<option>Track pants with cream side stripes</option>';});
+ await frame.locator('#hero-img').evaluate(image=>image.decode());
+ for(const changed of [false,true])for(const width of [390,768,1440]){
+  await page.setViewportSize({width,height:900});
+  await frame.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.type.P3.size=14;d.pillX=18;d.pillY=9;d.inner.paddingX=19;d.inner.paddingY=13;}MayaTypographyControls.apply(d);},changed);
+  const layout=await frame.evaluate(()=>{const cols=document.querySelector('#plan-a-view .cols'),r=[...cols.children].map(e=>e.getBoundingClientRect()),image=document.getElementById('hero-img'),picker=document.getElementById('test-picker'),style=getComputedStyle(picker);return {columns:r.map(r=>({x:r.x,y:r.y,width:r.width})),overflow:document.documentElement.scrollWidth>innerWidth+1,fit:getComputedStyle(image).objectFit,position:getComputedStyle(image).objectPosition,pad:parseFloat(style.paddingRight),font:parseFloat(style.fontSize),arrow:style.backgroundImage.includes('data:image/svg+xml'),customArrows:document.querySelectorAll('.picker-chevron').length};});
+  assert.equal(layout.overflow,false);assert.equal(layout.fit,'cover');assert.match(layout.position,/50%/);assert.equal(layout.customArrows,0);assert.equal(layout.arrow,true);assert.ok(layout.pad>layout.font,'Native select reserves space for its one chevron');
+  const [left,right]=layout.columns;if(width>768)assert.ok(Math.abs(left.width/(left.width+right.width)-.34)<.01);else assert.ok(right.y>left.y,'Small screens stack the panels');
+ }
+ await page.setViewportSize({width:1440,height:900});
+ await frame.locator('#hero-frame').dispatchEvent('pointermove',{pointerType:'mouse',clientX:0});
+ assert.match(await frame.locator('#hero-img').evaluate(image=>getComputedStyle(image).objectPosition),/^0%/);
+ await frame.locator('#hero-frame').dispatchEvent('pointerleave',{pointerType:'mouse'});
+ assert.match(await frame.locator('#hero-img').evaluate(image=>getComputedStyle(image).objectPosition),/^50%/);
+ // Running state and the SVG viewer must not capture ordinary vertical scrolling.
+ await frame.evaluate(()=>{RUNNING=true;TRACE={svg:'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M10 10L90 90"/></svg>'};CUR={kind:'svg'};document.getElementById('trace-view').classList.remove('off');mountTrace();});
+ assert.equal(await frame.locator('#trace-canvas').evaluate(canvas=>canvas.dispatchEvent(new WheelEvent('wheel',{deltaY:100,cancelable:true}))),true);
+ await page.evaluate(()=>{const host=document.getElementById('screens');host.scrollTop=document.getElementById('screen-operating').offsetTop;});
+ await page.waitForTimeout(100);
+ const before=await page.locator('#screens').evaluate(e=>e.scrollTop);
+ await page.mouse.move(1000,450);await page.mouse.wheel(0,350);
+ await page.waitForFunction(before=>document.getElementById('screens').scrollTop>before+20,before);
+ assert.deepEqual(page.errors,[]);await page.close();
+}
 
 async function checkFabricGallery(){
 // Owner standard: the served Global gallery must match In House, not a chat UI.
@@ -205,7 +237,8 @@ try{
     assert.deepEqual(global,local,design+' '+mode+' '+width+': Global must have exactly the In House geometry, roles, materials, controls and scroll containers');
     if(design==='saved'){assert.equal(global.title.size,'20px');assert.equal(global.caption.size,'14px');assert.deepEqual(global.card.pad,['19px','13px']);assert.equal(global.card.material,'rgba(23, 91, 59, 0.65)');}
     assert.equal(await page.locator('.fa-composer').isVisible(),false);assert.equal(await page.locator('.fa-observation').isVisible(),false);
-    assert.deepEqual(global.controls,['In House','Global','Favorites','CSV','Refresh fabrics',mode==='inline'?'Expand':'Collapse']);
+    const heights=await page.locator('.fa-toolbar>button').evaluateAll(buttons=>buttons.map(b=>b.getBoundingClientRect().height));assert.ok(Math.max(...heights)-Math.min(...heights)<1,'Refresh, CSV and Expand share their height');
+    assert.deepEqual(global.controls,['In House','Global','Favorites','Refresh fabrics','CSV',mode==='inline'?'Expand':'Collapse']);
     assert.ok(global.title.height<=(parseFloat(global.title.line)||parseFloat(global.title.size)*1.5)+1);assert.ok(global.caption.height<=(parseFloat(global.caption.line)||parseFloat(global.caption.size)*1.5)+1);
     await page.locator('.fa-results').evaluate(el=>el.scrollTop=190);const globalScroll=await page.locator('.fa-results').evaluate(el=>el.scrollTop);await tab('In House').click();await page.locator('.fa-results').evaluate(el=>el.scrollTop=190);assert.equal(await page.locator('.fa-results').evaluate(el=>el.scrollTop),globalScroll);
     if(mode==='inline'&&(width===390||width===1440)){
@@ -218,7 +251,7 @@ try{
      }
     }
    }
-   if(mode==='expanded')await page.getByRole('button',{name:'Collapse',exact:true}).click();
+   if(mode==='expanded'){await page.mouse.click(1,1);await page.waitForFunction(()=>!document.getElementById('fabric-assistant-dialog').open);assert.equal(await page.locator('.fa-product:visible').count(),8,'Outside click collapses without dropping results');}
   }
  }
  assert.equal(calls,1,'Comparing gallery views never repeats paid search');

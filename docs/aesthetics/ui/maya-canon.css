@@ -280,7 +280,7 @@ html[data-maya-surface="dense"] #clients-drawer :is(.client-date,.key-row label,
 html[data-maya-surface="dense"] #drawer-settings .settings-title {font:400 19px var(--maya-font-brand);letter-spacing:.04em;text-transform:none;}
 
 /* Pattern workspaces must shrink and stack rather than force a desktop canvas. */
-html[data-maya-surface="dense"] body:has(#plan-a-view) .cols {grid-template-columns:minmax(0,27.2fr) minmax(0,72.8fr);}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .cols {grid-template-columns:minmax(0,34fr) minmax(0,66fr);}
 html[data-maya-surface="dense"] body:has(#plan-a-view) :is(.panel,.trace-card,.row2>div) {min-width:0;overflow-wrap:anywhere;}
 html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:repeat(4,minmax(0,1fr));}
 html[data-maya-surface="dense"] body:has(#plan-a-view) .pattern-stage {align-items:center;justify-content:center;min-width:0;}
@@ -351,6 +351,6 @@ html[data-maya-surface] #drawer maya-owner-crm button,
 html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:8px 12px;margin:4px 8px 8px 0;border:0.5px solid var(--maya-line,rgba(255,255,255,.18));border-radius:999px;background:rgba(3,15,29,.45);color:var(--maya-ink);font:400 12px/1.5 var(--maya-font-ui);text-decoration:none;white-space:normal}
 
 /* Operation Room layout is shared with its active Aesthetic Control preview. */
-[data-maya-operation-layout]{display:grid;grid-template-columns:minmax(0,27.2fr) minmax(0,72.8fr);gap:var(--maya-form-field-gap,16px)}
-[data-maya-operation-layout]>*{min-width:0}.operation-layout-image{width:100%;height:220px;object-fit:contain}.operation-layout-stage{display:grid;place-items:center;text-align:center}
+[data-maya-operation-layout]{display:grid;grid-template-columns:minmax(0,34fr) minmax(0,66fr);gap:var(--maya-form-field-gap,16px)}
+[data-maya-operation-layout]>*{min-width:0}.operation-layout-garment{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center}.operation-layout-image{width:100%;height:100%;object-fit:contain}.operation-layout-stage{display:grid;place-items:center;text-align:center}
 @media(max-width:768px){[data-maya-operation-layout]{grid-template-columns:minmax(0,1fr)}}

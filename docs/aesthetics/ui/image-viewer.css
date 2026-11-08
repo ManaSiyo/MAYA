@@ -24,3 +24,5 @@ html body .maya-notes-drop{display:grid;place-items:center;transform:scale(.4);o
 .maya-notes-preview :is(.maya-notes-dock,.maya-design-notes){position:absolute}
 @media(hover:none){.maya-notes-drop{opacity:1!important;transform:none!important}}
 @media(prefers-reduced-motion:reduce){.maya-notes-dock *{transition:none!important}}
+.maya-garment-pan{position:relative;overflow:hidden;touch-action:pan-y pinch-zoom}
+.maya-garment-pan img.is-wide{object-fit:cover;object-position:var(--garment-position,50%) 50%}

@@ -1,3 +1,12 @@
+// Keep the authored card line; older summaries may store ideas as objects.
+export function submissionDescription(value){
+  const text=v=>typeof v==='string'?v.trim().replace(/\s+/g,' '):'';
+  const ideas=value?.design_ideas;
+  const idea=Array.isArray(ideas)?ideas.map(v=>text(typeof v==='string'?v:v?.idea)).find(Boolean):text(ideas);
+  return [value?._submissionCaption,value?.description,value?._dissection?.outfit_summary,idea,value?._paragraphs?.vision]
+    .map(text).find(v=>v&&!/^(submitted garment design|a dream garment,? made just for them\.?)$/i.test(v))?.slice(0,1000)||'';
+}
+
 // Presentation-only duplicate grouping. Never delete/merge stored submissions or
 // redirect a canonical submission ID; direct links still read their own files.
 import {createHash} from 'node:crypto';

@@ -2391,7 +2391,7 @@ checks['pattern-reuse']=async function(){
  context._patternSettingsError='';context.patternScope=()=>false;await vm.runInContext('startTest(true)',context);assert.equal(paid,0,'Changed garment cannot cross the paid boundary');
  const loadStart=source.indexOf('async function loadPatternWork('),loadEnd=source.indexOf('\n}',loadStart)+2;assert.doesNotMatch(source.slice(loadStart,loadEnd),/gptImageEdit|runGrounded|classifyGarment/);
  const restoreStart=source.indexOf('function restorePatternRun('),restoreEnd=source.indexOf('\n}',restoreStart)+2;
- Object.assign(context,{structuredClone,$:()=>({textContent:''}),_patternRun:{id:'new-version'},renderLogic(){},renderChunks(){},applyView(){},HERO:'saved-photo'});vm.runInContext(source.slice(restoreStart,restoreEnd),context);
+ Object.assign(context,{structuredClone,$:()=>({textContent:''}),_patternRun:{id:'new-version'},renderLogic(){},renderChunks(){},applyView(){},cancelPatternTrace(){},HERO:'saved-photo'});vm.runInContext(source.slice(restoreStart,restoreEnd),context);
  context.saved=run;vm.runInContext('restorePatternRun(saved)',context);assert.equal(context._patternRun,null,'Viewing history cannot overwrite a newer run on the next settings save');
  console.log('Pattern reuse: Start restores saved versions, storage/invalid settings/changed garment block paid generation.');
 };
@@ -2447,4 +2447,62 @@ checks['fabric-refresh-preparation']=async function(){
  const first=vm.runInContext('refreshView()',context);assert.equal(calls,0,'Refresh has not sent a request while its saved image is being prepared');release('prepared-photo');await first;assert.equal(calls,1);
  context.image='';const stale=vm.runInContext('refreshView()',context);current=false;release('late-photo');await stale;assert.equal(calls,1,'A reset during preparation cancels that search');
  console.log('Fabric refresh: saved-image preparation precedes search; resetting early cancels it.');
+};
+
+checks['operation-single-drawing']=async function(){
+ const {default:assert}=await import('node:assert/strict');
+ const vm=await import('node:vm'),{readFileSync}=await import('node:fs');const source=readFileSync('backend/operation-workspace.html','utf8');
+ const fn=name=>{const start=source.search(new RegExp('(?:async )?function '+name+'\\('));return source.slice(start,source.indexOf('\n}',start)+2);};
+ const gram={panels:[{label:'FRONT LEG',qty:2,mirror:true},{label:'BACK LEG',qty:2,mirror:true},{label:'WAISTBAND',qty:1}],components:[{label:'FRONT POCKET BAG',qty:2},{label:'POCKET FACING',qty:2}]};
+ const context=vm.createContext({_patternSettings:{logic:{},type:'pants',passes:3,hits:5,prompt:''},LAST:{type:'pants'},LOGIC_TYPE:'pants',logicLocked:()=>false,getLogic:()=>gram.panels});
+ for(const name of ['buildCutList','completeCutList','cutListLines','cutListTotal'])vm.runInContext(fn(name),context);
+ context.gram=gram;context.g={type:'pants',components:['side seam pockets']};
+ const cut=vm.runInContext('buildCutList(g,gram)',context);assert.equal(cut.length,5);context.cut=cut;
+ const lines=vm.runInContext('cutListLines(cut)',context);assert.match(lines,/FRONT LEG LEFT: ONE separate outline, label CUT 1/);assert.match(lines,/FRONT LEG RIGHT: ONE separate outline, label CUT 1/);assert.match(lines,/POCKET FACING/);assert.equal(lines.split('\n').length,9);assert.doesNotMatch(lines,/×2/);
+ context.g.components=['no pockets'];assert.equal(vm.runInContext('buildCutList(g,gram).length',context),3);
+ context.g.components=['side pockets'];context._patternSettings.logic.pants=gram.panels;assert.equal(vm.runInContext('buildCutList(g,gram).length',context),3,'Explicit owner cut list stays authoritative');context._patternSettings.logic={};
+ let drawings=0,saves=0,traces=0;const node={textContent:'',innerHTML:''};
+ Object.assign(context,{HERO:'photo',EMB:{},RUN:1,_operationInputContext:null,ANSWER:null,FILES:{},KB:{chapters:{}},PASSES:[],BEST_IDX:0,_patternRun:{},window:{},structuredClone,console,
+ operationAccount:()=> 'owner',operationContext:()=>({}),operationCurrent:()=>true,requireOperationSettings(){},requireOperation(){},patternGrammar:()=>({types:{pants:gram}}),classifyGarment:async()=>context.g,resolveType:()=> 'pants',renderLogic(){},renderGrammar(){},renderChunks(){},buildQuery:()=>'',embedTexts:async()=>[[1]],retrieve:()=>[],composeGroundedPrompt:()=> 'draw all cut pieces',getQuality:()=> 'medium',gptImageEdit:async()=>{drawings++;return 'pattern';},persistPatternWork:async()=>{saves++;},viewGrounded(){},liveOpen(){},liveLine(){},liveStatus(){},cancelPatternTrace(){},buildSVGfromGrounded(){traces++;},$:()=>node,esc:v=>v,toast:m=>{throw Error(m);}});
+ vm.runInContext(fn('runGrounded'),context);await vm.runInContext('runGrounded()',context);
+ assert.equal(drawings,1,'Even an older three-pass setting cannot trigger another paid drawing');assert.equal(context.PASSES.length,1);assert.ok(saves>0);assert.equal(traces,0,'Drawing completion must not start CPU-heavy SVG tracing');
+ console.log('Pattern generation: one drawing, saved output, explicit pocket pieces and non-doubled cutting labels passed.');
+};
+
+checks['pattern-trace-worker']=async function(){
+ const {default:assert}=await import('node:assert/strict');
+ const vm=await import('node:vm'),{readFileSync}=await import('node:fs'),source=readFileSync('backend/operation-workspace.html','utf8');
+ const images=[],workers=[],timers=new Map(),notices=[];let identity=1,sequence=0,mounted=0;
+ const context=vm.createContext({operationContext:()=>identity,operationCurrent:stamp=>stamp===identity,PASSES:[],CUR:{kind:'svg'},BEST_IDX:0,TRACE:null,
+ Image:class{constructor(){images.push(this);this.naturalWidth=3200;this.naturalHeight=2000;}},
+ Worker:class{constructor(url){this.url=url;workers.push(this);}postMessage(data,transfer){this.data=data;this.transfer=transfer;}terminate(){this.terminated=true;}},
+ document:{createElement:()=>({getContext:()=>({drawImage(){},getImageData:(x,y,width,height)=>({width,height,data:new Uint8ClampedArray(width*height*4)})})})},
+ $:()=>({classList:{remove(){}},src:''}),mountTrace:()=>mounted++,liveLine(){},toast:m=>notices.push(m),setTimeout:fn=>{timers.set(++sequence,fn);return sequence;},clearTimeout:id=>timers.delete(id)});
+ vm.runInContext(source.slice(source.indexOf('let _traceTask=null;'),source.indexOf('/* ============================ export')),context);
+ vm.runInContext('buildSVGfromGrounded("first");buildSVGfromGrounded("first")',context);assert.equal(images.length,1,'Repeated SVG clicks share one pending trace');images[0].onload();assert.equal(workers.length,1);assert.equal(workers[0].data.width,1600);assert.equal(workers[0].transfer[0],workers[0].data.pixels);
+ vm.runInContext('cancelPatternTrace()',context);assert.equal(workers[0].terminated,true);workers[0].onmessage({data:{svg:'stale'}});assert.equal(context.TRACE,null);
+ vm.runInContext('buildSVGfromGrounded("second")',context);images[1].onload();identity++;workers[1].onmessage({data:{svg:'wrong garment'}});assert.equal(context.TRACE,null);
+ vm.runInContext('buildSVGfromGrounded("third")',context);assert.equal(workers[1].terminated,true);images[2].onload();workers[2].onmessage({data:{svg:'<svg/>'}});assert.equal(context.TRACE.source,'third');assert.equal(mounted,1);assert.equal(workers[2].terminated,true);
+ vm.runInContext('buildSVGfromGrounded("timeout")',context);images[3].onload();[...timers.values()][0]();assert.equal(workers[3].terminated,true);assert.match(notices.at(-1),/timed out/);
+ console.log('SVG: worker transfer, size bound, deduplication, cancellation, account/garment isolation and timeout passed.');
+};
+
+checks['brief-fabric-navigation']=async function(){
+ const {default:assert}=await import('node:assert/strict');
+ const vm=await import('node:vm'),{readFileSync}=await import('node:fs'),source=readFileSync('backend/backend.html','utf8');
+ const fn=name=>{const start=source.indexOf('function '+name+'(');return source.slice(start,source.indexOf('\n}',start)+2);};
+ let opened=0;const context=vm.createContext({_pieceState:{pieces:[{_virtual:true},{id:'coat'},{id:'pants'}],idx:1},_briefView:'fabrics',document:{querySelectorAll:()=>[]},showBriefItem:()=>{context._briefView='item';},showBriefFabrics:()=>{opened++;context._briefView='fabrics';},_showActivePiece(){},_syncOpRoom(){}});
+ vm.runInContext(fn('setActivePiece'),context);vm.runInContext('setActivePiece(2)',context);assert.equal(opened,1);assert.equal(context._briefView,'fabrics');vm.runInContext('setActivePiece(0)',context);assert.equal(opened,1);assert.equal(context._briefView,'item');
+ const toggle=source.match(/function toggleBriefFabrics\(\)\{[^\n]+\}/)[0];vm.runInContext(toggle,context);vm.runInContext('toggleBriefFabrics();toggleBriefFabrics()',context);assert.equal(context._briefView,'item');assert.equal(opened,2);
+ console.log('Brief: item changes retain Fabrics; Full View and the Fabrics toggle return to the garment.');
+};
+
+checks['submission-descriptions']=async function(){
+ const {default:assert}=await import('node:assert/strict');
+ const {submissionDescription}=await import('../backend/server/submission-list.mjs');
+ assert.equal(submissionDescription({_submissionCaption:'Emerald tracksuit with cream side stripes',design_ideas:[{idea:'Another garment'}]}),'Emerald tracksuit with cream side stripes');
+ assert.equal(submissionDescription({design_ideas:[{idea:'Green hooded embroidered tailcoat'}]}),'Green hooded embroidered tailcoat');
+ assert.equal(submissionDescription({description:'Submitted garment design',_paragraphs:{vision:'Black coat with gold trim'}}),'Black coat with gold trim');
+ assert.equal(submissionDescription({}), '');
+ console.log('Submission captions: authored text, legacy idea objects and honest empty fallback passed.');
 };

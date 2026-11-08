@@ -140,7 +140,7 @@
     const toolbar=node('div','fa-toolbar');
     const refresh=icon('Refresh fabrics','M20 7v5h-5M20 12a8 8 0 1 0-2 5',()=>view==='search'&&busy?controller?.abort():refreshView());
     const expandButton=action('Expand',()=>host?expand():close());expandButton.setAttribute('aria-expanded','false');
-    const exportButton=action('CSV',exportCSV);exportButton.setAttribute('aria-label','Export submission fabric research as CSV');toolbar.append(exportButton,refresh,expandButton);
+    const exportButton=action('CSV',exportCSV);exportButton.setAttribute('aria-label','Export submission fabric research as CSV');toolbar.append(refresh,exportButton,expandButton);
     const sub=node('p','fa-context');
     const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');tabs.dataset.mayaControl='segmented';
     const inhouse=action('In House',()=>{view='inhouse';paint();});
@@ -173,6 +173,10 @@
     const details=window.MayaFabricSearchDetails.create({parent:workspace});tabs.append(details.trigger);details.set(null);
     // Native close events are queued. A prior close must not cancel or move a
     // workspace that has already been reopened for a new search.
+    let outsideDown=false;
+    const outside=event=>{const r=dialog.getBoundingClientRect();return event.target===dialog&&(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom);};
+    dialog.addEventListener('pointerdown',event=>{outsideDown=outside(event);});
+    dialog.addEventListener('click',event=>{if(outsideDown&&outside(event)){if(host)collapse();else close();}outsideDown=false;});
     dialog.addEventListener('close',()=>{if(dialog.open)return;if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');}else{controller?.abort();recognition?.stop();}});
     els={exportButton,details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,upload,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
   }

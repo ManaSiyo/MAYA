@@ -117,11 +117,11 @@
     position: fixed; inset: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    scroll-snap-type: y proximity; /* flows freely, rests aligned, no dead zones */
+    scroll-snap-type: y mandatory; /* section stops; tall Operation Room remains freely scrollable within its bounds */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     scrollbar-width: none;
-    scroll-padding-top:64px;
+    scroll-padding-top:0;
     z-index: 1;
   }
   #screens::-webkit-scrollbar { display: none; }
@@ -136,6 +136,7 @@
     padding: 72px 40px 32px;
     overflow: hidden;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   /* ───────── screen 1, one-pager horizontal ─────────
@@ -1391,15 +1392,15 @@
   #screens { opacity: 1; transition: opacity 0.4s ease; }
   #page-indicator { /* visible on boot */ }
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=15">
-<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=3"><script src="/aesthetics/ui/submission-cards.js?v=3"></script>
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=16">
+<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=4"><script src="/aesthetics/ui/submission-cards.js?v=4"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=5"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=6"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=26"></script>
 <link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=15">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=18"></script>
-<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=2"><script src="/aesthetics/ui/image-viewer.js?v=2"></script>
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=19"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=3"></script>
 </head>
 <body>
 
@@ -1438,7 +1439,7 @@
              deliberately; once a client is dissected it never runs again. -->
         <div class="piece-swiper" id="piece-swiper" style="display:none">
           <div class="piece-pills" id="piece-pills" data-maya-control="segmented"></div>
-          <button class="piece-pill" id="brief-fabrics-button" data-maya-type="P3" aria-pressed="false" onclick="showBriefFabrics()" disabled>Fabrics</button>
+          <button class="piece-pill" id="brief-fabrics-button" data-maya-type="P3" aria-pressed="false" onclick="toggleBriefFabrics()" disabled>Fabrics</button>
         </div>
       </div>
       <div class="op-info-col" data-maya-scrollbar="visible" tabindex="0" aria-label="Client details">
@@ -2778,7 +2779,7 @@ function setActivePiece(idx) {
   // piece is active. The right pane resets to blank unless this piece
   // already has a cached _pattern from a previous Dissect.
   _syncOpRoom(true);
-  if(keepFabrics)void showBriefFabrics();
+  if(keepFabrics&&!_pieceState.pieces[_pieceState.idx]?._virtual)void showBriefFabrics();
 }
 
 function _showActivePiece() {
@@ -3814,6 +3815,7 @@ function showBriefItem() {
 function openOperationRoom() {
   goToScreen(1);
 }
+function toggleBriefFabrics(){if(_briefView==='fabrics')showBriefItem();else void showBriefFabrics();}
 async function showBriefFabrics() {
   const context=_piecesContext(),saved=_savedOperation;
   if(!saved?.pieces.length||!context.sid||saved.submissionId!==context.sid||saved.account!==context.account||saved.referenceImage!==context.hero)return showBackendToast('Dissect and save this look before opening Fabrics.');

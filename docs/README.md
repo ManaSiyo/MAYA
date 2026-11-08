@@ -172,15 +172,18 @@ upload on each run. Jacket grammar specifies upper sleeve and undersleeve pieces
 these are editable assumptions, not proof that every coat needs a two-piece sleeve.
 
 Settings now exposes garment category, piece list, grammar JSON, classification
-prompt, construction/review direction, retrieval count, pass count, image quality,
+prompt, construction direction, retrieval count, image quality,
 waistband/underlap/yoke constants and an optional full drawing-prompt override.
 The retrieval trace and saved run include the actual classification, chosen rules,
-excerpts, measurements, prompt, critique and generated image passes. The existing
+excerpts, measurements, prompt and generated drawings (including older saved passes). The existing
 one-inch grid and lower-body dimension formulas are described in Settings. This
 remains an experimental drawing workflow, not a cutting-ready pattern exporter.
 
-Each pass saves before another paid refinement. Start reopens existing work;
-New version is the explicit new paid run. Retry Save retries storage only.
+New versions generate and save only Mark One, even with legacy multi-pass settings.
+There is no automatic paid refinement. The cut list includes pocket components
+identified by vision unless the owner explicitly overrides it; rendered left/right
+parts each say CUT 1. Start reopens existing work; New version is the explicit new
+paid run. Retry Save retries storage only.
 Unreadable/conflicting saved work blocks replacement. Version history retains old
 runs; changed garment snapshots are marked stale, never silently deleted. Stored
 runs are bounded to 25 MB/100 versions per garment and research to 100 links/500
@@ -188,11 +191,21 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
-November 7: Operation Room version 2 (c28322e) is pushed. The garment column is
-27.2% instead of 34% (20% narrower); the pattern receives 72.8%. Images are centered,
-the parent Brief owns vertical scrolling, and hidden iframe overflow no longer
-clips the retrieval area. Upload, Redrawn, duplicate Mark badge and Export SVG
-controls are removed. Settings includes a dedicated Operation Room version history.
+November 8 feedback: Fromsa confirmed Global Fabrics now sources photographs.
+This revision restores the 34/66 Operation Room proportions and a large
+center garment view with horizontal panning. One native dropdown chevron has
+reserved text space. The parent Brief uses section snap stops, and ordinary wheel
+input over SVG remains vertical scrolling. CPU-heavy SVG tracing moves to a
+bounded, cancellable background worker and runs only when SVG is requested.
+
+Fabrics can toggle off; Full View returns to the garment, while switching real
+garments keeps Fabrics selected. Expanded Fabrics dismisses on outside click.
+Refresh, CSV and Expand share a height in that order. Submission captions use the
+saved frontend description with two-line overflow; legacy structured design ideas
+are readable fallbacks. The X sits slightly closer to the top-right corner.
+Aesthetic Control previews and versioned shared-asset URLs track these changes.
+Owner visual/interaction review is pending. Deployment requires the Google build
+and matching live commit checks described above.
 
 Image magnification/pinch begins only after expansion, including Operation Room
 images expanded in the parent viewport. The pointer lens is 35% larger on both
@@ -203,7 +216,12 @@ cited links and automatically saved research survive missing photographs.
 
 Validation: Node20 code-only packaging, syntax, authorization, storage,
 communications, image/voice/avatar, Fabric deadlines/forced-GC and inspection
-checks pass. Added tests cover pattern history, no-charge reopen, storage failure,
+checks pass. New checks cover one paid drawing, conditional pocket pieces, worker
+cancellation/deadlines and Fabrics navigation. The pinned tracer also produced SVG
+in an isolated Node smoke check. CI now checks responsive proportions, panning,
+dropdown spacing, scrolling while running, toolbar heights and outside dismissal;
+these browser assertions have not been run locally. Existing tests cover pattern
+history, no-charge reopen, storage failure,
 account/garment scope, deletion races, source-only links, CSV and durable dismissals.
 CI presentation assertions were updated; no local browser was launched.
 

@@ -22,7 +22,7 @@ const docker=readFileSync('backend/server/Dockerfile','utf8');
 for(const match of docker.matchAll(/^COPY\s+(.+?)\s+\.\//gm))for(const file of match[1].split(/\s+/))assert.ok(existsSync('backend/server/'+file),'Docker source missing: '+file);
 const imported=[...readFileSync('backend/server/server.js','utf8').matchAll(/from\s+['"]\.\/([^'"]+)/g)].map(x=>x[1]);for(const file of imported)assert.ok(docker.includes(file),'Docker does not package '+file);
 for(const file of ['fabric-search.mjs','fabric-worldwide.mjs','fabric-discovery.mjs','fabric-retailers.mjs','fabric-sourcing.js','ai-router.js'])assert.ok(!existsSync('backend/server/'+file),'Retired fabric engine returned: '+file);
-assert.ok(existsSync(output+'/aesthetics/operations/kb.js'));assert.ok(!existsSync(output+'/aesthetics/operations/kb'));
+assert.ok(existsSync(output+'/aesthetics/operations/kb.js'));assert.ok(existsSync(output+'/aesthetics/operations/pattern-trace.worker.js'));new vm.Script(readFileSync(output+'/aesthetics/operations/pattern-trace.worker.js','utf8'));assert.ok(!existsSync(output+'/aesthetics/operations/kb'));
 assert.ok(!existsSync(output+'/aesthetics/ui/fabric-search-details.js'));assert.ok(!existsSync(output+'/aesthetics/operations/clo-library.js'));
 const redirects=new Set(config.hosting.redirects.map(r=>r.source));
 for(const folder of ['frontend','backend'])for(const file of readdirSync(output+'/'+folder).filter(x=>x.endsWith('.html'))){

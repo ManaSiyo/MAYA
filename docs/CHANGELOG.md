@@ -4,6 +4,15 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 8 — owner feedback:** Global Fabrics confirmed working
+  by Fromsa. Restored 34/66 Operation Room panels, centered garment panning and a
+  single dropdown chevron; section snapping and normal vertical wheel scrolling.
+  SVG tracing is on-demand in a cancellable worker, with size/time bounds.
+  New versions make only Mark One; pocket construction and CUT 1 labels are
+  explicit. Full View/Fabrics toggles, outside-click collapse and matched toolbar
+  heights/order are corrected. Submission hover captions preserve frontend text;
+  X moves slightly toward the top-right. Shared previews and asset versions updated.
+  Non-browser verification and owner visual review are recorded in README.
 - **November 8 — retire Vercel references:** removed obsolete source comments,
   historical folder listings and deployment guidance. No active provider config,
   functions, analytics scripts or dependencies remain in the repository. External

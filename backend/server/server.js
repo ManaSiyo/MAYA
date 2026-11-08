@@ -1,4 +1,4 @@
-import {createSubmissionDeletion,createPatternWork,submissionContentKey,markExactSubmissionRepeats} from './submission-list.mjs';
+import {createSubmissionDeletion,createPatternWork,submissionDescription,submissionContentKey,markExactSubmissionRepeats} from './submission-list.mjs';
 import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds,adSetupStatus} from './ad-reporting.mjs';
 // ═══════════════════════════════════════════════════════════════════════════
 // MAYA — Cloud Run API service
@@ -602,7 +602,7 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
       // A marker object so the submission exists the moment it is opened, even
       // if the designer never uploads a file. It also carries the real name.
       await gcsPut(SUB_PREFIX + subId + '/submission.json', Buffer.from(JSON.stringify({
-        description: String(body.description||'').trim().split(/\s+/).slice(0,4).join(' ').slice(0,100), client: clientName, openedAtMs: Date.now(), openedBy: user.email, schema: 'v13.27',
+        description: submissionDescription({description:body.description}), client: clientName, openedAtMs: Date.now(), openedBy: user.email, schema: 'v13.27',
       }), 'utf8'), 'application/json');
       _subsCache = { ts: 0, body: null };     // show up on the Systems Map immediately
       _subOwners.set(subId, String(user.email||'').trim().toLowerCase());
@@ -2147,7 +2147,7 @@ app.get('/api/admin/submissions', async (req, res) => {
       if (!m.ok) return;
       try {
         const j = JSON.parse(m.buf.toString('utf8'));markers.set(f.id,j);
-        f.description=typeof j.description==='string'?j.description:'';
+        f.description=submissionDescription(j);
         // Keep the shape every screen already parses: <client>-MM-DD-YYYY. The
         // Systems Map strips the date for its label and the Brief reads it for
         // the caption, so inventing a new shape would blank both.
@@ -2160,7 +2160,7 @@ app.get('/api/admin/submissions', async (req, res) => {
       const key=file.id+':'+file.checksum;
       if(file.checksum&&_submissionCaptions.has(key)){f.description=_submissionCaptions.get(key);return;}
       const value=await gcsGet(idToPath(file.id)).catch(()=>({ok:false}));if(!value.ok)return;
-      try{const summary=JSON.parse(value.buf.toString('utf8'));const ideas=summary.design_ideas;const text=summary._submissionCaption||summary._dissection?.outfit_summary||(typeof ideas==='string'?ideas:Array.isArray(ideas)?ideas.find(x=>typeof x==='string'):'');f.description=typeof text==='string'?text.trim().split(/\s+/).slice(0,4).join(' ').slice(0,100):'';if(file.checksum){if(_submissionCaptions.size>=200)_submissionCaptions.clear();_submissionCaptions.set(key,f.description);}}catch{}
+      try{const summary=JSON.parse(value.buf.toString('utf8'));f.description=submissionDescription(summary);if(file.checksum){if(_submissionCaptions.size>=200)_submissionCaptions.clear();_submissionCaptions.set(key,f.description);}}catch{}
     }));
     folders=markExactSubmissionRepeats(folders,markers);
     for (const f of folders){delete f.marker;for(const file of f.files)delete file.checksum;}

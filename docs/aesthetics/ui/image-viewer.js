@@ -112,9 +112,30 @@
     dialog.addEventListener('keydown',event=>event.stopPropagation());
     dialog.addEventListener('close',()=>{observer.disconnect();dialog.remove();if(active===dialog)active=null;onClose?.();if(previous?.isConnected)previous.focus({preventScroll:true});});dialog.showModal();image.focus();active=dialog;return dialog;
   }
+  function panGarment(host,image){
+    if(!host||!image)return;
+    host.classList.add('maya-garment-pan');
+    let position=50,drag=null,suppressUntil=0;
+    const update=()=>host.style.setProperty('--garment-position',position+'%');
+    const ready=()=>{position=50;update();image.classList.toggle('is-wide',image.naturalWidth>image.naturalHeight*1.1);};
+    image.addEventListener('load',ready);if(image.complete)ready();
+    host.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')drag={x:e.clientX,y:e.clientY,position};});
+    host.addEventListener('pointermove',e=>{
+      if(!image.classList.contains('is-wide')||image.style.display==='none')return;
+      const r=host.getBoundingClientRect();
+      if(e.pointerType==='mouse')position=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));
+      else if(drag&&Math.abs(e.clientX-drag.x)>Math.abs(e.clientY-drag.y)+8){position=Math.max(0,Math.min(100,drag.position-(e.clientX-drag.x)/r.width*100));suppressUntil=Date.now()+350;}
+      else return;
+      update();
+    });
+    host.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){position=50;update();}});
+    for(const type of ['pointerup','pointercancel'])host.addEventListener(type,()=>{drag=null;});
+    image.addEventListener('click',e=>{if(Date.now()<suppressUntil){e.preventDefault();e.stopImmediatePropagation();}},true);
+    host.addEventListener('keydown',e=>{if(!image.classList.contains('is-wide')||!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();position=Math.max(0,Math.min(100,position+(e.key==='ArrowRight'?10:-10)));update();});
+  }
   function watch(selector,options={}){
     const scan=()=>document.querySelectorAll(selector).forEach(image=>bind(image,options));scan();
     new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
   }
-  window.MayaImageViewer={open,close:()=>active?.close(),bind,watch,imageBounds,zoomAt,noteRows,notesDrawer,renderNotes};
+  window.MayaImageViewer={open,close:()=>active?.close(),bind,watch,panGarment,imageBounds,zoomAt,noteRows,notesDrawer,renderNotes};
 })();

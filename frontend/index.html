@@ -4009,9 +4009,9 @@
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=5"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=6"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=26"></script>
-<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=2"><script src="/aesthetics/ui/image-viewer.js?v=2"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=3"></script>
 </head>
 <body>
 <!-- v14.21: this is the Playground, promoted whole. The amber badge is the
@@ -15994,10 +15994,12 @@ async function doSaveToCloud() {
   // v13.42 SPEED: the submission folder is opened WHILE the one-pager renders,
   // not after. The init needs nothing but the name, and rendering the PDF is
   // the slowest single step, so running them together removes a whole wait.
+  const submittedItem=items.find(i=>i.card?.image===lastOnePagerImage||i.card?.imageUrl===lastOnePagerImage);
+  const submissionCaption=submittedItem?_buildPieceSummaryLine(submittedItem):'';
   const initPromise = fetch('/api/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    body: JSON.stringify({ action: 'init', client_name: slug, description: _buildPieceSummaryLine(items.find(i=>i.id===viewerItemId)).split(/\s+/).slice(0,4).join(' ') }),
+    body: JSON.stringify({ action: 'init', client_name: slug, description: submissionCaption }),
   }).then(async r => {
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
@@ -16069,6 +16071,7 @@ async function doSaveToCloud() {
         if (k === '_face_photo') continue;
         slim[k] = v;
       }
+      slim._submissionCaption=submissionCaption;
       queue.push({ name: 'summary.json', mime_type: 'application/json',
                    data_b64: btoa(unescape(encodeURIComponent(JSON.stringify(slim)))) });
     }

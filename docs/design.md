@@ -39,7 +39,8 @@ inline; Enter/Save persist, outside/Escape/Cancel discard; failed saves keep dra
 Messages keeps H2 above H3 contact, circular reviewed Phone/Share, no auto-sending.
 
 Submission photo cards share Inner material, 3:2 aspect, Drawer scroll behavior and
-width containment. Hover/focus reveals a P3 four-word description over the existing
+width containment. Hover/focus reveals the saved frontend garment description,
+clamped to two P3 lines, over the existing
 Favorites-style gradient. Hover or keyboard focus exposes the Glass circular X; touch reveals controls
 through selection/focus. Close controls use the saved Close icon percentage
 (default 80% on desktop; touch retains the shared minimum hit area). Confirmation is a compact, explicitly centered viewport dialog using
@@ -50,8 +51,11 @@ Inner/H3/P1/P3, shared fields and Glass Copy/Done, with a working dialog preview
 In House is the permanent exact layout baseline for Global Fabrics: identical
 photo/caption dimensions, full available width, scrolling and exactly two caption
 rows. A failed photo retains a compact two-line source link; never hide the result.
-The CSV action exports saved research and the hover/focus X dismisses an item.
-Fabrics and the active garment remain selected simultaneously. H4/P3/Inner/Glass and the single Fabric preview govern both. The sole bottom
+The toolbar order is Refresh → CSV → Expand, all the same height with the shared
+P3 line and Glass padding. CSV exports saved research; the hover/focus X dismisses
+an item. Expanded Fabrics closes on outside click or Escape.
+Fabrics and a real active garment remain selected simultaneously. Full View or
+pressing Fabrics again returns to the garment image. H4/P3/Inner/Glass and the single Fabric preview govern both. The sole bottom
 P1 loading line is “Searching for Fabrics”. No unsolicited Dictate/Find/refinement
 buttons. Preserve healthy photos and only retract sourced exclusions/wrong colors.
 
@@ -65,7 +69,9 @@ Image inspection is shared by the app, Brief and fabric photographs. A second
 click from the app card viewer opens a viewport-sized photograph. Hover reveals
 an Inner-material rectangular magnifier, 35% larger on each axis; pinch, wheel and
 drag inspect the expanded image only. Outer/card photos have no magnification or
-image gesture interception. Operation Room inspection opens in the parent viewport.
+image gesture interception, except the Operation Room garment frame: its enlarged
+center view pans horizontally across the source triptych while vertical gestures
+continue to scroll. Operation Room inspection opens in the parent viewport.
 Fabric captions retain their original source links. Pinching must not swipe to
 another version or zoom the board behind the image. Changing/removing a private
 source closes its expanded view.
@@ -78,9 +84,14 @@ merge repeated color/reference values and contain no attribute pills. A working
 notes/image preview lives beside the existing Drawer preview. Saved Drawer, Inner,
 Glass, icon and typography settings retain authority.
 
-Operation Room version 2 uses a 27.2/72.8 garment/pattern column ratio, stacks on
+Operation Room version 2 restores the 34/66 garment/pattern column ratio, stacks on
 narrow screens and centers every image. The parent Brief owns vertical scrolling
-through patterns and retrieval; there is no second fixed-height iframe scroller.
+through patterns and retrieval, with section snap stops; there is no second
+fixed-height iframe scroller. Ordinary vertical wheel input scrolls over SVG too;
+Ctrl/Command-wheel zooms its canvas. SVG tracing runs on demand in a bounded
+worker, never automatically after the drawing. New versions generate only Mark
+One. Required pocket pieces are individual outlines; displayed mirrored halves
+each say CUT 1 instead of duplicating the pair count.
 The version label uses P3 beside the H1 title; editable Settings reuse shared fields,
 Drawer and roles. The active Operation Room preview lives in Aesthetic Control.
 
