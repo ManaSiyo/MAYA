@@ -152,7 +152,7 @@ let saved={},research={items:[],generation:'0',searched:false},calls=0,failed=fa
 await page.addInitScript(token=>{if(location.origin==='https://maya-gallery.test')localStorage.setItem('maya_admin_tok',token);window.setInterval=()=>0;},token);
 await page.route('**/*',async route=>{
  const u=new URL(route.request().url());
- if(u.hostname==='photos.example')return failed?route.fulfill({status:404,body:'Unavailable fixture photograph'}):route.fulfill({body:readFileSync(resolve(root,'docs/aesthetics/fabrics',catalog[Number(u.pathname.split('/').pop().split('.')[0])].thumbnail)),contentType:'image/jpeg'});
+ if(u.hostname==='photos.example')return u.searchParams.has('failure')?route.fulfill({status:404,body:'Unavailable fixture photograph'}):route.fulfill({body:readFileSync(resolve(root,'docs/aesthetics/fabrics',catalog[Number(u.pathname.split('/').pop().split('.')[0])].thumbnail)),contentType:'image/jpeg'});
  if(u.hostname!=='maya-gallery.test')return route.abort();
  if(u.pathname==='/api/design')return route.fulfill({json:saved});
  if(u.pathname==='/api/admin/design'){saved=route.request().postDataJSON();assert.ok(validDesign(saved));return route.fulfill({json:{ok:true,savedAt:'2026-11-04'}});}
@@ -174,6 +174,14 @@ await page.route('**/*',async route=>{
  try{return route.fulfill({body:readFileSync(resolve(root,'.'+(u.pathname.startsWith('/aesthetics/')?'/docs':'')+decodeURIComponent(u.pathname))),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.JPG':'image/jpeg'})[extname(u.pathname)]||'text/plain'});}catch{return route.abort();}
 });
 const tab=name=>page.locator('.fa-tabs').getByRole('button',{name,exact:true});
+const refreshSearch=async()=>{
+ // Preparing the saved reference is asynchronous. An idle aria-busy value
+ // immediately after click does not establish that the search has started.
+ const response=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/admin/fabrics/search'&&r.request().method()==='POST');
+ await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await response;
+ await page.waitForFunction(()=>document.getElementById('fabric-assistant').getAttribute('aria-busy')==='false');
+};
+const reopenResearch=()=>page.evaluate(reference=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset:true,reopenSaved:showBriefFabrics,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),reference);
 const measure=()=>page.locator('#fabric-assistant').evaluate(root=>{
  const rect=el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {width:r.width,height:r.height,top:r.top,left:r.left,overflowX:s.overflowX,overflowY:s.overflowY,columns:s.gridTemplateColumns,rows:s.gridTemplateRows,gap:s.gap,font:s.fontFamily,size:s.fontSize,line:s.lineHeight,pad:[s.paddingLeft,s.paddingTop],material:s.backgroundColor,fit:s.objectFit};};
  const first=root.querySelector('.fa-product:not([hidden])');return {body:rect(root.querySelector('.fa-body')),grid:rect(root.querySelector('.fa-results')),card:rect(first),photo:rect(first.querySelector('img')),title:rect(first.querySelector('.fa-card-title')),caption:rect(first.querySelector('.fa-card-caption')),controls:[...root.querySelectorAll('button,textarea')].filter(el=>!el.closest('.fa-card-actions')&&el.getBoundingClientRect().width&&el.getBoundingClientRect().height).map(el=>el.textContent||el.getAttribute('aria-label'))};
@@ -215,17 +223,19 @@ try{
  }
  assert.equal(calls,1,'Comparing gallery views never repeats paid search');
  // Reopening reads saved research; Refresh keeps mounted healthy photos.
- await tab('Global').click();await page.evaluate(reference=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset:true,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),reference);
+ await tab('Global').click();await reopenResearch();
  await page.locator('.fa-product-image').evaluateAll(images=>Promise.all(images.map(image=>image.decode())));
  await page.evaluate(()=>{window._retainedFabricImage=document.querySelector('.fa-product-image');});
- assert.equal(calls,1);failed=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
- await page.waitForFunction(()=>document.getElementById('fabric-assistant').getAttribute('aria-busy')==='false');
+ assert.equal(calls,1);failed=true;await refreshSearch();assert.equal(calls,2);
+ assert.ok(research.items.every(p=>new URL(p.image).searchParams.has('failure')),'Saved fixture must contain the failed URLs before reopening');
  assert.equal(await page.evaluate(()=>document.querySelector('.fa-product-image')===window._retainedFabricImage),true,'Refreshing cannot discard a loaded photo');
  // A fresh mount of the failed saved URLs still retains all source links.
- await page.evaluate(reference=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset:true,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),reference);
+ await reopenResearch();
  await page.locator('.fa-product.has-missing-photo').first().waitFor();assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(await page.getByText('Photo unavailable',{exact:true}).count(),0);assert.equal(calls,2,'Failures do not retry the provider automatically');
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});assert.ok(await page.locator('.fa-results').evaluate(el=>[...el.querySelectorAll('a')].every(a=>a.href.startsWith('https://cloth.example/')&&a.getBoundingClientRect().right<=innerWidth+1)));}
- failed=false;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.locator('.fa-product-image').first().evaluate(image=>image.decode());assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(calls,3);
+ failed=false;await refreshSearch();
+ await page.waitForFunction(()=>{const cards=[...document.querySelectorAll('.fa-product')];return cards.length===8&&cards.every(card=>{const img=card.querySelector('.fa-product-image');return img?.complete&&img.naturalWidth>0;});});
+ assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(calls,3);
  // A session reset clears private data without restoring chat controls. Explicit
  // Refresh asks the host for its current canonical saved garment after renewal.
  await page.evaluate(()=>{const old=localStorage.getItem('maya_admin_tok');const p=JSON.parse(atob(old.split('.')[1]));p.exp=1;localStorage.setItem('maya_admin_tok','fixture.'+btoa(JSON.stringify(p))+'.fixture');window.dispatchEvent(new Event('focus'));});

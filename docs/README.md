@@ -40,8 +40,9 @@ An owner Push of **maya-v2** starts the existing Cloud Build trigger. The branch
 guard rejects other branches. The build installs pinned dependencies and
 Chromium, runs `node docs/check.mjs`, builds backend/server with its locked
 production dependencies, pushes the container, deploys Cloud Run, builds the
-public tree with the commit stamp, deploys Hosting, then deploys Firestore/Storage
-rules separately. No credentials or provider environment settings are changed.
+public tree with the commit stamp, deploys Hosting, verifies the live release, then
+deploys Firestore/Storage rules separately. No credentials or provider environment
+settings are changed.
 
 Local commands (Node20 or newer):
 
@@ -54,7 +55,12 @@ node docs/build-site.mjs
 ```
 
 After Push, compare the full intended commit in `/release.json`, the frontend and
-Admin `maya-build` metadata, and `/api/healthz`. Health's configured flags indicate
+Admin/Brief/workspace `maya-build` metadata, and `/api/healthz`, using
+`node docs/check.mjs --deployed <full-commit-sha>`. The build runs this same public
+HTTP check after Hosting deployment and fails on any stale or missing stamp.
+Inspect GitHub's commit **check-runs**, including Google's `output.text` build log;
+the combined status may report Vercel success while Cloud Build has failed.
+Health's configured flags indicate
 configuration, not successful inference/delivery. `/api/healthz/deep` is admin-only.
 
 ## APIs and providers
@@ -208,10 +214,20 @@ on phone/iPad/desktop after Push. No live OpenAI search was run in this change;
 these concrete fixes do not establish live provider availability, latency or photo
 quality. Prices/delivery are only present when returned as sourced metadata.
 
-Live checks on November 7 still report a71964a45998ab7eeec251ecc1678869d9a7f493
-in /release.json, frontend/Admin build stamps and /api/healthz, although origin/maya-v2
-has c28322e95ae3cac7c5c1fc1c9eac588e8267440c. The Vercel status is successful;
-Firebase/Cloud Run deployment of version 2 is not confirmed and its cause is not
-established. These follow-up fixes are local, not pushed. After owner Push, compare
-all release stamps, then the owner checks scrolling, Settings, saved work, Fabrics
-for each item and CSV. Twilio remains owner-managed; no messages or calls were sent.
+November 7 deployment diagnosis: origin/maya-v2 has 05a186c, but Hosting and API
+still serve a71964a45998ab7eeec251ecc1678869d9a7f493. Google's checks prove both
+c28322e and 05a186c failed **Test release contracts**, so Build server, Deploy
+server and Deploy website never ran. Vercel's green preview check was unrelated.
+Build d6a00ef3-d1f2-4314-a11b-10e4ab4203bc timed out in the Fabric gallery fixture:
+the test checked idle state before asynchronous photo preparation started the
+refresh, then reset the gallery and canceled that pending request. The prior build
+also reached a renewal test whose direct open omitted the host recovery callback.
+
+The fixture now waits for its actual search response before completion, binds photo
+failures to distinct URLs, and retains the host recovery callback. The release build
+stamps every app HTML page and verifies six live endpoints after deployment. The
+code-only checks pass; these CI/deployment repairs are local, not pushed, and the
+full CI presentation check remains unverified until the next owner Push. The live
+image-viewer is byte-identical to a71964a, which still zooms inline; version 2's
+fullscreen-only behavior has not shipped. Twilio remains owner-managed; no messages
+or calls were sent.

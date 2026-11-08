@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 import {readFileSync,readdirSync,existsSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import vm from 'node:vm';
-import {buildSite} from './build-site.mjs';
+import {buildSite,verifyDeployment} from './build-site.mjs';
 const root=new URL('../',import.meta.url).pathname;process.chdir(root);
+if(process.argv[2]==='--deployed'){
+ const result=await verifyDeployment(process.argv[3]);console.log('Production release verified: '+result.commit+' across '+result.paths.length+' endpoints.');process.exit(0);
+}
 const started=performance.now();
 const config=JSON.parse(readFileSync('docs/firebase.json','utf8'));
 assert.equal(config.hosting.public,'.hosting');
@@ -24,6 +27,7 @@ assert.ok(!existsSync(output+'/aesthetics/ui/fabric-search-details.js'));assert.
 const redirects=new Set(config.hosting.redirects.map(r=>r.source));
 for(const folder of ['frontend','backend'])for(const file of readdirSync(output+'/'+folder).filter(x=>x.endsWith('.html'))){
  const html=readFileSync(output+'/'+folder+'/'+file,'utf8');
+ assert.ok(html.includes('<meta name="maya-build" content="'+'a'.repeat(40)+'">'),'Missing release stamp in '+file);
  for(const match of html.matchAll(/(?:src|href)=["'](\/(?:aesthetics|backend)\/[^"'?<>]+)(?:[?][^"']*)?["']/g)){
   const path=decodeURIComponent(match[1]);if(redirects.has(path))continue;assert.ok(existsSync(output+path),'Missing served asset '+path+' in '+file);
  }

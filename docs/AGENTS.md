@@ -46,6 +46,12 @@ The owner requested this location and the November 5 repository consolidation.
 - Local success does not prove deployment or provider performance. After owner
   Push, compare release.json, page build stamps and API health to the full commit.
   Vercel checks do not establish Firebase/Cloud Run success.
+  Inspect GitHub's `/repos/ManaSiyo/MAYA/commits/{sha}/check-runs` for the Google
+  Cloud Build result and `output.text` log. The combined commit-status endpoint
+  can show only Vercel while Google's check has failed. Report the failing step
+  before preparing more unrelated fixes. `node docs/check.mjs --deployed <sha>`
+  verifies the public release after deployment; neither Push nor local tests prove
+  the change is live.
 
 Runtime: frontend/index.html, backend/*.html, backend/server/*. Shared assets and
 Aesthetic Control: docs/aesthetics. build-site.mjs publishes only an explicit

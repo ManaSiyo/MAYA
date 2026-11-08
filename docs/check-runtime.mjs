@@ -2,6 +2,21 @@
 // Each named check has its own scope; run all through node docs/check.mjs.
 export const checks = {};
 
+checks['deployment-verification']=async function(){
+ const {default:assert}=await import('node:assert/strict'),{verifyDeployment}=await import('./build-site.mjs');
+ const commit='a'.repeat(40),seen=[];let fault='';
+ const fetchImpl=async(url,options)=>{
+  const u=new URL(url),path=u.pathname;seen.push(path);assert.equal(u.hostname,'maya.manasiyo.com');assert.equal(u.searchParams.get('release_check'),commit);assert.equal(options.headers['Cache-Control'],'no-cache');
+  if(fault==='http'&&path==='/release.json')return new Response('',{status:503});
+  const actual=fault===path?'b'.repeat(40):commit;
+  return path==='/release.json'||path==='/api/healthz'?Response.json({commit:actual}):new Response(fault==='missing'&&path==='/backend.html'?'<head></head>':'<head><meta name="maya-build" content="'+actual+'"></head>');
+ };
+ assert.equal((await verifyDeployment(commit,{fetchImpl})).paths.length,6);assert.equal(seen.length,6);
+ for(fault of ['/api/healthz','/backend.html','/backend/operation-workspace.html','missing','http'])await assert.rejects(verifyDeployment(commit,{fetchImpl}),/Production release is not verified/);
+ await assert.rejects(verifyDeployment('short',{fetchImpl}),/full Git commit/);
+ console.log('Production verification: exact Hosting/API/Brief/iframe stamps required; stale, missing and failed responses cannot report success.');
+};
+
 checks['server-startup']=async function(){
  const {spawnSync}=await import('node:child_process');
  const result=spawnSync(process.execPath,['--input-type=module','-e',`
@@ -2422,4 +2437,14 @@ checks['fabric-photo-retention']=async function(){
  assert.match(nodes.find(n=>n.className==='fa-card-caption').textContent,/20 USD \/ yard/,'Late price metadata updates the caption without remounting the photo');
  context.product.rejectedImageURLs=['https://photos.example/wool.jpg'];vm.runInContext('reuseCard(original,product)',context);assert.equal(photo.isConnected,false);assert.equal(nodes.filter(n=>n.tag==='img').at(-1).src,'https://photos.example/new.jpg','Explicit image retractions still replace an excluded photo');
  original._fabricDispose();console.log('Fabric photos: mounted node retention during search/save state changes, controls and image retractions passed.');
+};
+
+checks['fabric-refresh-preparation']=async function(){
+ const vm=await import('node:vm'),{readFileSync}=await import('node:fs'),source=readFileSync('docs/aesthetics/ui/fabric-assistant.js','utf8');
+ const start=source.indexOf('  async function refreshView('),end=source.indexOf('  async function run(',start);let release,calls=0,current=true;
+ const context=vm.createContext({els:{results:{querySelectorAll:()=>[]}},view:'search',context:{automatic:true,submissionId:'project',referenceImage:'saved-photo'},searchState:'complete',epoch:1,image:'',submittedRequest:'',current:()=>current,preparedPhoto:()=>new Promise(resolve=>{release=resolve;}),run:async()=>{calls++;},status(){}});
+ vm.runInContext(source.slice(start,end),context);
+ const first=vm.runInContext('refreshView()',context);assert.equal(calls,0,'Refresh has not sent a request while its saved image is being prepared');release('prepared-photo');await first;assert.equal(calls,1);
+ context.image='';const stale=vm.runInContext('refreshView()',context);current=false;release('late-photo');await stale;assert.equal(calls,1,'A reset during preparation cancels that search');
+ console.log('Fabric refresh: saved-image preparation precedes search; resetting early cancels it.');
 };
