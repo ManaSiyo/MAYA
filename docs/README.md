@@ -219,8 +219,8 @@ on phone/iPad/desktop after Push. No live OpenAI search was run in this change;
 these concrete fixes do not establish live provider availability, latency or photo
 quality. Prices/delivery are only present when returned as sourced metadata.
 
-November 7 deployment diagnosis: origin/maya-v2 has 05a186c, but Hosting and API
-still serve a71964a45998ab7eeec251ecc1678869d9a7f493. Google's checks prove both
+November 7 deployment diagnosis: after 05a186c was pushed, Hosting and API
+still served a71964a45998ab7eeec251ecc1678869d9a7f493. Google's checks prove both
 c28322e and 05a186c failed **Test release contracts**, so Build server, Deploy
 server and Deploy website never ran. The old provider's preview check was unrelated.
 Build d6a00ef3-d1f2-4314-a11b-10e4ab4203bc timed out in the Fabric gallery fixture:
@@ -230,9 +230,12 @@ also reached a renewal test whose direct open omitted the host recovery callback
 
 The fixture now waits for its actual search response before completion, binds photo
 failures to distinct URLs, and retains the host recovery callback. The release build
-stamps every app HTML page and verifies six live endpoints after deployment. The
-code-only checks pass; these CI/deployment repairs are local, not pushed, and the
-full CI presentation check remains unverified until the next owner Push. The live
-image-viewer is byte-identical to a71964a, which still zooms inline; version 2's
-fullscreen-only behavior has not shipped. Twilio remains owner-managed; no messages
-or calls were sent.
+stamps every app HTML page and verifies six live endpoints after deployment.
+On November 8, repair commit 9917a907d26231c0a2541441ad679b1e89b0b841 passed
+every Google Cloud Build step, including the full CI checks, Cloud Run, Hosting,
+live verification and rules (build 69389664-ccb2-4bdb-aea0-b2fbb7beb8af).
+An independent HTTP check confirmed that same commit on all six live endpoints.
+This deployed the previously blocked Operation Room version 2 and Fabric changes.
+Later pushes must pass the same build and live commit checks; a green unrelated
+preview is never deployment evidence. Visual and interaction acceptance still
+belongs to Fromsa. Twilio remains owner-managed; no messages or calls were sent.

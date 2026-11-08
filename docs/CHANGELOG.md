@@ -9,18 +9,24 @@ under _to_delete/2026-11-05-cleanup for owner review.
   functions, analytics scripts or dependencies remain in the repository. External
   project/GitHub disconnection is pending Vercel account access; no provider-side
   deletion has been performed. Firebase/Cloud Run deployment is unchanged.
-- **November 7, deployment repair — local, not pushed:** Google Cloud Build logs
+- **November 8 — Google deployment verified:** repair commit 9917a90 passed all
+  eight steps in build 69389664-ccb2-4bdb-aea0-b2fbb7beb8af. Independent HTTP
+  checks confirmed the same full commit on release.json, API health, frontend,
+  Admin, Brief and the Operation Room workspace. Previously blocked changes are
+  deployed; owner visual and interaction review remains pending. Corrected the
+  stale documentation that still described the repair as unpushed.
+- **November 7, deployment repair — deployed November 8:** Google Cloud Build logs
   confirm c28322e and 05a186c failed the Fabric UI fixture before any deployment.
   Corrected the refresh wait and missing recovery callback without skipping tests.
   Every app HTML page now has a build stamp; the pipeline verifies six public
-  Hosting/API endpoints after deployment. Code-only checks pass; full CI and owner
-  visual acceptance remain pending. Live image-viewer bytes still match a71964a.
+  Hosting/API endpoints after deployment. Code-only and full CI checks pass;
+  owner visual acceptance remains pending.
 - **November 7 — 05a186c, pushed; deployment failed:** flush pending pattern
   settings before garment changes; retain failed drafts and lock settings during
   hydration. Acknowledge identical settings-only retries. Preserve loaded Fabric
   photos through Refresh and late price/caption updates. Added code regressions
   and updated the CI refresh check; owner visual acceptance remains pending.
-  Live Hosting and API still report a71964a; the later deployment audit above
+  At that time Hosting and API still reported a71964a; the deployment audit above
   identifies the failed release fixture.
 - **November 7 — c28322e, pushed — Operation Room version 2:** narrower garment
   column, centered pattern canvas, parent-page scrolling and trimmed controls;
