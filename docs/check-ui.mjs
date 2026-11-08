@@ -214,9 +214,15 @@ try{
   }
  }
  assert.equal(calls,1,'Comparing gallery views never repeats paid search');
- // Failed photos remain source links. Reopening reads saved research without a paid call.
+ // Reopening reads saved research; Refresh keeps mounted healthy photos.
  await tab('Global').click();await page.evaluate(reference=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset:true,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),reference);
+ await page.locator('.fa-product-image').evaluateAll(images=>Promise.all(images.map(image=>image.decode())));
+ await page.evaluate(()=>{window._retainedFabricImage=document.querySelector('.fa-product-image');});
  assert.equal(calls,1);failed=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
+ await page.waitForFunction(()=>document.getElementById('fabric-assistant').getAttribute('aria-busy')==='false');
+ assert.equal(await page.evaluate(()=>document.querySelector('.fa-product-image')===window._retainedFabricImage),true,'Refreshing cannot discard a loaded photo');
+ // A fresh mount of the failed saved URLs still retains all source links.
+ await page.evaluate(reference=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset:true,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),reference);
  await page.locator('.fa-product.has-missing-photo').first().waitFor();assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(await page.getByText('Photo unavailable',{exact:true}).count(),0);assert.equal(calls,2,'Failures do not retry the provider automatically');
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});assert.ok(await page.locator('.fa-results').evaluate(el=>[...el.querySelectorAll('a')].every(a=>a.href.startsWith('https://cloth.example/')&&a.getBoundingClientRect().right<=innerWidth+1)));}
  failed=false;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.locator('.fa-product-image').first().evaluate(image=>image.decode());assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(calls,3);

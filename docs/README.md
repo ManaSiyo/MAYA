@@ -177,7 +177,7 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
-November 7: Operation Room version 2 is prepared locally. The garment column is
+November 7: Operation Room version 2 (c28322e) is pushed. The garment column is
 27.2% instead of 34% (20% narrower); the pattern receives 72.8%. Images are centered,
 the parent Brief owns vertical scrolling, and hidden iframe overflow no longer
 clips the retrieval area. Upload, Redrawn, duplicate Mark badge and Export SVG
@@ -196,13 +196,22 @@ checks pass. Added tests cover pattern history, no-charge reopen, storage failur
 account/garment scope, deletion races, source-only links, CSV and durable dismissals.
 CI presentation assertions were updated; no local browser was launched.
 
+The follow-up review fixes dropped settings when changing garments: selection
+waits for autosave, failed writes keep the current draft, and fields remain locked
+until saved settings load. Identical settings-only save retries acknowledge the
+stored result without replacing history. Fabric refresh and late metadata update
+existing cards without discarding healthy photographs. Runtime checks cover these
+races and retained image nodes; the CI presentation assertion checks refresh too.
+
 No Chrome access or agent visual testing. Fromsa owns visual/interaction review
 on phone/iPad/desktop after Push. No live OpenAI search was run in this change;
 these concrete fixes do not establish live provider availability, latency or photo
 quality. Prices/delivery are only present when returned as sourced metadata.
 
-The checkout started at a71964a with maya-v2 and origin/maya-v2 matching. This work
-is not pushed. Next: owner Push, compare /release.json, HTML build stamps and
-/api/healthz against the full commit, then owner checks scrolling, Settings,
-reopening saved work, Fabrics for each item and CSV. Twilio remains owner-managed;
-no messages or calls were sent.
+Live checks on November 7 still report a71964a45998ab7eeec251ecc1678869d9a7f493
+in /release.json, frontend/Admin build stamps and /api/healthz, although origin/maya-v2
+has c28322e95ae3cac7c5c1fc1c9eac588e8267440c. The Vercel status is successful;
+Firebase/Cloud Run deployment of version 2 is not confirmed and its cause is not
+established. These follow-up fixes are local, not pushed. After owner Push, compare
+all release stamps, then the owner checks scrolling, Settings, saved work, Fabrics
+for each item and CSV. Twilio remains owner-managed; no messages or calls were sent.

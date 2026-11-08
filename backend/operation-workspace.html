@@ -265,7 +265,7 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
 <script src="/aesthetics/ui/pill-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=26"></script>
 <link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=15">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=17"></script>
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=18"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=2"><script src="/aesthetics/ui/image-viewer.js?v=2"></script>
 </head>
 <body>
@@ -489,6 +489,10 @@ let _operationInputContext=null,_operationRevision=-1,_operationLoadSequence=0;
 // Saved submission work: no model call on load, selection or reopening.
 let _patternRecord=null,_patternReady=Promise.resolve(),_patternSave=Promise.resolve(),_patternTimer=null,_patternRun=null,_patternDirty=false,_patternSettingsError='';
 let _patternSettings={logic:{}};
+let _patternNavigation=0;
+function lockPatternSettings(locked){
+  document.querySelectorAll('#pattern-settings input,#pattern-settings select,#pattern-settings textarea,#pattern-settings button,#logic button,#logic textarea,[data-q]').forEach(el=>el.disabled=locked);
+}
 function patternGrammar(){return _patternSettings.grammar||KB.grammar;}
 function patternDefaults(){return {type:'auto',passes:2,hits:5,quality:'medium',direction:'',prompt:'',classifier:CLASSIFY_PROMPT,grammar:structuredClone(KB.grammar),logic:{},locked:false,band:1.5,underlap:1.5,yoke:3};}
 function syncPatternSettings(){
@@ -505,7 +509,7 @@ async function loadPatternWork(){
   clearTimeout(_patternTimer);_patternTimer=null;_patternRecord=null;_patternRun=null;_patternDirty=false;_patternSettingsError='';_patternSave=Promise.resolve();
   _patternSettings=patternDefaults();syncPatternSettings();$('retry-pattern-save').hidden=true;
   if(!FILES.saved||!FILES.piece?.id)return;
-  const context=patternContext();$('start-test').disabled=true;$('pattern-save-status').textContent='';
+  const context=patternContext();lockPatternSettings(true);$('start-test').disabled=true;$('pattern-save-status').textContent='';
   try{
     const r=await fetch('/api/admin/patterns?'+new URLSearchParams({submissionId:context.submission,garmentId:context.garmentId}),{headers:{Authorization:'Bearer '+context.token},cache:'no-store',signal:AbortSignal.timeout(20000)});
     const data=await r.json();if(!r.ok)throw Error(data.error||'Saved patterns unavailable.');if(!patternScope(context))return;
@@ -513,7 +517,7 @@ async function loadPatternWork(){
     if(!data.stale&&data.runs.length)restorePatternRun(data.runs[data.runs.length-1]);
     if(data.stale)$('pattern-save-status').textContent='The garment changed. Previous patterns remain in Saved pattern versions.';
   }catch(e){if(patternScope(context)){$('pattern-save-status').textContent=e.message;throw e;}}
-  finally{if(patternScope(context))$('start-test').disabled=false;}
+  finally{if(patternScope(context)){lockPatternSettings(!_patternRecord);$('start-test').disabled=false;}}
 }
 function restorePatternRun(run){
   _patternRun=null;
@@ -556,6 +560,20 @@ function persistPatternWork(){
   _patternSave=task;return task;
 }
 async function retryPatternSave(){try{await persistPatternWork();}catch{}}
+async function flushPatternBeforeNavigation(){
+  if(RUNNING)return false;
+  if(!_patternDirty&&!_patternTimer)return true;
+  const context=patternContext();
+  try{
+    await _patternReady;if(!patternScope(context))return false;
+    if(_patternSettingsError)throw Error(_patternSettingsError);
+    clearTimeout(_patternTimer);_patternTimer=null;
+    await _patternSave;
+    if(!patternScope(context))return false;
+    if(_patternDirty)await persistPatternWork();
+    return patternScope(context)&&!_patternDirty;
+  }catch(e){if(patternScope(context))$('pattern-save-status').textContent=e.message;return false;}
+}
 
 function openOperationFabrics() {
   const context=_operationInputContext,piece=FILES.piece;
@@ -655,7 +673,7 @@ function setOperationRunning(on){
   else{_lockedOperationInputs.forEach(([el,disabled])=>el.disabled=disabled);_lockedOperationInputs=[];_runMeasures=null;_runQuality=null;}
 }
 function invalidateOperation(){
-  RUN++;_garmentSequence++;_garmentReady=Promise.resolve();_measurementGarment='';
+  RUN++;_garmentSequence++;_patternNavigation++;_garmentReady=Promise.resolve();_measurementGarment='';
   clearTimeout(_patternTimer);_patternTimer=null;_patternRecord=null;_patternRun=null;_patternReady=Promise.resolve();_patternSave=Promise.resolve();_patternDirty=false;_patternSettingsError='';_patternSettings=patternDefaults();
   $('pattern-save-status').textContent='';$('retry-pattern-save').hidden=true;renderPatternHistory();
   if(typeof clearLogicEditor==='function')clearLogicEditor();
@@ -687,14 +705,19 @@ function installOperationContext(context,selected=''){
   initTests();const selectedName=Object.keys(TESTS).find(name=>TESTS[name].piece?.id===selected)||selected;if(selectedName&&TESTS[selectedName])pickTest(selectedName);
   if(context.submissionId&&context.pieces.length)window.MayaFabricAssistant?.prepare({submissionId:context.submissionId,referenceImage:context.referenceImage,preferences:context.preferences,pieces:context.pieces,piece:FILES.piece});
 }
-function receiveOperationContext(event){
+async function receiveOperationContext(event){
   if(!EMBEDDED||event.origin!==location.origin||event.source!==window.parent||event.data?.maya!=='ops-pieces')return;
   const {context,revision,selected,selectionChanged}=event.data;
   const selectedName=Object.keys(TESTS).find(name=>TESTS[name].piece?.id===selected)||selected;
   if(!context||context.account!==operationAccount()||typeof context.submissionId!=='string'||!Number.isInteger(context.local)||!Array.isArray(context.pieces)||!Number.isInteger(revision)||revision<_operationRevision)return;
+  const sameProject=_operationInputContext?.submissionId===context.submissionId&&_operationInputContext?.local===context.local;
+  if(revision===_operationRevision&&(!sameProject||selectionChanged!==true||!TESTS[selectedName]||ACTIVE_TEST===selectedName))return;
+  const navigation=++_patternNavigation;
+  if(sameProject&&!(await flushPatternBeforeNavigation()))return;
+  if(navigation!==_patternNavigation||context.account!==operationAccount())return;
   if(revision===_operationRevision){
     if(_operationInputContext?.submissionId!==context.submissionId||_operationInputContext?.local!==context.local)return;
-    if(selectionChanged===true&&selectedName&&TESTS[selectedName]&&ACTIVE_TEST!==selectedName){invalidateOperation();pickTest(selectedName);}
+    if(selectionChanged===true&&selectedName&&TESTS[selectedName]&&ACTIVE_TEST!==selectedName)pickTest(selectedName);
     return;
   }
   _operationRevision=revision;installOperationContext(context,selected);
@@ -1147,7 +1170,10 @@ function initTests(){
   p.innerHTML=names.map(n=>`<option value="${esc(n)}">${esc(shortLabel(n))}</option>`).join('');
   p.value=names[0]; pickTest(names[0]);
 }
-function onPickTest(val){ pickTest(val); }
+async function onPickTest(val){
+  const navigation=++_patternNavigation;$('test-picker').value=ACTIVE_TEST;
+  if(await flushPatternBeforeNavigation()&&navigation===_patternNavigation)pickTest(val);
+}
 function pickTest(name){
   if(RUNNING){if($('test-picker'))$('test-picker').value=ACTIVE_TEST;return;}
   if(ACTIVE_TEST===name&&FILES===TESTS[name])return;

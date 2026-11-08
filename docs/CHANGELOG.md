@@ -4,7 +4,14 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
-- **November 7, prepared locally — Operation Room version 2:** narrower garment
+- **November 7, follow-up review — local, not pushed:** flush pending pattern
+  settings before garment changes; retain failed drafts and lock settings during
+  hydration. Acknowledge identical settings-only retries. Preserve loaded Fabric
+  photos through Refresh and late price/caption updates. Added code regressions
+  and updated the CI refresh check; owner visual acceptance remains pending.
+  Live Hosting and API still report a71964a despite c28322e being pushed; deployment
+  cause is not confirmed.
+- **November 7 — c28322e, pushed — Operation Room version 2:** narrower garment
   column, centered pattern canvas, parent-page scrolling and trimmed controls;
   fullscreen-only inspection with a 35% larger lens; card-centered Glass Design
   Notes. Exposed pattern inputs and room version history. Pattern passes, settings
@@ -13,7 +20,7 @@ under _to_delete/2026-11-05-cleanup for owner review.
   item/section selections, accepts footwear, retains cited source links without
   photos, remembers removals and exports per-submission CSV. One OpenAI search
   remains the only sourcing engine. Code-only checks pass; live provider and owner
-  visual/interaction acceptance remain unverified. Not pushed.
+  visual/interaction acceptance remain unverified. Deployment not confirmed.
 - **November 6 — a71964a, pushed:** centered delete confirmation, drawer-only
   Brief deletion, smaller adjustable hover controls, deduplicated Design Notes
   drawer and shared fullscreen magnification/pinch zoom. Separated Fabric tab

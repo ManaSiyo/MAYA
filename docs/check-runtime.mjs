@@ -2348,6 +2348,7 @@ checks['pattern-work']=async function(){
  const run={id:'version-1',createdAt:'2026-11-07T00:00:00Z',inputs:{type:'jacket',prompt:'Book construction',cutlist:[{label:'upper sleeve',qty:2}]},passes:[{img:piece._image,prompt:'Book construction'}],bestIndex:0};
  state=await service.save(user,{...base,generation:state.generation,fingerprint:state.fingerprint,run});
  const written=writes;const acknowledged=await service.save(user,{...base,generation:'0',fingerprint:state.fingerprint,run});assert.equal(acknowledged.generation,state.generation);assert.equal(writes,written,'Retrying an unconfirmed save acknowledges the identical stored run without overwriting');
+ const settingsRetry=await service.save(user,{...base,generation:'0',fingerprint:state.fingerprint,run:null});assert.equal(settingsRetry.generation,state.generation);assert.equal(writes,written,'An uncertain settings-only save can be acknowledged without overwriting history');
  assert.equal((await service.load(user,'project-A','coat')).runs[0].inputs.prompt,'Book construction');assert.equal((await service.load({sub:'owner-B'},'project-A','coat')).runs.length,0);
  await assert.rejects(service.save(user,{...base,generation:'0',fingerprint:state.fingerprint,run:{...run,id:'conflict'}}),e=>e.status===409);
  const next={...run,id:'version-2',passes:[...run.passes,{img:'data:image/png;base64,c2Vjb25k',prompt:'Refine sleeves'}]};
@@ -2378,4 +2379,47 @@ checks['pattern-reuse']=async function(){
  Object.assign(context,{structuredClone,$:()=>({textContent:''}),_patternRun:{id:'new-version'},renderLogic(){},renderChunks(){},applyView(){},HERO:'saved-photo'});vm.runInContext(source.slice(restoreStart,restoreEnd),context);
  context.saved=run;vm.runInContext('restorePatternRun(saved)',context);assert.equal(context._patternRun,null,'Viewing history cannot overwrite a newer run on the next settings save');
  console.log('Pattern reuse: Start restores saved versions, storage/invalid settings/changed garment block paid generation.');
+};
+
+checks['pattern-navigation']=async function(){
+ const vm=await import('node:vm'),{readFileSync}=await import('node:fs'),source=readFileSync('backend/operation-workspace.html','utf8');
+ const fn=name=>{const start=source.indexOf('async function '+name+'(');return source.slice(start,source.indexOf('\n}',start)+2);};
+ const pending=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
+ const status={textContent:''},picker={value:'Coat'},picked=[];let writes=0;
+ const context=vm.createContext({RUNNING:false,ACTIVE_TEST:'Coat',_patternNavigation:0,_patternDirty:true,_patternTimer:1,_patternSettingsError:'',_patternReady:Promise.resolve(),_patternSave:Promise.resolve(),patternContext:()=>({garmentId:'coat'}),patternScope:()=>true,clearTimeout(){},$:id=>id==='test-picker'?picker:status,pickTest:name=>picked.push(name)});
+ context.persistPatternWork=async()=>{writes++;context._patternDirty=false;};
+ vm.runInContext(fn('flushPatternBeforeNavigation')+'\n'+fn('onPickTest'),context);
+ await vm.runInContext('onPickTest("Trousers")',context);assert.equal(writes,1);assert.deepEqual(picked,['Trousers'],'Selection flushes a pending debounce before discarding current work');
+ const wait=pending();context._patternDirty=true;context._patternSave=wait.promise;
+ const first=vm.runInContext('onPickTest("Boots")',context),last=vm.runInContext('onPickTest("Shirt")',context);await Promise.resolve();assert.equal(picked.length,1);wait.resolve();await Promise.all([first,last]);assert.deepEqual(picked,['Trousers','Shirt'],'Only the latest selection wins while saving');
+ context._patternDirty=true;context._patternSave=Promise.reject(Error('Save unavailable'));
+ await vm.runInContext('onPickTest("Coat")',context);assert.equal(picked.length,2);assert.equal(status.textContent,'Save unavailable');assert.equal(context._patternDirty,true,'A failed save leaves the current draft available to retry');
+ const cancelled=pending();context._patternSave=cancelled.promise;
+ const switching=vm.runInContext('onPickTest("Boots")',context);await Promise.resolve();context._patternNavigation++;context.patternScope=()=>false;cancelled.resolve();await switching;assert.equal(picked.length,2,'An account/project reset cancels pending navigation');
+ console.log('Pattern navigation: debounce flush, pending writes, latest selection, failed-save retention and scope cancellation passed.');
+};
+
+checks['fabric-photo-retention']=async function(){
+ const vm=await import('node:vm'),{readFileSync}=await import('node:fs'),source=readFileSync('docs/aesthetics/ui/fabric-assistant.js','utf8');
+ class Node{
+  constructor(tag){this.tag=tag;this.children=[];this.dataset={};this.attributes={};this.listeners={};this.classes=new Set();this.isConnected=true;this.classList={add:(...names)=>names.forEach(n=>this.classes.add(n)),remove:(...names)=>names.forEach(n=>this.classes.delete(n)),contains:n=>this.classes.has(n)};}
+  append(...children){children.forEach(child=>{child.parent=this;this.children.push(child);});}
+  prepend(child){child.parent=this;this.children.unshift(child);}
+  remove(){if(this.parent)this.parent.children=this.parent.children.filter(c=>c!==this);this.isConnected=false;}
+  setAttribute(k,v){this.attributes[k]=v;} getAttribute(k){return k==='src'?this.src:this.attributes[k];} removeAttribute(k){delete this.attributes[k];if(k==='src')delete this.src;}
+  addEventListener(type,fn){this.listeners[type]=fn;}
+ }
+ const nodes=[],node=(tag,cls)=>{const n=new Node(tag);n.className=cls;nodes.push(n);return n;};
+ const context=vm.createContext({URL,location:{href:'https://maya.test/',origin:'https://maya.test'},view:'search',searchMode:'worldwide',context:{automatic:true,piece:{id:'coat'}},research:{generation:'1'},busy:false,saves:{pending:new Set()},window:{},node,icon:()=>node('button'),action:()=>node('button'),queueMicrotask(){},setTimeout:()=>1,clearTimeout(){}});
+ vm.runInContext(source.slice(source.indexOf('  function photoCandidates('),source.indexOf('  function paint()')),context);
+ context.product={url:'https://cloth.example/coat',title:'Wool',image:'https://photos.example/wool.jpg',garmentId:'coat'};
+ const original=vm.runInContext('card(product)',context);context.original=original;
+ const photo=nodes.find(n=>n.tag==='img');photo.listeners.load();
+ const remove=nodes.find(n=>n.tag==='button');assert.equal(remove.disabled,false);
+ context.busy=true;assert.equal(vm.runInContext('reuseCard(original,product)',context),original);assert.equal(remove.disabled,true);
+ context.busy=false;context.research={generation:'2'};context.product={...context.product,image:'https://photos.example/new.jpg',price:'20',currency:'USD',unit:'yard'};
+ assert.equal(vm.runInContext('reuseCard(original,product)',context),original);assert.equal(remove.disabled,false);assert.equal(nodes.filter(n=>n.tag==='img').length,1);assert.equal(photo.src,'https://photos.example/wool.jpg','New search evidence keeps the already loaded photograph');
+ assert.match(nodes.find(n=>n.className==='fa-card-caption').textContent,/20 USD \/ yard/,'Late price metadata updates the caption without remounting the photo');
+ context.product.rejectedImageURLs=['https://photos.example/wool.jpg'];vm.runInContext('reuseCard(original,product)',context);assert.equal(photo.isConnected,false);assert.equal(nodes.filter(n=>n.tag==='img').at(-1).src,'https://photos.example/new.jpg','Explicit image retractions still replace an excluded photo');
+ original._fabricDispose();console.log('Fabric photos: mounted node retention during search/save state changes, controls and image retractions passed.');
 };

@@ -86,7 +86,7 @@ export function createPatternWork({read,write,remove,assertActive}){
   async function save(user,body){
     const {submissionId:id,garmentId,generation,fingerprint,run,settings}=body;
     const current=await load(user,id,garmentId);
-    if(fingerprint===(current.currentFingerprint||current.fingerprint)&&run&&JSON.stringify(current.runs.find(r=>r.id===run.id))===JSON.stringify(run)&&JSON.stringify(current.settings)===JSON.stringify(settings))return current;
+    if(current.generation!=='0'&&fingerprint===current.fingerprint&&fingerprint===(current.currentFingerprint||current.fingerprint)&&(!run||JSON.stringify(current.runs.find(r=>r.id===run.id))===JSON.stringify(run))&&JSON.stringify(current.settings)===JSON.stringify(settings))return current;
     if(String(generation)!==current.generation||fingerprint!==(current.currentFingerprint||current.fingerprint))throw fail('Saved garment or patterns changed. Reopen this submission before saving.',409);
     if(!settings||typeof settings!=='object'||Array.isArray(settings)||JSON.stringify(settings).length>60000)throw fail('Pattern settings are too large.');
     const runs=[...current.runs];

@@ -382,28 +382,31 @@
   }
   // Photo evidence can arrive late. It updates the mounted image without
   // discarding a healthy photograph or restarting URLs that already failed.
-  const cardSignature=p=>JSON.stringify([view,p.url,p.price,p.unit,p.currency,p.garment,p.garmentId,p.materialLabel,p.merchant,p.evidence,saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||'')),busy,!!research]);
+  const cardSignature=p=>JSON.stringify([view,!!context.automatic,p.url]);
   function card(p) {
     const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);
-    const local=p.evidence==='atelier_inventory';
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
-    const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
     mountProductPhoto(item,link,p);
     const title=node('h3','fa-card-title',p.title);title.dataset.mayaType='H4';
-    const use=[p.garment?'For '+p.garment:'',p.materialLabel].filter(Boolean).join(' · ');
-    const source=local?'Atelier inventory':p.merchant||'View fabric source';
-    const caption=node('p','fa-card-caption',[knownPrice,source].filter(Boolean).join(' · '));caption.dataset.mayaType='P3';
-    link.setAttribute('aria-label',[p.title,use,source,knownPrice,p.reason].filter(Boolean).join(' · '));
-    item._fabricUpdateText=updated=>{title.textContent=updated.title;link.setAttribute('aria-label',[updated.title,use,source,knownPrice,updated.reason].filter(Boolean).join(' · '));};
+    const caption=node('p','fa-card-caption');caption.dataset.mayaType='P3';
+    item._fabricUpdateText=updated=>{
+      p=updated;const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
+      const use=[p.garment?'For '+p.garment:'',p.materialLabel].filter(Boolean).join(' · '),source=p.evidence==='atelier_inventory'?'Atelier inventory':p.merchant||'View fabric source';
+      title.textContent=p.title;caption.textContent=[knownPrice,source].filter(Boolean).join(' · ');link.setAttribute('aria-label',[p.title,use,source,knownPrice,p.reason].filter(Boolean).join(' · '));
+    };item._fabricUpdateText(p);
     link.append(title,caption);item.append(link);
     if(view==='search'&&context.automatic){
-      const controls=node('div','fa-card-actions'),remove=icon('Remove this source','M6 6l12 12M18 6L6 18',()=>dismiss(p,remove));remove.disabled=busy||!research;controls.append(remove);item.append(controls);
+      let removing=false;const controls=node('div','fa-card-actions'),remove=icon('Remove this source','M6 6l12 12M18 6L6 18',async()=>{if(removing)return;removing=true;try{await dismiss(p,remove);}finally{removing=false;item._fabricUpdateControls?.();}});item._fabricUpdateControls=()=>{remove.disabled=removing||busy||!research;};controls.append(remove);item.append(controls);
     }
     if(view==='saved'){
       const controls=node('div','fa-card-actions'),remove=action('Remove',()=>save(p,'remove',remove));
-      remove.disabled=saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''));controls.append(remove);item.append(controls);
+      item._fabricUpdateControls=()=>{remove.disabled=saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''));};controls.append(remove);item.append(controls);
     }
-    return item;
+    item._fabricUpdateControls?.();return item;
+  }
+  function reuseCard(old,product){
+    if(old?._fabricSignature!==cardSignature(product))return card(product);
+    old._fabricUpdateImages?.(product);old._fabricUpdateText?.(product);old._fabricUpdateControls?.();return old;
   }
   function paint() {
     showStatus();els.exportButton.hidden=!context.submissionId;
@@ -423,7 +426,7 @@
     // Retained cards keep their actual image/link nodes through Refresh and
     // appended results. Rebuilding the grid made loaded photographs flicker.
     const existing=new Map([...els.results.children].filter(el=>el._fabricURL).map(el=>[el._fabricURL,el]));
-    const cards=items.map(product=>{const old=existing.get(product.url);if(old?._fabricSignature===cardSignature(product)){old._fabricUpdateImages?.(product);old._fabricUpdateText?.(product);return old;}return card(product);});
+    const cards=items.map(product=>reuseCard(existing.get(product.url),product));
     // Keep retained source-only cards after usable photos, even when they were
     // inserted earlier in the stream or exhausted their image URLs later.
     if(view==='search'&&searchMode==='worldwide'){

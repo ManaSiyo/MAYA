@@ -1740,7 +1740,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 531,
+          "line": 535,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3369,7 +3369,7 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 531
+              "line": 535
             },
             {
               "page": "backend/privacy.html",
@@ -5123,7 +5123,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1076,
+          "line": 1099,
           "tag": "button",
           "id": null,
           "class": "pill sm ${act}",
@@ -5133,7 +5133,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1078,
+          "line": 1101,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='grounded'?'active':''}",
@@ -5143,7 +5143,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1080,
+          "line": 1103,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='svg'?'active':''}",
@@ -5153,7 +5153,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 529,
+          "line": 533,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7857,19 +7857,19 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1076
+              "line": 1099
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1078
+              "line": 1101
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1080
+              "line": 1103
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 529
+              "line": 533
             },
             {
               "page": "backend/status.html",
