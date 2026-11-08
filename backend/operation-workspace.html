@@ -78,7 +78,7 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
   .pill.active{background:var(--hover);color:#fff;border-color:rgba(255,255,255,0.55)}
 
   /* layout: 34/66 like the op room */
-  .cols{display:grid;grid-template-columns:30% 1fr;gap:20px;align-items:stretch}
+  .cols{display:grid;grid-template-columns:minmax(0,27.2fr) minmax(0,72.8fr);gap:20px;align-items:stretch}
   .panel{border:var(--maya-hairline) solid var(--hair);border-radius:20px;
 
     padding:16px}
@@ -88,7 +88,7 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
   .hero-frame{aspect-ratio:3/4;border-radius:16px;border:var(--maya-hairline) solid var(--hair);
     background:rgba(0,0,0,0.32);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
   .hero-frame img{width:100%;height:100%;object-fit:contain}
-  .hero-frame img.is-wide{object-fit:cover;object-position:var(--garment-position,50%) 50%}
+  .hero-frame img.is-wide{object-fit:contain;object-position:center}
   .hero-empty{color:var(--faint);font-size:var(--maya-text-caption);text-align:center;padding:30px;line-height:1.8}
   .left-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;flex-wrap:wrap}
 
@@ -109,9 +109,9 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
   .pattern-top{min-height:54px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}.pattern-top .pattern-head{margin:0}.pattern-top .stage-badge{position:static}
   .pill.sm{padding:5px 12px;font-size:var(--maya-text-caption);letter-spacing:.12em}
   .pattern-stage{position:relative;border-radius:16px;overflow:hidden;border:var(--maya-hairline) solid var(--hair);
-    background:rgba(0,0,0,0.32); min-height:520px;display:flex;align-items:flex-end;justify-content:flex-start}
+    background:rgba(0,0,0,0.32); height:clamp(320px,65vw,650px);min-height:0;display:flex;align-items:center;justify-content:center}
   /* images anchor to the BOTTOM-LEFT corner = the grid origin (0,0) */
-  .pattern-stage img{max-width:100%;max-height:560px;object-fit:contain;object-position:left bottom;display:none}
+  .pattern-stage img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;display:none}
   /* interactive pan/zoom viewer for a traced SVG, baked into the Draft tab */
   .trace-view{position:absolute;inset:0;z-index:6;background:#0a0c12;display:flex;flex-direction:column}
   .trace-view.off{display:none}
@@ -225,7 +225,7 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
     color:var(--faint);margin-bottom:10px;text-align:center}
   .drawer label{display:block;font-family:var(--maya-font-ui);font-style:italic;font-size:var(--maya-text-caption);
     color:rgba(245,250,255,0.65);margin:0 0 6px}
-  .drawer input,.standalone-measurements input{width:100%;min-width:0}
+  .drawer :is(input,select,textarea),.standalone-measurements input{width:100%;min-width:0}.drawer textarea{resize:vertical;max-width:100%}
   .standalone-measurements label{display:block}
   .standalone-measurements{margin-top:var(--maya-form-field-gap,14px)}
   .standalone-measurements[hidden]{display:none}
@@ -259,14 +259,14 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
   #operation-fabrics-host{position:absolute;inset:0;width:100%;min-width:0;min-height:0;height:100%;overflow:hidden}
   #operation-fabrics-host[hidden]{display:none}
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=15">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=4"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=26"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=14">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=16"></script>
-<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=1"><script src="/aesthetics/ui/image-viewer.js?v=1"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=15">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=17"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=2"><script src="/aesthetics/ui/image-viewer.js?v=2"></script>
 </head>
 <body>
 <!-- Front End drawer model: horizontal scroll-snap with a main pane + a drawer pane.
@@ -285,24 +285,25 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
   <p id="operation-fabric-selection" hidden></p>
 
   <div id="plan-a-view">
-  <div class="cols">
+  <div class="cols" data-maya-operation-layout>
     <!-- LEFT: dream garment -->
     <div class="panel">
       <div class="col-head">
         <span class="picker-wrap"><select id="test-picker" class="head-select" data-maya-control="field" data-maya-pill="glass" data-maya-type="P3" onchange="onPickTest(this.value)" title="choose a test"></select><span class="picker-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 6 5 5 5-5"/></svg></span></span>
       </div>
-      <div class="hero-frame" id="hero-frame" tabindex="0" aria-label="Garment image; move pointer or use arrow keys to pan">
+      <div class="hero-frame" id="hero-frame" tabindex="0" aria-label="Garment image; click to expand">
         <div class="hero-empty" id="hero-empty">
           Pick a test and view, then press <b>Start</b>.<br><br>
-          <span style="color:var(--faint)">Or Upload an image to run directly.</span>
+          <span style="color:var(--faint)">Saved work reopens without generating again.</span>
         </div>
         <img id="hero-img" alt="garment">
         <div id="operation-fabrics-host" hidden aria-label="Fabrics for the selected garment"></div>
       </div>
       <div class="left-actions">
         <button class="pill maya-pill" id="operation-fabrics" data-maya-type="P3" onclick="openOperationFabrics()" disabled>Fabrics</button>
-        <span class="pill primary" id="start-test" onclick="startTest()">Start</span>
-        <span class="pill" onclick="document.getElementById('file').click()">Upload</span>
+        <button class="pill primary" id="start-test" onclick="startTest()">Start</button>
+        <button class="pill" id="retry-pattern-save" hidden onclick="retryPatternSave()">Retry Save</button>
+
       </div>
   <section class="standalone-measurements" id="standalone-measurements" hidden>
     <div class="sec-title" data-maya-type="H3">Measurements · inches</div>
@@ -320,23 +321,19 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
     </div>
     <div class="kb-status" id="dim-derived" data-maya-type="P3">Enter measurements for the derived dimensions.</div>
   </section>
-      <input type="file" id="file" accept="image/*" style="display:none" onchange="onFile(event)">
+
     </div>
 
     <!-- RIGHT: dual pattern windows -->
     <div class="panel">
-      <div class="pattern-top"><div class="pattern-head" id="pass-pills"></div>
-        <span class="stage-badge raw" id="badge-rd" style="display:none">Redrawn</span>
-        <span class="stage-badge grounded" id="badge-grounded">Grounded · book + measurements</span></div>
+      <div class="pattern-top"><div class="pattern-head" id="pass-pills"></div></div>
       <div class="pattern-stage" id="stage">
         <div class="stage-empty" id="stage-empty">Choose a garment and press <b>Start</b> to draft a pattern.</div>
         <img id="img-rd" alt="answer pattern">
         <img id="img-grounded" alt="grounded pattern">
         <div class="trace-view off" id="trace-view"></div>
       </div>
-      <div class="right-actions">
-        <span class="pill" id="export-svg" onclick="exportSVG()">Export SVG</span>
-      </div>
+
       <div class="live" id="live">
         <div class="lh"><span class="dot"></span> Pipeline · live <span class="lstatus" id="live-status">idle</span></div>
         <pre id="live-log" data-maya-scrollbar="visible" tabindex="0"></pre>
@@ -360,13 +357,13 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
 
   <!-- PLAN B · CLO route: same two-panel layout as Plan A, photo left, closest CLO reference right -->
   <div id="plan-b-view" style="display:none">
-  <div class="cols">
+  <div class="cols" data-maya-operation-layout>
     <!-- LEFT: the same photo Plan A holds -->
     <div class="panel">
       <div class="col-head"><span class="pill active">Client photo</span></div>
       <div class="hero-frame">
         <div class="hero-empty" id="hero-empty-b">
-          Pick a test or Upload in Plan A; its photo appears here.
+          The selected saved garment appears here.
         </div>
         <img id="hero-img-b" alt="garment">
       </div>
@@ -409,12 +406,28 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
     <div class="kb-status" data-maya-type="P1">A generates the pattern from the photo. B matches the photo to the CLO library and grades it.</div>
   </div>
 
-  <div class="sec">
-    <div class="sec-title" data-maya-type="P2">Key</div>
-    <div class="kb-status" data-maya-type="P1">Keys stay on MAYA's server. Google sign in authorises calls; this browser stores no keys.</div>
-  </div>
-
-
+  <section class="sec" id="pattern-settings">
+    <h3 data-maya-type="H3">Pattern inputs</h3>
+    <p data-maya-type="P1">The selected garment photo, saved Brief measurements, optional selected fabric, vision classification, editable construction rules and retrieved book passages feed each drawing. Mark Two uses a book-based critique of Mark One. Start opens existing work; New version is the explicit paid generation action.</p>
+    <label data-maya-type="P3" for="pattern-type">Construction category</label><select id="pattern-type" data-maya-control="field" data-maya-type="P1" onchange="changePatternSetting()"><option value="auto">From selected garment / vision</option><option>jacket</option><option>pants</option><option>shirt</option><option>skirt</option><option>bodice</option><option value="unknown">Adaptive</option></select>
+    <div class="row2"><div><label for="pattern-passes" data-maya-type="P3">Maximum drawing passes</label><input id="pattern-passes" data-maya-control="field" data-maya-type="P1" type="number" min="1" max="3" value="2" onchange="changePatternSetting()"></div><div><label for="pattern-hits" data-maya-type="P3">Retrieved passages</label><input id="pattern-hits" data-maya-control="field" data-maya-type="P1" type="number" min="1" max="12" value="5" onchange="changePatternSetting()"></div></div>
+    <label for="pattern-direction" data-maya-type="P3">Construction and review direction</label><textarea id="pattern-direction" data-maya-control="field" data-maya-type="P1" rows="4" maxlength="8000" oninput="changePatternSetting()"></textarea>
+    <details><summary data-maya-type="P3">Book rules and classification</summary>
+      <p data-maya-type="P1">The bundled book text is Patternmaking for Fashion Design, 5th edition (Helen Joseph-Armstrong). The editable category templates below are MAYA's rules, not a fresh PDF analysis. Upper/under sleeves currently come from the jacket template. Conditional components are not added automatically.</p>
+      <label for="pattern-grammar" data-maya-type="P3">Construction rules · JSON</label><textarea id="pattern-grammar" data-maya-control="field" data-maya-type="P1" rows="10" oninput="changePatternSetting()"></textarea>
+      <label for="pattern-classifier" data-maya-type="P3">Vision classification prompt</label><textarea id="pattern-classifier" data-maya-control="field" data-maya-type="P1" rows="8" oninput="changePatternSetting()"></textarea>
+    </details>
+    <details><summary data-maya-type="P3">Dimensions and drawing prompt</summary>
+      <p data-maya-type="P1">Body measurements come from this submission's Brief. Pants use quarter waist/hip splits ±¼ inch; rise is length minus inseam, at least 6 inches. Missing measurements stay unknown. These are draft assumptions, not a fitted pattern.</p>
+      <div class="row2"><div><label for="pattern-band" data-maya-type="P3">Waistband depth · in</label><input id="pattern-band" type="number" min="0.25" max="10" step="0.25" data-maya-control="field" data-maya-type="P1" onchange="changePatternSetting()"></div><div><label for="pattern-underlap" data-maya-type="P3">Underlap · in</label><input id="pattern-underlap" type="number" min="0" max="10" step="0.25" data-maya-control="field" data-maya-type="P1" onchange="changePatternSetting()"></div><div><label for="pattern-yoke" data-maya-type="P3">Yoke depth · in</label><input id="pattern-yoke" type="number" min="0" max="12" step="0.25" data-maya-control="field" data-maya-type="P1" onchange="changePatternSetting()"></div></div>
+      <label for="pattern-prompt" data-maya-type="P3">Replace drawing prompt · optional</label><textarea id="pattern-prompt" data-maya-control="field" data-maya-type="P1" rows="8" maxlength="16000" placeholder="Leave blank to compose from the inputs above" oninput="changePatternSetting()"></textarea>
+      <p data-maya-type="P1">The exact composed drawing prompt, classification, measurements, selected fabric and retrieved passages are saved with every pattern version and shown in Retrieval Trace.</p>
+    </details>
+    <button class="pill" data-maya-type="P3" onclick="startTest(true)">New version</button>
+    <p data-maya-type="P1" id="pattern-save-status" role="status"></p>
+    <details><summary data-maya-type="H3">Saved pattern versions</summary><div id="pattern-history"></div></details>
+  </section>
+  <section class="sec"><details id="operation-version-history"><summary data-maya-type="H3">Operation Room version history</summary><h4 data-maya-type="H4">Version 2 · November 7, 2026</h4><p data-maya-type="P1">Narrower garment panel; centered pattern view; continuous Brief scrolling; saved pattern versions, inputs and garment research; full-screen inspection.</p><h4 data-maya-type="H4">Version 1</h4><p data-maya-type="P1">Photo classification, book retrieval, construction templates and iterative pattern drawings.</p></details></section>
   <div class="sec">
     <div class="sec-title" data-maya-type="P2">Pattern Logic</div>
     <div class="logic" id="logic">
@@ -465,14 +478,85 @@ const MC_NAME  = 'maya_measure_crotch';
 const MI_NAME  = 'maya_measure_inseam';
 const GROUNDED_PASSES = 2;             // Mark One + Mark Two (refine passes)
 const LOGIC_PREFIX = 'maya_logic_';   // legacy keys are retained; new writes include the account
-const WB_UNDERLAP = 1.5;   // waistband closure underlap (in)
-const WB_DEPTH    = 1.5;   // finished waistband depth (in)
-const YOKE_DEPTH  = 3;     // back yoke height (in)
+let WB_UNDERLAP = 1.5;   // waistband closure underlap (in)
+let WB_DEPTH    = 1.5;   // finished waistband depth (in)
+let YOKE_DEPTH  = 3;     // back yoke height (in)
 const KB = { chunks: window.MAYA_KB_CHUNKS?.chunks || [], grammar: window.MAYA_KB_GRAMMAR || {types:{}},
              chapters: window.MAYA_KB_CHAPTERS || {} };
 let HERO = null;                 // dataURL of the loaded garment
 let _sampleLoadSuperseded=false;  // A chosen upload takes precedence even while FileReader is pending.
 let _operationInputContext=null,_operationRevision=-1,_operationLoadSequence=0;
+// Saved submission work: no model call on load, selection or reopening.
+let _patternRecord=null,_patternReady=Promise.resolve(),_patternSave=Promise.resolve(),_patternTimer=null,_patternRun=null,_patternDirty=false,_patternSettingsError='';
+let _patternSettings={logic:{}};
+function patternGrammar(){return _patternSettings.grammar||KB.grammar;}
+function patternDefaults(){return {type:'auto',passes:2,hits:5,quality:'medium',direction:'',prompt:'',classifier:CLASSIFY_PROMPT,grammar:structuredClone(KB.grammar),logic:{},locked:false,band:1.5,underlap:1.5,yoke:3};}
+function syncPatternSettings(){
+  const pairs={type:'type',passes:'passes',hits:'hits',direction:'direction',prompt:'prompt',classifier:'classifier',band:'band',underlap:'underlap',yoke:'yoke'};
+  for(const [field,key]of Object.entries(pairs))$('pattern-'+field).value=_patternSettings[key]??'';
+  $('pattern-grammar').value=JSON.stringify(patternGrammar(),null,2);
+  WB_DEPTH=_patternSettings.band;WB_UNDERLAP=_patternSettings.underlap;YOKE_DEPTH=_patternSettings.yoke;
+  LOGIC_TYPE=_patternSettings.type!=='auto'?_patternSettings.type:resolveType(FILES.piece?.category||FILES.piece?.name||'unknown');
+  renderLogic();syncQuality();renderPatternHistory();
+}
+function patternScope(context){return operationGarmentCurrent(context)&&context.garmentId===FILES.piece?.id;}
+function patternContext(){return {...operationContext(),garmentId:FILES.piece?.id};}
+async function loadPatternWork(){
+  clearTimeout(_patternTimer);_patternTimer=null;_patternRecord=null;_patternRun=null;_patternDirty=false;_patternSettingsError='';_patternSave=Promise.resolve();
+  _patternSettings=patternDefaults();syncPatternSettings();$('retry-pattern-save').hidden=true;
+  if(!FILES.saved||!FILES.piece?.id)return;
+  const context=patternContext();$('start-test').disabled=true;$('pattern-save-status').textContent='';
+  try{
+    const r=await fetch('/api/admin/patterns?'+new URLSearchParams({submissionId:context.submission,garmentId:context.garmentId}),{headers:{Authorization:'Bearer '+context.token},cache:'no-store',signal:AbortSignal.timeout(20000)});
+    const data=await r.json();if(!r.ok)throw Error(data.error||'Saved patterns unavailable.');if(!patternScope(context))return;
+    _patternRecord=data;_patternSettings={...patternDefaults(),...data.settings,logic:data.settings.logic||{}};syncPatternSettings();
+    if(!data.stale&&data.runs.length)restorePatternRun(data.runs[data.runs.length-1]);
+    if(data.stale)$('pattern-save-status').textContent='The garment changed. Previous patterns remain in Saved pattern versions.';
+  }catch(e){if(patternScope(context)){$('pattern-save-status').textContent=e.message;throw e;}}
+  finally{if(patternScope(context))$('start-test').disabled=false;}
+}
+function restorePatternRun(run){
+  _patternRun=null;
+  PASSES=structuredClone(run.passes);BEST_IDX=Math.min(run.bestIndex||0,PASSES.length-1);CUR={kind:'grounded',idx:BEST_IDX};
+  LAST={...(run.inputs||{}),bestGrounded:PASSES[BEST_IDX]?.img,bestHero:HERO};
+  if(run.inputs){$('t-type').textContent=JSON.stringify(run.inputs.garment||{});$('t-chapter').textContent=run.inputs.type||'';$('t-panels').textContent=JSON.stringify(run.inputs.cutlist||[]);renderChunks(run.inputs.hits||[]);$('t-prompt').textContent=run.inputs.prompt||'';$('t-fixes').textContent=run.inputs.cutlistSource||'';}
+  if(run.inputs?.type){LOGIC_TYPE=run.inputs.type;renderLogic();}
+  TRACE=null;applyView();$('start-test').textContent='Open saved pattern';
+}
+function renderPatternHistory(){
+  const host=$('pattern-history');host.replaceChildren();
+  for(const [index,run]of (_patternRecord?.runs||[]).entries()){
+    const b=document.createElement('button');b.className='pill';b.dataset.mayaType='P3';b.textContent='Version '+(index+1)+' · '+new Date(run.createdAt).toLocaleDateString();b.disabled=RUNNING||_patternDirty;b.onclick=()=>{if(!RUNNING&&!_patternDirty)restorePatternRun(run);};host.append(b);
+  }
+  if(!host.childElementCount){const p=document.createElement('p');p.dataset.mayaType='P1';p.textContent='No saved pattern versions yet.';host.append(p);}
+}
+function changePatternSetting(){
+  if(RUNNING)return;
+  clearTimeout(_patternTimer);_patternTimer=null;
+  try{
+    const grammar=JSON.parse($('pattern-grammar').value);if(!grammar.types||Object.values(grammar.types).some(g=>!Array.isArray(g.panels)||g.panels.some(p=>typeof p.label!=='string'||!Number.isInteger(p.qty)||p.qty<1)))throw Error('Review the construction-rule JSON.');
+    const number=(id,min,max)=>{const n=Number($('pattern-'+id).value);if(!Number.isFinite(n)||n<min||n>max)throw Error('Review '+id+'.');return n;};
+    _patternSettings={..._patternSettings,type:$('pattern-type').value,passes:Math.round(number('passes',1,3)),hits:Math.round(number('hits',1,12)),direction:$('pattern-direction').value,prompt:$('pattern-prompt').value,classifier:$('pattern-classifier').value,grammar,band:number('band',.25,10),underlap:number('underlap',0,10),yoke:number('yoke',0,12)};
+    WB_DEPTH=_patternSettings.band;WB_UNDERLAP=_patternSettings.underlap;YOKE_DEPTH=_patternSettings.yoke;
+    LOGIC_TYPE=_patternSettings.type!=='auto'?_patternSettings.type:resolveType(FILES.piece?.category||FILES.piece?.name||'unknown');_patternSettingsError='';renderLogic();queuePatternSettings();
+  }catch(e){_patternSettingsError=e.message;_patternDirty=true;$('pattern-save-status').textContent=e.message;}
+}
+function queuePatternSettings(){
+  _patternDirty=true;renderPatternHistory();clearTimeout(_patternTimer);_patternTimer=setTimeout(()=>{_patternTimer=null;void persistPatternWork().catch(()=>{});},600);
+}
+function persistPatternWork(){
+  const context=patternContext(),settings=structuredClone(_patternSettings),run=_patternRun&&PASSES.length?structuredClone({..._patternRun,passes:PASSES,bestIndex:BEST_IDX}):null;
+  const task=_patternSave.catch(()=>{}).then(async()=>{
+    if(!patternScope(context))throw Error('The garment changed.');
+    if(!_patternRecord)throw Error('Reopen this submission to load its saved patterns before saving.');
+    const r=await fetch('/api/admin/patterns',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+context.token},body:JSON.stringify({submissionId:context.submission,garmentId:context.garmentId,generation:_patternRecord.generation,fingerprint:_patternRecord.currentFingerprint||_patternRecord.fingerprint,settings,run}),signal:AbortSignal.timeout(45000)});
+    const data=await r.json();if(!r.ok)throw Error(data.error||'Pattern did not save.');if(!patternScope(context))return;
+    _patternRecord=data;_patternDirty=!!_patternSettingsError||JSON.stringify(settings)!==JSON.stringify(_patternSettings);$('retry-pattern-save').hidden=true;$('pattern-save-status').textContent=_patternSettingsError;renderPatternHistory();
+  }).catch(e=>{if(patternScope(context)){_patternDirty=true;$('retry-pattern-save').hidden=false;$('pattern-save-status').textContent=e.message;}throw e;});
+  _patternSave=task;return task;
+}
+async function retryPatternSave(){try{await persistPatternWork();}catch{}}
+
 function openOperationFabrics() {
   const context=_operationInputContext,piece=FILES.piece;
   if(!context?.submissionId||context.account!==operationAccount()||!piece||!FILES.saved)return toast('Open a saved dissected garment before choosing Fabrics.');
@@ -499,7 +583,7 @@ const $ = id => document.getElementById(id);
 // the OpenAI key; this returns the Google sign in token that authorises them.
 function getKey(){ try{ return localStorage.getItem('maya_admin_tok')||''; }catch{ return ''; } }
 function saveKey(){ /* v12.5: retired, there is no key to type in any more */ }
-function getQuality(){ if(RUNNING&&_runQuality)return _runQuality;try{ return localStorage.getItem(Q_NAME)||'medium'; }catch{ return 'medium'; } }
+function getQuality(){ if(RUNNING&&_runQuality)return _runQuality;if(_operationInputContext)return _patternSettings.quality||'medium';try{ return localStorage.getItem(Q_NAME)||'medium'; }catch{ return 'medium'; } }
 
 /* ---- measurements & derived dimensions ---- */
 function num(v){ const n=parseFloat(v); return isFinite(n)&&n>0 ? n : null; }
@@ -572,6 +656,8 @@ function setOperationRunning(on){
 }
 function invalidateOperation(){
   RUN++;_garmentSequence++;_garmentReady=Promise.resolve();_measurementGarment='';
+  clearTimeout(_patternTimer);_patternTimer=null;_patternRecord=null;_patternRun=null;_patternReady=Promise.resolve();_patternSave=Promise.resolve();_patternDirty=false;_patternSettingsError='';_patternSettings=patternDefaults();
+  $('pattern-save-status').textContent='';$('retry-pattern-save').hidden=true;renderPatternHistory();
   if(typeof clearLogicEditor==='function')clearLogicEditor();
   setOperationRunning(false);HERO=null;ANSWER=null;RD=null;RD_PROMISE=null;RD_IS_RAW=false;TRACE=null;PASSES=[];LAST={type:null,garment:null};ACTIVE_TEST=null;FILES={};_tv=null;
   for(const id of ['hero-img','hero-img-b','img-grounded','img-rd']){const image=$(id);if(image){image.removeAttribute('src');image.style.display='none';}}
@@ -700,19 +786,11 @@ function buildDimensionBlock(typeKey){
   return s;
 }
 /* ── PATTERN LOGIC ── the canonical unique shapes for a garment type, user-editable,
-   applied to EVERY render (the cut-list authority). Pants seed = Fromsa's 7 shapes. */
-let LOGIC_TYPE = 'pants';
-const LOGIC_SEEDS = {
-  pants: [
-    {label:'FRONT LEG', qty:2}, {label:'BACK LEG', qty:2}, {label:'WAISTBAND', qty:1},
-    {label:'BACK YOKE', qty:1}, {label:'FRONT POCKET BAG', qty:2},
-    {label:'BACK POCKET FACING', qty:2}, {label:'COIN POCKET', qty:1}
-  ]
-};
+   applied to every render. Each selected category starts with its own book template. */
+let LOGIC_TYPE = 'unknown';
 function seedLogic(type){
-  if(LOGIC_SEEDS[type]) return LOGIC_SEEDS[type].map(x=>({...x}));
-  const g=KB.grammar.types[type];
-  if(g){ const l=g.panels.map(p=>({label:p.label,qty:p.qty})); (g.components||[]).forEach(c=>l.push({label:c.label,qty:c.qty||1})); return l; }
+  const g=patternGrammar().types[type];
+  if(g)return g.panels.filter(p=>p.qty>0).map(p=>({label:p.label,qty:p.qty}));
   return [];
 }
 function parseLogic(text){
@@ -728,13 +806,14 @@ function logicKey(type){const account=operationAccount();return account?LOGIC_PR
 function logicEditorCurrent(){return !!_logicEditor&&_logicEditor.type===LOGIC_TYPE&&operationGarmentCurrent(_logicEditor.context);}
 function clearLogicEditor(){_logicEditor=null;if($('logic')){$('logic').classList.remove('editing');$('logic-edit').value='';$('logic-edit-btn').style.display='';$('logic-save-btn').style.display='none';}renderLogic();}
 function getLogic(type){
+  if(_operationInputContext)return (_patternSettings.logic?.[type]||seedLogic(type)).map(p=>({...p}));
   const key=logicKey(type);if(!key)return seedLogic(type);
   if(_logicValues.has(key))return _logicValues.get(key).map(p=>({...p}));
   let list;try{const raw=localStorage.getItem(key);list=raw?JSON.parse(raw):seedLogic(type);if(!Array.isArray(list)||list.some(p=>!p||typeof p.label!=='string'||!Number.isInteger(p.qty)||p.qty<1))throw Error('invalid shapes');}
   catch{throw Error('Pattern Logic could not be read. Edit and save the reviewed shapes before starting.');}
   _logicValues.set(key,list);return list.map(p=>({...p}));
 }
-function setLogic(type,list){const key=logicKey(type);if(!key)throw Error('Sign in before saving Pattern Logic.');localStorage.setItem(key,JSON.stringify(list));_logicValues.set(key,list.map(p=>({...p})));}
+function setLogic(type,list){if(_operationInputContext){_patternSettings.logic={..._patternSettings.logic,[type]:list};queuePatternSettings();return;}const key=logicKey(type);if(!key)throw Error('Sign in before saving Pattern Logic.');localStorage.setItem(key,JSON.stringify(list));_logicValues.set(key,list.map(p=>({...p})));}
 function renderLogic(){
   if(!$('logic-type')) return;
   if(_logicEditor&&!logicEditorCurrent()){_logicEditor=null;$('logic').classList.remove('editing');$('logic-edit-btn').style.display='';$('logic-save-btn').style.display='none';}
@@ -761,7 +840,7 @@ function saveLogic(){ if(RUNNING){toast('Finish the current run before changing 
 }
 function resetLogic(){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;}
   const key=logicKey(LOGIC_TYPE);if(!key)return toast('Sign in before resetting Pattern Logic.');
-  try{localStorage.removeItem(key);_logicValues.set(key,seedLogic(LOGIC_TYPE));}
+  try{if(_operationInputContext){delete _patternSettings.logic[LOGIC_TYPE];queuePatternSettings();}else{localStorage.removeItem(key);_logicValues.set(key,seedLogic(LOGIC_TYPE));}}
   catch{toast('Pattern Logic was not reset. Your current shapes and draft are kept; retry Reset.');return;}
   LAST.bestGrounded=null; LAST.bestHero=null;              // piece set changed, the carried best is stale
   clearLogicEditor();refreshLogicCutList('Pattern logic reset to default.');
@@ -771,10 +850,10 @@ function resetLogic(){ if(RUNNING){toast('Finish the current run before changing
    so eval runs measure what the pipeline generalises, not what Fromsa taught it. */
 const LOCK_NAME='maya_logic_locked';
 function logicLockKey(){const account=operationAccount();return account?LOCK_NAME+'_v2:'+encodeURIComponent(account):'';}
-function logicLocked(){const key=logicLockKey();if(!key)return false;if(_logicLocks.has(key))return _logicLocks.get(key);let raw;try{raw=localStorage.getItem(key);if(raw!==null&&raw!=='0'&&raw!=='1')throw Error('invalid lock');}catch{throw Error('Test lock could not be read. Retry its control before starting.');}const locked=raw==='1';_logicLocks.set(key,locked);return locked;}
+function logicLocked(){if(_operationInputContext)return _patternSettings.locked===true;const key=logicLockKey();if(!key)return false;if(_logicLocks.has(key))return _logicLocks.get(key);let raw;try{raw=localStorage.getItem(key);if(raw!==null&&raw!=='0'&&raw!=='1')throw Error('invalid lock');}catch{throw Error('Test lock could not be read. Retry its control before starting.');}const locked=raw==='1';_logicLocks.set(key,locked);return locked;}
 function toggleLogicLock(){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;}
   const key=logicLockKey();if(!key)return toast('Sign in before changing Test lock.');
-  try{const locked=!logicLocked();localStorage.setItem(key,locked?'1':'0');_logicLocks.set(key,locked);}
+  try{const locked=!logicLocked();if(_operationInputContext){_patternSettings.locked=locked;queuePatternSettings();}else{localStorage.setItem(key,locked?'1':'0');_logicLocks.set(key,locked);}}
   catch{toast('Test lock was not changed. Retry when browser storage is available.');return;}
   LAST.bestGrounded=null; LAST.bestHero=null;              // authority changed, the carried best is stale
   renderLogic();
@@ -938,7 +1017,7 @@ async function startCloMatch(){
 }
 
 
-function setQuality(q){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;} try{ localStorage.setItem(Q_NAME,q); }catch{} syncQuality(); }
+function setQuality(q){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;} if(_operationInputContext){_patternSettings.quality=q;queuePatternSettings();syncQuality();return;} try{ localStorage.setItem(Q_NAME,q); }catch{} syncQuality(); }
 function syncQuality(){ const q=getQuality(); document.querySelectorAll('[data-q]').forEach(el=>el.classList.toggle('active',el.dataset.q===q)); }
 
 window.addEventListener('DOMContentLoaded',()=>{
@@ -991,7 +1070,7 @@ const MARK_WORDS=['One','Two','Three','Four','Five'];
 function markLabel(i){ return 'Mark '+(MARK_WORDS[i]||(i+1)); }
 function renderPassPills(){
   const host=$('pass-pills'); if(!host) return;
-  let h=`<button class="pill sm ${CUR.kind==='rd'?'active':''}" aria-pressed="${CUR.kind==='rd'}" onclick="viewRD()" title="Redrawn, the answer we score against">Redrawn</button>`;
+  let h='';
   if(PASSES.length>1){
     PASSES.forEach((p,i)=>{ const act=(CUR.kind==='grounded'&&CUR.idx===i)?'active':'';
       h+=`<button class="pill sm ${act}" aria-pressed="${!!act}" onclick="viewGrounded(${i})">${markLabel(i)}</button>`; });
@@ -1023,9 +1102,7 @@ function applyView(){
   if(rd && (RD||ANSWER)) $('img-rd').src=RD||ANSWER;
   $('img-rd').style.display       = rd && $('img-rd').src ? 'block':'none';
   $('img-grounded').style.display = grounded && $('img-grounded').src ? 'block':'none';
-  $('badge-rd').style.display       = rd?'block':'none';
-  $('badge-grounded').style.display = grounded?'block':'none';
-  if(grounded) $('badge-grounded').textContent = markLabel(pass?CUR.idx:0)+' · grounded'+(pass&&pass.badge?' · '+pass.badge:'');
+
   // SVG panel: vector-trace the grounded pass currently on stage
   if(svg){
     if(!TRACE && $('img-grounded').src) buildSVGfromGrounded();
@@ -1073,6 +1150,7 @@ function initTests(){
 function onPickTest(val){ pickTest(val); }
 function pickTest(name){
   if(RUNNING){if($('test-picker'))$('test-picker').value=ACTIVE_TEST;return;}
+  if(ACTIVE_TEST===name&&FILES===TESTS[name])return;
   if(ACTIVE_TEST!==name)invalidateOperation();
   ACTIVE_TEST=name; FILES=TESTS[name]||{};
   window.MayaFabricAssistant?.focusGarment(FILES.piece);
@@ -1082,6 +1160,7 @@ function pickTest(name){
   if($('test-view')) $('test-view').value='front';
   showView('front');
   if(FILES.piece?._pattern){PASSES=[{img:FILES.piece._pattern,badge:'saved'}];CUR={kind:'grounded',idx:0};applyView();}
+  _patternReady=loadPatternWork();_patternReady.catch(()=>{});
 }
 // Show one of the test's images on the left; non-answer views also become the pipeline input.
 function showView(which){
@@ -1092,20 +1171,25 @@ function showView(which){
   $('hero-img').src=data; $('hero-img').style.display='block'; $('hero-empty').style.display='none';
   if(which!=='answer') HERO=data;
 }
-// Wide saved garment images show the center first; pan the same original image
-// without changing the image used by the pattern pipeline.
-{
-  const frame=$('hero-frame'), img=$('hero-img'); let position=50;
-  const update=()=>frame.style.setProperty('--garment-position',position+'%');
-  img.addEventListener('load',()=>{position=50;update();img.classList.toggle('is-wide',img.naturalWidth>img.naturalHeight*1.1);});
-  frame.addEventListener('pointermove',e=>{if(!img.classList.contains('is-wide')||img.style.display==='none')return;const r=frame.getBoundingClientRect();position=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));update();});
-  frame.addEventListener('pointerleave',()=>{position=50;update();});
-  frame.addEventListener('keydown',e=>{if(!img.classList.contains('is-wide')||!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();position=Math.max(0,Math.min(100,position+(e.key==='ArrowRight'?10:-10)));update();});
+// Photo inspection starts only after an explicit expansion click.
+MayaImageViewer.watch('#hero-img,#hero-img-b,#img-grounded',{expand:image=>{if(EMBEDDED)parent.postMessage({maya:'ops-inspect',src:image.currentSrc||image.src,alt:image.alt,account:operationAccount(),submissionId:operationSubmission()},location.origin);else MayaImageViewer.open(image);}});
+// One vertical scroller: the parent Brief owns scrolling through the workspace
+// and retrieval section. No fixed-height nested viewport to clip during momentum.
+if(EMBEDDED){
+  let resizeFrame=0,lastHeight=0;
+  const report=()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{const height=Math.ceil(document.querySelector('.hpane-main').getBoundingClientRect().height);if(height!==lastHeight){lastHeight=height;parent.postMessage({maya:'ops-height',height},location.origin);}});};
+  new ResizeObserver(report).observe(document.querySelector('.hpane-main'));report();
 }
 // Start → redraw the answer (RD), then Raw, then Grounded (scored vs RD). Answer/RD shown left for side-by-side.
-async function startTest(){
+async function startTest(newVersion=false){
   if(RUNNING){ toast('A run is already going, let it finish.'); return; }
-  if(!ACTIVE_TEST&&!HERO){toast('Pick a test or upload a garment first.');return;}
+  if(!ACTIVE_TEST&&!HERO){toast('Choose a saved garment first.');return;}
+  const requested=patternContext();
+  try{await _patternReady;if(!patternScope(requested))return;if(!_patternRecord)throw Error('Saved patterns must load before generating.');if(_patternTimer){clearTimeout(_patternTimer);_patternTimer=null;await persistPatternWork();}await _patternSave;if(_patternDirty||_patternSettingsError)throw Error(_patternSettingsError||'Review and save the pattern settings first.');}catch(e){toast(e.message);return;}
+  if(RUNNING||!patternScope(requested))return;
+  if(!newVersion&&(_patternRecord.runs.length||FILES.piece?._pattern)){if(_patternRecord.runs.length)restorePatternRun(_patternRecord.runs.at(-1));else {PASSES=[{img:FILES.piece._pattern,badge:'saved'}];viewGrounded(0);}return;}
+  if(newVersion)LAST={type:null,garment:null};
+  _patternRun={id:crypto.randomUUID(),createdAt:new Date().toISOString(),version:2,inputs:{}};
   if(!getKey()){ toast('Sign in on the Systems Map first, then reload this page.'); return; }
   try{requireOperationSettings();}catch(error){toast(error.message);return;}
   RUN++;const started=RUN;setOperationRunning(true);
@@ -1129,7 +1213,7 @@ async function startTest(){
     await redraw.catch(()=>{});
     // the left frame stays on whatever view the user picked, the redrawn answer never hijacks it
   }catch(e){ if(operationCurrent(context)){toast('Start failed: '+e.message);console.error(e);liveLine('Start failed: '+e.message);} }
-  finally{ if(started===RUN){btn.textContent=orig;setOperationRunning(false);} }
+  finally{ if(started===RUN){btn.textContent=PASSES.length?'Open saved pattern':orig;setOperationRunning(false);renderPatternHistory();} }
 }
 
 /* ---------- RD · GPT redraws the answer into a clean flat pattern (the scoring target) ---------- */
@@ -1191,17 +1275,17 @@ async function runGrounded(){
     const g = await classifyGarment(inputHero);
     if(myRun!==RUN||inputAccount!==operationAccount()) return;
     LAST.garment=g;
-    const typeKey = resolveType(g.type);
+    const typeKey = _patternSettings.type!=='auto'?_patternSettings.type:resolveType(g.type);
     // An unknown garment keeps adaptive grammar. Decisions can only supply a
     // soft retrieval hint; it never authorizes a guessed cut list.
-    const retrievalType = KB.grammar.types[typeKey] ? typeKey : await decidePatternCategory(g, typeKey, context.token);
+    const retrievalType = patternGrammar().types[typeKey] ? typeKey : await decidePatternCategory(g, typeKey, context.token);
     if(!operationCurrent(context)) return;
     LAST.type=typeKey; LOGIC_TYPE=typeKey; renderLogic();
-    $('t-type').innerHTML = `<b style="color:var(--accent)">${g.type}</b>${g.subtype?' · '+g.subtype:''}<br>`+
-      `<span style="color:var(--dim)">${(g.attributes||[]).slice(0,6).join(' · ')||''}</span>`;
+    $('t-type').innerHTML = `<b style="color:var(--accent)">${esc(g.type)}</b>${g.subtype?' · '+esc(g.subtype):''}<br>`+
+      `<span style="color:var(--dim)">${esc((g.attributes||[]).slice(0,6).join(' · '))}</span>`;
 
     // 2 · ROUTE
-    const grammar = KB.grammar.types[typeKey];
+    const grammar = patternGrammar().types[typeKey];
     const route = KB.chapters[typeKey] || (grammar?[{ch:grammar.chapter,title:'(chapter '+grammar.chapter+')'}]:[]);
     $('t-chapter').innerHTML = route.length
       ? route.map(r=>`Ch.${r.ch}, ${r.title}`).join('<br>')
@@ -1218,11 +1302,13 @@ async function runGrounded(){
     const query = buildQuery(g, typeKey, gram);
     const qvec = await embedTexts([query]).then(v=>v[0]);
     if(myRun!==RUN||inputAccount!==operationAccount())return;
-    const hits = retrieve(qvec, retrievalType, 5);
+    const hits = retrieve(qvec, retrievalType, _patternSettings.hits||5);
     renderChunks(hits);
 
     // 5 · COMPOSE base grounded prompt
-    const basePrompt = composeGroundedPrompt(g, typeKey, gram, hits);
+    const basePrompt = _patternSettings.prompt.trim()||composeGroundedPrompt(g, typeKey, gram, hits);
+    Object.assign(LAST,{hits,prompt:basePrompt,measurements:structuredClone(_operationInputContext?.measurements||{}),quality:getQuality(),selectedFabric:window.MayaFabricAssistant?.selection(FILES.piece)||null});
+    const {bestGrounded,bestHero,...savedInputs}=LAST;_patternRun.inputs=structuredClone({...savedInputs,settings:_patternSettings});
     $('t-prompt').textContent = basePrompt;
 
     // 6 · MARK ONE, base grounded, or CONTINUE from the previous run's best pass of this same input
@@ -1238,19 +1324,21 @@ async function runGrounded(){
       PASSES=[{ img, badge:'base grounded', acc:null }];
     }
     viewGrounded(0);
+    PASSES[0].prompt=basePrompt;await persistPatternWork();requireOperation(context);
     if(ANSWER) scoreGrounded(PASSES[0]);     // fire-and-forget; HUD updates when done
 
     // 7 · MARK TWO+, critique against the book, then redraw to fix
-    for(let p=2; p<=GROUNDED_PASSES; p++){
+    for(let p=2; p<=(_patternSettings.passes||GROUNDED_PASSES); p++){
       const mk=markLabel(p-1);
       liveStatus(`${mk}: reading the book…`);
       const cq = critiqueQuery(g, typeKey, gram);
       const cqvec = await embedTexts([cq]).then(v=>v[0]);
       if(myRun!==RUN||inputAccount!==operationAccount()) return;
-      const bookHits = retrieveBlended(cqvec, typeKey, 8);
+      const bookHits = retrieveBlended(cqvec, typeKey, _patternSettings.hits||5);
       liveStatus(`${mk}: critiquing…`);
       const crit = await critiquePattern(img, inputHero, typeKey, gram, g, bookHits, mk);
       if(myRun!==RUN||inputAccount!==operationAccount()) return;
+      PASSES[PASSES.length-1].review={critique:crit,hits:bookHits,prompt:critiquePrompt(typeKey,gram,g,bookHits)};await persistPatternWork();requireOperation(context);
       if(crit.ok){ PASSES[PASSES.length-1].critDefects=0; liveLine(`Passed the book critique after ${p-1} pass(es).`); break; }
       if(!crit.fixes.length && !crit.defects.length){
         liveLine('Critique came back unusable (no defects, no fixes), skipping the redraw, keeping '+markLabel(p-2)+'.');
@@ -1261,8 +1349,8 @@ async function runGrounded(){
       const refinePrompt = composeRefinePrompt(basePrompt, crit, gram);
       img = await gptImageEdit(img, refinePrompt);
       if(myRun!==RUN||inputAccount!==operationAccount()) return;
-      PASSES.push({ img, badge:'refined from book critique', acc:null });
-      viewGrounded(PASSES.length-1);
+      PASSES.push({ img, badge:'refined from book critique', acc:null,prompt:refinePrompt,critique:crit });
+      viewGrounded(PASSES.length-1);await persistPatternWork();requireOperation(context);
       if(ANSWER) scoreGrounded(PASSES[PASSES.length-1]);
     }
 
@@ -1275,10 +1363,10 @@ async function runGrounded(){
         const vq = critiqueQuery(g, typeKey, gram);
         const vqvec = await embedTexts([vq]).then(v=>v[0]);
         if(myRun!==RUN||inputAccount!==operationAccount()) return;
-        const vHits = retrieveBlended(vqvec, typeKey, 8);
+        const vHits = retrieveBlended(vqvec, typeKey, _patternSettings.hits||5);
         const vc = await critiquePattern(fin.img, inputHero, typeKey, gram, g, vHits, markLabel(PASSES.length-1)+' · verify');
         if(myRun!==RUN||inputAccount!==operationAccount()) return;
-        fin.critDefects = vc.ok ? 0 : vc.defects.length;
+        fin.review={critique:vc,hits:vHits,prompt:critiquePrompt(typeKey,gram,g,vHits)};fin.critDefects = vc.ok ? 0 : vc.defects.length;
       }catch(e){if(myRun!==RUN||inputAccount!==operationAccount())return;liveLine('Verify critique failed, keeping the newest pass by default: '+e.message);}
     }
     let bestIdx = PASSES.length-1;
@@ -1297,7 +1385,7 @@ async function runGrounded(){
     PASSES[bestIdx].badge+=' · best';
     LAST.bestGrounded=PASSES[bestIdx].img; LAST.bestHero=inputHero;   // the next run of this same input continues from here
     viewGrounded(bestIdx);
-    liveStatus('done');
+    await persistPatternWork();requireOperation(context);liveStatus('done');
     TRACE=null; buildSVGfromGrounded(PASSES[bestIdx].img);   // SVG follows the BEST pass, not blindly the latest
   }catch(e){ if(myRun!==RUN||inputAccount!==operationAccount())return;toast('Grounded failed: '+e.message); console.error(e); liveLine('Grounded failed: '+e.message); }
 }
@@ -1565,7 +1653,7 @@ function critiquePrompt(typeKey, gram, g, bookHits){
       cut.map(p=>`${p.label}×${p.qty}${p.mirror?'(pair)':''}`).join(', ') +
       `. If the draft shows a different count, a missing piece, an extra piece, or one piece SPLIT into two (e.g. a back yoke drawn as left+right), that is a defect; say so explicitly and cite the book on the correct piece set.`
     : '';
-  const d=computeDims();
+  const d=['pants','skirt'].includes(typeKey)?computeDims():null;
   const dimCheck = d ? `\nDIMENSION CHECK (the designer entered real measurements, verify the draft against them on the 1-inch grid; origin bottom-left):`+
     (d.waist!=null?`\n - finished waist ${fmt(d.waist)}in → waistband strip must read ~${fmt(d.waistbandLen)}in long × ${fmt(d.waistbandDepth)}in deep`:'')+
     (d.frontWaist!=null?`\n - front waist ~${fmt(d.frontWaist)}in, back waist ~${fmt(d.backWaist)}in (back wider)`:'')+
@@ -1577,6 +1665,7 @@ BOOK PASSAGES (the authority on how this garment is constructed):
 """
 ${book}
 """${panelChecklist}${dimCheck}
+Owner construction direction (review these chosen assumptions): ${_patternSettings.direction||'none'}
 
 The FIRST image is the reference garment. The SECOND image is a draft 2D sewing pattern made for it. Judge the draft against what the BOOK says correct construction is.
 
@@ -1660,6 +1749,7 @@ function composeRefinePrompt(basePrompt, crit, gram){
        `offset, small uppercase panel labels, flat marker-sheet layout on a 1 inch × 1 inch grid with the origin `+
        `at the BOTTOM-LEFT corner and inch numbers along the bottom and left edges. No model, no body, no shading, `+
        `no text other than panel labels and grid numbers.`;
+  if(_patternSettings.direction)P+='\nOWNER CONSTRUCTION DIRECTION (overrides template assumptions):\n'+_patternSettings.direction;
   return P;
 }
 
@@ -1681,7 +1771,7 @@ async function classifyGarment(img){
   const res = await fetch('/api/openai/v1/chat/completions',{
     method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
     body:JSON.stringify({ model:'gpt-4.1', response_format:{type:'json_object'},
-      messages:[{role:'system',content:CLASSIFY_PROMPT},
+      messages:[{role:'system',content:_patternSettings.classifier||CLASSIFY_PROMPT},
         {role:'user',content:[{type:'text',text:'Classify this garment. Output the JSON.'},
           {type:'image_url',image_url:{url:img}}]}] })
   });
@@ -1694,7 +1784,7 @@ async function classifyGarment(img){
 function resolveType(t){
   const s=(t||'').toLowerCase();
   if(!s.trim()) return 'unknown';
-  for(const [key,def] of Object.entries(KB.grammar.types)){
+  for(const [key,def] of Object.entries(patternGrammar().types)){
     if(key===s) return key;
     if((def.match||[]).some(m=>s.includes(m)||m.includes(s))) return key;
   }
@@ -1837,14 +1927,16 @@ function composeGroundedPrompt(g, typeKey, gram, hits){
     }
   } else {
     P += `CONSTRUCTION RULES (adaptive, no named chapter, reason from principles):\n`;
-    (KB.grammar.adaptive_fallback?.principles||[]).forEach(pr=>P+=`• ${pr}\n`);
+    (patternGrammar().adaptive_fallback?.principles||[]).forEach(pr=>P+=`• ${pr}\n`);
+    if(cut?.length)P+='Required piece set:\n'+cutListLines(cut)+'\n';
   }
 
   if(hits.length){
     P += `\nREFERENCE GUIDANCE from Patternmaking for Fashion Design (use for proportion & detail, do not copy text into the drawing):\n`;
-    hits.slice(0,3).forEach(h=>{ P += `• [Ch.${h.ch} p${h.page}] ${h.text.slice(0,240).trim()}…\n`; });
+    hits.slice(0,_patternSettings.hits||5).forEach(h=>{ P += `• [Ch.${h.ch} p${h.page}] ${h.text.slice(0,240).trim()}…\n`; });
   }
 
+  if(_patternSettings.direction)P+='\nOWNER CONSTRUCTION DIRECTION:\n'+_patternSettings.direction+'\n';
   P += buildDimensionBlock(typeKey);
   P += topstitchNote(g);
 
@@ -1884,7 +1976,7 @@ function renderGrammar(gram, typeKey){
   const cut = LAST.cutlist || buildCutList(LAST.garment, gram);
   if(cut && cut.length){
     $('t-panels').innerHTML = cut.map(p=>
-      `<div class="panel-row"><span class="q">×${p.qty}</span> ${p.label}${p.mirror?' ⇆':''}</div>`).join('')+
+      `<div class="panel-row"><span class="q">×${p.qty}</span> ${esc(p.label)}${p.mirror?' ⇆':''}</div>`).join('')+
       `<div class="panel-row" style="color:var(--faint);border:none">from ${LAST.cutlistSource||'Pattern Logic'} · ${cutListTotal(cut)} pcs</div>`;
   } else {
     $('t-panels').innerHTML='<span style="color:var(--warn)">adaptive, derived from first principles</span>';

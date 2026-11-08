@@ -32,7 +32,7 @@
  }};
 })();
 
-/* One fabric conversation for the Brief and Operation Room. Private state is memory-only. */
+/* One fabric conversation for the Brief and Operation Room. Research is saved per item in its submission folder. */
 (function () {
   'use strict';
   let dialog, workspace, host, els, context = {}, identity = '', epoch = 0, controller, image = '', originalImage = '';
@@ -48,7 +48,8 @@
   const storeKey=()=>searchMode==='worldwide'?'worldwide':'retailers|'+[...activeStores].sort().join('|');
   let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
   let bookSeq = 0, photoSeq = 0, projectEpoch=0, projectIdentity='', reads=new AbortController(),projectReads=new AbortController();
-  let searchDetails=null,searchState='idle';
+  let searchDetails=null,searchState='idle',research=null,researchReady=Promise.resolve();
+  let retracted=new Set();
   const resultCache=new Map(),preparedPhotos=new Map();
   const resultKey=()=>scope()+'|'+JSON.stringify([context.preferences||'',!!context.automatic,storeKey()]);
   function rememberResults(){
@@ -104,7 +105,7 @@
     searchStatus='';inventoryStatus='';epoch++;photoSeq++;searchSeq++;autoStarted=false;searchMode='worldwide';activeStores=new Set();filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
     const nextProject=projectScope();if(nextProject!==projectIdentity){resultCache.clear();preparedPhotos.clear();bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
     controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
-    searchDetails=null;searchState='idle';els?.details.set(null);
+    research=null;researchReady=Promise.resolve();retracted=new Set();searchDetails=null;searchState='idle';els?.details.set(null);
     if(els){els.input.value='';els.observation.textContent='';els.transcript.replaceChildren();for(const card of els.results.children)card._fabricDispose?.();els.results.replaceChildren();els.photo.hidden=true;els.preview.removeAttribute('src');els.file.value='';els.send.disabled=false;els.stop.hidden=true;els.saveStatus.textContent='';els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');status('');}
   }
   function icon(label,path,fn) {
@@ -139,7 +140,7 @@
     const toolbar=node('div','fa-toolbar');
     const refresh=icon('Refresh fabrics','M20 7v5h-5M20 12a8 8 0 1 0-2 5',()=>view==='search'&&busy?controller?.abort():refreshView());
     const expandButton=action('Expand',()=>host?expand():close());expandButton.setAttribute('aria-expanded','false');
-    toolbar.append(refresh,expandButton);
+    const exportButton=action('CSV',exportCSV);exportButton.setAttribute('aria-label','Export submission fabric research as CSV');toolbar.append(exportButton,refresh,expandButton);
     const sub=node('p','fa-context');
     const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');tabs.dataset.mayaControl='segmented';
     const inhouse=action('In House',()=>{view='inhouse';paint();});
@@ -173,7 +174,7 @@
     // Native close events are queued. A prior close must not cancel or move a
     // workspace that has already been reopened for a new search.
     dialog.addEventListener('close',()=>{if(dialog.open)return;if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');}else{controller?.abort();recognition?.stop();}});
-    els={details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,upload,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
+    els={exportButton,details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,upload,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
   }
   let recognition;
   function dictate() {
@@ -271,6 +272,30 @@
       book=data;if(view==='saved')paint();notifySelection();
     }catch(e){if(projectCurrent(ticket)&&sequence===bookSeq)els.saveStatus.textContent=e.message;}
   }
+  async function loadResearch(stamp=epoch){
+    if(!context.automatic||!context.submissionId||!context.piece?.id)return null;
+    const data=await json('/api/admin/fabrics/research?'+new URLSearchParams({submissionId:context.submissionId,garmentId:context.piece.id}));
+    if(!current(stamp))return null;research=data;products=data.items.filter(p=>!retracted.has(p.url));return {...data,items:products};
+  }
+  async function dismiss(product,button){
+    if(busy||!research)return;
+    const stamp=epoch,submissionId=context.submissionId,garmentId=context.piece?.id;
+    button.disabled=true;
+    try{
+      const data=await json('/api/admin/fabrics/research',{method:'POST',body:JSON.stringify({submissionId,garmentId,generation:research.generation,url:product.url})});
+      if(!current(stamp))return;research=data;products=data.items;rememberResults();status('');paint();
+    }catch(e){if(current(stamp))status(e.message);}finally{button.disabled=false;}
+  }
+  async function exportCSV(){
+    const ticket=projectTicket(),submissionId=context.submissionId;if(!submissionId)return;
+    els.exportButton.disabled=true;
+    try{
+      const response=await fetch('/api/admin/fabrics/export?'+new URLSearchParams({submissionId}),{headers:headers(),cache:'no-store',signal:AbortSignal.any([projectReads.signal,AbortSignal.timeout(30000)])});
+      if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.error||'Export unavailable.');}
+      const blob=await response.blob();if(!projectCurrent(ticket))return;
+      const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=submissionId+'-fabrics.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }catch(e){if(projectCurrent(ticket))els.saveStatus.textContent=e.message;}finally{els.exportButton.disabled=false;}
+  }
   function notifySelection(){
     window.dispatchEvent(new CustomEvent('maya:fabric-selected',{detail:{submissionId:context.submissionId,garmentId:context.piece?.id||'',product:selectedProduct()}}));
   }
@@ -322,7 +347,7 @@
     const missing=()=>{
       const wasMissing=item.classList.contains('has-missing-photo');
       img?.remove();item.classList.add('has-missing-photo');item.classList.remove('has-photo');
-      if(!unavailable){unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);}
+      // The source link and two caption lines remain usable without a photo.
       if(!wasMissing)queuePhotoPaint(item);
     };
     const next=()=>{
@@ -357,7 +382,7 @@
   }
   // Photo evidence can arrive late. It updates the mounted image without
   // discarding a healthy photograph or restarting URLs that already failed.
-  const cardSignature=p=>JSON.stringify([view,p.url,p.price,p.unit,p.currency,p.garment,p.garmentId,p.materialLabel,p.merchant,p.evidence,saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''))]);
+  const cardSignature=p=>JSON.stringify([view,p.url,p.price,p.unit,p.currency,p.garment,p.garmentId,p.materialLabel,p.merchant,p.evidence,saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||'')),busy,!!research]);
   function card(p) {
     const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);
     const local=p.evidence==='atelier_inventory';
@@ -371,6 +396,9 @@
     link.setAttribute('aria-label',[p.title,use,source,knownPrice,p.reason].filter(Boolean).join(' · '));
     item._fabricUpdateText=updated=>{title.textContent=updated.title;link.setAttribute('aria-label',[updated.title,use,source,knownPrice,updated.reason].filter(Boolean).join(' · '));};
     link.append(title,caption);item.append(link);
+    if(view==='search'&&context.automatic){
+      const controls=node('div','fa-card-actions'),remove=icon('Remove this source','M6 6l12 12M18 6L6 18',()=>dismiss(p,remove));remove.disabled=busy||!research;controls.append(remove);item.append(controls);
+    }
     if(view==='saved'){
       const controls=node('div','fa-card-actions'),remove=action('Remove',()=>save(p,'remove',remove));
       remove.disabled=saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''));controls.append(remove);item.append(controls);
@@ -378,7 +406,7 @@
     return item;
   }
   function paint() {
-    showStatus();
+    showStatus();els.exportButton.hidden=!context.submissionId;
     els.search.setAttribute('aria-pressed',String(view==='search'));els.saved.setAttribute('aria-pressed',String(view==='saved'));els.inhouse.setAttribute('aria-pressed',String(view==='inhouse'));
     els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=view!=='search'||!!context.automatic;els.sub.hidden=!!context.automatic;
     workspace.classList.toggle('is-automatic',!!context.automatic);els.upload.hidden=!!context.automatic;
@@ -389,7 +417,7 @@
     els.details.setEnabled(view==='search'&&!context.automatic);
     els.filter.hidden=view!=='search'||!!context.automatic;if(view!=='search'||context.automatic){els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');}
     for(const button of els.storeButtons){button.setAttribute('aria-pressed',String(activeStores.has(button.dataset.storeGroup)));button.disabled=searchState==='preparing';}
-    const candidates=view==='saved'?book.items:view==='inhouse'?inventory():products;
+    const candidates=view==='saved'?book.items.filter(p=>!context.piece?.id||p.garmentId===context.piece.id||book.selectedByGarment?.[context.piece.id]===p.url):view==='inhouse'?inventory():products;
     const allowed=new Set(storeGroups.filter(group=>activeStores.has(group.id)).flatMap(group=>group.hosts));
     const items=candidates.filter(p=>view!=='search'||searchMode==='worldwide'||(()=>{try{return allowed.has(new URL(p.url).hostname.replace(/^www\./,''));}catch{return false;}})());
     // Retained cards keep their actual image/link nodes through Refresh and
@@ -402,13 +430,10 @@
       const missingPhoto=item=>Number(item.classList.contains('has-missing-photo')||!item.querySelector('.fa-product-image'));
       cards.sort((a,b)=>missingPhoto(a)-missingPhoto(b));
     }
-    // Saved-look Global is the same photo gallery as In House. Exhausted source
-    // links remain private evidence, but cannot turn its grid into text rows.
-    for(const item of cards)item.hidden=!!context.automatic&&view==='search'&&searchMode==='worldwide'&&item.classList.contains('has-missing-photo');
+    for(const item of cards)item.hidden=false;
     const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child)){child._fabricDispose?.();child.remove();}
     cards.forEach((el,index)=>{if(els.results.children[index]!==el)els.results.insertBefore(el,els.results.children[index]||null);});
-    if(items.length&&cards.every(item=>item.hidden)&&!busy){els.results.append(node('p','fa-empty','No fabric photographs loaded. Refresh to retry.'));}
-    if(!items.length&&(view!=='search'||(!busy&&searchState!=='preparing'))&&!(view==='inhouse'&&inventoryRequest))els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?(inventoryStatus||'No in-house fabrics yet.'):searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
+    if(!items.length&&!(context.automatic&&view==='search')&&(view!=='search'||(!busy&&searchState!=='preparing'))&&!(view==='inhouse'&&inventoryRequest))els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?(inventoryStatus||'No in-house fabrics yet.'):searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
     els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
   }
   async function chooseSearch(mode,group){
@@ -428,7 +453,7 @@
     if(view==='inhouse'){try{if(context.loadInhouse){const stamp=epoch;const items=await context.loadInhouse();if(current(stamp)){context.inhouse=items;paint();}}else await loadInventory(true);}catch(e){inventoryStatus=e.message;showStatus();}return;}
     if(context.automatic&&!context.submissionId&&reopenSaved)return reopenSaved();
     if(searchState==='preparing')return;
-    if(context.automatic&&!image)return open({...context,host,forceReset:true});
+    if(context.automatic&&!image){const stamp=epoch;try{image=await preparedPhoto(context.referenceImage);if(!current(stamp))return;}catch(e){return status(e.message);}}
     return run(true,!!submittedRequest);
   }
   async function run(force=false,filterOnly=false) {
@@ -436,14 +461,15 @@
     if(force)controller?.abort();
     if (!account()) { reset(); paint(); return status('Sign in to Admin to search fabrics.'); }
     if (identity!==scope()) { reset(); identity=scope(); paint(); return status('Account changed. Start a new search.'); }
+    try{await researchReady;if(context.automatic&&!research)throw Error('Saved research must load before searching. Reopen this item.');}catch(e){status(e.message);return;}
     if(searchMode==='retailers'&&!activeStores.size)return status('Choose a retailer search.');
-    const request=(filterOnly||force?submittedRequest:els.input.value.trim())||(context.automatic?'Find apparel fabrics like this piece, starting with its main body color.':'' );
+    const request=(filterOnly||force?submittedRequest:els.input.value.trim())||(context.automatic?'Find sources for this selected item. For clothing find apparel fabric; for shoes or accessories find similar finished products.':'' );
     if (!request && !image) return status('Describe a fabric or add a photo.');
     recognition?.stop();
     const stamp=epoch, sequence=++searchSeq; controller=new AbortController(); const active=controller;
     const signal=AbortSignal.any([active.signal,AbortSignal.timeout(60000)]);
     const valid=()=>current(stamp)&&sequence===searchSeq;
-    let retained=(filterOnly||request===submittedRequest)?products:[];
+    let retained=(context.automatic||filterOnly||request===submittedRequest)?products:[];
     if(!retained.length)resultCache.delete(resultKey());
     busy=true;searchState='searching';completedStatus=''; els.send.disabled=true; els.stop.hidden=false; view='search'; els.saveStatus.textContent='';
     products=retained;if(!retained.length){searchDetails=null;els.details.set(null);}paint();status('Searching for Fabrics');
@@ -467,14 +493,14 @@
         if(event.type==='interpretation'){els.observation.textContent=event.observation||'';paint();}
         if(event.type==='products'&&event.incremental&&!event.preliminary){
           const removed=new Set(Array.isArray(event.removedUrls)?event.removedUrls:[]);
-          if(removed.size){retained=retained.filter(p=>!removed.has(p.url));resultCache.delete(resultKey());}
+          if(removed.size){for(const url of removed)retracted.add(url);retained=retained.filter(p=>!removed.has(p.url));resultCache.delete(resultKey());}
           published=(Array.isArray(event.products)?event.products:[]).filter(p=>!removed.has(p.url));
-          products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-10);paint();rememberResults();
+          products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-100);paint();rememberResults();
         }
         if(event.type==='products' && event.preliminary)status('Searching for Fabrics');
         if(event.type==='done'){
           const confirmed=Array.isArray(event.products)?event.products:[];
-          products=[...new Map([...retained,...confirmed].map(p=>[p.url,p])).values()].slice(-10);
+          products=[...new Map([...retained,...confirmed.filter(p=>!retracted.has(p.url))].map(p=>[p.url,p])).values()].slice(-100);
           finished=true;searchState='complete';history.push({request:submitted,query:event.query});history=history.slice(-6);
           els.observation.textContent=event.observation?'Reference interpretation: '+event.observation:'';
           lastSearchStores=storeKey();completedStatus=event.warning || (retained.length&&!confirmed.length?'No additional matches. Previously loaded fabrics are kept.':event.message) || '';status(completedStatus);rememberResults();
@@ -486,8 +512,8 @@
       } finally { void reader.cancel().catch(()=>{}); }
       if(!finished)throw Error('Search ended early. You can retry your request.');
     } catch(e) {
-      if(valid()){ searchState='interrupted';products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-10);autoStarted=products.length>0;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}rememberResults();if(!filterOnly&&!els.input.value)els.input.value=request; }
-    } finally { if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;paint();} }
+      if(valid()){ searchState='interrupted';products=[...new Map([...retained,...published].map(p=>[p.url,p])).values()].slice(-100);autoStarted=products.length>0;const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}rememberResults();if(!filterOnly&&!els.input.value)els.input.value=request; }
+    } finally { if(valid()){if(context.automatic){try{await loadResearch(stamp);if(valid())rememberResults();}catch(e){if(valid())status(e.message);}}if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;paint();}} }
   }
   async function open(next={}) {
     make();
@@ -501,7 +527,7 @@
     if(changed){reset();identity=nextIdentity;}
     else {context.referenceImage=context.referenceImage||previousContext.referenceImage;context.preferences=context.preferences||previousContext.preferences;}
     if(next.forceReset){for(const key of resultCache.keys())if(key.startsWith(scope()+'|'))resultCache.delete(key);preparedPhotos.delete(next.referenceImage);}
-    const restored=changed&&!next.forceReset&&restoreResults();
+    let restored=changed&&!next.forceReset&&restoreResults();
     const stamp=epoch,preparationSequence=searchSeq;
     if(next.host instanceof HTMLElement){collapse();host=next.host;host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';}
     else if(!next.silent){host=null;expand();}
@@ -518,6 +544,10 @@
     if(changed&&!restored)status(context.automatic?'Searching for Fabrics':'Describe what you need. A photo is optional.');
     els.send.disabled=true;
     try{
+      if(context.automatic&&(changed||!research)){
+        researchReady=loadResearch(stamp);const saved=await researchReady;if(!current(stamp)||preparationSequence!==searchSeq)return;
+        if(saved&&(saved.searched||saved.items.length)){restored=true;autoStarted=true;searchState='complete';completedStatus=saved.items.length?'':'No saved sources. Refresh to search.';status(completedStatus);paint();rememberResults();}
+      }
       if(changed&&!restored&&next.referenceImage){const value=await preparedPhoto(next.referenceImage);if(!current(stamp)||preparationSequence!==searchSeq)return;image=value;originalImage=next.referenceImage;paintPhoto();}
       if(!restored)await loadContext(stamp);if(!current(stamp)||preparationSequence!==searchSeq)return;
       if(searchState==='preparing'){searchState='idle';paint();}

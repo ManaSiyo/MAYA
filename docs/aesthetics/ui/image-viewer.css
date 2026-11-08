@@ -1,5 +1,6 @@
 /* Layout only. Inner, Drawer, Glass, typography and icons keep shared authority. */
 .maya-zoom-image{touch-action:none;transform-origin:center;cursor:zoom-in;user-select:none;-webkit-user-select:none}
+.maya-image-opener{cursor:zoom-in}
 dialog.maya-image-viewer{position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;padding:0;border:0;overflow:hidden;background:var(--maya-surface);backdrop-filter:var(--maya-frost);color:inherit}
 .maya-image-viewer::backdrop{background:rgb(0 0 0 / .85)}
 .maya-image-stage{position:absolute;inset:0;overflow:hidden}
@@ -13,7 +14,7 @@ html body .maya-image-lens{position:absolute;pointer-events:none;max-width:none;
 .maya-notes-label{writing-mode:vertical-rl;transform:rotate(180deg)}
 html body .maya-notes-drop{display:grid;place-items:center;transform:scale(.4);opacity:0;transform-origin:left center;transition:transform .22s,opacity .22s;border-radius:15% 70% 70% 70%!important}
 .maya-notes-dock:is(:hover,:focus-within,.is-open) .maya-notes-drop{transform:scale(1);opacity:1}
-.maya-design-notes{position:fixed;left:0;top:50%;width:min(340px,calc(100vw - 76px));max-height:80dvh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;transform:translate(-105%,-50%);visibility:hidden;transition:transform .25s,visibility .25s}
+.maya-design-notes{position:absolute;left:0;top:50%;width:min(340px,calc(100vw - 76px));max-height:80dvh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;transform:translate(-105%,-50%);visibility:hidden;transition:transform .25s,visibility .25s}
 .maya-notes-dock.is-open .maya-design-notes{transform:translate(0,-50%);visibility:visible}
 .maya-notes-dock.is-open .maya-notes-trigger{translate:min(340px,calc(100vw - 76px)) 0}
 .maya-notes-content section{margin-block:var(--maya-form-field-gap,10px)}

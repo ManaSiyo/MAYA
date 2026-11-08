@@ -1585,7 +1585,7 @@ console.log('realtime-voice: '+passed+' checks passed; no production audio or la
 };
 
 checks['fabrics']=async function(){
-const {createFabricSearch,normalizeFabricRequest,fabricSearchBody,sourceURL,mountFabricSearch}=await import('../backend/server/fabrics.mjs');
+const {createFabricSearch,normalizeFabricRequest,fabricSearchBody,sourceURL,mountFabricSearch,fabricCSV}=await import('../backend/server/fabrics.mjs');
 const user={sub:'owner-A'},second={sub:'owner-B'},image='data:image/png;base64,aW1hZ2U=',url='https://cloth.example/product/red',other='https://cloth.example/product/other';
 let count=0;const test=async(name,run)=>{await run();count++;console.log('  ok '+name);};
 const entry=(i=0,extra={})=>({type:'image_result',source_website_url:'https://cloth.example/product/'+i,image_url:'https://photo.example/'+i+'.jpg',thumbnail_url:'https://photo.example/'+i+'-thumb.jpg',caption:'Red apparel fabric',...extra});
@@ -1617,7 +1617,11 @@ await test('one direct OpenAI request returns up to ten source-linked photos wit
 await test('source links reject unsafe addresses and never invent photographs from text',async()=>{
  for(const value of ['javascript:alert(1)','http://example.com','https://user:pass@example.com','https://127.0.0.1','https://x.internal','https://[::1]','https://example.com:123'])assert.equal(sourceURL(value),'');
  const events=[];await create({fetchImpl:async()=>response([entry(0,{image_url:'javascript:1',thumbnail_url:''}),entry(1,{source_website_url:'https://127.0.0.1'}),entry(2,{image_url:'',thumbnail_url:'https://photos.example/2.jpg'})])}).search(user,{request:'fabric'},e=>events.push(e));
- assert.equal(events.at(-1).products.length,1);assert.equal(events.at(-1).products[0].image,'https://photos.example/2.jpg');
+ assert.equal(events.at(-1).products.length,2);assert.equal(events.at(-1).products[0].image,'');assert.equal(events.at(-1).products[1].image,'https://photos.example/2.jpg');
+});
+await test('source-cited metadata enriches CSV columns without creating unsourced URLs',async()=>{
+ const events=[];await create({fetchImpl:async()=>new Response(wire([done([item([entry()]),{type:'message',content:[{type:'output_text',text:JSON.stringify({items:[{url:entry().source_website_url,fabricType:'Cotton twill',relevance:'Similar body cloth',price:'12.50',currency:'USD',unit:'yard',delivery:'Ships in 3 days'},{url:'https://invented.example/cloth',price:'1.00',currency:'USD',unit:'yard'}]})}]}])]))}).search(user,{request:'red fabric'},event=>events.push(event));
+ const rows=events.at(-1).products;assert.equal(rows.length,1);assert.equal(rows[0].price,'12.50');assert.equal(rows[0].unit,'yard');assert.match(fabricCSV(rows),/Ships in 3 days/);assert.doesNotMatch(fabricCSV(rows),/invented/);
 });
 await test('photos stream before completion; later explicit exclusions retract even on failure',async()=>{
  let controller;const events=[],service=create({fetchImpl:async()=>new Response(new ReadableStream({start(c){controller=c;}}))});
@@ -1747,11 +1751,11 @@ await test('redissection hides only orphan selections and prunes them on an expl
   const service=createFabricSearch({...s,fetchImpl:async()=>{throw Error('Stored selections do not need retailer access');}});
   const book=await service.loadBook(user,'project-A');assert.deepEqual(book.selectedByGarment,{kept:url});assert.equal(book.items.length,1);assert.equal(s.records.get(key).buf.toString(),raw,'Read does not write a migration');
   await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'3',action:'select',garmentId:'kept',product:{url}}),e=>e.status===409);assert.equal(s.records.get(key).buf.toString(),raw);
-  const updated=await service.saveBook(user,{submissionId:'project-A',generation:'4',action:'select',garmentId:'kept',product:{url}});
-  assert.deepEqual(updated.selectedByGarment,{kept:url});assert.deepEqual(JSON.parse(s.records.get(key).buf).selectedByGarment,{kept:url});
+  const updated=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'kept',product:{url}});
+  assert.deepEqual(updated.selectedByGarment,{kept:url});assert.deepEqual(JSON.parse(s.records.get('submissions/project-A/fabrics/owner-A/lookbook.json').buf).selectedByGarment,{kept:url});
 });
 await test('selection fingerprints reject reused IDs but preserve stable garments through reorder and production work',async()=>{
-  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',pieceKey='submissions/project-A/pieces.json';
+  const s=store(),key='submissions/project-A/fabrics/owner-A/lookbook.json',pieceKey='submissions/project-A/pieces.json';
   const coat={id:'saved-piece-0',name:'Coat',fabric:'Crimson wool',fabric_spec:{fiber:'wool',weave:'twill'}},pants={id:'pants',name:'Pants',fabric:'cotton'};
   const writePieces=pieces=>s.records.set(pieceKey,{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
   writePieces([coat,pants]);
@@ -1790,6 +1794,29 @@ await test('local in-house photo favorites share the sealed book without invente
   assert.equal(book.items[0].image,product.url);assert.equal(book.items[0].availability,'unknown');assert.equal(book.items[0].etaDays,undefined);assert.equal(book.items[0].price,undefined);
   assert.equal((await service.loadBook(second,'project-A')).items.length,0);
   await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{...product,url:'/aesthetics/fabrics/%2e%2e/private.png'}}));
+});
+await test('per-item research survives reload, footwear is searchable, and dismissals survive another paid search',async()=>{
+ const s=store();put(s,'submissions/project-A/pieces.json',{pieces:[{id:'coat',name:'Coat',fabric:'Wool'},{id:'boots',name:'Boots',category:'footwear'}]});
+ let calls=0;const service=create({...s,fetchImpl:async(_url,options)=>{calls++;const request=JSON.parse(options.body);if(calls===2)assert.match(request.instructions,/finished items/);return new Response(wire([done([{type:'message',content:[{type:'output_text',annotations:[{type:'url_citation',url,title:'Source with no image'}]}]},item([entry()])])]));}});
+ const body=id=>({submissionId:'project-A',automatic:true,piece:{id}});
+ await service.search(user,body('coat'),()=>{});await service.search(user,body('boots'),()=>{});
+ let coat=await service.loadResearch(user,'project-A','coat'),boots=await service.loadResearch(user,'project-A','boots');
+ assert.equal(coat.items.length,2);assert.equal(coat.items[0].image,'');assert.equal(boots.items[0].garment,'Boots');
+ assert.equal((await service.loadResearch(second,'project-A','coat')).items.length,0);assert.equal(calls,2,'Reads and exports must not search');
+ const csv=await service.exportResearch(user,'project-A');assert.match(csv,/"Coat"/);assert.match(csv,/"Boots"/);assert.match(csv,/Delivery estimate/);assert.equal(calls,2);
+ coat=await service.dismissResearch(user,{submissionId:'project-A',garmentId:'coat',url,generation:coat.generation});assert.equal(coat.items.length,1);
+ await assert.rejects(service.dismissResearch(user,{submissionId:'project-A',garmentId:'coat',url,generation:'1'}),e=>e.status===409);
+ await service.search(user,body('coat'),()=>{});assert.equal((await service.loadResearch(user,'project-A','coat')).items.length,1);assert.equal((await service.loadResearch(user,'project-A','boots')).items.length,2);
+ assert.ok([...s.records.keys()].some(k=>k==='submissions/project-A/fabrics/owner-A/coat.json'));
+ assert.match(fabricCSV([{garment:'=IMPORTXML("x")',url,description:'line1\nline2'}]),/"'=IMPORTXML/);
+ s.records.set(coat.path,{buf:Buffer.from('{'),generation:'9'});await assert.rejects(service.search(user,body('coat'),()=>{}),e=>e.status===503);assert.equal(calls,3,'Unreadable saved work cannot launch a paid replacement');
+});
+await test('partial provider results save before failure and later exclusions remove persisted evidence',async()=>{
+ const s=store();put(s,'submissions/project-A/pieces.json',{pieces:[{id:'coat',name:'Coat'}]});let polyester=false;
+ const service=create({...s,fetchImpl:async()=>new Response(wire([{type:'response.output_item.done',item:item([entry(0,{caption:polyester?'Polyester cloth':'Red cloth'})])},{type:'response.failed'}]))});
+ const body={submissionId:'project-A',automatic:true,piece:{id:'coat'},preferences:'no polyester'};
+ await assert.rejects(service.search(user,body,()=>{}),/stopped/);let stored=await service.loadResearch(user,'project-A','coat');assert.equal(stored.items.length,1);assert.equal(stored.searched,false);
+ polyester=true;await assert.rejects(service.search(user,body,()=>{}),/stopped/);stored=await service.loadResearch(user,'project-A','coat');assert.equal(stored.items.length,0);assert.equal(stored.dismissed.length,1);
 });
 console.log('Fabrics: '+count+' direct-search, cancellation, privacy and storage checks passed.');
 };
@@ -2291,14 +2318,64 @@ checks['image-inspection']=async function(){
  const rows=plain(api.noteRows({profile:{color:'Midnight blue',bio:'A tailored coat'},refs:[{tag:'colour',title:'midnight BLUE'},{tag:'color',title:'blue'},{tag:'visual_ref',title:'Evening tailoring'},{tag:'visual reference',title:'Evening tailoring'}],fabrics:[{color:'Midnight blue',weave:'Velvet'}]}));
  assert.deepEqual(rows.find(r=>r.title==='Color').values,['Midnight blue']);assert.equal(rows.filter(r=>r.title==='Visual reference').length,1);
  const listeners=new Map(),image={parentElement:{getBoundingClientRect:()=>({left:0,top:0,width:600,height:400})},clientWidth:600,clientHeight:400,naturalWidth:1200,naturalHeight:800,style:{},classList:{add(){}},setAttribute(){},setPointerCapture(){},addEventListener:(name,fn)=>{listeners.set(name,fn);}};
- let expanded=0;const bound=api.bind(image,{expand:()=>expanded++});
+ let expanded=0;const bound=api.bind(image,{expand:()=>expanded++,inspect:true});
  const fire=(name,props={})=>listeners.get(name)?.({button:0,pointerType:'touch',preventDefault(){},stopPropagation(){},stopImmediatePropagation(){},...props});
  fire('pointerdown',{pointerId:1,clientX:200,clientY:200});fire('pointerdown',{pointerId:2,clientX:400,clientY:200});fire('pointermove',{pointerId:2,clientX:600,clientY:200});assert.equal(bound.state.scale,2);
  fire('pointerup',{pointerId:1});fire('pointerup',{pointerId:2});fire('click');assert.equal(expanded,0,'A pinch cannot accidentally expand or close the card');
  fire('load');assert.deepEqual(plain(bound.state),origin,'A newly selected image starts unzoomed');
  fire('wheel',{deltaY:-100,clientX:300,clientY:200});assert.ok(bound.state.scale>1);bound.reset();assert.deepEqual(plain(bound.state),origin);
  assert.equal(api.bind(image),bound,'Rebinding cannot duplicate gesture listeners');
+ const outerListeners=new Map(),outer={...image,addEventListener:(name,fn)=>outerListeners.set(name,fn)};let opened=0;
+ const opener=api.bind(outer,{expand:()=>opened++});assert.equal(outerListeners.has('wheel'),false);assert.equal(outerListeners.has('pointermove'),false);assert.equal(opener.state.scale,1);
+ outerListeners.get('click')({preventDefault(){}});assert.equal(opened,1,'Outer images only expand; inspection starts inside the viewer');
  const frontend=readFileSync('frontend/index.html','utf8'),brief=readFileSync('backend/backend.html','utf8');
  assert.ok(!brief.includes('delete-open-submission'));assert.ok(brief.includes('onDelete:deleteBriefSubmission'));assert.ok(frontend.includes('MayaImageViewer.notesDrawer'));assert.ok(!frontend.includes('class="vn-pill'));
  console.log('Image inspection: anchored zoom, bounds, pinch, reset, click suppression and deduplicated notes passed.');
+};
+
+checks['pattern-work']=async function(){
+ const {createPatternWork,createSubmissionDeletion}=await import('../backend/server/submission-list.mjs');
+ const records=new Map(),key='submissions/project-A/',user={sub:'owner-A'},piece={id:'coat',name:'Coat',category:'jacket',fabric:'Wool',_image:'data:image/png;base64,aW1hZ2U='};
+ const put=(path,data,generation='1')=>records.set(path,{buf:Buffer.from(JSON.stringify(data)),generation});put(key+'submission.json',{});put(key+'pieces.json',{pieces:[piece]});
+ let writes=0,readsFail=false,afterWrite=null;
+ const read=async path=>{if(readsFail&&path.includes('/patterns/'))return {ok:false,status:503};return records.has(path)?{ok:true,...records.get(path)}:{ok:false,status:404};};
+ const remove=async(path,generation)=>{if(records.get(path)?.generation!==generation)throw Object.assign(Error('changed'),{status:412});records.delete(path);};
+ const write=async(path,buf,_type,generation)=>{if(String(records.get(path)?.generation||'0')!==String(generation))throw Object.assign(Error('changed'),{status:412});writes++;const result={buf,generation:String(Number(generation)+1)};records.set(path,result);await afterWrite?.(path);return result;};
+ const deletion=createSubmissionDeletion({read,write,remove,list:async prefix=>[...records.entries()].filter(([name])=>name.startsWith(prefix)).map(([name,value])=>({name,generation:value.generation}))});
+ const service=createPatternWork({read,write,remove,assertActive:deletion.assertActive});
+ const base={submissionId:'project-A',garmentId:'coat',settings:{quality:'medium',type:'jacket'}};
+ let state=await service.load(user,'project-A','coat');assert.equal(state.runs.length,0);assert.equal(writes,0);
+ const run={id:'version-1',createdAt:'2026-11-07T00:00:00Z',inputs:{type:'jacket',prompt:'Book construction',cutlist:[{label:'upper sleeve',qty:2}]},passes:[{img:piece._image,prompt:'Book construction'}],bestIndex:0};
+ state=await service.save(user,{...base,generation:state.generation,fingerprint:state.fingerprint,run});
+ const written=writes;const acknowledged=await service.save(user,{...base,generation:'0',fingerprint:state.fingerprint,run});assert.equal(acknowledged.generation,state.generation);assert.equal(writes,written,'Retrying an unconfirmed save acknowledges the identical stored run without overwriting');
+ assert.equal((await service.load(user,'project-A','coat')).runs[0].inputs.prompt,'Book construction');assert.equal((await service.load({sub:'owner-B'},'project-A','coat')).runs.length,0);
+ await assert.rejects(service.save(user,{...base,generation:'0',fingerprint:state.fingerprint,run:{...run,id:'conflict'}}),e=>e.status===409);
+ const next={...run,id:'version-2',passes:[...run.passes,{img:'data:image/png;base64,c2Vjb25k',prompt:'Refine sleeves'}]};
+ state=await service.save(user,{...base,generation:state.generation,fingerprint:state.fingerprint,run:next});assert.equal(state.runs.length,2);
+ const unchangedWrites=writes;assert.equal((await service.load(user,'project-A','coat')).runs.length,2);assert.equal(writes,unchangedWrites,'Opening saved versions cannot generate or write');
+ put(key+'pieces.json',{pieces:[{...piece,fabric:'Linen'}]},'2');const changed=await service.load(user,'project-A','coat');assert.equal(changed.stale,true);assert.equal(changed.runs.length,2);
+ await assert.rejects(service.save(user,{...base,generation:state.generation,fingerprint:state.fingerprint,run:next}),e=>e.status===409);
+ readsFail=true;await assert.rejects(service.save(user,{...base,generation:'0',fingerprint:changed.currentFingerprint,run}),e=>e.status===503);readsFail=false;
+ const patternPath=key+'patterns/owner-A/coat.json';const backup=records.get(patternPath);records.set(patternPath,{buf:Buffer.from('{'),generation:'3'});await assert.rejects(service.load(user,'project-A','coat'),e=>e.status===503);records.set(patternPath,backup);
+ await deletion.erase('project-A','owner-A');assert.equal([...records.keys()].some(k=>k.startsWith(key)),false);await assert.rejects(service.load(user,'project-A','coat'),e=>e.status===410);
+ records.delete('deleted-submissions/project-A.json');put(key+'submission.json',{});put(key+'pieces.json',{pieces:[piece]});state=await service.load(user,'project-A','coat');
+ afterWrite=async path=>{if(path.includes('/patterns/'))put('deleted-submissions/project-A.json',{deleted:true});};
+ await assert.rejects(service.save(user,{...base,generation:state.generation,fingerprint:state.fingerprint,run}),e=>e.status===410);assert.equal(records.has(patternPath),false,'A late save cannot resurrect a deleted submission');
+ console.log('Pattern work: saved passes/inputs/history, account and garment isolation, CAS, failed-read protection and deletion barriers passed.');
+};
+
+checks['pattern-reuse']=async function(){
+ const vm=await import('node:vm'),{readFileSync}=await import('node:fs');const source=readFileSync('backend/operation-workspace.html','utf8');
+ const start=source.indexOf('async function startTest('),end=source.indexOf('\n}',start)+2,code=source.slice(start,end);
+ const run={id:'saved-v1',passes:[{img:'data:image/png;base64,aW1hZ2U='}]},notices=[],opened=[];let paid=0;
+ const context=vm.createContext({RUNNING:false,ACTIVE_TEST:'Coat',HERO:'saved-photo',FILES:{piece:{id:'coat'}},_patternReady:Promise.resolve(),_patternSave:Promise.resolve(),_patternRecord:{runs:[run]},_patternTimer:null,_patternDirty:false,_patternSettingsError:'',patternContext:()=>({garmentId:'coat'}),patternScope:()=>true,restorePatternRun:value=>opened.push(value),toast:text=>notices.push(text),getKey:()=>{paid++;return 'token';},clearTimeout});vm.runInContext(code,context);
+ await vm.runInContext('startTest()',context);assert.equal(opened.length,1);assert.equal(paid,0,'Repeated Start restores saved work before any provider setup');
+ context._patternReady=Promise.reject(Error('Storage unavailable'));await vm.runInContext('startTest()',context);assert.equal(paid,0);assert.match(notices.at(-1),/Storage unavailable/);
+ context._patternReady=Promise.resolve();context._patternSettingsError='Invalid grammar';await vm.runInContext('startTest(true)',context);assert.equal(paid,0);assert.match(notices.at(-1),/Invalid grammar/);
+ context._patternSettingsError='';context.patternScope=()=>false;await vm.runInContext('startTest(true)',context);assert.equal(paid,0,'Changed garment cannot cross the paid boundary');
+ const loadStart=source.indexOf('async function loadPatternWork('),loadEnd=source.indexOf('\n}',loadStart)+2;assert.doesNotMatch(source.slice(loadStart,loadEnd),/gptImageEdit|runGrounded|classifyGarment/);
+ const restoreStart=source.indexOf('function restorePatternRun('),restoreEnd=source.indexOf('\n}',restoreStart)+2;
+ Object.assign(context,{structuredClone,$:()=>({textContent:''}),_patternRun:{id:'new-version'},renderLogic(){},renderChunks(){},applyView(){},HERO:'saved-photo'});vm.runInContext(source.slice(restoreStart,restoreEnd),context);
+ context.saved=run;vm.runInContext('restorePatternRun(saved)',context);assert.equal(context._patternRun,null,'Viewing history cannot overwrite a newer run on the next settings save');
+ console.log('Pattern reuse: Start restores saved versions, storage/invalid settings/changed garment block paid generation.');
 };

@@ -49,7 +49,9 @@ Inner/H3/P1/P3, shared fields and Glass Copy/Done, with a working dialog preview
 
 In House is the permanent exact layout baseline for Global Fabrics: identical
 photo/caption dimensions, full available width, scrolling and exactly two caption
-rows. H4/P3/Inner/Glass and the single Fabric preview govern both. The sole bottom
+rows. A failed photo retains a compact two-line source link; never hide the result.
+The CSV action exports saved research and the hover/focus X dismisses an item.
+Fabrics and the active garment remain selected simultaneously. H4/P3/Inner/Glass and the single Fabric preview govern both. The sole bottom
 P1 loading line is “Searching for Fabrics”. No unsolicited Dictate/Find/refinement
 buttons. Preserve healthy photos and only retract sourced exclusions/wrong colors.
 
@@ -61,16 +63,26 @@ headshots. Operations is a component of the Brief, not a standalone navigation i
 
 Image inspection is shared by the app, Brief and fabric photographs. A second
 click from the app card viewer opens a viewport-sized photograph. Hover reveals
-an Inner-material rectangular magnifier; pinch, wheel and drag inspect the image.
+an Inner-material rectangular magnifier, 35% larger on each axis; pinch, wheel and
+drag inspect the expanded image only. Outer/card photos have no magnification or
+image gesture interception. Operation Room inspection opens in the parent viewport.
 Fabric captions retain their original source links. Pinching must not swipe to
 another version or zoom the board behind the image. Changing/removing a private
 source closes its expanded view.
 
 Design Notes starts closed at the left edge of the app card viewer. Its vertical
-P3 label and Glass plus droplet reveal a sliding Drawer surface. Notes use H4/P1,
+P3 label and Glass plus droplet follow the image center and reveal a sliding Glass
+surface (data-maya-material="glass"), using shared Glass fill, border, frost and
+padding without capsule geometry. Notes use H4/P1,
 merge repeated color/reference values and contain no attribute pills. A working
 notes/image preview lives beside the existing Drawer preview. Saved Drawer, Inner,
 Glass, icon and typography settings retain authority.
+
+Operation Room version 2 uses a 27.2/72.8 garment/pattern column ratio, stacks on
+narrow screens and centers every image. The parent Brief owns vertical scrolling
+through patterns and retrieval; there is no second fixed-height iframe scroller.
+The version label uses P3 beside the H1 title; editable Settings reuse shared fields,
+Drawer and roles. The active Operation Room preview lives in Aesthetic Control.
 
 Fromsa's November 6 instruction supersedes local browser/visual acceptance:
 **do not use Chrome; Fromsa performs live visual and interaction checks after

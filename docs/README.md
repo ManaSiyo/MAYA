@@ -107,6 +107,12 @@ Exact duplicates are presentation-grouped only when complete authored content an
 owner/client/project evidence agree. No approximate destructive deduplication.
 Fabrics lookbooks remain private to account/submission/garment, generation-checked,
 and respect client exclusions. Saved dissection reads never generate missing work.
+New private work is inside the submission prefix:
+`patterns/{adminUid}/{garmentId}.json` contains settings, input snapshots and image
+passes; `fabrics/{adminUid}/{garmentId}.json` contains research and dismissed URLs;
+`fabrics/{adminUid}/lookbook.json` contains favorites. Legacy private lookbooks are
+read without writes and copied into the submission only on an explicit mutation.
+Deleting the submission removes its new work through the same tombstone barrier.
 
 Lead stores use generation checks, deletion tombstones and bounded request receipts.
 Private Messages overflow is archived before trimming; archive failure blocks trim.
@@ -123,54 +129,80 @@ to OpenAI's Responses API with web_search, image/text results, max_results: 10,
 and include: ["web_search_call.results"]. One provider request, one tool call;
 there are no retailer feeds, seller-page fetches, second ranking pass or paid retry.
 The gallery reads image_result.image_url, thumbnail_url and source_website_url
-from that tool payload directly. Assistant-written links cannot become photos.
+from that tool payload directly. Cited source URLs also survive without images;
+assistant prose cannot invent a photo or create an uncited source. Optional JSON
+metadata enriches only those sourced URLs with OpenAI-reported material/relevance,
+price/unit/currency and delivery wording. Unknown commercial facts stay blank.
 
 This follows the [documented OpenAI image-search API](https://developers.openai.com/api/docs/guides/tools-web-search).
 It does not reproduce ChatGPT's private implementation or promise identical speed.
 OpenAI chooses the search and matches. MAYA keeps authentication, canonical saved
 context, cancellation, source links and private favorites. Explicit excluded
 materials discovered in later captions retract earlier cards and cached results.
-Price, composition and stock remain unknown; results are suggestions. Up to ten
-cards are displayed, using the unchanged In House gallery layout and two captions.
+These are sourced suggestions, not independently verified inventory or arrival
+promises. Each explicit search asks for up to ten results. Previously saved links
+remain until removed, rather than expiring or disappearing on a later search.
+Photo cards use the In House gallery layout and two captions. A missing photo
+leaves a compact usable source link. CSV exports all researched items in the
+submission, including boots/accessories. Loading saved research never searches;
+Refresh explicitly starts another search. Dismissals are persisted per item.
 Named-shop searches use the same API with an explicit domain filter; they do not
 constrain or replace the Global cache. Legacy feed/rank/generated-swatch APIs
 return 410. Photo hosts can still fail; their sourced thumbnail is the fallback.
 
+## Operation Room version 2
+
+The original pipeline combines the saved dissected photo, garment vision
+classification, shared construction rules, a reviewed piece list, submission
+measurements, selected fabric and retrieved excerpts from Helen Joseph-Armstrong's
+*Patternmaking for Fashion Design*, fifth edition. The bundled kb.js contains 929
+passages and five garment grammars; it is extracted book content, not a fresh PDF
+upload on each run. Jacket grammar specifies upper sleeve and undersleeve pieces;
+these are editable assumptions, not proof that every coat needs a two-piece sleeve.
+
+Settings now exposes garment category, piece list, grammar JSON, classification
+prompt, construction/review direction, retrieval count, pass count, image quality,
+waistband/underlap/yoke constants and an optional full drawing-prompt override.
+The retrieval trace and saved run include the actual classification, chosen rules,
+excerpts, measurements, prompt, critique and generated image passes. The existing
+one-inch grid and lower-body dimension formulas are described in Settings. This
+remains an experimental drawing workflow, not a cutting-ready pattern exporter.
+
+Each pass saves before another paid refinement. Start reopens existing work;
+New version is the explicit new paid run. Retry Save retries storage only.
+Unreadable/conflicting saved work blocks replacement. Version history retains old
+runs; changed garment snapshots are marked stale, never silently deleted. Stored
+runs are bounded to 25 MB/100 versions per garment and research to 100 links/500
+dismissals, with a visible failure rather than silent eviction at the limit.
+
 ## Current work
 
-November 6 owner review: Chrome access and agent visual testing are stopped.
-Fromsa performs the final visual/interaction review after each Push. Local checks
-use `node docs/check.mjs --code-only`; the deployment's existing isolated browser
-regression gate remains. Do not confuse either with a live provider acceptance.
+November 7: Operation Room version 2 is prepared locally. The garment column is
+27.2% instead of 34% (20% narrower); the pattern receives 72.8%. Images are centered,
+the parent Brief owns vertical scrolling, and hidden iframe overflow no longer
+clips the retrieval area. Upload, Redrawn, duplicate Mark badge and Export SVG
+controls are removed. Settings includes a dedicated Operation Room version history.
 
-Prepared locally: explicit centering for submission deletion confirmation;
-Brief header deletion removed (drawer deletion retained); shared hover/focus-only
-card controls and adjustable Close icon percentage, default 80%; hover captions;
-plain, deduplicated Design Notes behind a vertical left-edge plus/drawer; shared
-fullscreen photograph inspection with a rectangular magnifier, pinch/wheel zoom
-and pan. App, Brief, fabric images and Aesthetic Control use the same viewer.
-Gesture handling excludes board zoom and version swipes. Source changes/removal
-close private expanded images. Fabric caption/source links still open the source.
+Image magnification/pinch begins only after expansion, including Operation Room
+images expanded in the parent viewport. The pointer lens is 35% larger on both
+axes. Design Notes tracks the card's vertical center and uses Glass material.
+Both changes have active Aesthetic Control previews. Fabrics and its selected item
+remain visibly selected together. Footwear now passes canonical saved-item checks;
+cited links and automatically saved research survive missing photographs.
 
-Fabrics: separate Global and In House status messages, wait for inventory before
-showing an empty state, retain sourced photos from incomplete provider responses,
-and allow 4096 output/reasoning tokens rather than the restrictive 800 cap.
-Provider failures record bounded categories only in server logs. There is still
-one OpenAI image search, no scraping/ranking/retry engine and no invented photos.
-These fix concrete code paths but do **not** establish the cause of the owner's
-live Global failure. Its exact final message/provider failure remains unconfirmed.
-The owner has been asked for the exact Global message; no live search was run.
+Validation: Node20 code-only packaging, syntax, authorization, storage,
+communications, image/voice/avatar, Fabric deadlines/forced-GC and inspection
+checks pass. Added tests cover pattern history, no-charge reopen, storage failure,
+account/garment scope, deletion races, source-only links, CSV and durable dismissals.
+CI presentation assertions were updated; no local browser was launched.
 
-Validation: Node20 non-browser packaging, syntax, authorization, storage,
-communications, image/voice/avatar, Fabric request/GC and inspection gesture/note
-checks pass. CI browser assertions were updated for dialog centering, removal of
-the header delete action, notes and fullscreen/lens behavior; not run locally at
-the owner's request. Visual/interaction acceptance, physical iPad gestures and
-Global provider results remain for the owner after deployment.
+No Chrome access or agent visual testing. Fromsa owns visual/interaction review
+on phone/iPad/desktop after Push. No live OpenAI search was run in this change;
+these concrete fixes do not establish live provider availability, latency or photo
+quality. Prices/delivery are only present when returned as sourced metadata.
 
-Production successfully deployed 9a8bfcef20ea19b6d7e48197de1e4bcc6412b9c1 before
-this review (Cloud Build 6ffa411e-3a3f-4a0a-9f61-feaf9e81b9f7). Hosting marker,
-frontend/Admin stamps and Cloud Run health matched it. Current changes are not
-pushed. Exact next step: owner Push, confirm release/API commit through read-only
-HTTP, then owner visual/interaction review and the exact Global Fabrics outcome.
-Twilio configuration remains owner-managed; no messages or calls were sent.
+The checkout started at a71964a with maya-v2 and origin/maya-v2 matching. This work
+is not pushed. Next: owner Push, compare /release.json, HTML build stamps and
+/api/healthz against the full commit, then owner checks scrolling, Settings,
+reopening saved work, Fabrics for each item and CSV. Twilio remains owner-managed;
+no messages or calls were sent.

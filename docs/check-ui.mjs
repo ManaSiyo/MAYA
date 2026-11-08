@@ -114,6 +114,11 @@ try{
  await gallery.getByRole('button',{name:'Close Settings',exact:true}).click();
  const notes=gallery.locator('.maya-notes-preview');
  assert.equal(await notes.locator('.maya-design-notes').evaluate(e=>e.inert),true);
+ assert.equal(await notes.locator('.maya-design-notes').getAttribute('data-maya-material'),'glass');
+ const beforeInspect=await notes.locator('img').evaluate(e=>e.classList.contains('maya-zoom-image'));assert.equal(beforeInspect,false);
+ for(const [width,height]of [[390,844],[768,1024],[1194,834]]){await gallery.setViewportSize({width,height});const centers=await notes.evaluate(e=>{const a=e.querySelector('img').getBoundingClientRect(),b=e.querySelector('.maya-notes-dock').getBoundingClientRect();return [a.y+a.height/2,b.y+b.height/2];});assert.ok(Math.abs(centers[0]-centers[1])<2);}
+ await gallery.setViewportSize({width:1194,height:834});
+ for(const changed of [false,true]){await gallery.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.glass.fill=65;d.glass.blur=12;d.pillX=21;d.pillY=11;}MayaTypographyControls.apply(d);},changed);const glass=await notes.evaluate(e=>{const panel=getComputedStyle(e.querySelector('.maya-design-notes')),drop=getComputedStyle(e.querySelector('.maya-notes-drop'));return [panel.backgroundColor,drop.backgroundColor,panel.backdropFilter,drop.backdropFilter,panel.paddingLeft,drop.paddingLeft];});assert.equal(glass[0],glass[1]);assert.equal(glass[2],glass[3]);assert.equal(glass[4],glass[5]);}
  await notes.getByRole('button',{name:'Design Notes',exact:true}).click();
  assert.equal(await notes.locator('.maya-design-notes').evaluate(e=>e.inert),false);
  assert.equal(await notes.locator('.maya-notes-content').getByText('Midnight blue',{exact:true}).count(),1);
@@ -123,6 +128,7 @@ try{
  const bounds=await expanded.boundingBox();assert.equal(bounds.width,1194);assert.equal(bounds.height,834);
  await expanded.locator('img').evaluate(image=>image.decode());
  await expanded.locator('img').hover();assert.equal(await expanded.locator('.maya-image-lens').isVisible(),true);
+ assert.ok((await expanded.locator('.maya-image-lens').boundingBox()).width>300);
  await expanded.locator('img').press('+');assert.notEqual(await expanded.locator('img').evaluate(e=>e.style.transform),'translate(0px,0px) scale(1)');
  await gallery.keyboard.press('Escape');await expanded.waitFor({state:'detached'});
  assert.deepEqual(gallery.errors,[]);await gallery.close();
@@ -142,7 +148,7 @@ const png=readFileSync('docs/aesthetics/ui/logo-circle.png'),reference='data:ima
 const catalog=JSON.parse(readFileSync('docs/aesthetics/fabrics/fabrics.json')).items;
 const products=catalog.map((p,i)=>({url:'https://cloth.example/products/fabric-'+i,title:p.name,image:'https://photos.example/'+i+'.png',merchant:'cloth.example',evidence:'web_suggestion'}));
 const token='fixture.'+Buffer.from(JSON.stringify({sub:'gallery-owner',exp:4000000000})).toString('base64url')+'.fixture';
-let saved={},calls=0,failed=false,holdSearch=true,releaseSearch;const errors=[];page.on('pageerror',e=>errors.push(e.message));
+let saved={},research={items:[],generation:'0',searched:false},calls=0,failed=false,holdSearch=true,releaseSearch;const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.addInitScript(token=>{if(location.origin==='https://maya-gallery.test')localStorage.setItem('maya_admin_tok',token);window.setInterval=()=>0;},token);
 await page.route('**/*',async route=>{
  const u=new URL(route.request().url());
@@ -150,6 +156,8 @@ await page.route('**/*',async route=>{
  if(u.hostname!=='maya-gallery.test')return route.abort();
  if(u.pathname==='/api/design')return route.fulfill({json:saved});
  if(u.pathname==='/api/admin/design'){saved=route.request().postDataJSON();assert.ok(validDesign(saved));return route.fulfill({json:{ok:true,savedAt:'2026-11-04'}});}
+ if(u.pathname==='/api/admin/patterns')return route.fulfill({json:{generation:'0',fingerprint:'fixture',runs:[],settings:{}}});
+ if(u.pathname==='/api/admin/fabrics/research')return route.fulfill({json:research});
  if(u.pathname==='/api/admin/fabrics/search'){
   calls++;if(holdSearch)await new Promise(resolve=>{releaseSearch=resolve;});
   // Exercise the real adapter from the documented OpenAI payload to the browser.
@@ -159,6 +167,7 @@ await page.route('**/*',async route=>{
    return new Response('data: '+JSON.stringify({type:'response.completed',response:{status:'completed',output:[{type:'web_search_call',results}]}})+'\n\n');
   }});
   await service.search({sub:'gallery-owner'},{request:'Green apparel fabric',image:reference},event=>events.push(event));
+  research={items:events.at(-1).products,generation:String(calls),searched:true};
   return route.fulfill({contentType:'application/x-ndjson',body:events.map(e=>JSON.stringify(e)).join('\n')+'\n'});
  }
  if(u.pathname.startsWith('/api/'))return route.fulfill({json:{items:[],generation:'0'}});
@@ -167,7 +176,7 @@ await page.route('**/*',async route=>{
 const tab=name=>page.locator('.fa-tabs').getByRole('button',{name,exact:true});
 const measure=()=>page.locator('#fabric-assistant').evaluate(root=>{
  const rect=el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {width:r.width,height:r.height,top:r.top,left:r.left,overflowX:s.overflowX,overflowY:s.overflowY,columns:s.gridTemplateColumns,rows:s.gridTemplateRows,gap:s.gap,font:s.fontFamily,size:s.fontSize,line:s.lineHeight,pad:[s.paddingLeft,s.paddingTop],material:s.backgroundColor,fit:s.objectFit};};
- const first=root.querySelector('.fa-product:not([hidden])');return {body:rect(root.querySelector('.fa-body')),grid:rect(root.querySelector('.fa-results')),card:rect(first),photo:rect(first.querySelector('img')),title:rect(first.querySelector('.fa-card-title')),caption:rect(first.querySelector('.fa-card-caption')),controls:[...root.querySelectorAll('button,textarea')].filter(el=>el.getBoundingClientRect().width&&el.getBoundingClientRect().height).map(el=>el.textContent||el.getAttribute('aria-label'))};
+ const first=root.querySelector('.fa-product:not([hidden])');return {body:rect(root.querySelector('.fa-body')),grid:rect(root.querySelector('.fa-results')),card:rect(first),photo:rect(first.querySelector('img')),title:rect(first.querySelector('.fa-card-title')),caption:rect(first.querySelector('.fa-card-caption')),controls:[...root.querySelectorAll('button,textarea')].filter(el=>!el.closest('.fa-card-actions')&&el.getBoundingClientRect().width&&el.getBoundingClientRect().height).map(el=>el.textContent||el.getAttribute('aria-label'))};
 });
 try{
  await page.goto('https://maya-gallery.test/backend/backend.html');await page.waitForFunction(()=>window.MayaFabricAssistant&&window.MayaTypographyControls);
@@ -188,7 +197,7 @@ try{
     assert.deepEqual(global,local,design+' '+mode+' '+width+': Global must have exactly the In House geometry, roles, materials, controls and scroll containers');
     if(design==='saved'){assert.equal(global.title.size,'20px');assert.equal(global.caption.size,'14px');assert.deepEqual(global.card.pad,['19px','13px']);assert.equal(global.card.material,'rgba(23, 91, 59, 0.65)');}
     assert.equal(await page.locator('.fa-composer').isVisible(),false);assert.equal(await page.locator('.fa-observation').isVisible(),false);
-    assert.deepEqual(global.controls,['In House','Global','Favorites','Refresh fabrics',mode==='inline'?'Expand':'Collapse']);
+    assert.deepEqual(global.controls,['In House','Global','Favorites','CSV','Refresh fabrics',mode==='inline'?'Expand':'Collapse']);
     assert.ok(global.title.height<=(parseFloat(global.title.line)||parseFloat(global.title.size)*1.5)+1);assert.ok(global.caption.height<=(parseFloat(global.caption.line)||parseFloat(global.caption.size)*1.5)+1);
     await page.locator('.fa-results').evaluate(el=>el.scrollTop=190);const globalScroll=await page.locator('.fa-results').evaluate(el=>el.scrollTop);await tab('In House').click();await page.locator('.fa-results').evaluate(el=>el.scrollTop=190);assert.equal(await page.locator('.fa-results').evaluate(el=>el.scrollTop),globalScroll);
     if(mode==='inline'&&(width===390||width===1440)){
@@ -205,19 +214,19 @@ try{
   }
  }
  assert.equal(calls,1,'Comparing gallery views never repeats paid search');
- // Failed photos cannot replace the gallery with Photo unavailable text tiles.
- failed=true;await tab('Global').click();await page.evaluate(reference=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset:true,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),reference);
- await page.getByText('No fabric photographs loaded. Refresh to retry.',{exact:true}).waitFor();assert.equal(await page.locator('.fa-product:visible').count(),0);assert.equal(await page.getByText('Photo unavailable',{exact:true}).filter({visible:true}).count(),0);assert.equal(calls,2,'Failures do not retry the provider automatically');
- for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});const empty=page.getByText('No fabric photographs loaded. Refresh to retry.',{exact:true});assert.equal(await empty.getAttribute('data-maya-type'),'P1');assert.equal(await empty.evaluate(el=>getComputedStyle(el).fontSize),'16px');assert.ok(await empty.evaluate(el=>el.getBoundingClientRect().right<=innerWidth+1));}
+ // Failed photos remain source links. Reopening reads saved research without a paid call.
+ await tab('Global').click();await page.evaluate(reference=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset:true,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),reference);
+ assert.equal(calls,1);failed=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
+ await page.locator('.fa-product.has-missing-photo').first().waitFor();assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(await page.getByText('Photo unavailable',{exact:true}).count(),0);assert.equal(calls,2,'Failures do not retry the provider automatically');
+ for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});assert.ok(await page.locator('.fa-results').evaluate(el=>[...el.querySelectorAll('a')].every(a=>a.href.startsWith('https://cloth.example/')&&a.getBoundingClientRect().right<=innerWidth+1)));}
  failed=false;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.locator('.fa-product-image').first().evaluate(image=>image.decode());assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(calls,3);
  // A session reset clears private data without restoring chat controls. Explicit
  // Refresh asks the host for its current canonical saved garment after renewal.
  await page.evaluate(()=>{const old=localStorage.getItem('maya_admin_tok');const p=JSON.parse(atob(old.split('.')[1]));p.exp=1;localStorage.setItem('maya_admin_tok','fixture.'+btoa(JSON.stringify(p))+'.fixture');window.dispatchEvent(new Event('focus'));});
  assert.equal(await page.locator('.fa-product').count(),0);assert.equal(await page.locator('.fa-composer').isVisible(),false);
  await page.evaluate(token=>localStorage.setItem('maya_admin_tok',token),token);
- holdSearch=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.fa-status')?.textContent==='Searching for Fabrics');
- assert.equal(await page.locator('.fa-status').evaluate(e=>getComputedStyle(e).fontSize),'16px');assert.equal(await page.locator('.fa-empty').count(),0);assert.equal(await page.locator('.fa-composer').isVisible(),false);
- process.env.MAYA_CAPTURE&&await page.screenshot({path:'/private/tmp/maya-clean-fabric-loading.png'});holdSearch=false;releaseSearch();await page.locator('.fa-product-image').first().evaluate(image=>image.decode());assert.equal(calls,4,'Only explicit Refresh recovers the current saved context');
+ await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.locator('.fa-product-image').first().evaluate(image=>image.decode());
+ assert.equal(calls,3,'Session renewal reloads saved sources without another search');
  await page.evaluate(()=>MayaTypographyControls.save(MayaTypographyControls.defaults));
  await page.goto('https://maya-gallery.test/aesthetics/aesthetic-control.html');await page.locator('#workspace-previews > summary').click();
  assert.equal(await page.locator('#workspace-previews textarea,#workspace-previews .fa-composer').count(),0,'Aesthetic Control cannot restore the unrequested composer');
@@ -230,7 +239,7 @@ try{
   for(const width of [390,768,1440]){await page.setViewportSize({width,height:1000});const style=await preview.locator('.fa-status').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return {size:s.fontSize,font:s.fontFamily,color:s.color,margin:s.marginTop,right:r.right};});assert.equal(style.size,changed?'16px':'12px');assert.match(style.font,changed?/Cormorant/:/Jost/);assert.equal(style.color,changed?'rgb(255, 255, 255)':'rgb(170, 181, 196)');assert.equal(style.margin,'0px');assert.ok(style.right<=width+1);}
   process.env.MAYA_CAPTURE&&await preview.screenshot({path:'/private/tmp/maya-clean-preview-'+(changed?'saved':'default')+'.png'});
  }
- assert.equal(calls,4,'Aesthetic previews make no searches');assert.deepEqual(errors,[]);
+ assert.equal(calls,3,'Aesthetic previews make no searches');assert.deepEqual(errors,[]);
  console.log('Fabric gallery: exact In House/Global parity, two caption rows, same scrolling, default/saved settings, six widths, photo failure/recovery and active preview passed.');
 }catch(error){console.error(error);console.error((await page.locator('body').innerText()).slice(-2500));process.env.MAYA_CAPTURE&&await page.screenshot({path:'/private/tmp/maya-global-gallery-failure.png'});throw error;}finally{await browser.close();}
 

@@ -121,7 +121,7 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     scrollbar-width: none;
-    will-change: scroll-position;
+    scroll-padding-top:64px;
     z-index: 1;
   }
   #screens::-webkit-scrollbar { display: none; }
@@ -134,7 +134,6 @@
     position: relative;
     height: 100vh; min-height: 100vh; width: 100%;
     padding: 72px 40px 32px;
-    transform: translate3d(0,0,0);
     overflow: hidden;
     scroll-snap-align: start;
   }
@@ -337,11 +336,11 @@
     display: flex; flex-direction: column;
     gap: 12px;
   }
-  #operations-embed { width:100%; flex:1; min-height:0; border:0; background:transparent; }
-  #screen-operating { padding:64px 0 0; gap:0; transform:none; }
+  #operations-embed { display:block; width:100%; flex:none; height:900px; min-height:0; border:0; background:transparent; }
+  #screen-operating { padding:64px 0 0; gap:0; transform:none; height:auto; min-height:100dvh; overflow:visible; }
   body.operations-settings-open #screens { z-index:300; overflow:hidden; }
   body.operations-settings-open #screen-operating { overflow:visible; }
-  body.operations-settings-open #operations-embed { position:fixed; inset:0; width:100%; height:100dvh; z-index:100; }
+  body.operations-settings-open #operations-embed { position:fixed; inset:0; width:100%; height:100dvh!important; z-index:100; }
   .op-identity { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px 16px; }
   .op-identity .op-hero { margin:0; }
   #brand a { min-width:0; }
@@ -1392,15 +1391,15 @@
   #screens { opacity: 1; transition: opacity 0.4s ease; }
   #page-indicator { /* visible on boot */ }
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=15">
 <link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=3"><script src="/aesthetics/ui/submission-cards.js?v=3"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=4"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=26"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=14">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=16"></script>
-<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=1"><script src="/aesthetics/ui/image-viewer.js?v=1"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=15">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=17"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=2"><script src="/aesthetics/ui/image-viewer.js?v=2"></script>
 </head>
 <body>
 
@@ -1409,7 +1408,7 @@
     <!-- v13.35: the logo is the way back to the Systems Map. -->
     <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Back to Admin">
       <img src="/aesthetics/ui/logo-circle.png" alt="" style="width:44px;height:44px;object-fit:contain;opacity:0.92;-webkit-user-drag:none" />
-      <span id="workspace-title" data-maya-type="H1">Backend</span></a>
+      <span id="workspace-title" data-maya-type="H1">Backend</span></a><span id="workspace-version" data-maya-type="P3" hidden>– version 2</span>
     <span class="status-pill" id="dissect-status" style="display:none">Dissecting…</span>
   </div>
   <div id="top-actions">
@@ -1845,6 +1844,7 @@ async function _loadSubmission(tok) {
 
 function _updateBrandSub() {
   const title=document.getElementById('workspace-title');if(title)title.textContent=SCREEN_LABELS[_currentScreen]||'Backend';
+  document.getElementById('workspace-version').hidden=_currentScreen!==1;
   const menu=document.querySelector('#top-actions .hamburger');if(menu){menu.title=_currentScreen===1?'Operation Room settings':'Submissions menu';menu.setAttribute('aria-controls',_currentScreen===1?'operations-embed':'clients-drawer');}
   const brandSub = document.querySelector('#brand .sub');
   if (!brandSub) return;
@@ -1857,27 +1857,9 @@ function _updateBrandSub() {
   const host = document.getElementById('screens');
   if (!host) return;
   const sections = host.querySelectorAll('section[data-screen]');
-  let titleFrame=0;host.addEventListener('scroll',()=>{if(titleFrame)return;titleFrame=requestAnimationFrame(()=>{titleFrame=0;const position=host.scrollTop+host.clientHeight*.35;_currentScreen=position>=sections[1].offsetTop?1:0;_updateBrandSub();});},{passive:true});
-  const io = new IntersectionObserver((entries) => {
-    let best = null;
-    for (const e of entries) {
-      if (!best || e.intersectionRatio > best.intersectionRatio) best = e;
-    }
-    if (best && best.isIntersecting) {
-      const n = parseInt(best.target.dataset.screen, 10);
-      _currentScreen = n;
-      for (let i = 1; i <= 2; i++) {
-        const d = document.getElementById('dot-' + i);
-        if (d) d.classList.toggle('active', n === (i - 1));
-      }
-      _updateBrandSub();
-      // v0.16: when the designer lands on the Op Room and the active
-      // piece is still Full view, advance to the first real garment piece
-      // so the work surfaces aren't waiting for a manual swipe.
-      // Navigation preserves the Operation Room's current garment and results.
-    }
-  }, { root: host, threshold: [0.25, 0.5, 0.75] });
-  sections.forEach(s => io.observe(s));
+  let titleFrame=0;
+  const update=()=>{if(titleFrame)return;titleFrame=requestAnimationFrame(()=>{titleFrame=0;const position=host.scrollTop+host.clientHeight*.35;_currentScreen=position>=sections[1].offsetTop?1:0;_updateBrandSub();for(let i=1;i<=2;i++)document.getElementById('dot-'+i)?.classList.toggle('active',_currentScreen===i-1);});};
+  host.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update);update();
 })();
 
 // v0.18: pattern grid scale. The Op Room's pattern swiper is treated
@@ -2508,6 +2490,8 @@ window.addEventListener('message',event=>{
   const frame=document.getElementById('operations-embed');
   if(event.origin!==location.origin||event.source!==frame?.contentWindow)return;
   if(event.data?.maya==='ops-ready')_postPiecesToOps();
+  if(event.data?.maya==='ops-inspect'){const data=event.data,context=_piecesContext();if(data.account===context.account&&data.submissionId===context.sid&&typeof data.src==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(data.src)&&data.src.length<=25*1024*1024){const source=document.createElement('img');source.src=data.src;source.alt=typeof data.alt==='string'?data.alt:'Pattern';source.hidden=true;document.body.append(source);MayaImageViewer.open(source,{onClose:()=>source.remove()});}}
+  if(event.data?.maya==='ops-height'&&Number.isFinite(event.data.height)&&event.data.height>=100&&event.data.height<=50000){frame.style.height=Math.ceil(event.data.height)+'px';}
   if(event.data?.maya==='ops-settings-state'){const wasOpen=_operationsSettingsOpen;_operationsSettingsOpen=event.data.open===true;document.body.classList.toggle('operations-settings-open',_operationsSettingsOpen);const menu=document.querySelector('#top-actions .hamburger');if(_currentScreen===1&&menu){menu.setAttribute('aria-expanded',String(_operationsSettingsOpen));if(wasOpen&&!_operationsSettingsOpen)menu.focus({preventScroll:true});}}
   if(event.data?.maya==='ops-brief')goToScreen(0);
 });
@@ -2808,6 +2792,7 @@ window._pieceState = _pieceState;
 
 function setActivePiece(idx) {
   if (!_pieceState.pieces.length) return;
+  const keepFabrics=_briefView==='fabrics';
   if (typeof showBriefItem === 'function') showBriefItem();
   _pieceState.idx = Math.max(0, Math.min(_pieceState.pieces.length - 1, idx));
   document.querySelectorAll('#piece-pills [data-maya-segment]').forEach((node, i) => {
@@ -2821,6 +2806,7 @@ function setActivePiece(idx) {
   // piece is active. The right pane resets to blank unless this piece
   // already has a cached _pattern from a previous Dissect.
   _syncOpRoom(true);
+  if(keepFabrics)void showBriefFabrics();
 }
 
 function _showActivePiece() {
@@ -3860,10 +3846,13 @@ async function showBriefFabrics() {
   const context=_piecesContext(),saved=_savedOperation;
   if(!saved?.pieces.length||!context.sid||saved.submissionId!==context.sid||saved.account!==context.account||saved.referenceImage!==context.hero)return showBackendToast('Dissect and save this look before opening Fabrics.');
   if(!window.MayaFabricAssistant)return showBackendToast('Fabric search is still loading. Try again.');
-  const active=_pieceState.pieces[_pieceState.idx],piece=active&&!active._virtual?saved.pieces.find(p=>p.id===active.id):null;
+  let active=_pieceState.pieces[_pieceState.idx];
+  if(!active||active._virtual){const first=_pieceState.pieces.findIndex(p=>!p._virtual&&!p.skip);if(first>=0){_pieceState.idx=first;active=_pieceState.pieces[first];}}
+  const piece=active&&!active._virtual?saved.pieces.find(p=>p.id===active.id):null;
+  if(!piece)return showBackendToast('Choose a saved item before opening Fabrics.');
   _briefView='fabrics';
   document.getElementById('brief-fabrics-button')?.setAttribute('aria-pressed','true');
-  document.querySelectorAll('#piece-pills [data-maya-segment]').forEach(node=>node.setAttribute('aria-pressed','false'));
+  document.querySelectorAll('#piece-pills [data-maya-segment]').forEach((node,i)=>{node.setAttribute('aria-pressed',String(i===_pieceState.idx));node.classList.toggle('active',i===_pieceState.idx);});
   document.getElementById('op-image-frame').style.display='none';
   const host=document.getElementById('brief-fabrics');host.style.display='flex';
   return window.MayaFabricAssistant.open({host,automatic:true,reopenSaved:showBriefFabrics,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces});

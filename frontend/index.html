@@ -4012,9 +4012,9 @@
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=4"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=26"></script>
-<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=1"><script src="/aesthetics/ui/image-viewer.js?v=1"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=2"><script src="/aesthetics/ui/image-viewer.js?v=2"></script>
 </head>
 <body>
 <!-- v14.21: this is the Playground, promoted whole. The amber badge is the
@@ -11902,7 +11902,7 @@ function viewerStep(delta) {
 // ════════════════════════════════════════════════════════════
 let viewerNotesDrawer;
 function renderViewerNotes(item) {
-  viewerNotesDrawer ||= MayaImageViewer.notesDrawer({parent:document.getElementById('garment-modal'),id:'viewer-notes'});
+  viewerNotesDrawer ||= MayaImageViewer.notesDrawer({parent:document.getElementById('garment-modal'),anchor:document.getElementById('garment-image-wrap'),id:'viewer-notes'});
   viewerNotesDrawer.update(item?.card||{});
 }
 // Notes are plain text in one place; the old duplicate Attributes pills are retired.

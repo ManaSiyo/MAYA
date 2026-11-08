@@ -1,4 +1,4 @@
-import {createSubmissionDeletion,submissionContentKey,markExactSubmissionRepeats} from './submission-list.mjs';
+import {createSubmissionDeletion,createPatternWork,submissionContentKey,markExactSubmissionRepeats} from './submission-list.mjs';
 import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds,adSetupStatus} from './ad-reporting.mjs';
 // ═══════════════════════════════════════════════════════════════════════════
 // MAYA — Cloud Run API service (replaces the three Vercel functions)
@@ -2280,8 +2280,18 @@ app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb
   }
 });
 
+const patternWork=createPatternWork({read:gcsGet,write:gcsPut,remove:gcsRemove,assertActive:submissionDeletion.assertActive});
+app.get('/api/admin/patterns',requireAuthHeader,async(req,res)=>{
+  try{const user=await requireAdmin(req);res.set('Cache-Control','no-store').json({ok:true,...await patternWork.load(user,String(req.query.submissionId||''),String(req.query.garmentId||''))});}
+  catch(e){res.status(e.status||503).json({error:e.status?e.message:'Saved patterns unavailable.'});}
+});
+app.post('/api/admin/patterns',requireAuthHeader,express.json({limit:'30mb'}),async(req,res)=>{
+  try{const user=await requireAdmin(req);res.set('Cache-Control','no-store').json({ok:true,...await patternWork.save(user,req.body||{})});}
+  catch(e){res.status(e.status||503).json({error:e.status?e.message:'Pattern did not save. Retry Save.'});}
+});
+
 mountFabricSearch(app, { requireAdmin, requireAuthHeader, json: express.json,
-  rateLimit, read: async path=>{if(path.startsWith(SUB_PREFIX))await submissionDeletion.assertActive(path.split('/')[1]);return gcsGet(path);}, write: async(path,...args)=>{const match=path.match(/^private\/fabrics\/[^/]+\/([^/]+)\//);if(match)await submissionDeletion.assertActive(match[1]);return gcsPut(path,...args);}, apiKey: () => process.env.OPENAI_API_KEY,
+  rateLimit, read: async path=>{if(path.startsWith(SUB_PREFIX))await submissionDeletion.assertActive(path.split('/')[1]);return gcsGet(path);}, write: async(path,...args)=>{const match=path.match(/^private\/fabrics\/[^/]+\/([^/]+)\//),id=path.startsWith(SUB_PREFIX)?path.split('/')[1]:match?.[1];if(id)await submissionDeletion.assertActive(id);const saved=await gcsPut(path,...args);if(id)try{await submissionDeletion.assertActive(id);}catch(e){if(e.status===410)await gcsRemove(path,saved?.generation);throw e;}return saved;}, apiKey: () => process.env.OPENAI_API_KEY,
 });
 
 // Retired merchant feeds, extra ranking and synthetic fabric previews.

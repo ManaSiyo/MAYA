@@ -22,8 +22,9 @@ export function setupSharedSurfaces({parent,design}){
  host.append(Pill({label:'Share dialog',onClick:()=>{if(!share.isConnected)document.body.append(share);share.querySelector('[data-copy]').textContent='Copy';share.showModal();}}));
  const photo=document.createElement('img');photo.src='/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg';photo.alt='Midnight velvet';photo.style.cssText='width:100%;height:220px;object-fit:contain';
  const imagePreview=document.createElement('div');imagePreview.className='maya-notes-preview';imagePreview.dataset.mayaPanel='inner';imagePreview.append(photo);host.append(imagePreview);
+ const notesHelp=document.createElement('p');notesHelp.dataset.mayaType='P3';notesHelp.textContent='Design Notes uses Glass material and padding. The tab follows the image center; click the image to inspect it.';host.append(notesHelp);
  MayaImageViewer.bind(photo);
- MayaImageViewer.notesDrawer({parent:imagePreview,id:'preview-design-notes',card:{profile:{bio:'Tailored velvet coat',color:'Midnight blue',silhouette:'Long fitted coat'},refs:[{tag:'color',title:'Midnight blue'},{tag:'visual ref',title:'Evening tailoring'}]}});
+ MayaImageViewer.notesDrawer({parent:imagePreview,anchor:photo,id:'preview-design-notes',card:{profile:{bio:'Tailored velvet coat',color:'Midnight blue',silhouette:'Long fitted coat'},refs:[{tag:'color',title:'Midnight blue'},{tag:'visual ref',title:'Evening tailoring'}]}});
  host.append(Pill({label:'Drawer',onClick:event=>drawer.showFrom(event.currentTarget)}));
  const usage=document.createElement('p');usage.dataset.mayaType=usage.dataset.previewCategory='P3';for(const [label,href]of [['MAYA','/'],['Admin','/status.html'],['Brief','/backend.html'],['Brief operations','/backend.html']]){const link=document.createElement('a');link.textContent=label;link.href=href;usage.append(link,document.createTextNode(' · '));}host.append(usage);
  highlightPadding(edit,()=>[drawer],()=>({x:values.paddingX,y:values.paddingY}));
