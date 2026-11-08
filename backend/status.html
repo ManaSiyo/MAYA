@@ -1334,7 +1334,7 @@ async function markFeatureDone(btn){
     if(r.ok&&_adminContextCurrent(context))rowEl.classList.toggle('done',!undone);
   }catch(_){ }
 }
-// Show the commit actually published by Hosting; GitHub/Vercel success alone
+// Show the commit actually published by Hosting; a successful GitHub push alone
 // does not mean this site's Firebase release completed.
 (async function _publishedRelease(){
   const host=document.getElementById('release-stamp');

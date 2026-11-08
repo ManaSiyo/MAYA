@@ -311,9 +311,6 @@
     uploadVideo,
   };
 </script>
-<!-- v11.29: Vercel Web Analytics + Speed Insights scripts removed, the app
-     is migrating to Firebase Hosting + Cloud Run, where /_vercel/* no longer
-     exists. (They fail silently off-Vercel, but dead requests are dead weight.) -->
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -4977,7 +4974,7 @@
 
 <!-- settings modal -->
 <!-- v0.11: Public deploy, Settings becomes account + preferences only.
-     The OpenAI key UX is gone (key lives on the Vercel server). What's
+     The OpenAI key UX is gone (key lives on the Cloud Run server). What's
      left: who you're signed in as, image-quality toggle, sign out. -->
 <div class="modal" id="settings-modal">
   <button class="modal-close" onclick="closeSettings()">Close</button>
@@ -5469,7 +5466,7 @@ let _switchFabricsContext = null;
 // ════════════════════════════════════════════════════════════
 // settings
 // ════════════════════════════════════════════════════════════
-// v0.11: public deploy. The OpenAI key lives on the server (Vercel env var)
+// v0.11: public deploy. The OpenAI key lives on the Cloud Run server
 // and is NEVER in the browser. getApiKey() now returns the Google ID token
 // for the signed-in user, that's what we send as Authorization: Bearer …
 // to /api/openai/*, and what the proxy validates before forwarding to OpenAI.
@@ -5487,14 +5484,7 @@ function getModel()  {
   if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini') { try { localStorage.removeItem(STORAGE_KEY_MODEL); } catch (_) {} return 'gpt-4.1'; }
   return stored || 'gpt-4.1';
 }
-// Image quality preference (medium = fast/cheap; high = sharper, better face).
-// History: v5.15 introduced the toggle. v9.9 raised the default to 'high'
-// for face consistency. v0.13.10 reverted to 'medium' after measuring
-// gpt-image-2 'high' at ~118s wall-clock on 1024×1536 (blew past the
-// Vercel Hobby 60s function cap → 504s). v10.30 stayed on 'medium', now
-// on Vercel Pro (300s function cap) we COULD revert to 'high', but the
-// 4x cost-per-image difference ($0.04 vs $0.17) isn't justified yet.
-// Current default: 'medium'. Users can opt into 'high' in Settings.
+// Image quality uses the shared medium setting.
 const STORAGE_KEY_IMG_QUALITY = 'maya_image_quality';
 // v13.43: one standard for everyone. The Settings screen that once offered a
 // choice is gone, and any stored preference is ignored: every render is
@@ -9763,10 +9753,8 @@ const VISION_SCHEMA = {
 // v10.21: image inputs are compressed (max 1024px on longer edge, JPEG q=0.82)
 // before being turned into a data URL. The same compressed dataUrl is used on
 // the canvas AND sent to OpenAI's image edits endpoint. This fixes the 413
-// "payload too large" errors on multi-reference renders (Vercel caps request
-// bodies at 4.5MB) and makes drag perf snappy since the browser is now moving
-// 200-400KB blobs around instead of multi-MB originals. gpt-image-2 internally
-// downsamples to ~1024px anyway, so we lose no usable detail.
+// "payload too large" errors on multi-reference renders and makes drag
+// performance faster by moving compressed blobs instead of multi-MB originals.
 const IMAGE_COMPRESS_MAX_DIM = 1024;
 const IMAGE_COMPRESS_QUALITY = 0.82;
 
@@ -9830,8 +9818,7 @@ function fileToDataUrl(file) {
 // compression (above) only catches things uploaded AFTER v10.22 shipped, it
 // misses (a) images already on a user's canvas from earlier sessions, and
 // (b) AI-generated images that come back from OpenAI at full resolution and
-// get used as anchors in subsequent edits. Both routes hit Vercel's 4.5MB
-// body cap and 413. This wrapper takes any Blob and returns a JPEG ≤1024px
+// get used as anchors in subsequent edits. This wrapper returns a JPEG ≤1024px
 // on the longer edge, so every payload that leaves the browser is small,
 // regardless of where the image originated.
 // v13.26: read one of MAYA's own pictures as bytes, wherever it lives.
@@ -15967,8 +15954,7 @@ async function doSave() {
 // submission, named "<client>-<MM-DD-YYYY>"). Two-phase:
 //   1. POST { action: "init", client_name } → returns folder_id
 //   2. POST { action: "upload", folder_id, name, mime_type, data_b64 }
-//      for each file. Sequential to stay friendly to Vercel's body-size
-//      limits.
+//      for each file. Each file is uploaded in a separate request.
 // ════════════════════════════════════════════════════════════
 // v13.33: one upload attempt, reported honestly.
 async function _sendSubmissionFile(token, folder_id, f) {
@@ -16233,8 +16219,7 @@ async function renderOnePagerPdfBlob() {
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
-  // v11.13: 0.86 (was 0.92) keeps the 2-page PDF well under Vercel's 4.5 MB
-  // upload cap while staying crisp at 3× canvas scale.
+  // JPEG quality 0.86 keeps the two-page PDF compact at 3× canvas scale.
   pdf.addImage(page1.toDataURL('image/jpeg', 0.86), 'JPEG', 0, 0, pageW, pageH);
   pdf.addPage();
   pdf.addImage(page2.toDataURL('image/jpeg', 0.86), 'JPEG', 0, 0, pageW, pageH);

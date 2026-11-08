@@ -1,7 +1,7 @@
 import {createSubmissionDeletion,createPatternWork,submissionContentKey,markExactSubmissionRepeats} from './submission-list.mjs';
 import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedAdReader,combineDirectAds,adSetupStatus} from './ad-reporting.mjs';
 // ═══════════════════════════════════════════════════════════════════════════
-// MAYA — Cloud Run API service (replaces the three Vercel functions)
+// MAYA — Cloud Run API service
 //
 //   /api/openai/*   → authenticated passthrough to api.openai.com
 //                     (JSON *and* multipart — images/edits, audio/transcriptions)
@@ -14,7 +14,7 @@ import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedA
 //
 // Deployed on Cloud Run in project `pro-maya`; fronted by Firebase Hosting
 // with a rewrite of /api/** → this service, so the browser keeps calling
-// same-origin /api/... exactly as it did on Vercel.
+// same-origin /api/... endpoints.
 //
 // Required env vars (set via `gcloud run deploy/services update`):
 //   OPENAI_API_KEY              — OpenAI secret key (server-side only)
@@ -247,7 +247,7 @@ const MODEL_ALLOWED = new Set([
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Google ID-token verification (same JWKS check the Vercel functions used)
+// Google ID-token verification using Google's JWKS
 // ═══════════════════════════════════════════════════════════════════════════
 let _googleKeysCache = { keys: null, exp: 0 };
 async function getGoogleKeys() {
@@ -357,7 +357,7 @@ async function countUsers() {
 // forwarded byte-for-byte, so JSON, multipart (images/edits, audio) and
 // everything else survive untouched.
 //
-// KEY UPGRADE over the Vercel proxy: upstream error bodies are LOGGED, so a
+// Upstream error bodies are logged, so a
 // 400 from OpenAI shows its real reason in Cloud Run logs instead of dying
 // as an anonymous status code.
 // ═══════════════════════════════════════════════════════════════════════════

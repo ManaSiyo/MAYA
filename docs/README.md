@@ -31,6 +31,11 @@ server code, test helpers and dependencies never enter .hosting.
 
 ## Hosting and deployment
 
+Vercel is retired for MAYA. The source has no Vercel config, functions, analytics
+scripts or dependencies; obsolete deployment comments were removed on November 8.
+The external Vercel project/GitHub connection still requires account access to
+remove. Repository cleanup alone does not stop that external connection's builds.
+
 Project **pro-maya**, Firebase Hosting **maya.manasiyo.com** and **pro-maya.web.app**.
 /api/** and /mcp rewrite to Cloud Run **maya-api**, region **us-west1**. Storage is
 **pro-maya.firebasestorage.app**. The API uses its Cloud Run service account through
@@ -59,7 +64,7 @@ Admin/Brief/workspace `maya-build` metadata, and `/api/healthz`, using
 `node docs/check.mjs --deployed <full-commit-sha>`. The build runs this same public
 HTTP check after Hosting deployment and fails on any stale or missing stamp.
 Inspect GitHub's commit **check-runs**, including Google's `output.text` build log;
-the combined status may report Vercel success while Cloud Build has failed.
+the combined status can omit a failed Google Cloud Build check.
 Health's configured flags indicate
 configuration, not successful inference/delivery. `/api/healthz/deep` is admin-only.
 
@@ -217,7 +222,7 @@ quality. Prices/delivery are only present when returned as sourced metadata.
 November 7 deployment diagnosis: origin/maya-v2 has 05a186c, but Hosting and API
 still serve a71964a45998ab7eeec251ecc1678869d9a7f493. Google's checks prove both
 c28322e and 05a186c failed **Test release contracts**, so Build server, Deploy
-server and Deploy website never ran. Vercel's green preview check was unrelated.
+server and Deploy website never ran. The old provider's preview check was unrelated.
 Build d6a00ef3-d1f2-4314-a11b-10e4ab4203bc timed out in the Fabric gallery fixture:
 the test checked idle state before asynchronous photo preparation started the
 refresh, then reset the gallery and canceled that pending request. The prior build

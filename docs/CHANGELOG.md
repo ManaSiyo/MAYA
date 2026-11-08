@@ -4,6 +4,11 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 8 — retire Vercel references:** removed obsolete source comments,
+  historical folder listings and deployment guidance. No active provider config,
+  functions, analytics scripts or dependencies remain in the repository. External
+  project/GitHub disconnection is pending Vercel account access; no provider-side
+  deletion has been performed. Firebase/Cloud Run deployment is unchanged.
 - **November 7, deployment repair — local, not pushed:** Google Cloud Build logs
   confirm c28322e and 05a186c failed the Fabric UI fixture before any deployment.
   Corrected the refresh wait and missing recovery callback without skipping tests.
