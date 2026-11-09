@@ -48,7 +48,7 @@
   const storeKey=()=>searchMode==='worldwide'?'worldwide':'retailers|'+[...activeStores].sort().join('|');
   let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
   let bookSeq = 0, photoSeq = 0, projectEpoch=0, projectIdentity='', reads=new AbortController(),projectReads=new AbortController();
-  let searchDetails=null,searchState='idle',research=null,researchReady=Promise.resolve();
+  let searchDetails=null,searchState='idle',research=null,researchRead=null,researchReady=Promise.resolve();
   let retracted=new Set();
   const resultCache=new Map(),preparedPhotos=new Map();
   const resultKey=()=>scope()+'|'+JSON.stringify([context.preferences||'',!!context.automatic,storeKey()]);
@@ -61,7 +61,19 @@
     const cached=resultCache.get(resultKey());if(!cached||cached.reference!==(context.referenceImage||'')||(!cached.products.length&&Date.now()-cached.at>30000))return false;
     ({submittedRequest,lastSearchStores,completedStatus,filterTouched,image,originalImage,view}=cached);products=structuredClone(cached.products);searchDetails=structuredClone(cached.searchDetails);history=structuredClone(cached.history);activeStores=new Set(cached.stores);context.inhouse=cached.inhouse;searchState=cached.searchState==='complete'?'complete':'interrupted';autoStarted=true;els.details.set(searchDetails);els.observation.textContent=cached.observation||searchDetails?.observation||'';paintPhoto();status(searchState==='complete'?completedStatus:'Search interrupted. Loaded suggestions are kept; Refresh to continue.');return true;
   }
-  let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null;
+  let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null,inventoryData=null,inventoryVersion=0;
+  let bookRead=null,bookLoadedAt=0;
+  // Only decoded cards survive a tab switch. Pending image requests retain
+  // their normal deadlines; private nodes are discarded on every scope reset.
+  const parkedCards=new Map();
+  function clearParkedCards(){for(const card of parkedCards.values())card._fabricDispose?.();parkedCards.clear();}
+  function releaseCard(card){
+    card.remove();
+    if(card._fabricView!==view&&card.classList.contains('has-photo')){
+      const key=card._fabricSignature;parkedCards.get(key)?._fabricDispose?.();parkedCards.delete(key);parkedCards.set(key,card);
+      if(parkedCards.size>24){const first=parkedCards.keys().next().value;parkedCards.get(first)._fabricDispose?.();parkedCards.delete(first);}
+    }else card._fabricDispose?.();
+  }
   const token = () => localStorage.getItem('maya_admin_tok') || localStorage.getItem('maya_google_token') || '';
   function account() {
     try { const p = JSON.parse(atob(token().split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return p.exp * 1000 > Date.now() ? String(p.sub || '') : ''; }
@@ -102,10 +114,10 @@
   function showStatus(){els.status.textContent=view==='search'?searchStatus:view==='inhouse'?inventoryStatus:'';}
   function status(message){searchStatus=message||'';showStatus();}
   function reset() {
-    searchStatus='';inventoryStatus='';epoch++;photoSeq++;searchSeq++;autoStarted=false;searchMode='worldwide';activeStores=new Set();filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
-    const nextProject=projectScope();if(nextProject!==projectIdentity){resultCache.clear();preparedPhotos.clear();bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
+    searchStatus='';inventoryStatus='';epoch++;photoSeq++;searchSeq++;autoStarted=false;searchMode='worldwide';activeStores=new Set();filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();clearParkedCards();
+    const nextProject=projectScope();if(nextProject!==projectIdentity){resultCache.clear();preparedPhotos.clear();bookRead=null;bookLoadedAt=0;bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
     controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
-    research=null;researchReady=Promise.resolve();retracted=new Set();searchDetails=null;searchState='idle';els?.details.set(null);
+    research=null;researchRead=null;researchReady=Promise.resolve();retracted=new Set();searchDetails=null;searchState='idle';els?.details.set(null);
     if(els){els.input.value='';els.observation.textContent='';els.transcript.replaceChildren();for(const card of els.results.children)card._fabricDispose?.();els.results.replaceChildren();els.photo.hidden=true;els.preview.removeAttribute('src');els.file.value='';els.send.disabled=false;els.stop.hidden=true;els.saveStatus.textContent='';els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');status('');}
   }
   function icon(label,path,fn) {
@@ -235,20 +247,28 @@
   function paintPhoto() { els.photo.hidden=!image; if (image) els.preview.src=image; else els.preview.removeAttribute('src'); }
   async function loadInventory(force=false) {
     if(Array.isArray(context.inhouse)&&!force)return;
-    if(inventoryRequest&&!force)return inventoryRequest;
-    const stamp=epoch,signal=AbortSignal.any([reads.signal,AbortSignal.timeout(15000)]);
+    const stamp=epoch;
     inventoryStatus='';
-    const task=(async()=>{
+    // This catalog is public and versioned, independent of any garment/account.
+    // Each caller applies it only to its own still-current view.
+    if(force||(!inventoryData&&!inventoryRequest)){
+      inventoryVersion++;
+      const task=(async()=>{
+      const signal=AbortSignal.timeout(15000);
       const response=await fetch('/aesthetics/fabrics/fabrics.json?v=2',{cache:force?'no-store':'default',signal});
       if(!response.ok)throw Error('In-house photos unavailable.');
-      const data=await response.json();if(!current(stamp))return;
-      context.inhouse=(data.items||[]).filter(p=>typeof p.fileName==='string'&&!/[\\/]/.test(p.fileName)&&/\.(?:png|jpe?g|webp)$/i.test(p.fileName)).map(p=>{
+      const data=await response.json();
+      return (data.items||[]).filter(p=>typeof p.fileName==='string'&&!/[\\/]/.test(p.fileName)&&/\.(?:png|jpe?g|webp)$/i.test(p.fileName)).map(p=>{
         const original='/aesthetics/fabrics/'+encodeURIComponent(p.fileName);
         const thumbnail=typeof p.thumbnail==='string'&&p.thumbnail.match(/^thumbs\/([^\\/]+\.(?:png|jpe?g|webp))$/i);
         return {title:p.name||p.fileName,url:original,image:thumbnail?'/aesthetics/fabrics/thumbs/'+encodeURIComponent(thumbnail[1]):original,description:[p.weave,p.weight,p.color].filter(Boolean).join(' · ')};
       });
-      if(view==='inhouse')paint();
-    })();inventoryRequest=task;try{await task;}catch(e){if(current(stamp))inventoryStatus=e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':'In-house photos unavailable. Refresh to retry.';throw e;}finally{if(inventoryRequest===task){inventoryRequest=null;if(current(stamp))paint();}}
+      })();inventoryRequest=task;
+    }
+    const task=inventoryRequest,version=inventoryVersion;
+    try{const data=task?await task:inventoryData;if(version!==inventoryVersion)return;if(task&&inventoryRequest===task)inventoryData=data;if(current(stamp))context.inhouse=data;}
+    catch(e){if(version===inventoryVersion&&current(stamp))inventoryStatus=e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':'In-house photos unavailable. Refresh to retry.';throw e;}
+    finally{if(inventoryRequest===task)inventoryRequest=null;if(version===inventoryVersion&&current(stamp))paint();}
   }
   async function loadContext(stamp) {
     if (!context.submissionId || context.referenceImage) return;
@@ -268,18 +288,24 @@
   }
   async function loadBook(forSave=false) {
     if(saves.pending.size&&!forSave)return;
+    if(!forSave){if(bookRead)return bookRead;if(bookLoadedAt&&Date.now()-bookLoadedAt<30000)return;}
     const ticket=projectTicket(),sequence=++bookSeq;
     if(!context.submissionId){if(view==='saved')status('Open a submission to save fabrics.');return;}
+    const task=(async()=>{
     try{
       const data=await json('/api/admin/fabrics/lookbook?submissionId='+encodeURIComponent(context.submissionId),{signal:AbortSignal.any([projectReads.signal,AbortSignal.timeout(10000)])});
-      if(!projectCurrent(ticket)||(!forSave&&sequence!==bookSeq))return;
-      book=data;if(view==='saved')paint();notifySelection();
+      if(!projectCurrent(ticket)||sequence!==bookSeq)return;
+      book=data;bookLoadedAt=Date.now();if(view==='saved')paint();notifySelection();
     }catch(e){if(projectCurrent(ticket)&&sequence===bookSeq)els.saveStatus.textContent=e.message;}
+    })();bookRead=task;try{await task;}finally{if(bookRead===task)bookRead=null;}
   }
   async function loadResearch(stamp=epoch){
     if(!context.automatic||!context.submissionId||!context.piece?.id)return null;
+    if(researchRead)return researchRead;
+    const task=(async()=>{
     const data=await json('/api/admin/fabrics/research?'+new URLSearchParams({submissionId:context.submissionId,garmentId:context.piece.id}));
     if(!current(stamp))return null;research=data;products=data.items.filter(p=>!retracted.has(p.url));return {...data,items:products};
+    })();researchRead=task;try{return await task;}finally{if(researchRead===task)researchRead=null;}
   }
   async function dismiss(product,button){
     if(busy||!research)return;
@@ -316,7 +342,7 @@
         const payload=book.items.some(p=>p.url===snapshot.url)?{url:snapshot.url}:{...snapshot,garment:snapshot.garment||garmentName,garmentId:snapshot.garmentId||garmentId};
         const data=await json('/api/admin/fabrics/lookbook',{method:'POST',body:JSON.stringify({submissionId,generation:book.generation,action:actionName,garmentId,product:payload})});
         if(!projectCurrent(ticket))return;
-        book=data;if(view==='saved')paint();notifySelection();els.saveStatus.textContent=actionName==='remove'?'Removed.':actionName==='select'?'Selected: '+(garmentName||'this look')+'.':'Saved'+(garmentName?': '+garmentName:'')+'.';
+        book=data;bookLoadedAt=Date.now();if(view==='saved')paint();notifySelection();els.saveStatus.textContent=actionName==='remove'?'Removed.':actionName==='select'?'Selected: '+(garmentName||'this look')+'.':'Saved'+(garmentName?': '+garmentName:'')+'.';
       }catch(e){if(projectCurrent(ticket)){book.generation=null;els.saveStatus.textContent=e.name==='TimeoutError'?'Change not confirmed. Check Favorites before retrying.':e.message;await loadBook(true);}}
     };
     queue.tail=queue.tail.catch(()=>{}).then(task).finally(()=>{queue.pending.delete(key);button.removeAttribute('aria-busy');button.disabled=false;if(projectCurrent(ticket))paint();});return queue.tail;
@@ -388,7 +414,7 @@
   // discarding a healthy photograph or restarting URLs that already failed.
   const cardSignature=p=>JSON.stringify([view,!!context.automatic,p.url]);
   function card(p) {
-    const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);
+    const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);item._fabricView=view;
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
     mountProductPhoto(item,link,p);
     const title=node('h3','fa-card-title',p.title);title.dataset.mayaType='H4';
@@ -430,7 +456,7 @@
     // Retained cards keep their actual image/link nodes through Refresh and
     // appended results. Rebuilding the grid made loaded photographs flicker.
     const existing=new Map([...els.results.children].filter(el=>el._fabricURL).map(el=>[el._fabricURL,el]));
-    const cards=items.map(product=>reuseCard(existing.get(product.url),product));
+    const cards=items.map(product=>{const key=cardSignature(product),mounted=existing.get(product.url),old=mounted?._fabricSignature===key?mounted:parkedCards.get(key);parkedCards.delete(key);return reuseCard(old,product);});
     // Keep retained source-only cards after usable photos, even when they were
     // inserted earlier in the stream or exhausted their image URLs later.
     if(view==='search'&&searchMode==='worldwide'){
@@ -438,7 +464,7 @@
       cards.sort((a,b)=>missingPhoto(a)-missingPhoto(b));
     }
     for(const item of cards)item.hidden=false;
-    const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child)){child._fabricDispose?.();child.remove();}
+    const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child))releaseCard(child);
     cards.forEach((el,index)=>{if(els.results.children[index]!==el)els.results.insertBefore(el,els.results.children[index]||null);});
     if(!items.length&&!(context.automatic&&view==='search')&&(view!=='search'||(!busy&&searchState!=='preparing'))&&!(view==='inhouse'&&inventoryRequest))els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?(inventoryStatus||'No in-house fabrics yet.'):searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
     els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
@@ -456,7 +482,7 @@
   async function refreshView(){
     // Retry only failed photographs on explicit Refresh; healthy loaded images stay mounted.
     for(const item of els.results.querySelectorAll('.has-missing-photo'))item._fabricSignature='';
-    if(view==='saved')return loadBook();
+    if(view==='saved')return loadBook(true);
     if(view==='inhouse'){try{if(context.loadInhouse){const stamp=epoch;const items=await context.loadInhouse();if(current(stamp)){context.inhouse=items;paint();}}else await loadInventory(true);}catch(e){inventoryStatus=e.message;showStatus();}return;}
     if(context.automatic&&!context.submissionId&&reopenSaved)return reopenSaved();
     if(searchState==='preparing')return;
@@ -529,10 +555,10 @@
     context={...next};
     reopenSaved=typeof next.reopenSaved==='function'?next.reopenSaved:null;
     const nextIdentity=scope();
-    const changed=next.forceReset||prevIdentity!==nextIdentity||(next.referenceImage&&next.referenceImage!==originalImage)||(next.preferences!==undefined&&next.preferences!==previousContext.preferences);
+    const changed=next.forceReset||prevIdentity!==nextIdentity||(next.referenceImage&&next.referenceImage!==previousContext.referenceImage)||(next.preferences!==undefined&&next.preferences!==previousContext.preferences);
     if(next.silent&&!changed){context={...previousContext,...next};return;}
     if(changed){reset();identity=nextIdentity;}
-    else {context.referenceImage=context.referenceImage||previousContext.referenceImage;context.preferences=context.preferences||previousContext.preferences;}
+    else {context={...previousContext,...next};context.referenceImage=context.referenceImage||previousContext.referenceImage;if(next.preferences===undefined)context.preferences=previousContext.preferences;}
     if(next.forceReset){for(const key of resultCache.keys())if(key.startsWith(scope()+'|'))resultCache.delete(key);preparedPhotos.delete(next.referenceImage);}
     let restored=changed&&!next.forceReset&&restoreResults();
     const stamp=epoch,preparationSequence=searchSeq;

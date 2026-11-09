@@ -191,6 +191,26 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 9 responsiveness pass preserves the current visual settings and layout.
+Reopening the same saved Fabric research retains its loaded state; switching
+In House/Global/Favorites retains up to 24 decoded photo cards in memory. Private
+cards clear on garment/account/project reset. The public inventory loads once
+per page; concurrent lookbook/research reads are shared. Lookbook reads remain
+fresh for 30 seconds; explicit Refresh/save reads bypass that window.
+Favorites additions/removals and caption updates preserve unchanged image nodes.
+Shared image inspection watches new subtrees instead of rescanning the document
+on every text update, and Design Notes positioning runs at most once per frame.
+Shared CSS settings coalesce simultaneous loads, throttle focus revalidation to
+30 seconds, and skip unchanged incoming values. Explicit Aesthetic Control
+previews/saves and cross-tab edits remain immediate. No image model, provider,
+paid search behavior or production speed setting changed.
+
+Node20 code-only release checks pass, including cache/reset, refresh races,
+unchanged CSS, incremental image watching and Favorites reuse. The Google release
+gate and matching public versions still establish deployment. CI also checks photo
+identity through gallery switches, saved reopening and Favorites edits at the
+existing responsive sizes. Fromsa owns visual/interaction acceptance.
+
 November 8 feedback: Fromsa confirmed Global Fabrics now sources photographs.
 This revision restores the 34/66 Operation Room proportions and a large
 center garment view with horizontal panning. One native dropdown chevron has

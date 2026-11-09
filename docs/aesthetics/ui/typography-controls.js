@@ -179,18 +179,24 @@ html body #adm-mkt #leads-table .lead-stage:has(option[value="completed"]:checke
     let node=document.getElementById('maya-editor-control-style');if(!node){node=document.createElement('style');node.id='maya-editor-control-style';document.head.append(node);}
     node.textContent=`html body :is(.type-editor-fields,.maya-model-popover,.lead-status-menu,.maya-filter-popover,.lead-stage-menu,:where(#msg-share-menu),:where([data-maya-control="field"]),:where([data-maya-popup])){background:rgb(${palette[e.background]||palette.black} / ${e.fill/100})!important;border:1px solid rgb(${e.borderColor==='black'?'0 0 0':e.borderColor==='gray'?'170 181 196':'255 255 255'} / ${e.rim/100})!important;border-radius:${e.radius}px!important;padding:${e.paddingY??e.padding??8}px ${e.paddingX??e.padding??8}px!important;}`;
   }
-  let revision=0,currentDesign;
-  async function load(){const started=revision;if(local){let value;try{value=JSON.parse(localStorage.getItem(key)||'null')||defaults;}catch{value=defaults;}value=normalize(value);apply(value);return value;}
-    try{const r=await fetch('/api/design',{cache:'no-store'});if(!r.ok)throw Error('design');const value=normalize(await r.json());if(started===revision)apply(value);return currentDesign||value;}catch{if(!currentDesign)apply(defaults);return currentDesign||defaults;}
+  let revision=0,currentDesign,loadRequest=null,lastChecked=0;
+  function applyIncoming(value){value=normalize(value);if(JSON.stringify(value)!==JSON.stringify(currentDesign))apply(value);}
+  async function load(){
+    if(loadRequest)return loadRequest;
+    const started=revision;
+    if(local){let value;try{value=JSON.parse(localStorage.getItem(key)||'null')||defaults;}catch{value=defaults;}value=normalize(value);applyIncoming(value);lastChecked=Date.now();return value;}
+    const task=(async()=>{
+      try{const r=await fetch('/api/design',{cache:'no-store'});if(!r.ok)throw Error('design');const value=normalize(await r.json());lastChecked=Date.now();if(started===revision)applyIncoming(value);return currentDesign||value;}catch{if(!currentDesign)apply(defaults);return currentDesign||defaults;}
+    })();loadRequest=task;try{return await task;}finally{if(loadRequest===task)loadRequest=null;}
   }
   async function save(value){value=structuredClone(value);if(local){localStorage.setItem(key,JSON.stringify(value));apply(value);channel?.postMessage(value);return 'Saved locally.';}
     const token=localStorage.getItem('maya_admin_tok');if(!token)throw Error('Sign in to Admin before saving.');
     const r=await fetch('/api/admin/design',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(value)});
     if(!r.ok)throw Error(r.status===403?'Admin access required.':'Save failed ('+r.status+').');const result=await r.json();localStorage.setItem(key,JSON.stringify(value));apply(value);channel?.postMessage(value);document.dispatchEvent(new CustomEvent('maya-design-saved',{detail:{savedAt:result.savedAt}}));return 'Saved.';
   }
-  window.addEventListener('storage',e=>{if(e.key===key&&e.newValue){try{const v=JSON.parse(e.newValue);if(v?.type&&v?.glass)apply(v);}catch{}}});
-  const revalidate=()=>{if(!location.pathname.endsWith('aesthetic-control.html'))void load();};
+  window.addEventListener('storage',e=>{if(e.key===key&&e.newValue){try{const v=JSON.parse(e.newValue);if(v?.type&&v?.glass)applyIncoming(v);}catch{}}});
+  const revalidate=()=>{if(!location.pathname.endsWith('aesthetic-control.html')&&Date.now()-lastChecked>=30000)void load();};
   window.addEventListener('focus',revalidate);document.addEventListener('visibilitychange',()=>{if(!document.hidden)revalidate();});
-  if(channel)channel.onmessage=e=>{if(e.data?.type&&e.data?.glass)apply(e.data);};
+  if(channel)channel.onmessage=e=>{if(e.data?.type&&e.data?.glass)applyIncoming(e.data);};
   window.MayaTypographyControls={defaults,normalize,apply,previewPresentation:applyPresentation,previewPills:value=>window.MayaPillControls.apply(normalize(value)),previewSurfaces:applySurfaces,previewEditor,load,save,ready:load()};
 })();

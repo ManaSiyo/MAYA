@@ -2439,6 +2439,82 @@ checks['fabric-photo-retention']=async function(){
  original._fabricDispose();console.log('Fabric photos: mounted node retention during search/save state changes, controls and image retractions passed.');
 };
 
+checks['fabric-loading-reuse']=async function(){
+ const {default:assert}=await import('node:assert/strict'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const source=readFileSync('docs/aesthetics/ui/fabric-assistant.js','utf8');
+ const fn=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
+ let resets=0,researchReads=0,searches=0;
+ const reference={submissionId:'project',automatic:true,piece:{id:'coat'},referenceImage:'saved-reference',preferences:'green'};
+ const noop=()=>{},control={textContent:'',setAttribute:noop};
+ const c=vm.createContext({HTMLElement:class{},context:{...reference,inhouse:[{title:'Wool'}]},identity:'project|coat',originalImage:'',epoch:1,searchSeq:0,autoStarted:true,research:{items:[],searched:true},searchState:'complete',busy:false,
+   make:noop,rememberResults:noop,scope:()=> 'project|coat',reset:()=>resets++,restoreResults:()=>false,collapse:noop,expand:noop,workspace:{},els:{sub:{},send:{},input:{focus:noop},expand:control},paint:noop,account:()=> 'owner',loadBook:noop,loadInventory:async()=>{},loadResearch:async()=>{researchReads++;return {items:[],searched:true};},preparedPhoto:async()=> 'prepared',loadContext:async()=>{},current:()=>true,run:async()=>searches++,status:noop});
+ vm.runInContext(fn('  async function open(','  function guardAccount'),c);c.next=reference;
+ await vm.runInContext('open(next)',c);await vm.runInContext('open(next)',c);
+ assert.equal(resets,0,'Reopening saved research does not compare the source to an unprepared image');assert.equal(researchReads,0);assert.equal(searches,0);assert.equal(c.context.inhouse.length,1);
+ c.next={...reference,referenceImage:'changed-reference'};await vm.runInContext('open(next)',c);assert.equal(resets,1,'A changed input still resets');
+ let fetches=0,resolveFetch,activeEpoch=1;const paints=[];
+ const inventory=vm.createContext({epoch:1,context:{},inventoryRequest:null,inventoryData:null,inventoryVersion:0,inventoryStatus:'',AbortSignal,fetch:()=>{fetches++;return new Promise(resolve=>resolveFetch=resolve);},current:stamp=>stamp===activeEpoch,paint:()=>paints.push(activeEpoch)});
+ vm.runInContext(fn('  async function loadInventory(','  async function loadContext('),inventory);
+ const first=vm.runInContext('loadInventory()',inventory);activeEpoch=2;inventory.epoch=2;inventory.context={};const second=vm.runInContext('loadInventory()',inventory);
+ resolveFetch({ok:true,json:async()=>({items:[{fileName:'Wool.jpg',thumbnail:'thumbs/Wool.jpg',name:'Wool'}]})});await Promise.all([first,second]);
+ assert.equal(fetches,1,'Garment switches share the public inventory request');assert.equal(inventory.context.inhouse.length,1);assert.equal(paints.length,1,'Stale inventory callers cannot paint');
+ inventory.context={};await vm.runInContext('loadInventory()',inventory);assert.equal(fetches,1,'The loaded public catalog is reused');
+ const refresh=vm.runInContext('loadInventory(true)',inventory);resolveFetch({ok:true,json:async()=>({items:[]})});await refresh;assert.equal(fetches,2);assert.equal(inventory.context.inhouse.length,0);
+ const older=vm.runInContext('loadInventory(true)',inventory),resolveOlder=resolveFetch,newer=vm.runInContext('loadInventory(true)',inventory);resolveFetch({ok:true,json:async()=>({items:[]})});await newer;resolveOlder({ok:true,json:async()=>({items:[{fileName:'Old.jpg'}]})});await older;assert.equal(inventory.context.inhouse.length,0,'A delayed catalog request cannot undo explicit refresh');
+ let bookReads=0,resolveBook,project='A';const ticket=()=>({key:project});
+ const book=vm.createContext({context:{submissionId:'A'},saves:{pending:new Set()},bookRead:null,bookLoadedAt:0,bookSeq:0,projectReads:new AbortController(),projectTicket:ticket,projectCurrent:t=>t.key===project,AbortSignal,Date,view:'search',json:()=>{bookReads++;return new Promise(resolve=>resolveBook=resolve);},notifySelection:noop,els:{saveStatus:{}},paint:noop});
+ vm.runInContext(fn('  async function loadBook(','  async function loadResearch('),book);
+ const a=vm.runInContext('loadBook()',book),b=vm.runInContext('loadBook()',book);resolveBook({generation:'1',items:[]});await Promise.all([a,b]);await vm.runInContext('loadBook()',book);assert.equal(bookReads,1,'In-flight and recent lookbook reads are reused');
+ const fresh=vm.runInContext('loadBook(true)',book);resolveBook({generation:'2',items:[]});await fresh;assert.equal(bookReads,2,'Explicit refresh/save reads bypass freshness');
+ const stale=vm.runInContext('loadBook(true)',book);project='B';resolveBook({generation:'stale',items:[]});await stale;assert.equal(book.book.generation,'2','Late project results cannot replace the book');
+ // Retained nodes are bounded, and private reset disposes every parked image.
+ const parked=vm.createContext({view:'inhouse'});vm.runInContext(fn('  const parkedCards=','  const token ='),parked);let disposed=0;
+ const cards=Array.from({length:30},(_,i)=>({_fabricSignature:String(i),_fabricView:'search',classList:{contains:()=>true},remove:noop,_fabricDispose:()=>disposed++}));
+ for(const card of cards){parked.card=card;vm.runInContext('releaseCard(card)',parked);}assert.equal(vm.runInContext('parkedCards.size',parked),24);assert.equal(disposed,6);vm.runInContext('clearParkedCards()',parked);assert.equal(disposed,30);
+ console.log('Fabric reuse: stable reopening, one inventory/book read, explicit refresh, stale-project rejection and bounded private photo retention passed.');
+};
+
+checks['shared-style-loading']=async function(){
+ const {default:assert}=await import('node:assert/strict'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');const source=readFileSync('docs/aesthetics/ui/typography-controls.js','utf8');
+ let calls=0,resolveFetch,now=100000;const events={};
+ const c=vm.createContext({Date:{now:()=>now},local:false,location:{pathname:'/backend.html'},key:'design',channel:null,defaults:{type:{size:12}},normalize:structuredClone,fetch:()=>{calls++;return new Promise(resolve=>resolveFetch=resolve);},window:{addEventListener:(name,fn)=>events[name]=fn},document:{addEventListener:(name,fn)=>events[name]=fn}});
+ vm.runInContext('let applications=0;function apply(v){applications++;currentDesign=v;revision++;}',c);
+ vm.runInContext(source.slice(source.indexOf('  let revision='),source.indexOf('  window.MayaTypographyControls=')),c);
+ const a=vm.runInContext('load()',c),b=vm.runInContext('load()',c);events.focus();resolveFetch({ok:true,json:async()=>({type:{size:12}})});await Promise.all([a,b]);assert.equal(calls,1);assert.equal(vm.runInContext('applications',c),1);
+ events.focus();events.visibilitychange();assert.equal(calls,1,'Paired focus/visibility events do not refetch fresh settings');
+ const same=vm.runInContext('load()',c);resolveFetch({ok:true,json:async()=>({type:{size:12}})});await same;assert.equal(vm.runInContext('applications',c),1,'Unchanged settings do not rebuild styles or broadcast layout work');
+ const racing=vm.runInContext('load()',c);vm.runInContext('apply({type:{size:20}})',c);resolveFetch({ok:true,json:async()=>({type:{size:12}})});await racing;assert.equal(vm.runInContext('currentDesign.type.size',c),20,'A delayed read cannot undo a newer live edit');
+ now+=31000;events.focus();events.visibilitychange();assert.equal(calls,4);resolveFetch({ok:true,json:async()=>({type:{size:22}})});await vm.runInContext('loadRequest',c);assert.equal(vm.runInContext('currentDesign.type.size',c),22);
+ console.log('Shared CSS loading: one concurrent request, focus throttle, unchanged-style no-op and newer-edit protection passed.');
+};
+
+checks['incremental-image-watching']=async function(){
+ const {default:assert}=await import('node:assert/strict'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');let scans=0,observer,bound=0;
+ const c={window:{},document:{body:{},querySelectorAll:()=>{scans++;return [];}},MutationObserver:class{constructor(fn){observer=fn;}observe(){}}};
+ vm.runInNewContext(readFileSync('docs/aesthetics/ui/image-viewer.js','utf8'),c);c.window.MayaImageViewer.watch('img');
+ for(let i=0;i<100;i++)observer([{addedNodes:[{nodeType:3}]}]);assert.equal(scans,1,'Text updates never scan the whole document');
+ const image={nodeType:1,isConnected:true,matches:()=>true,querySelectorAll:()=>[],classList:{add:()=>bound++},setAttribute(){},addEventListener(){}};
+ const wrapper={nodeType:1,isConnected:true,matches:()=>false,querySelectorAll:()=>[image]};image.parentElement=wrapper;
+ observer([{addedNodes:[wrapper,image]}]);assert.equal(bound,1,'An added subtree binds its images once');observer([{addedNodes:[image]}]);assert.equal(bound,1,'Moving a retained photo does not rebind it');assert.equal(scans,1);
+ console.log('Image watcher: added subtrees only; 100 caption mutations cause zero additional whole-page scans.');
+};
+
+checks['favorites-incremental-render']=async function(){
+ const {default:assert}=await import('node:assert/strict'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');const source=readFileSync('frontend/index.html','utf8');let creations=0;
+ const wrap={children:[],dataset:{},insertBefore(card,before){card.remove();this.children.splice(before?this.children.indexOf(before):this.children.length,0,card);}};
+ const document={body:{classList:{toggle(){}}},getElementById:()=>wrap,createElement:tag=>{
+  assert.equal(tag,'template');return {set innerHTML(value){creations++;const card={dataset:{id:value.match(/data-id="([^"]+)"/)[1]},caption:{textContent:value.match(/class="fc-summary">([^<]*)/)[1]},querySelector(){return this.caption;},remove(){const i=wrap.children.indexOf(this);if(i>=0)wrap.children.splice(i,1);}};this.content={firstElementChild:card};}};
+ }};
+ const c=vm.createContext({document,items:[{id:1,card:{favorited:true,image:'https://photos.test/one',caption:'First coat'}}],_buildPieceSummaryLine:f=>f.card.caption,escapeHtml:v=>v,SHOWCASE_VIDEO_ENABLED:false,location:{search:''}});
+ vm.runInContext(source.slice(source.indexOf('function _renderFavoritesScroller()'),source.indexOf('// v9.12: open the standard image viewer')),c);
+ vm.runInContext('_renderFavoritesScroller()',c);const original=wrap.children[0];
+ c.items.push({id:2,card:{favorited:true,image:'https://photos.test/two',caption:'Second coat'}});vm.runInContext('_renderFavoritesScroller()',c);assert.equal(wrap.children[0],original);assert.equal(creations,2);
+ c.items[0].card.caption='Updated coat';vm.runInContext('_renderFavoritesScroller()',c);assert.equal(wrap.children[0],original);assert.equal(original.caption.textContent,'Updated coat');assert.equal(creations,2);
+ c.items.reverse();vm.runInContext('_renderFavoritesScroller()',c);assert.equal(wrap.children[1],original);c.items.shift();vm.runInContext('_renderFavoritesScroller()',c);assert.equal(wrap.children[0],original);assert.equal(creations,2);
+ c.items[0].card.image='https://photos.test/replacement';vm.runInContext('_renderFavoritesScroller()',c);assert.notEqual(wrap.children[0],original);assert.equal(creations,3,'A genuinely changed image gets a fresh card');
+ console.log('Favorites: additions, removals, reordering and caption changes retain photos; replacements update correctly.');
+};
+
 checks['fabric-refresh-preparation']=async function(){
  const vm=await import('node:vm'),{readFileSync}=await import('node:fs'),source=readFileSync('docs/aesthetics/ui/fabric-assistant.js','utf8');
  const start=source.indexOf('  async function refreshView('),end=source.indexOf('  async function run(',start);let release,calls=0,current=true;

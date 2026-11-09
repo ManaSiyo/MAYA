@@ -49,8 +49,9 @@
     let open=false;
     function set(value){open=value;dock.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open));panel.inert=!open;button.querySelector('.maya-notes-drop').textContent=open?'−':'+';}
     button.onclick=()=>set(!open);
-    const place=()=>{if(!anchor?.isConnected||!anchor.getClientRects().length)return;const r=anchor.getBoundingClientRect(),p=parent.getBoundingClientRect();dock.style.top=(parent.classList.contains('maya-notes-preview')?r.top-p.top+r.height/2:r.top+r.height/2)+'px';};
-    new ResizeObserver(place).observe(anchor);window.addEventListener('resize',place);document.addEventListener('scroll',place,true);place();
+    const place=()=>{if(!anchor?.isConnected||!anchor.getClientRects().length)return;const r=anchor.getBoundingClientRect(),p=parent.getBoundingClientRect(),top=(parent.classList.contains('maya-notes-preview')?r.top-p.top+r.height/2:r.top+r.height/2)+'px';if(dock.style.top!==top)dock.style.top=top;};
+    let placementFrame=0;const schedulePlace=()=>{if(!placementFrame)placementFrame=requestAnimationFrame(()=>{placementFrame=0;place();});};
+    new ResizeObserver(schedulePlace).observe(anchor);window.addEventListener('resize',schedulePlace);document.addEventListener('scroll',schedulePlace,true);place();
     dock.addEventListener('keydown',event=>{if(event.key==='Escape'&&open){event.stopPropagation();set(false);button.focus();}});
     renderNotes(content,card);
     return {element:dock,set,update:card=>{set(false);renderNotes(content,card);}};
@@ -134,8 +135,17 @@
     host.addEventListener('keydown',e=>{if(!image.classList.contains('is-wide')||!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();position=Math.max(0,Math.min(100,position+(e.key==='ArrowRight'?10:-10)));update();});
   }
   function watch(selector,options={}){
-    const scan=()=>document.querySelectorAll(selector).forEach(image=>bind(image,options));scan();
-    new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
+    document.querySelectorAll(selector).forEach(image=>bind(image,options));
+    new MutationObserver(records=>{
+      // Caption/status changes must not rescan every image on the page.
+      const added=new Set(records.flatMap(record=>[...record.addedNodes]).filter(node=>node.nodeType===1&&node.isConnected));
+      for(const node of added){
+        let nested=false;for(let parent=node.parentElement;parent;parent=parent.parentElement)if(added.has(parent)){nested=true;break;}
+        if(nested)continue;
+        if(node.matches(selector))bind(node,options);
+        node.querySelectorAll(selector).forEach(image=>bind(image,options));
+      }
+    }).observe(document.body,{childList:true,subtree:true});
   }
   window.MayaImageViewer={open,close:()=>active?.close(),bind,watch,panGarment,imageBounds,zoomAt,noteRows,notesDrawer,renderNotes};
 })();

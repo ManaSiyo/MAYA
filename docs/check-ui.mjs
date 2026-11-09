@@ -29,6 +29,13 @@ try{
    communityBoard.posts=Array.from({length:12},(_,i)=>({id:'design'+i,imageUrl:'/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',author:'Preview',summary:'Midnight velvet tailored coat'}));communityBoard.render();
    items=[{id:1,card:{favorited:true,image:'/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',caption:'Midnight velvet tailored coat'}}];_renderFavoritesScroller();
   });
+  assert.ok(await page.evaluate(()=>{
+   const photo=document.querySelector('.fc-img');
+   items.push({id:2,card:{favorited:true,image:items[0].card.image,caption:'Second garment'}});_renderFavoritesScroller();
+   const keptOnAdd=document.querySelector('.fc-img')===photo;
+   items.pop();items[0].card.caption='Updated velvet coat';_renderFavoritesScroller();
+   return keptOnAdd&&document.querySelector('.fc-img')===photo&&document.querySelector('.fc-summary').textContent===_buildPieceSummaryLine(items[0]);
+  }),'Favorites additions, removals and caption updates preserve the loaded photograph');
   assert.deepEqual(await page.locator('#page-indicator button').evaluateAll(nodes=>nodes.map(n=>n.title)),['Inspo','Favorites','Community']);
   assert.deepEqual(await page.locator('#screens > section').evaluateAll(nodes=>nodes.map(n=>n.id)),['screen-inspo','screen-favorites','screen-community']);
   await page.waitForFunction(()=>document.querySelector('#page-indicator button.active')?.title==='Inspo');
@@ -213,7 +220,7 @@ const refreshSearch=async()=>{
  await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await response;
  await page.waitForFunction(()=>document.getElementById('fabric-assistant').getAttribute('aria-busy')==='false');
 };
-const reopenResearch=()=>page.evaluate(reference=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset:true,reopenSaved:showBriefFabrics,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),reference);
+const reopenResearch=(forceReset=true)=>page.evaluate(({reference,forceReset})=>MayaFabricAssistant.open({host:document.getElementById('brief-fabrics'),submissionId:'gallery-project',referenceImage:reference,automatic:true,forceReset,reopenSaved:showBriefFabrics,piece:{id:'coat',name:'Coat'},pieces:[{id:'coat',name:'Coat'}]}),{reference,forceReset});
 const measure=()=>page.locator('#fabric-assistant').evaluate(root=>{
  const rect=el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return {width:r.width,height:r.height,top:r.top,left:r.left,overflowX:s.overflowX,overflowY:s.overflowY,columns:s.gridTemplateColumns,rows:s.gridTemplateRows,gap:s.gap,font:s.fontFamily,size:s.fontSize,line:s.lineHeight,pad:[s.paddingLeft,s.paddingTop],material:s.backgroundColor,fit:s.objectFit};};
  const first=root.querySelector('.fa-product:not([hidden])');return {body:rect(root.querySelector('.fa-body')),grid:rect(root.querySelector('.fa-results')),card:rect(first),photo:rect(first.querySelector('img')),title:rect(first.querySelector('.fa-card-title')),caption:rect(first.querySelector('.fa-card-caption')),controls:[...root.querySelectorAll('button,textarea')].filter(el=>!el.closest('.fa-card-actions')&&el.getBoundingClientRect().width&&el.getBoundingClientRect().height).map(el=>el.textContent||el.getAttribute('aria-label'))};
@@ -259,6 +266,10 @@ try{
  await tab('Global').click();await reopenResearch();
  await page.locator('.fa-product-image').evaluateAll(images=>Promise.all(images.map(image=>image.decode())));
  await page.evaluate(()=>{window._retainedFabricImage=document.querySelector('.fa-product-image');});
+ await reopenResearch(false);
+ assert.equal(await page.evaluate(()=>document.querySelector('.fa-product-image')===window._retainedFabricImage),true,'Reopening saved research preserves the already loaded photo even without preparing its reference again');
+ await tab('In House').click();await page.locator('.fa-product-image').first().evaluate(image=>image.decode());await tab('Global').click();
+ assert.equal(await page.evaluate(()=>document.querySelector('.fa-product-image')===window._retainedFabricImage),true,'Switching gallery tabs reuses the decoded Global photograph');
  assert.equal(calls,1);failed=true;await refreshSearch();assert.equal(calls,2);
  assert.ok(research.items.every(p=>new URL(p.image).searchParams.has('failure')),'Saved fixture must contain the failed URLs before reopening');
  assert.equal(await page.evaluate(()=>document.querySelector('.fa-product-image')===window._retainedFabricImage),true,'Refreshing cannot discard a loaded photo');

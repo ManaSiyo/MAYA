@@ -4,6 +4,12 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 9 — loading and responsiveness:** preserve loaded Fabrics on reopen
+  and tab switches, bound and clear private photo retention, share public catalog
+  and concurrent private reads, retain unchanged Favorites images, avoid unchanged
+  CSS reapplication and duplicate focus requests, and scan only newly added image
+  subtrees. Design Notes positioning is frame-coalesced. Current dimensions and
+  Aesthetic Control settings are unchanged; regression and CI coverage extended.
 - **November 8 — owner feedback:** Global Fabrics confirmed working
   by Fromsa. Restored 34/66 Operation Room panels, centered garment panning and a
   single dropdown chevron; section snapping and normal vertical wheel scrolling.

@@ -4010,8 +4010,8 @@
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=6"></script>
-<script src="/aesthetics/ui/typography-controls.js?v=26"></script>
-<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=3"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=27"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=4"></script>
 </head>
 <body>
 <!-- v14.21: this is the Playground, promoted whole. The amber badge is the
@@ -7407,15 +7407,13 @@ function _renderFavoritesScroller() {
   const favs = items.filter(i => i.card.favorited && i.card.image);
   document.body.classList.toggle('has-favorites', favs.length > 0);
   if (!favs.length) { wrap.innerHTML = ''; wrap.dataset.sig = ''; return; }
-  // v12.7: rebuilding this strip throws away every loaded image and downloads
-  // them all again. Only rebuild when the contents genuinely changed.
-  const favSig = favs.map(f => f.id + ':' + String(f.card.image || '').slice(-40)).join(',');
-  if (wrap.dataset.sig === favSig) return;
-  wrap.dataset.sig = favSig;
+  // Retain each unchanged card, including its decoded photo, when another
+  // favorite is added/removed or its caption changes.
+  const existing=new Map([...wrap.children].map(card=>[card.dataset.id,card]));
   // v9.4: image only, no tag chip, no caption text on the favorites cards.
   // v9.12: click opens the garment-modal in "submit" mode (no Listen/Modify/
   // Switch, just a single glowing Submit button).
-  wrap.innerHTML = favs.map(f => {
+  const cards = favs.map(f => {
     // v11.14: hover overlay is now a 1-sentence garment summary over a black
     // gradient (was a row of construction tag chips). Summary reuses the same
     // per-favorite line the submit-mode viewer shows.
@@ -7431,7 +7429,13 @@ function _renderFavoritesScroller() {
     const pendingHtml = (SHOWCASE_VIDEO_ENABLED && !f.card.showcaseVideoUrl && f.card._showcasePending)
       ? '<div class="fc-rendering">rendering 360°…</div>'
       : '';
-    return '<div class="favorite-card" data-id="' + f.id + '" ' +
+    const previous=existing.get(String(f.id)),media={image:f.card.image,video:videoHtml,pending:pendingHtml};
+    if(previous?._favoriteMedia&&Object.keys(media).every(key=>previous._favoriteMedia[key]===media[key])){
+      const caption=previous.querySelector('.fc-summary');if(caption.textContent!==summary)caption.textContent=summary;
+      return previous;
+    }
+    const template=document.createElement('template');
+    template.innerHTML = '<div class="favorite-card" data-id="' + f.id + '" ' +
       'onmouseenter="_favHoverIn(this)" onmouseleave="_favHoverOut(this)" ' +
       'onclick="openFavoriteForSubmit(' + f.id + ')">' +
       '<div class="fc-image"><img class="fc-img" src="' + escapeHtml(f.card.image) + '" alt="" loading="lazy" decoding="async" onerror="_favImgBroken(this,' + f.id + ')"/></div>' +
@@ -7439,7 +7443,10 @@ function _renderFavoritesScroller() {
       pendingHtml +
       '<div class="fc-summary">' + escapeHtml(summary) + '</div>' +
     '</div>';
-  }).join('');
+    const card=template.content.firstElementChild;card._favoriteMedia=media;return card;
+  });
+  const keep=new Set(cards);for(const child of [...wrap.children])if(!keep.has(child))child.remove();
+  cards.forEach((card,index)=>{if(wrap.children[index]!==card)wrap.insertBefore(card,wrap.children[index]||null);});
   // v11.53: ?debug=favs, on-screen truth table of every favorited item
   if (location.search.indexOf('debug') !== -1) {
     let dbg = document.getElementById('maya-debug');
