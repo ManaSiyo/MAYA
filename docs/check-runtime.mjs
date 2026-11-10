@@ -1124,13 +1124,13 @@ function harness(page) {
     fetch:async url=>({blob:async()=>({type:'image/jpeg',content:String(url)})}),
     blobFromPicture:async url=>{if(String(url).startsWith('https://storage.invalid/')){const data=assets.get(decodeURIComponent(url.split('/').at(-1)));if(!data)throw Error('missing source');return clone(data);}return {type:'image/jpeg',content:String(url)};},
     compressBlobForUpload:async blob=>blob,
-    _authSeq:1,_boardEpoch:1,_persistTimer:null,_hydrating:false,_creatingBin:false,_flushNow:false,_autosaveDirty:false,_activeSessionId:null,
+    _authSeq:1,_boardEpoch:1,_persistTimer:null,_hydrating:false,_creatingBin:false,_flushNow:false,_autosaveDirty:false,_activeSessionId:null,_projectActivity:false,drawerRefreshes:0,
     currentClientName:null,lastSummary:null,lastTranscript:'',items:[],_lastPaintDropped:0,
     _avatarLibCache:null,_avatarLibCacheUid:null,_facePhotoVersion:0,_avatarSaveInFlight:false,_avatarSavePending:null,_avatarSaveTimer:null,_pendingAssetDeletes:[],_pendingLegacyDeletes:[],
     _cardSig:c=>c.title||c.imageUrl||c.image||'',_twoWordFromItems:()=>'',_autoProjectName:()=> 'Untitled fixture',
-    _drainAssetDeletes(){},_hydrate:async fn=>fn(),_doClear(){ctx.items=[];ctx.lastSummary=null;ctx.lastTranscript='';ctx._boardEpoch++;},
+    _drainAssetDeletes(){},_hydrate:async fn=>fn(),_doClear(){ctx.items=[];ctx.lastSummary=null;ctx.lastTranscript='';ctx._projectActivity=false;ctx._boardEpoch++;},
     showError:msg=>notices.push(msg),showToast:msg=>notices.push(msg),refreshDrawerClientName(){},renderNotesPanel(){},
-    document:{visibilityState:'visible',getElementById:id=>id==='save-session-btn'?saveButton:null},confirm:()=>false,_renderSessionsDropdown(){},
+    document:{visibilityState:'visible',getElementById:id=>id==='save-session-btn'?saveButton:null},confirm:()=>false,_renderSessionsDropdown(){ctx.drawerRefreshes++;},
     window:{addEventListener:(_name,fn)=>{ctx.beforeUnload=fn;}},
     _flashAutosaved:()=>notices.push('Autosaved'),_notifySyncOffline:()=>notices.push('Offline'),
     _paintItems:items=>{ctx.items=items;},_opContext:()=>({id:ctx.projectStore.currentId,auth:ctx._authSeq}),_opStillValid:stamp=>stamp.id===ctx.projectStore.currentId&&stamp.auth===ctx._authSeq,
@@ -1138,7 +1138,7 @@ function harness(page) {
     _safeImgSrc:s=>typeof s==='string'?s:'',_safeRealism:()=>null,
   };
   runInNewContext(part(source,'const projectStore = {','async function _renderSessionsDropdown()')+'\nglobalThis.projectStore=projectStore;',ctx);
-  runInNewContext(part(source,'function _persistSession() {','// v11.31: flush immediately'),ctx);
+  runInNewContext(part(source,'function _persistSession(','// v11.31: flush immediately'),ctx);
   runInNewContext(part(source,'async function _persistNow(flush) {','// v11.0: full session sync'),ctx);
   runInNewContext(part(source,'async function _rescueLegacyProjects(','// ── v12.6: TIP.'),ctx);
   runInNewContext(part(source,'let _cloudBooted = false;','// ── v12.5 ONE TIME RESCUE'),ctx);
@@ -1158,6 +1158,50 @@ function harness(page) {
 }
 
 for(const page of ['frontend/index.html']) {
+  { // A slower earlier drawer read and a background refresh cannot replace a newer row or inline rename.
+    const h=harness(page),old=deferred(),fresh=deferred(),list={innerHTML:'',editing:false,querySelector(){return this.editing;}};
+    h.ctx.document={getElementById:()=>list,querySelector:()=>false};h.ctx._lastReconcileAt=Date.now();h.ctx._reconcileInFlight=false;h.ctx._NEW_PROJECT_ROW='new';h.ctx._sessionRows=rows=>rows.map(r=>r.id).join(',');
+    const source=readFileSync(page,'utf8');runInNewContext(part(source,'async function _renderSessionsDropdown() {','let _reconcileInFlight = false;'),h.ctx);
+    let calls=0;h.store.list=()=>++calls===1?old.promise:fresh.promise;
+    const first=h.ctx._renderSessionsDropdown(),second=h.ctx._renderSessionsDropdown();fresh.resolve([{id:'saved-photo'}]);await second;old.resolve([{id:'old'}]);await first;assert.equal(list.innerHTML,'saved-photo');
+    list.editing=true;h.store.list=async()=>[{id:'newer'}];await h.ctx._renderSessionsDropdown();assert.equal(list.innerHTML,'saved-photo');
+  }
+  { // The first photo/text/mic action is visible in Projects after cloud acknowledgement.
+    for(const kind of ['photo','text','mic']) {
+      const h=harness(page),gate=deferred();let blocked=false;
+      if(kind==='photo')h.ctx.items=[{id:1,el:{style:{}},card:{title:'Photo only',kind:'inspo',image:'data:image/jpeg;base64,FIRST'}}];
+      if(kind==='text')h.ctx.lastTranscript='A cropped hood jacket';
+      h.ctx._persistSession(kind==='mic');
+      const touch=h.store._touchIndex.bind(h.store);h.store._touchIndex=async(...args)=>{blocked=true;await gate.promise;return touch(...args);};
+      const saving=h.ctx._persistNow();await until(()=>blocked);
+      assert.equal(h.ctx.drawerRefreshes,0,'Never show an unacknowledged draft as saved');
+      const id=h.store.currentId,doc=h.records.get('users/A/projects/'+id);assert.ok(doc);
+      gate.resolve();await saving;assert.equal(h.ctx.drawerRefreshes,1,'First acknowledgement refreshes the drawer, even without text cards');
+      if(kind==='photo')assert.ok(doc.items[0].card.storagePath);
+      if(kind==='text')assert.equal(doc.lastTranscript,'A cropped hood jacket');
+      h.ctx._persistSession();await h.store.flush();assert.equal(h.store.currentId,id);assert.equal(h.ctx.drawerRefreshes,1,'Later autosaves do not repaint editable project rows');
+    }
+  }
+  { // A failed first save is not presented as saved; retry uses the same project and publishes once.
+    const h=harness(page);h.ctx.lastTranscript='Keep my words';h.ctx._persistSession();h.hooks.commit=async()=>{throw Error('offline');};
+    await h.ctx._persistNow();const id=h.store.currentId;assert.equal(h.ctx.drawerRefreshes,0);assert.equal(h.store._dirty,true);
+    h.hooks.commit=null;assert.equal(await h.store.flush(),true);assert.equal(h.store.currentId,id);assert.equal(h.ctx.drawerRefreshes,1);
+  }
+  { // Merely selecting an avatar must not create a project, but navigation must flush a mic-only draft.
+    const h=harness(page);h.ctx.lastSummary={client:{name:'Avatar'}};h.ctx._persistSession();await h.ctx._persistNow();assert.equal(h.store.currentId,null);
+    h.ctx._persistSession(true);assert.equal(await h.store.flush(),true);assert.ok(h.store.currentId);
+    h.ctx._doClear();h.store.detach();await h.ctx._persistNow();assert.equal(h.store.currentId,null);
+  }
+  { // An account transition during first indexing cannot repaint another account's Projects.
+    const h=harness(page),gate=deferred();h.ctx.lastTranscript='New project';let blocked=false;
+    h.store._touchIndex=async()=>{blocked=true;await gate.promise;};const saving=h.ctx._persistNow();await until(()=>blocked);
+    h.switchUser('B');gate.resolve();await saving;assert.equal(h.ctx.drawerRefreshes,0);
+  }
+  { // Photo and avatar uploads begin concurrently, with one transactional project acknowledgement.
+    const h=harness(page),gate=deferred();h.board();h.ctx.items[0].card.image='data:image/jpeg;base64,PHOTO';h.ctx.lastSummary={client:{name:'Avatar'},_face_photo:'data:image/jpeg;base64,FACE'};
+    let uploads=0;h.hooks.upload=async()=>{uploads++;await gate.promise;};const saving=h.store.save();await until(()=>uploads===2);gate.resolve();assert.equal((await saving).written,true);
+    assert.equal(h.assets.size,2);assert.equal(h.writes.filter(w=>w.path==='users/A/projects/pfixture-existing').length,1);
+  }
   for(const operation of ['index','list','reconcile','migration','boot']) {
     for(const returnToA of [false,true]) {
       const h=harness(page),gate=deferred();let blocked=false;

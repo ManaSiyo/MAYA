@@ -2506,6 +2506,10 @@
     text-transform: uppercase;
     color: rgba(200,210,230,0.55);
   }
+  #notes-drawer .session-item:has(.session-item-actions){display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--maya-icon-pill-gap,6px);padding-right:8px;align-items:center}
+  #notes-drawer .session-item-actions{grid-column:2;grid-row:1 / span 2}
+  #notes-drawer :is(.session-item-title,.session-item-meta){grid-column:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  #notes-drawer .session-item:focus-within .session-item-actions>button{opacity:1}
   /* v11.22: × pinned to the top-right corner as a round bubble, shown on hover. */
   #notes-drawer .session-item-delete {
     position: absolute; top: 8px; right: 8px;
@@ -4009,7 +4013,7 @@
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
-<script src="/aesthetics/ui/pill-runtime.js?v=6"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=27"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=4"></script>
 </head>
@@ -9047,6 +9051,7 @@ function _doClear() {
   lastSummary = (_keepAvatar && (_keepAvatar._face_photo || _keepAvatar._measurements || _keepAvatar._face_descriptors || _keepAvatar.client))
     ? _keepAvatar : null;
   lastTranscript = '';
+  _projectActivity = false;
   liveTranscriptBuffer = '';
   liveInterimBuffer = '';
   lastOnePagerImage = null;
@@ -9220,6 +9225,7 @@ async function processConsultation(transcript) {
   // user was talking; the deep pass should only ADD what's missing. Image
   // cards, consumed pills, and live refs all stay exactly where they are.
   lastTranscript = transcript;
+  _persistSession();
   setThinking(true);
   updateCount();
 
@@ -9558,6 +9564,7 @@ function startListening() {
     return;
   }
 
+  const voiceContext = _opContext(), previousTranscript = lastTranscript;
   liveTranscriptBuffer = '';
   _lastVoiceTick = Date.now();
   recognition = new SR();
@@ -9566,6 +9573,7 @@ function startListening() {
   recognition.lang = 'en-US';
 
   recognition.onresult = ev => {
+    if (!_opStillValid(voiceContext)) return;
     _lastVoiceTick = Date.now();
     let finalChunk = '', interim = '';
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
@@ -9575,6 +9583,8 @@ function startListening() {
     }
     if (finalChunk) {
       liveTranscriptBuffer += finalChunk;
+      lastTranscript = [previousTranscript, liveTranscriptBuffer.trim()].filter(Boolean).join('\n');
+      _persistSession();
     }
     liveInterimBuffer = interim;
     const echo = document.getElementById('transcript-echo');
@@ -9610,6 +9620,7 @@ function startListening() {
   recognition.start();
 
   isListening = true;
+  _persistSession(true);
   document.getElementById('voice-bar').classList.add('listening');
   document.getElementById('voice-text').textContent = 'tap to mute';
   document.getElementById('listening-ring').classList.add('active');
@@ -14085,6 +14096,7 @@ function _shrinkFace(dataUrl, maxSide) {
 }
 
 let _hydrating = false;
+let _projectActivity = false; // Explicit microphone use starts a project, unlike avatar selection.
 let _creatingBin = false;
 function _autoProjectName() {
   try { return 'Untitled ' + _autosaveStamp(); } catch (_) { return 'Untitled'; }
@@ -14097,8 +14109,9 @@ async function _hydrate(fn) {
     clearTimeout(_persistTimer); _persistTimer = null; // drop anything the rebuild queued
   }
 }
-function _persistSession() {
+function _persistSession(startProject = false) {
   if (_hydrating) return;
+  if (startProject) _projectActivity = true;
   _autosaveDirty = true;
   projectStore._markDirty();
   clearTimeout(_persistTimer);
@@ -14154,13 +14167,9 @@ async function _persistNow(flush) {
     projectStore._scheduleSave();
     return;
   }
-    // No project open yet. The moment there is real content, open one so the
-    // work is in the cloud from its first second. It gets its real name later,
-    // when the designer presses Save.
-    // v13.85: an avatar identity alone (lastSummary set by switching avatar, with
-    // an empty board) is NOT content — it was spawning an empty project on every
-    // avatar switch. Only a populated board or a named project opens a bin.
-    const hasContent = (Array.isArray(items) && items.length) || currentClientName;
+    // A first photo, text or microphone action starts a project automatically.
+    // Selecting an avatar alone must never create an empty project.
+    const hasContent = (Array.isArray(items) && items.length) || currentClientName || lastTranscript || _projectActivity;
     if (!hasContent || _creatingBin) return;
     _creatingBin = true;
     try { await projectStore.createAuto(); }
@@ -14484,7 +14493,7 @@ async function _cloudBoot() {
     // v12.5: the same test _persistNow uses, so a name typed or a word dictated
     // during boot counts as real work and is never cleared by the restore.
     const busy = () => (Array.isArray(items) && items.length) || lastSummary ||
-                       currentClientName || lastTranscript || projectStore.currentId;
+                       currentClientName || lastTranscript || _projectActivity || projectStore.currentId;
     if (busy()) return;
     const target = rows[0].id;
     const doc = await projectStore._col(ctx.uid).doc(target).get();
@@ -15277,9 +15286,10 @@ const projectStore = {
         if (tomb.exists) { this.detach(); return { written: false, reason: 'deleted' }; }
         this._tombChecked[tombKey] = true;
       }
-      const snapItems  = await this._snapshotForCloud(myId, expectedUid);
-      if (!this._accountValid(ctx) || !sameProject()) return { written: false, reason: 'switched' };
-      const cloudSum   = await this._summaryForCloud(myId, expectedUid);
+      // Independent uploads can run together; the same pinned identity guards both.
+      const [snapItems, cloudSum] = await Promise.all([
+        this._snapshotForCloud(myId, expectedUid), this._summaryForCloud(myId, expectedUid),
+      ]);
       if (!this._accountValid(ctx)) return { written: false, reason: 'auth-changed' };
       if (!sameProject()) return { written: false, reason: 'switched' };
       const docRef = firebase.firestore().collection('users').doc(expectedUid).collection('projects').doc(myId);
@@ -15356,8 +15366,17 @@ const projectStore = {
         const _written = new Set((payloadItems || []).map(x => x && x.card && x.card.storagePath).filter(Boolean));
         if (!this._dirty) _drainAssetDeletes(myId, _written);
       } catch (_) {}
-      this._touchIndex(myId, { name, updatedAt: Date.now(), createdAt: createdAtMs,
+      const indexed = this._touchIndex(myId, { name, updatedAt: Date.now(), createdAt: createdAtMs,
                                cardCount: payloadItems.length, twoWord }, expectedUid, ctx);
+      if (base === 0) {
+        // Publish the first confirmed save in Projects, including photo-only boards
+        // and first-save retries. Do not repaint the drawer on every later edit.
+        await indexed;
+        if (this._accountValid(ctx) && sameProject()) {
+          refreshDrawerClientName();
+          void _renderSessionsDropdown();
+        }
+      }
       return { written: true };
     }
   },
@@ -15529,7 +15548,7 @@ const projectStore = {
         // Creation sets currentId before its first network step. Always await
         // that first save, including when the caller arrives before debounce.
         if (this._createP) await this._createP;
-        if (!this.currentId && ((items || []).length || currentClientName)) await this.createAuto();
+        if (!this.currentId && ((items || []).length || currentClientName || lastTranscript || _projectActivity)) await this.createAuto();
         this._requireAccount(ctx);
         const id = this.currentId;
         if (!id) return true;
@@ -15699,7 +15718,9 @@ const projectStore = {
     if (typeof renderNotesPanel === 'function') renderNotesPanel(null);
   },
 };
+let _sessionsRenderSequence = 0;
 async function _renderSessionsDropdown() {
+  const sequence = ++_sessionsRenderSequence;
   const list = document.getElementById('drawer-sessions-list');
   if (!list) return;
   const ctx = projectStore._accountContext();
@@ -15709,7 +15730,8 @@ async function _renderSessionsDropdown() {
   try {
     if (typeof projectStore !== 'undefined' && projectStore.ready()) sessions = await projectStore.list(false, ctx);
   } catch (e) { console.warn('[maya sessions]', e && e.message); }
-  if (!projectStore._accountValid(ctx)) return;
+  if (!projectStore._accountValid(ctx) || sequence !== _sessionsRenderSequence) return;
+  if (list.querySelector('.pg-project-rename')) return;
   if (!sessions.length) {
     list.innerHTML = '<div class="sessions-empty">No projects yet.</div>' + _NEW_PROJECT_ROW;
   } else {
@@ -15726,7 +15748,7 @@ async function _renderSessionsDropdown() {
     _reconcileInFlight = true;
     projectStore.reconcile(ctx)
       .then(fresh => {
-        if (projectStore._accountValid(ctx) && fresh && document.getElementById('drawer-sessions-list')) {
+        if (projectStore._accountValid(ctx) && sequence === _sessionsRenderSequence && fresh && !list.querySelector('.pg-project-rename') && document.getElementById('drawer-sessions-list')) {
           document.getElementById('drawer-sessions-list').innerHTML =
             fresh.length ? _sessionRows(fresh)
                          : '<div class="sessions-empty">No projects yet.</div>' + _NEW_PROJECT_ROW;
@@ -15751,11 +15773,13 @@ function _projectRows(sessions) {
     const dateStr = _formatSessionDate(s.createdAt);
     return `
       <div class="session-item${s.id === ((typeof projectStore !== 'undefined' && projectStore.currentId) || _activeSessionId) ? ' active' : ''}" data-id="${escapeHtml(s.id)}" onclick="loadSavedSessionById('${escapeHtml(s.id)}')" title="${escapeHtml(s.name || 'project')}">
-        <button class="session-item-share" onclick="event.stopPropagation();shareProjectById('${escapeHtml(s.id)}')" title="Share this project" aria-label="Share this project">
+        <div class="session-item-actions">
+        <button data-maya-project-action class="session-item-rename" onclick="event.stopPropagation();pgRenameProject('${escapeHtml(s.id)}')" title="Rename this project" aria-label="Rename this project"><span>&#9998;</span></button>
+        <button data-maya-project-action class="session-item-share" onclick="event.stopPropagation();shareProjectById('${escapeHtml(s.id)}')" title="Share this project" aria-label="Share this project">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 L12 15" /><path d="M8.4 7.1 L12 3.5 L15.6 7.1" /><path d="M6.5 11.5 L5 11.5 L5 20 L19 20 L19 11.5 L17.5 11.5" /></svg>
         </button>
-        <button class="session-item-delete" onclick="event.stopPropagation();deleteSavedSessionRow('${escapeHtml(s.id)}')" title="Delete this project">&#215;</button>
-        <button class="session-item-rename" onclick="event.stopPropagation();pgRenameProject('${escapeHtml(s.id)}')" title="Rename this project" aria-label="Rename this project">&#9998;</button>
+        <button data-maya-project-action class="session-item-delete" onclick="event.stopPropagation();deleteSavedSessionRow('${escapeHtml(s.id)}')" title="Delete this project" aria-label="Delete this project"><span>&#215;</span></button>
+        </div>
         <div class="session-item-title" onclick="if(this.parentNode.classList.contains('active')){event.stopPropagation();pgRenameProject('${escapeHtml(s.id)}');}">${escapeHtml(s.name || 'untitled')}</div>
         <div class="session-item-meta">${s.shared ? 'Shared · ' : ''}${dateStr}${label ? ' · ' + escapeHtml(label) : ''}</div>
       </div>`;

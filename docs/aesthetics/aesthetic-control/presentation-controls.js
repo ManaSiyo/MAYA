@@ -1,7 +1,7 @@
 import {fields} from './surface-editors.js';
 import {addRestore} from './restore-controls.js';
 import {Pill} from '/aesthetics/ui/components/components.js';
-import {setupWorkspacePreviews} from './workspace-previews.js?v=4';
+import {setupWorkspacePreviews} from './workspace-previews.js?v=5';
 export function setupPresentation({buttons,preview,colors,design,controlSizes}){
  const shared=window.MayaPresentationControls;
  const statusStyles=Object.fromEntries(shared.statuses.map(({key})=>[key,{...shared.defaults.statusStyles[key],...design.statusStyles?.[key]}]));

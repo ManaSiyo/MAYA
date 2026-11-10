@@ -4,6 +4,13 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 9 — compact workspace and first-action autosave:** move Start beside
+  the garment selector, fit pattern frames to raster height and remove Operation
+  Room Fabrics. Keep Brief Fabrics, 34/66 proportions and garment panning. Project
+  action circles are spaced and scaled through shared controls with active previews.
+  Photo-only projects enter the drawer after their first acknowledged save; text
+  and microphone use also start autosave. Guard late list updates and inline rename,
+  and run independent media uploads together. No local browser access.
 - **November 9 — loading and responsiveness:** preserve loaded Fabrics on reopen
   and tab switches, bound and clear private photo retention, share public catalog
   and concurrent private reads, retain unchanged Favorites images, avoid unchanged

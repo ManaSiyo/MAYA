@@ -145,6 +145,7 @@ try{
  await deletion.locator('[data-delete]').click();assert.equal(deleteRequests.length,0);assert.match(await deletion.locator('.submission-confirm-status').textContent(),/account changed/);
  await deletion.evaluate(()=>deleteValid=true);await deletion.locator('[data-delete]').click();await deletion.waitForFunction(()=>deleted===1);assert.deepEqual(deleteRequests,[{method:'DELETE',auth:'Bearer fixture-owner'}]);await deletion.close();
  await checkOperationLayout();
+ await checkProjectActions();
  await checkFabricGallery();
  console.log('UI, responsive layout, sharing performance and saved aesthetics passed',JSON.stringify(measure));
 }finally{await browser.close();}
@@ -157,11 +158,18 @@ async function checkOperationLayout(){
  await frame.waitForFunction(()=>window.MayaImageViewer&&window.MayaTypographyControls);
  await frame.evaluate(()=>{const image=document.getElementById('hero-img');image.style.display='block';image.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400"><rect width="900" height="400" fill="gray"/></svg>');document.getElementById('hero-empty').style.display='none';document.getElementById('test-picker').innerHTML='<option>Track pants with cream side stripes</option>';});
  await frame.locator('#hero-img').evaluate(image=>image.decode());
+ assert.equal(await frame.locator('#operation-fabrics,#operation-fabrics-host').count(),0);
+ assert.equal(await frame.locator('script[src*="fabric-assistant"]').count(),0,'Pattern workspace does not initialize a second Fabric assistant');
+ await frame.evaluate(()=>{PASSES=[{img:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600"><rect width="900" height="600" fill="white"/></svg>')}];CUR={kind:'grounded',idx:0};applyView();});
+ await frame.locator('#img-grounded').evaluate(image=>image.decode());
  for(const changed of [false,true])for(const width of [390,768,1440]){
   await page.setViewportSize({width,height:900});
   await frame.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.type.P3.size=14;d.pillX=18;d.pillY=9;d.inner.paddingX=19;d.inner.paddingY=13;}MayaTypographyControls.apply(d);},changed);
   const layout=await frame.evaluate(()=>{const cols=document.querySelector('#plan-a-view .cols'),r=[...cols.children].map(e=>e.getBoundingClientRect()),image=document.getElementById('hero-img'),picker=document.getElementById('test-picker'),style=getComputedStyle(picker);return {columns:r.map(r=>({x:r.x,y:r.y,width:r.width})),overflow:document.documentElement.scrollWidth>innerWidth+1,fit:getComputedStyle(image).objectFit,position:getComputedStyle(image).objectPosition,pad:parseFloat(style.paddingRight),font:parseFloat(style.fontSize),arrow:style.backgroundImage.includes('data:image/svg+xml'),customArrows:document.querySelectorAll('.picker-chevron').length};});
   assert.equal(layout.overflow,false);assert.equal(layout.fit,'cover');assert.match(layout.position,/50%/);assert.equal(layout.customArrows,0);assert.equal(layout.arrow,true);assert.ok(layout.pad>layout.font,'Native select reserves space for its one chevron');
+  const compact=await frame.evaluate(()=>{const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height};};return {start:rect('start-test'),picker:rect('test-picker'),hero:rect('hero-frame'),stage:rect('stage'),pattern:rect('img-grounded'),sameToolbar:document.getElementById('start-test').parentNode===document.getElementById('test-picker').closest('.operation-layout-toolbar')};});
+  assert.ok(compact.sameToolbar);assert.ok(compact.start.bottom<=compact.hero.top);assert.ok(compact.picker.bottom<=compact.hero.top);
+  assert.ok(Math.abs(compact.stage.height-compact.pattern.height)<3,'Pattern frame has no top/bottom letterboxing');
   const [left,right]=layout.columns;if(width>768)assert.ok(Math.abs(left.width/(left.width+right.width)-.34)<.01);else assert.ok(right.y>left.y,'Small screens stack the panels');
  }
  await page.setViewportSize({width:1440,height:900});
@@ -178,6 +186,23 @@ async function checkOperationLayout(){
  await page.mouse.move(1000,450);await page.mouse.wheel(0,350);
  await page.waitForFunction(before=>document.getElementById('screens').scrollTop>before+20,before);
  assert.deepEqual(page.errors,[]);await page.close();
+}
+
+async function checkProjectActions(){
+ for(const width of [390,768,1440]){
+  const page=await open('/frontend/index.html',width,900);
+  await page.evaluate(()=>{document.getElementById('signin-gate').style.setProperty('display','none','important');_renderSessionsDropdown=()=>{};toggleNotesDrawer(true);const list=document.getElementById('drawer-sessions-list');list.style.display='block';list.innerHTML=_projectRows([{id:'fixture-project',name:'A new reference project',createdAt:1}]);});
+  for(const changed of [false,true]){
+   await page.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.pillX=18;d.pillY=9;d.type.P3.size=14;}MayaTypographyControls.apply(d);},changed);
+   const bounds=await page.locator('.session-item-actions').evaluate(group=>{const row=group.closest('.session-item'),r=row.getBoundingClientRect();return {width:row.clientWidth,scroll:row.scrollWidth,rowRight:r.right,buttons:[...group.children].map(b=>{const r=b.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width,height:r.height};})};});
+   assert.ok(bounds.scroll<=bounds.width+1,'Project action row fits the drawer');
+   for(let i=1;i<3;i++)assert.ok(bounds.buttons[i].left-bounds.buttons[i-1].right>=5,'Project action circles do not overlap');
+   assert.ok(bounds.buttons[2].right<=bounds.rowRight);
+   if(width<1400)assert.ok(bounds.buttons.every(b=>b.width>=44&&b.height>=44),'Touch targets remain full size');
+  }
+  await page.locator('.session-item-rename').evaluate(e=>e.click());assert.equal(await page.locator('.pg-project-rename').count(),1,'Rename is reachable from the action group');
+  assert.deepEqual(page.errors,[]);await page.close();
+ }
 }
 
 async function checkFabricGallery(){
@@ -290,6 +315,8 @@ try{
  await page.evaluate(()=>MayaTypographyControls.save(MayaTypographyControls.defaults));
  await page.goto('https://maya-gallery.test/aesthetics/aesthetic-control.html');await page.locator('#workspace-previews > summary').click();
  assert.equal(await page.locator('#workspace-previews textarea,#workspace-previews .fa-composer').count(),0,'Aesthetic Control cannot restore the unrequested composer');
+ const operationPreview=page.locator('#operations-layout-preview');await operationPreview.getByRole('button',{name:'Start',exact:true}).click();await operationPreview.locator('.operation-layout-pattern img').evaluate(img=>img.decode());
+ const projectPreview=page.locator('#project-actions-preview');await projectPreview.getByRole('button',{name:'Rename preview project'}).click();await projectPreview.getByRole('textbox',{name:'Rename preview project'}).fill('Renamed preview');await projectPreview.getByRole('textbox',{name:'Rename preview project'}).press('Tab');assert.equal(await projectPreview.locator('[data-maya-type=H4]').textContent(),'Renamed preview');
  const preview=page.locator('#workspace-previews');await preview.getByRole('button',{name:'Global',exact:true}).click();assert.equal(await preview.locator('.fa-status').textContent(),'Searching for Fabrics');assert.equal(await preview.locator('.fa-status').getAttribute('data-maya-type'),'P1');await preview.locator('.fa-product-image').first().evaluate(image=>image.decode());
  for(const width of [390,768,1440]){await page.setViewportSize({width,height:1000});const rect=()=>preview.locator('.fa-results').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight,rows:getComputedStyle(el).gridTemplateRows,cards:[...el.children].map(c=>[c.clientWidth,c.clientHeight,c.querySelector('img').clientHeight])}));await preview.getByRole('button',{name:'In House',exact:true}).click();const local=await rect();await preview.getByRole('button',{name:'Global',exact:true}).click();assert.deepEqual(await rect(),local);}
  for(const changed of [false,true]){

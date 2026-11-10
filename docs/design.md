@@ -62,6 +62,11 @@ buttons. Preserve healthy photos and only retract sourced exclusions/wrong color
 Frontend physical order is Inspo, Favorites, Community; dots match that order.
 Favorites and all Community rows fit the visible viewport, including iPad landscape,
 without cropping their top/bottom. The frontend uses the backend's circular logo.
+Project rows use a spaced action group: Glass bubbles are 5% smaller and their
+glyphs 5% larger on desktop; touch keeps the shared minimum hit area. The active
+Project actions preview shares these rules. New projects auto-save on the first
+photo/import, text or microphone action and appear in Projects after cloud
+acknowledgement. Selecting an avatar alone does not create a project.
 Avatar uploads/camera changes save automatically; no Avatar Save or bundled random
 headshots. Operations is a component of the Brief, not a standalone navigation item.
 
@@ -85,7 +90,10 @@ notes/image preview lives beside the existing Drawer preview. Saved Drawer, Inne
 Glass, icon and typography settings retain authority.
 
 Operation Room version 2 restores the 34/66 garment/pattern column ratio, stacks on
-narrow screens and centers every image. The parent Brief owns vertical scrolling
+narrow screens and centers every image. Compact content-height toolbars put Start
+beside the garment selector. Raster frames follow the image ratio without black
+letterboxing; SVG retains its interactive canvas. Fabrics belongs only in the Brief,
+not the Operation Room. The parent Brief owns vertical scrolling
 through patterns and retrieval, with section snap stops; there is no second
 fixed-height iframe scroller. Ordinary vertical wheel input scrolls over SVG too;
 Ctrl/Command-wheel zooms its canvas. SVG tracing runs on demand in a bounded

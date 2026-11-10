@@ -352,5 +352,12 @@ html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex
 
 /* Operation Room layout is shared with its active Aesthetic Control preview. */
 [data-maya-operation-layout]{display:grid;grid-template-columns:minmax(0,34fr) minmax(0,66fr);gap:var(--maya-form-field-gap,16px)}
-[data-maya-operation-layout]>*{min-width:0}.operation-layout-garment{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center}.operation-layout-image{width:100%;height:100%;object-fit:contain}.operation-layout-stage{display:grid;place-items:center;text-align:center}
+[data-maya-operation-layout]{align-items:start}
+[data-maya-operation-layout]>*{min-width:0}.operation-layout-garment{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center}.operation-layout-image{width:100%;height:100%;object-fit:contain}
+[data-maya-operation-layout] .operation-layout-toolbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:var(--maya-icon-pill-gap,6px);min-height:0;margin-bottom:var(--maya-icon-pill-gap,6px)}
+.operation-layout-toolbar .picker-wrap{min-width:0;max-width:100%;flex:1 1 160px}
+.operation-layout-toolbar select{max-width:100%}
+.operation-layout-pattern{overflow:hidden;text-align:center}
+.operation-layout-pattern.has-pattern{height:auto;min-height:0}
+.operation-layout-pattern.has-pattern>img{display:block;width:100%;height:auto;max-height:none;margin:0}
 @media(max-width:768px){[data-maya-operation-layout]{grid-template-columns:minmax(0,1fr)}}

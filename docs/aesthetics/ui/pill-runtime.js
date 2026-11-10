@@ -34,6 +34,14 @@
     // Fabric toolbar icons use the same P3 line height as CSV and Expand.
     // Saved Glass padding/material and the shared touch target remain authoritative.
     css+=`html body .fa-toolbar .maya-icon-button{--maya-icon-glyph:calc(var(--maya-type-P3-size)*1.4);}`;
+    css+=`/* Project actions flow together, so saved padding cannot make their circles collide. */
+.session-item-actions{display:flex;align-items:center;gap:calc(var(--maya-icon-pill-gap,6px) + 2px)}
+.session-item-actions>button{position:static!important;margin:0!important}
+.session-item-actions>button>span{display:block;font:inherit;letter-spacing:inherit;line-height:inherit}
+`;
+    // Project row bubbles shrink 5%, while their glyphs grow 5% in screen space.
+    // Keep the saved Glass geometry and a full-size touch target underneath.
+    css+=`html body [data-maya-project-action]{scale:.95}html body [data-maya-project-action]>:is(span,svg){scale:1.105263}@media(any-pointer:coarse){html body [data-maya-project-action]{scale:1}html body [data-maya-project-action]>:is(span,svg){scale:1.05}}`;
     // Native status selects remain the authenticated input over an intrinsic label.
     css+=`html body .lead-status{padding-right:calc(var(--maya-pill-x) + var(--maya-icon-pill-gap) + var(--maya-control-icon-size)*.45)!important}html body .lead-status::after{right:var(--maya-pill-x)!important}html body .status-pill::before{flex:none}html body .lead-status select{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;padding:0!important;}`;
     // Coarse pointers get a shared minimum hit area; saved Glass padding and

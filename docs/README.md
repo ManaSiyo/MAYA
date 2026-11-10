@@ -191,7 +191,22 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
-November 9 responsiveness pass preserves the current visual settings and layout.
+November 9 owner cleanup: Operation Room keeps 34/66 columns and center-view
+panning, with compact headers, Start beside the selector, and raster frames that
+fit their image height. Its duplicate Fabrics UI/initializer is removed; Brief
+Fabrics is retained. Project-row action circles are spaced, 5% smaller visually
+and their glyphs 5% larger, with full touch targets and shared Glass settings.
+Active Aesthetic Control previews cover both changes.
+
+The first photo, import, typed text or microphone action creates a cloud project
+without a Save button. Projects refreshes after the first acknowledged write
+and index update, including retry; later saves leave editable rows intact. Older
+drawer reads cannot replace a newer result or erase a rename in progress. Avatar
+selection alone does not create a project. Independent photo/avatar uploads now
+run concurrently, retaining account/project guards. Node20 non-browser checks
+pass; deployment is checked separately and owner visual acceptance is pending.
+
+The earlier November 9 responsiveness pass retains these improvements:
 Reopening the same saved Fabric research retains its loaded state; switching
 In House/Global/Favorites retains up to 24 decoded photo cards in memory. Private
 cards clear on garment/account/project reset. The public inventory loads once
