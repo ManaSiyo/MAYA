@@ -11,6 +11,8 @@ under _to_delete/2026-11-05-cleanup for owner review.
   the shared delete dialog to a centered 420px popup. Reuse the account-bound
   submissions feed and decoded photos; revalidate without clearing the drawer,
   preserving failure, account and deletion guards. Extend runtime and CI checks.
+  Keep install output bounded so Google attaches actual release-test failures to
+  GitHub rather than truncating them behind dependency logs.
 
 - **November 9 — compact workspace and first-action autosave:** move Start beside
   the garment selector, fit pattern frames to raster height and remove Operation

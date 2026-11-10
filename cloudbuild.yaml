@@ -25,9 +25,11 @@ steps:
     args:
       - '-ceu'
       - |
-        npm ci --prefix docs --ignore-scripts --no-audit --no-fund
-        npm ci --prefix backend/server --ignore-scripts --no-audit --no-fund
-        (cd docs && npx --no-install playwright install --with-deps chromium)
+        # Keep dependency chatter from exhausting GitHub's attached-log limit.
+        # Any install failure still prints its last 80 lines and stops deployment.
+        npm ci --prefix docs --ignore-scripts --no-audit --no-fund > /tmp/maya-release-dependencies.log 2>&1 || { tail -n 80 /tmp/maya-release-dependencies.log; exit 1; }
+        npm ci --prefix backend/server --ignore-scripts --no-audit --no-fund >> /tmp/maya-release-dependencies.log 2>&1 || { tail -n 80 /tmp/maya-release-dependencies.log; exit 1; }
+        (cd docs && npx --no-install playwright install --with-deps chromium) >> /tmp/maya-release-dependencies.log 2>&1 || { tail -n 80 /tmp/maya-release-dependencies.log; exit 1; }
         node docs/check.mjs
   - id: Build server
     name: gcr.io/cloud-builders/docker

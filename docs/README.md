@@ -63,7 +63,9 @@ After Push, compare the full intended commit in `/release.json`, the frontend an
 Admin/Brief/workspace `maya-build` metadata, and `/api/healthz`, using
 `node docs/check.mjs --deployed <full-commit-sha>`. The build runs this same public
 HTTP check after Hosting deployment and fails on any stale or missing stamp.
-Inspect GitHub's commit **check-runs**, including Google's `output.text` build log;
+Dependency installation prints only a failure tail, preserving room in GitHub's
+attached log for the actual release checks. Inspect GitHub's commit **check-runs**,
+including Google's `output.text` build log;
 the combined status can omit a failed Google Cloud Build check.
 Health's configured flags indicate
 configuration, not successful inference/delivery. `/api/healthz/deep` is admin-only.

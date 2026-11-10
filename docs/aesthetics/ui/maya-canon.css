@@ -356,6 +356,9 @@ html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex
 .operation-layout-garment{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
 .operation-layout-image{width:100%;height:100%;object-fit:contain}
 [data-maya-operation-layout] .operation-layout-toolbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:var(--maya-icon-pill-gap,6px);min-height:0;margin:0}
+#operations-layout-preview{max-width:none}
+[data-maya-operation-layout] .operation-layout-toolbar:has(.picker-wrap){flex-wrap:nowrap}
+[data-maya-operation-layout] .operation-layout-toolbar:has(#retry-pattern-save:not([hidden])){flex-wrap:wrap}
 .operation-layout-toolbar .picker-wrap{min-width:0;max-width:100%;flex:0 1 auto}
 .operation-layout-toolbar select{max-width:100%}
 .operation-layout-pattern{position:relative;overflow:hidden;text-align:center;display:flex;align-items:center;justify-content:center}
