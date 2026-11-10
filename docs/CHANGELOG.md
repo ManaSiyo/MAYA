@@ -4,6 +4,14 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 9 — stable Operation Room and retained drawer:** align inner/outer
+  frames across empty/running/saved states, center the paired garment controls,
+  balance header spacing and match Mark One/SVG to P3/Glass. Move Pipeline Live
+  into the reference section and use a plain Retrieval Trace heading. Constrain
+  the shared delete dialog to a centered 420px popup. Reuse the account-bound
+  submissions feed and decoded photos; revalidate without clearing the drawer,
+  preserving failure, account and deletion guards. Extend runtime and CI checks.
+
 - **November 9 — compact workspace and first-action autosave:** move Start beside
   the garment selector, fit pattern frames to raster height and remove Operation
   Room Fabrics. Keep Brief Fabrics, 34/66 proportions and garment panning. Project

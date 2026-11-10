@@ -14,7 +14,7 @@
 .sub-tile .submission-delete{position:absolute;top:0;right:0;opacity:0;transition:opacity .2s}
 .sub-tile:hover :is(.submission-caption,.submission-delete),.sub-tile:focus-within :is(.submission-caption,.submission-delete){opacity:1}
 @media(hover:none){.sub-tile:focus-within .submission-caption{opacity:1}}
-.submission-confirm{position:fixed;inset:0;margin:auto;max-width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 32px);height:fit-content;overflow:auto;text-align:center;color:inherit}
+.submission-confirm{position:fixed;inset:0;margin:auto;width:min(420px,calc(100vw - 32px));max-width:min(420px,calc(100vw - 32px))!important;max-height:calc(100dvh - 32px);height:fit-content;overflow:auto;text-align:center;color:inherit}
 .submission-confirm::backdrop{background:rgb(0 0 0 / .6)}
 .submission-confirm-actions{display:flex;gap:var(--maya-icon-pill-gap,8px);justify-content:center;margin-top:16px;flex-wrap:wrap}
 .submission-confirm-status:empty{display:none}

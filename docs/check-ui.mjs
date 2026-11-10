@@ -105,7 +105,7 @@ try{
  await page.locator('.submission-delete').click();
  for(const [width,height] of [[390,844],[768,1024],[1440,900]]){
   await page.setViewportSize({width,height});
-  const box=await page.locator('.submission-confirm').boundingBox();assert.ok(Math.abs(box.x+box.width/2-width/2)<2&&Math.abs(box.y+box.height/2-height/2)<2,'Delete confirmation must center in both axes');
+  const box=await page.locator('.submission-confirm').boundingBox();assert.ok(box.width<=Math.min(420,width-32)+1,'Delete dialog stays compact despite shared Inner width');assert.ok(Math.abs(box.x+box.width/2-width/2)<2&&Math.abs(box.y+box.height/2-height/2)<2,'Delete confirmation must center in both axes');
  }
  await page.locator('[data-cancel]').click();assert.equal(await page.evaluate(()=>calls),0);
  await page.locator('.submission-delete').click();await page.locator('[data-delete]').click();assert.equal(await page.locator('.submission-confirm-status').textContent(),'Fixture unavailable');
@@ -117,7 +117,7 @@ try{
  await gallery.locator('[data-editor=inner] summary').click();await gallery.locator('[data-editor=inner] [data-field=paddingX]').fill('23');await gallery.keyboard.press('Escape');
  await gallery.locator('#save').click();await gallery.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved locally'));await gallery.reload();await gallery.locator('#drawer-controls-preview').waitFor();
  await gallery.getByRole('button',{name:'Share dialog',exact:true}).click();assert.equal(await gallery.locator('#share-style-preview').evaluate(e=>getComputedStyle(e).paddingLeft),'23px');await gallery.locator('#share-style-preview [data-done]').click();
- await gallery.getByRole('button',{name:'Drawer',exact:true}).click();await gallery.locator('.sub-tile').hover();await gallery.locator('.submission-delete').click();await gallery.locator('.submission-confirm').waitFor();assert.equal(await gallery.locator('.submission-confirm').evaluate(e=>getComputedStyle(e).paddingLeft),'23px');await gallery.locator('[data-cancel]').click();
+ await gallery.getByRole('button',{name:'Drawer',exact:true}).click();await gallery.locator('.sub-tile').hover();await gallery.locator('.submission-delete').click();await gallery.locator('.submission-confirm').waitFor();assert.equal(await gallery.locator('.submission-confirm').evaluate(e=>getComputedStyle(e).paddingLeft),'23px');assert.ok((await gallery.locator('.submission-confirm').boundingBox()).width<=420);await gallery.locator('[data-cancel]').click();
  await gallery.getByRole('button',{name:'Close Settings',exact:true}).click();
  const notes=gallery.locator('.maya-notes-preview');
  assert.equal(await notes.locator('.maya-design-notes').evaluate(e=>e.inert),true);
@@ -144,12 +144,32 @@ try{
  await deletion.evaluate(()=>{window.deleteValid=false;window.deleted=0;MayaSubmissionCards.requestDelete({id:'fixture-submission'},{token:'fixture-owner',valid:()=>deleteValid,onDeleted:()=>deleted++});});
  await deletion.locator('[data-delete]').click();assert.equal(deleteRequests.length,0);assert.match(await deletion.locator('.submission-confirm-status').textContent(),/account changed/);
  await deletion.evaluate(()=>deleteValid=true);await deletion.locator('[data-delete]').click();await deletion.waitForFunction(()=>deleted===1);assert.deepEqual(deleteRequests,[{method:'DELETE',auth:'Bearer fixture-owner'}]);await deletion.close();
+ await checkSubmissionDrawer();
  await checkOperationLayout();
  await checkProjectActions();
  await checkFabricGallery();
  console.log('UI, responsive layout, sharing performance and saved aesthetics passed',JSON.stringify(measure));
 }finally{await browser.close();}
 
+
+async function checkSubmissionDrawer(){
+ const page=await open('/backend/backend.html',1440,900);let feeds=0,photos=0;
+ await page.route('**/api/admin/submissions',route=>{feeds++;return route.fulfill({json:{folders:[{id:'retained',name:'Retained coat',description:'Velvet coat',files:[{id:'thumb',name:'dream-garment.jpg'}]}]}});});
+ await page.route('**/api/admin/subthumb?**',route=>{photos++;return route.fulfill({body:readFileSync(root+'/docs/aesthetics/fabrics/thumbs/Midnight Velvet.jpg'),contentType:'image/jpeg'});});
+ await page.evaluate(()=>{localStorage.setItem('maya_admin_tok','fixture.'+btoa(JSON.stringify({sub:'fixture-owner',exp:Date.now()/1000+3600}))+'.fixture');getMayaFolder=async()=>null;toggleClientsDrawer(true);});
+ await page.waitForFunction(()=>document.querySelector('#clients-list img')?.src.startsWith('blob:'));
+ await page.evaluate(()=>window.retainedPhoto=document.querySelector('#clients-list img'));
+ for(let i=0;i<3;i++)await page.evaluate(async()=>{toggleClientsDrawer(false);await openClientsDrawer();});
+ assert.equal(feeds,1);assert.equal(photos,1);assert.equal(await page.evaluate(()=>retainedPhoto===document.querySelector('#clients-list img')),true);
+ await page.evaluate(async()=>{_drawerCheckedAt=0;_submissionFeed.at=0;await openClientsDrawer();});
+ assert.equal(feeds,2);assert.equal(photos,1);assert.equal(await page.evaluate(()=>retainedPhoto===document.querySelector('#clients-list img')),true);
+ await page.evaluate(()=>MayaSubmissionCards.confirmDelete(async()=>{}));
+ for(const changed of [false,true])for(const width of [390,768,1440]){
+  await page.setViewportSize({width,height:900});await page.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.inner.paddingX=23;d.inner.paddingY=19;d.inner.width=95;}MayaTypographyControls.apply(d);},changed);
+  const box=await page.locator('.submission-confirm').boundingBox();assert.ok(box.width<=Math.min(420,width-32)+1);assert.ok(Math.abs(box.x+box.width/2-width/2)<2&&Math.abs(box.y+box.height/2-450)<2);
+ }
+ await page.locator('[data-cancel]').click();assert.deepEqual(page.errors,[]);await page.close();
+}
 
 async function checkOperationLayout(){
  const page=await open('/backend/backend.html',1440,900);
@@ -167,9 +187,27 @@ async function checkOperationLayout(){
   await frame.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.type.P3.size=14;d.pillX=18;d.pillY=9;d.inner.paddingX=19;d.inner.paddingY=13;}MayaTypographyControls.apply(d);},changed);
   const layout=await frame.evaluate(()=>{const cols=document.querySelector('#plan-a-view .cols'),r=[...cols.children].map(e=>e.getBoundingClientRect()),image=document.getElementById('hero-img'),picker=document.getElementById('test-picker'),style=getComputedStyle(picker);return {columns:r.map(r=>({x:r.x,y:r.y,width:r.width})),overflow:document.documentElement.scrollWidth>innerWidth+1,fit:getComputedStyle(image).objectFit,position:getComputedStyle(image).objectPosition,pad:parseFloat(style.paddingRight),font:parseFloat(style.fontSize),arrow:style.backgroundImage.includes('data:image/svg+xml'),customArrows:document.querySelectorAll('.picker-chevron').length};});
   assert.equal(layout.overflow,false);assert.equal(layout.fit,'cover');assert.match(layout.position,/50%/);assert.equal(layout.customArrows,0);assert.equal(layout.arrow,true);assert.ok(layout.pad>layout.font,'Native select reserves space for its one chevron');
-  const compact=await frame.evaluate(()=>{const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height};};return {start:rect('start-test'),picker:rect('test-picker'),hero:rect('hero-frame'),stage:rect('stage'),pattern:rect('img-grounded'),sameToolbar:document.getElementById('start-test').parentNode===document.getElementById('test-picker').closest('.operation-layout-toolbar')};});
-  assert.ok(compact.sameToolbar);assert.ok(compact.start.bottom<=compact.hero.top);assert.ok(compact.picker.bottom<=compact.hero.top);
-  assert.ok(Math.abs(compact.stage.height-compact.pattern.height)<3,'Pattern frame has no top/bottom letterboxing');
+  const geometry=()=>frame.evaluate(()=>{
+   const rect=e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height,width:r.width};};
+   const hero=document.getElementById('hero-frame'),stage=document.getElementById('stage'),toolbar=hero.previousElementSibling;
+   return {hero:rect(hero),stage:rect(stage),left:rect(hero.parentNode),right:rect(stage.parentNode),toolbar:rect(toolbar),picker:rect(document.getElementById('test-picker')),start:rect(document.getElementById('start-test')),
+    pills:[...document.querySelectorAll('#start-test,#pass-pills button,#test-picker')].map(e=>{const s=getComputedStyle(e);return [s.paddingTop,s.paddingBottom,s.fontSize,s.lineHeight];}),pipelineBelow:document.getElementById('live').parentNode.classList.contains('trace'),traceHeading:document.querySelector('.trace h3').textContent};
+  });
+  const compact=await geometry();assert.ok(compact.start.bottom<=compact.hero.top);assert.ok(compact.picker.bottom<=compact.hero.top);
+  assert.ok(compact.pipelineBelow);assert.equal(compact.traceHeading,'Retrieval Trace');
+  for(const pill of compact.pills)assert.deepEqual(pill,compact.pills[0],'Operation toolbar pills share P3 and Glass padding');
+  if(width>768){
+   for(const edge of ['top','bottom']){assert.ok(Math.abs(compact.hero[edge]-compact.stage[edge])<2,'Frames align at '+edge);assert.ok(Math.abs(compact.left[edge]-compact.right[edge])<2,'Outer panels align at '+edge);}
+   const above=compact.toolbar.top-compact.left.top-1,below=compact.hero.top-compact.toolbar.bottom;
+   assert.ok(Math.abs(above-below)<2,'Toolbar has equal space above/below');
+   assert.ok(compact.start.left-compact.picker.right<16,'Selector and Start stay together');
+  }
+  // Empty, running and saved drawings share exactly the same geometry.
+  await frame.evaluate(()=>{document.getElementById('img-grounded').style.display='none';document.getElementById('stage').classList.remove('has-pattern');document.getElementById('stage-empty').style.display='block';});
+  const empty=await geometry();assert.deepEqual(empty.hero,compact.hero);assert.deepEqual(empty.stage,compact.stage);
+  await frame.evaluate(()=>{liveOpen();liveLine('Drawing Mark One');});
+  const running=await geometry();assert.deepEqual(running.stage,compact.stage);assert.deepEqual(running.right,compact.right);
+  await frame.evaluate(()=>applyView());
   const [left,right]=layout.columns;if(width>768)assert.ok(Math.abs(left.width/(left.width+right.width)-.34)<.01);else assert.ok(right.y>left.y,'Small screens stack the panels');
  }
  await page.setViewportSize({width:1440,height:900});
@@ -315,7 +353,12 @@ try{
  await page.evaluate(()=>MayaTypographyControls.save(MayaTypographyControls.defaults));
  await page.goto('https://maya-gallery.test/aesthetics/aesthetic-control.html');await page.locator('#workspace-previews > summary').click();
  assert.equal(await page.locator('#workspace-previews textarea,#workspace-previews .fa-composer').count(),0,'Aesthetic Control cannot restore the unrequested composer');
- const operationPreview=page.locator('#operations-layout-preview');await operationPreview.getByRole('button',{name:'Start',exact:true}).click();await operationPreview.locator('.operation-layout-pattern img').evaluate(img=>img.decode());
+ const operationPreview=page.locator('#operations-layout-preview');
+ await page.setViewportSize({width:1440,height:1000});
+ const previewBounds=()=>operationPreview.locator('[data-maya-operation-fixed]').evaluate(el=>{const r=e=>{const b=e.getBoundingClientRect();return {top:b.top,bottom:b.bottom,height:b.height};};return {garment:r(el.querySelector('.operation-layout-garment')),pattern:r(el.querySelector('.operation-layout-pattern'))};});
+ const beforePattern=await previewBounds();assert.ok(Math.abs(beforePattern.garment.height-beforePattern.pattern.height)<2);
+ await operationPreview.getByRole('button',{name:'Start',exact:true}).click();await operationPreview.locator('.operation-layout-pattern img').evaluate(img=>img.decode());
+ assert.deepEqual(await previewBounds(),beforePattern,'Active preview keeps its fixed frames when a drawing arrives');
  const projectPreview=page.locator('#project-actions-preview');await projectPreview.getByRole('button',{name:'Rename preview project'}).click();await projectPreview.getByRole('textbox',{name:'Rename preview project'}).fill('Renamed preview');await projectPreview.getByRole('textbox',{name:'Rename preview project'}).press('Tab');assert.equal(await projectPreview.locator('[data-maya-type=H4]').textContent(),'Renamed preview');
  const preview=page.locator('#workspace-previews');await preview.getByRole('button',{name:'Global',exact:true}).click();assert.equal(await preview.locator('.fa-status').textContent(),'Searching for Fabrics');assert.equal(await preview.locator('.fa-status').getAttribute('data-maya-type'),'P1');await preview.locator('.fa-product-image').first().evaluate(image=>image.decode());
  for(const width of [390,768,1440]){await page.setViewportSize({width,height:1000});const rect=()=>preview.locator('.fa-results').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight,rows:getComputedStyle(el).gridTemplateRows,cards:[...el.children].map(c=>[c.clientWidth,c.clientHeight,c.querySelector('img').clientHeight])}));await preview.getByRole('button',{name:'In House',exact:true}).click();const local=await rect();await preview.getByRole('button',{name:'Global',exact:true}).click();assert.deepEqual(await rect(),local);}

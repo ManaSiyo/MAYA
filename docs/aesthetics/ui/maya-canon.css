@@ -350,14 +350,23 @@ html[data-maya-surface] #drawer maya-owner-crm p{margin:12px 0;line-height:1.6;c
 html[data-maya-surface] #drawer maya-owner-crm button,
 html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:8px 12px;margin:4px 8px 8px 0;border:0.5px solid var(--maya-line,rgba(255,255,255,.18));border-radius:999px;background:rgba(3,15,29,.45);color:var(--maya-ink);font:400 12px/1.5 var(--maya-font-ui);text-decoration:none;white-space:normal}
 
-/* Operation Room layout is shared with its active Aesthetic Control preview. */
-[data-maya-operation-layout]{display:grid;grid-template-columns:minmax(0,34fr) minmax(0,66fr);gap:var(--maya-form-field-gap,16px)}
-[data-maya-operation-layout]{align-items:start}
-[data-maya-operation-layout]>*{min-width:0}.operation-layout-garment{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center}.operation-layout-image{width:100%;height:100%;object-fit:contain}
-[data-maya-operation-layout] .operation-layout-toolbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:var(--maya-icon-pill-gap,6px);min-height:0;margin-bottom:var(--maya-icon-pill-gap,6px)}
-.operation-layout-toolbar .picker-wrap{min-width:0;max-width:100%;flex:1 1 160px}
+/* Operation Room geometry is independent of generation state and shared with preview. */
+[data-maya-operation-layout]{display:grid;grid-template-columns:minmax(0,34fr) minmax(0,66fr);gap:var(--maya-form-field-gap,16px);align-items:start}
+[data-maya-operation-layout]>*{min-width:0}
+.operation-layout-garment{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.operation-layout-image{width:100%;height:100%;object-fit:contain}
+[data-maya-operation-layout] .operation-layout-toolbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:var(--maya-icon-pill-gap,6px);min-height:0;margin:0}
+.operation-layout-toolbar .picker-wrap{min-width:0;max-width:100%;flex:0 1 auto}
 .operation-layout-toolbar select{max-width:100%}
-.operation-layout-pattern{overflow:hidden;text-align:center}
-.operation-layout-pattern.has-pattern{height:auto;min-height:0}
-.operation-layout-pattern.has-pattern>img{display:block;width:100%;height:auto;max-height:none;margin:0}
-@media(max-width:768px){[data-maya-operation-layout]{grid-template-columns:minmax(0,1fr)}}
+.operation-layout-pattern{position:relative;overflow:hidden;text-align:center;display:flex;align-items:center;justify-content:center}
+/* Subgrid shares the toolbar and image rows. Only the garment's 3:4 frame
+   determines their height; incoming drawings and logs cannot stretch either panel. */
+[data-maya-operation-fixed]{row-gap:var(--maya-inner-padding-y,12px);align-items:stretch}
+[data-maya-operation-fixed]>*{display:grid;grid-row:1 / span 2;grid-template-rows:subgrid;row-gap:var(--maya-inner-padding-y,12px);align-self:stretch}
+[data-maya-operation-fixed] .operation-layout-pattern{height:auto;min-height:0;contain:size}
+[data-maya-operation-fixed] .operation-layout-pattern>img{position:absolute;inset:0;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;margin:0}
+@media(max-width:768px){
+ [data-maya-operation-layout]{grid-template-columns:minmax(0,1fr)}
+ [data-maya-operation-fixed]>*{grid-row:auto;grid-template-rows:auto auto}
+ [data-maya-operation-fixed] .operation-layout-pattern{contain:none;aspect-ratio:3/2}
+}

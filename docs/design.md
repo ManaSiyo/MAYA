@@ -39,7 +39,10 @@ inline; Enter/Save persist, outside/Escape/Cancel discard; failed saves keep dra
 Messages keeps H2 above H3 contact, circular reviewed Phone/Share, no auto-sending.
 
 Submission photo cards share Inner material, 3:2 aspect, Drawer scroll behavior and
-width containment. Hover/focus reveals the saved frontend garment description,
+width containment. Reopening the Brief drawer retains decoded cards and revalidates
+the account-bound feed after one minute without blanking it. Account reset and
+deletion invalidate private data; failed background reads retain the good list.
+Hover/focus reveals the saved frontend garment description,
 clamped to two P3 lines, over the existing
 Favorites-style gradient. Hover or keyboard focus exposes the Glass circular X; touch reveals controls
 through selection/focus. Close controls use the saved Close icon percentage
@@ -91,8 +94,12 @@ Glass, icon and typography settings retain authority.
 
 Operation Room version 2 restores the 34/66 garment/pattern column ratio, stacks on
 narrow screens and centers every image. Compact content-height toolbars put Start
-beside the garment selector. Raster frames follow the image ratio without black
-letterboxing; SVG retains its interactive canvas. Fabrics belongs only in the Brief,
+beside the garment selector in a centered group. Both toolbars use the same P3/Glass
+padding, with equal space above and below. Shared grid rows keep garment/pattern
+frames and outer panels aligned before, during and after generation; raster
+images fit inside without resizing the frame. SVG retains its interactive canvas.
+Pipeline Live is the first row of the lower reference section. Retrieval Trace
+is a plain H3 heading, never a pill. Fabrics belongs only in the Brief,
 not the Operation Room. The parent Brief owns vertical scrolling
 through patterns and retrieval, with section snap stops; there is no second
 fixed-height iframe scroller. Ordinary vertical wheel input scrolls over SVG too;

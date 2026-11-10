@@ -2626,3 +2626,33 @@ checks['submission-descriptions']=async function(){
  assert.equal(submissionDescription({}), '');
  console.log('Submission captions: authored text, legacy idea objects and honest empty fallback passed.');
 };
+
+checks['submission-drawer-reuse']=async function(){
+ const {default:assert}=await import('node:assert/strict'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const source=readFileSync('backend/backend.html','utf8');let now=100000,owner='A',feeds=0,photos=0,creates=0,status=200,wait=null;
+ const folders=[{id:'coat',files:[{id:'photo',name:'dream-garment.jpg'}]}],revoked=[];
+ const list={children:[],dataset:{},replaceChildren(...nodes){this.children.forEach(c=>c.photo.isConnected=false);this.children=nodes;this._text='';},set textContent(v){this.replaceChildren();this._text=v;},get textContent(){return this._text||'';},insertBefore(card,before){const old=this.children.indexOf(card);if(old>=0)this.children.splice(old,1);const at=before?this.children.indexOf(before):this.children.length;this.children.splice(at,0,card);card.photo.isConnected=true;},querySelectorAll(){return this.children.map(c=>c.photo).filter(p=>!p.removed);}};
+ const count={textContent:''},drawer={classList:{add(){}}};
+ const context=vm.createContext({Date:{now:()=>now},DOMException,AbortSignal,URL:{createObjectURL:()=> 'blob:photo-'+photos,revokeObjectURL:u=>revoked.push(u)},
+  _piecesAccount:t=>t,_subCachedTok:()=>owner,window:{addEventListener(){}},document:{getElementById:id=>({'clients-list':list,'clients-count':count,'clients-drawer':drawer}[id])},getMayaFolder:async()=>null,deleteBriefSubmission(){},
+  MayaSubmissionCards:{unique:v=>v,create(folder){creates++;const photo={dataset:{thumb:folder.files[0].id},src:'',isConnected:false,getAttribute(){return this.src;},remove(){this.removed=true;}};const card={dataset:{submissionId:folder.id},photo,querySelector:()=>photo,remove(){const i=list.children.indexOf(this);if(i>=0)list.children.splice(i,1);photo.isConnected=false;}};return card;}},
+  fetch:async url=>{if(url.startsWith('/api/admin/subthumb')){photos++;return {ok:true,blob:async()=>({})};}feeds++;if(wait)await wait;return {ok:status===200,status,json:async()=>({folders:structuredClone(folders)})};}
+ });
+ vm.runInContext(source.slice(source.indexOf('let _submissionFeed='),source.indexOf('async function _loadSubmission('))+'\n'+source.slice(source.indexOf('let _drawerListSequence='),source.indexOf('// v13.45: a click anywhere outside')),context);
+ const run=code=>vm.runInContext(code,context),settle=async()=>{for(let i=0;i<12;i++)await Promise.resolve();};
+ // The Brief's feed and repeated opens share the same read and decoded photo.
+ await run('submissionFeed("A")');await Promise.all([run('openClientsDrawer()'),run('openClientsDrawer()')]);await settle();
+ const card=list.children[0],photo=card.photo;assert.equal(feeds,1);assert.equal(photos,1);assert.equal(list.textContent,'');
+ await run('openClientsDrawer()');assert.equal(feeds,1);assert.equal(list.children[0],card);
+ now+=61000;await run('openClientsDrawer()');assert.equal(feeds,2);assert.equal(photos,1);assert.equal(creates,1);assert.equal(list.children[0].photo,photo);
+ now+=61000;status=503;await run('openClientsDrawer()');assert.equal(list.children[0],card,'Failed background refresh retains good cards');
+ status=200;let release;wait=new Promise(resolve=>release=resolve);const old=run('openClientsDrawer()');await settle();
+ owner='B';wait=null;await run('openClientsDrawer()');await settle();const next=list.children[0];assert.notEqual(next,card);assert.ok(revoked.includes(photo.src));
+ release();await old;assert.equal(list.children[0],next,'Old account response cannot replace current cards');
+ now+=61000;status=403;await run('openClientsDrawer()');assert.equal(list.children.length,0);assert.match(list.textContent,/Sign in/);
+ status=200;owner='A';await run('openClientsDrawer()');await settle();
+ now+=61000;wait=new Promise(resolve=>release=resolve);const pending=run('openClientsDrawer()');await settle();
+ run('clearSubmissionDrawer()');folders.length=0;wait=null;await run('openClientsDrawer()');release();await pending;
+ assert.equal(list.children.length,0,'Invalidated or deleted submissions cannot reappear from a late response');
+ console.log('Submission drawer: shared feed, concurrent opens, retained cards/photos, refresh failure, account reset and deletion races passed.');
+};

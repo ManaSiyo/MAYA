@@ -191,12 +191,25 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
-November 9 owner cleanup: Operation Room keeps 34/66 columns and center-view
-panning, with compact headers, Start beside the selector, and raster frames that
-fit their image height. Its duplicate Fabrics UI/initializer is removed; Brief
-Fabrics is retained. Project-row action circles are spaced, 5% smaller visually
-and their glyphs 5% larger, with full touch targets and shared Glass settings.
-Active Aesthetic Control previews cover both changes.
+November 9 follow-up: Operation Room keeps 34/66 columns and center-view
+panning. Shared grid rows align both panels through empty, running and saved
+states. Selector/Start stay together at center; Mark One/SVG use the same P3/Glass
+controls and balanced vertical spacing. Pipeline Live moved to the first row of
+the reference section; Retrieval Trace is a plain heading. The shared delete
+dialog is capped at 420px, centered and bounded by phone viewport margins.
+
+The Brief and submissions drawer share one account-bound feed. Reopening retains
+loaded cards/photos; one-minute background revalidation reconciles changed cards
+without blanking the list. Concurrent opens share a request. Failed reads keep
+existing cards; account changes, revoked access and deletion clear private state.
+Runtime checks cover these cache and invalidation races. CI checks fixed frames,
+shared pill padding, compact dialogs and retained photo nodes at responsive sizes;
+no browser was launched locally. Owner visual acceptance is pending.
+
+The earlier cleanup removed the duplicate Operation Room Fabrics UI/initializer;
+Brief Fabrics is retained. Project-row action circles are spaced, 5% smaller
+visually and their glyphs 5% larger, with full touch targets and shared Glass
+settings. Active Aesthetic Control previews cover these changes.
 
 The first photo, import, typed text or microphone action creates a cloud project
 without a Save button. Projects refreshes after the first acknowledged write

@@ -1392,12 +1392,12 @@
   #screens { opacity: 1; transition: opacity 0.4s ease; }
   #page-indicator { /* visible on boot */ }
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=17">
-<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=4"><script src="/aesthetics/ui/submission-cards.js?v=4"></script>
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=18">
+<link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=5"><script src="/aesthetics/ui/submission-cards.js?v=4"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
-<script src="/aesthetics/ui/typography-controls.js?v=27"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=28"></script>
 <link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=15">
 <script defer src="/aesthetics/ui/fabric-assistant.js?v=20"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=4"></script>
@@ -1755,6 +1755,29 @@ function _subAuthBoot() {
   if (cached) { _subScheduleRenew(); _loadSubmission(cached); }
 }
 let _submissionLoadSequence=0;
+// One account-bound feed serves the Brief and its drawer. Failed reads never
+// replace a good list, and invalidation prevents a late response undoing deletion.
+let _submissionFeed={owner:'',folders:null,at:0,pending:null};
+function invalidateSubmissionFeed(){_submissionFeed={owner:'',folders:null,at:0,pending:null};}
+async function submissionFeed(token){
+  const owner=_piecesAccount(token);
+  if(owner!==_piecesAccount(_subCachedTok()||''))throw new DOMException('Submission account changed','AbortError');
+  if(owner!==_submissionFeed.owner){invalidateSubmissionFeed();_submissionFeed.owner=owner;}
+  if(_submissionFeed.folders&&Date.now()-_submissionFeed.at<60000)return _submissionFeed.folders;
+  if(_submissionFeed.pending)return _submissionFeed.pending;
+  const state=_submissionFeed,current=()=>state===_submissionFeed&&owner===_piecesAccount(_subCachedTok()||'');
+  const work=(async()=>{
+    const response=await fetch('/api/admin/submissions',{headers:{Authorization:'Bearer '+token},cache:'no-store',signal:AbortSignal.timeout(15000)});
+    if(!response.ok){const error=Error('Could not load submissions.');error.status=response.status;throw error;}
+    const data=await response.json();
+    if(!Array.isArray(data.folders))throw Error('Invalid submissions response.');
+    if(!current())throw new DOMException('Submission account changed','AbortError');
+    state.folders=data.folders;state.at=Date.now();return state.folders;
+  })();
+  state.pending=work;
+  try{return await work;}finally{if(state.pending===work)state.pending=null;}
+}
+
 async function _loadSubmission(tok) {
   const sequence=++_submissionLoadSequence,sid=window._openedSubmission?.id,account=_piecesAccount(tok);
   const current=()=>sequence===_submissionLoadSequence&&sid===window._openedSubmission?.id&&account===_piecesAccount(_subCachedTok()||'');
@@ -1762,10 +1785,9 @@ async function _loadSubmission(tok) {
     _clearBriefPrivate();
   }
   try {
-    const r = await fetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
-    if (!r.ok) return void console.warn('[submission] list', r.status);
-    const data = await r.json();
-    const folder = (data.folders || []).find(f => f.id === sid);
+    const folders=await submissionFeed(tok);
+    if(!current())return;
+    const folder = folders.find(f => f.id === sid);
     if (!folder) return void console.warn('[submission] folder not in feed');
     const files = folder.files || [];
     const sumFile = files.find(f => /summary\.json$/i.test(f.name || ''));
@@ -2027,71 +2049,84 @@ async function listClients() {
   return list;
 }
 
-let _drawerListSequence=0,_drawerOwner='';
+let _drawerListSequence=0,_drawerOwner='',_drawerCheckedAt=0,_drawerLoaded=false,_drawerLoad=null;
 const _drawerPhotoURLs=new Set();
-function clearSubmissionDrawer(){++_drawerListSequence;for(const url of _drawerPhotoURLs)URL.revokeObjectURL(url);_drawerPhotoURLs.clear();document.getElementById('clients-list')?.replaceChildren();}
+function releaseSubmissionPhoto(card){const src=card.querySelector('img')?.src;if(_drawerPhotoURLs.delete(src))URL.revokeObjectURL(src);}
+function clearSubmissionDrawer(keepFeed=false){
+  ++_drawerListSequence;_drawerLoad=null;_drawerCheckedAt=0;_drawerLoaded=false;if(!keepFeed)invalidateSubmissionFeed();
+  for(const url of _drawerPhotoURLs)URL.revokeObjectURL(url);_drawerPhotoURLs.clear();
+  document.getElementById('clients-list')?.replaceChildren();
+}
 window.addEventListener('storage',event=>{if(event.key==='maya_admin_tok'||event.key===null){const owner=_piecesAccount(_subCachedTok()||'');if(owner!==_drawerOwner){clearSubmissionDrawer();_drawerOwner=owner;}}});
 async function paintSubmissionDrawerPhotos(list,token,valid){
- await Promise.all([...list.querySelectorAll('img[data-thumb]')].map(async image=>{
-  try{const response=await fetch('/api/admin/subthumb?id='+encodeURIComponent(image.dataset.thumb)+'&w=480',{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)});if(!valid()||!image.isConnected)return;if(!response.ok)throw Error('Photo unavailable');const blob=await response.blob();if(!valid()||!image.isConnected)return;const url=URL.createObjectURL(blob);_drawerPhotoURLs.add(url);image.src=url;}catch{if(valid())image.remove();}
+ await Promise.all([...list.querySelectorAll('img[data-thumb]')].filter(image=>!image.getAttribute('src')&&!image.dataset.loading).map(async image=>{
+  image.dataset.loading='1';
+  try{
+    const response=await fetch('/api/admin/subthumb?id='+encodeURIComponent(image.dataset.thumb)+'&w=480',{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)});
+    if(!valid()||!image.isConnected)return;
+    if(!response.ok)throw Error('Photo unavailable');
+    const blob=await response.blob();if(!valid()||!image.isConnected)return;
+    const url=URL.createObjectURL(blob);_drawerPhotoURLs.add(url);image.src=url;
+  }catch{if(valid()&&image.isConnected)image.remove();}finally{delete image.dataset.loading;}
  }));
 }
-async function openClientsDrawer() {
-  const drawer = document.getElementById('clients-drawer');
-  // v13.46: slide open FIRST, then fill. The open used to wait for the
-  // submissions fetch, so the drawer lagged behind the sliding pill.
-  if (drawer) drawer.classList.add('open');
-  const listEl = document.getElementById('clients-list');
-  const countEl = document.getElementById('clients-count');
-  clearSubmissionDrawer();const sequence=_drawerListSequence,owner=_piecesAccount(_subCachedTok()||'');_drawerOwner=owner;
-  const valid=()=>sequence===_drawerListSequence&&owner===_piecesAccount(_subCachedTok()||'');
-  // v0.26: detect whether the MAYA folder has been granted yet. If it
-  // hasn't, the drawer's empty state offers a "Choose MAYA folder"
-  // button instead of just listing zero clients.
-  const cached = await getMayaFolder();
-  const clients = await listClients();
-  if(!valid())return;
-  if (countEl) {
-    if (!cached)               countEl.textContent = 'pick the MAYA folder';
-    else if (clients.length === 0) countEl.textContent = 'no submissions yet';
-    else if (clients.length === 1) countEl.textContent = '1 submission';
-    else                       countEl.textContent = clients.length + ' submissions';
-  }
-  if (listEl) {
-    if (!cached) {
-      // v13.43: no local folder means the clients come from MAYA itself.
-      // The old "choose a folder" capsule confused everyone; submissions
-      // live in the cloud now, listed with the same admin sign in.
-      listEl.innerHTML = '<div class="client-date" style="padding:8px 4px">loading submissions&#8230;</div>';
-      try {
-        const tok = localStorage.getItem('maya_admin_tok') || '';
-        const r = await fetch('/api/admin/submissions?t=' + Date.now(),
-          { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
-        if (r.ok) {
-          const data = await r.json();
-          if(!valid())return;
-          const folders = MayaSubmissionCards.unique(data.folders).slice(0,24);
-          if (countEl) countEl.textContent = folders.length === 1 ? '1 submission' : folders.length + ' submissions';
-          listEl.replaceChildren(...folders.map(folder=>MayaSubmissionCards.create(folder,{onDelete:deleteBriefSubmission})));
-          if(!folders.length)listEl.textContent='No submissions yet.';
-          void paintSubmissionDrawerPhotos(listEl,tok,valid);
-
-        } else {
-          if(!valid())return;
-          listEl.innerHTML = '<div class="client-date" style="padding:8px 4px">sign in on Admin first, then reopen</div>';
-        }
-      } catch (_) {
+function renderSubmissionDrawer(folders,list){
+  if(!list.children.length)list.replaceChildren();
+  const previous=new Map([...list.children].map(card=>[card.dataset.submissionId,card]));
+  const cards=folders.map(folder=>{
+    const signature=JSON.stringify(folder),old=previous.get(folder.id);previous.delete(folder.id);
+    if(old?._drawerSignature===signature)return old;
+    if(old){releaseSubmissionPhoto(old);old.remove();}
+    const card=MayaSubmissionCards.create(folder,{onDelete:deleteBriefSubmission});card._drawerSignature=signature;return card;
+  });
+  for(const card of previous.values()){releaseSubmissionPhoto(card);card.remove();}
+  // Reconcile only changed positions; unchanged images retain their decoded data.
+  cards.forEach((card,index)=>{if(list.children[index]!==card)list.insertBefore(card,list.children[index]||null);});
+  if(!cards.length)list.textContent='No submissions yet.';
+}
+async function openClientsDrawer(){
+  document.getElementById('clients-drawer')?.classList.add('open');
+  const owner=_piecesAccount(_subCachedTok()||'');
+  if(owner!==_drawerOwner){clearSubmissionDrawer(_submissionFeed.owner===owner);_drawerOwner=owner;}
+  if(_drawerLoad)return _drawerLoad;
+  if(_drawerLoaded&&Date.now()-_drawerCheckedAt<60000)return;
+  const sequence=_drawerListSequence,valid=()=>sequence===_drawerListSequence&&owner===_piecesAccount(_subCachedTok()||'');
+  const list=document.getElementById('clients-list'),count=document.getElementById('clients-count');
+  const work=(async()=>{
+    try{
+      const cached=await getMayaFolder();if(!valid())return;
+      if(!cached){
+        if(!_drawerLoaded)list.textContent='Loading submissions…';
+        const token=_subCachedTok()||'',folders=MayaSubmissionCards.unique(await submissionFeed(token)).slice(0,24);
         if(!valid())return;
-        listEl.innerHTML = '<div class="client-date" style="padding:8px 4px">could not reach MAYA</div>';
+        renderSubmissionDrawer(folders,list);
+        count.textContent=folders.length===1?'1 submission':folders.length+' submissions';
+        void paintSubmissionDrawerPhotos(list,token,valid);
+      }else{
+        const clients=await listClients();if(!valid())return;
+        const signature=JSON.stringify(clients.map(client=>client.name));
+        if(list.dataset.localSignature!==signature||!_drawerLoaded){
+          for(const card of list.children)releaseSubmissionPhoto(card);
+          list.replaceChildren(...clients.map(client=>{const card=MayaSubmissionCards.create({id:client.name,name:client.name},{onSelect:()=>loadClient(client.name)});if(currentClientName===client.name)card.setAttribute('aria-current','true');return card;}));
+          list.dataset.localSignature=signature;
+          for(const [index,client]of clients.entries()){
+            try{
+              let file;for(const name of ['dream-garment.png','dream-garment.jpg','dream-garment.jpeg']){try{file=await (await client.getFileHandle(name)).getFile();break;}catch{}}
+              if(!valid())return;if(!file)continue;
+              const photo=list.children[index]?.querySelector('img');if(photo){const url=URL.createObjectURL(file);_drawerPhotoURLs.add(url);photo.src=url;photo.classList.remove('submission-placeholder');list.children[index].querySelector('.badge')?.remove();}
+            }catch{}
+          }
+        }
+        count.textContent=clients.length===1?'1 submission':clients.length+' submissions';
       }
-    } else {
-      listEl.replaceChildren(...clients.map(client=>(()=>{const card=MayaSubmissionCards.create({id:client.name,name:client.name},{onSelect:()=>loadClient(client.name)});if(currentClientName===client.name)card.setAttribute('aria-current','true');return card;})()));
-      for(const [index,client]of clients.entries()){
-        try{let file;for(const name of ['dream-garment.png','dream-garment.jpg','dream-garment.jpeg']){try{file=await (await client.getFileHandle(name)).getFile();break;}catch{}}if(!file)continue;if(!valid())return;const url=URL.createObjectURL(file);_drawerPhotoURLs.add(url);const photo=listEl.children[index]?.querySelector('img');if(photo){photo.src=url;photo.classList.remove('submission-placeholder');listEl.children[index].querySelector('.badge')?.remove();}}catch{}
-      }
-
+      if(valid()){_drawerLoaded=true;_drawerCheckedAt=Date.now();}
+    }catch(error){
+      if(!valid())return;
+      if(error.status===401||error.status===403){clearSubmissionDrawer();count.textContent='';list.textContent='Sign in on Admin first, then reopen.';}
+      else if(!_drawerLoaded)list.textContent='Could not reach MAYA.';
     }
-  }
+  })();
+  _drawerLoad=work;try{await work;}finally{if(_drawerLoad===work)_drawerLoad=null;}
 }
 
 // v13.45: a click anywhere outside the drawer closes it.
@@ -2475,6 +2510,7 @@ function deleteBriefSubmission(folder=window._openedSubmission){
   MayaSubmissionCards.requestDelete(folder,{token,valid:()=>account===_piecesAccount(_subCachedTok()),onDeleted:async()=>{
     ++_submissionLoadSequence;++_briefLocalSequence;
     if(window._openedSubmission?.id===folder.id){window._openedSubmission=null;_clearBriefPrivate();history.replaceState(null,'','/backend.html');}
+    clearSubmissionDrawer();
     await openClientsDrawer();
   }});
 }
