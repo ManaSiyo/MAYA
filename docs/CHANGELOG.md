@@ -13,7 +13,8 @@ under _to_delete/2026-11-05-cleanup for owner review.
   preserving failure, account and deletion guards. Extend runtime and CI checks.
   Constrain nested grid tracks so intrinsic image widths cannot overflow mobile
   panels. Keep install output bounded so Google attaches actual release-test failures to
-  GitHub rather than truncating them behind dependency logs.
+  GitHub rather than truncating them behind dependency logs. Preview frame checks
+  use panel-relative coordinates so scrolling to Start cannot create a false failure.
 
 - **November 9 — compact workspace and first-action autosave:** move Start beside
   the garment selector, fit pattern frames to raster height and remove Operation

@@ -355,7 +355,7 @@ try{
  assert.equal(await page.locator('#workspace-previews textarea,#workspace-previews .fa-composer').count(),0,'Aesthetic Control cannot restore the unrequested composer');
  const operationPreview=page.locator('#operations-layout-preview');
  await page.setViewportSize({width:1440,height:1000});
- const previewBounds=()=>operationPreview.locator('[data-maya-operation-fixed]').evaluate(el=>{const r=e=>{const b=e.getBoundingClientRect();return {top:b.top,bottom:b.bottom,height:b.height};};return {garment:r(el.querySelector('.operation-layout-garment')),pattern:r(el.querySelector('.operation-layout-pattern'))};});
+ const previewBounds=()=>operationPreview.locator('[data-maya-operation-fixed]').evaluate(el=>{const origin=el.getBoundingClientRect().top,r=e=>{const b=e.getBoundingClientRect();return {top:b.top-origin,bottom:b.bottom-origin,height:b.height};};return {garment:r(el.querySelector('.operation-layout-garment')),pattern:r(el.querySelector('.operation-layout-pattern'))};});
  const beforePattern=await previewBounds();assert.ok(Math.abs(beforePattern.garment.height-beforePattern.pattern.height)<2);
  await operationPreview.getByRole('button',{name:'Start',exact:true}).click();await operationPreview.locator('.operation-layout-pattern img').evaluate(img=>img.decode());
  assert.deepEqual(await previewBounds(),beforePattern,'Active preview keeps its fixed frames when a drawing arrives');
