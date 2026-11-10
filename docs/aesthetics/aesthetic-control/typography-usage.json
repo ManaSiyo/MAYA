@@ -4670,7 +4670,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2947,
+          "line": 2948,
           "tag": "button",
           "id": null,
           "class": "' + cls + (nonFabric?' piece-non-fabric':'') + '",
@@ -4680,7 +4680,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2952,
+          "line": 2953,
           "tag": "button",
           "id": "dissect-start-pill",
           "class": "piece-pill dissect-start",
@@ -4690,7 +4690,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2953,
+          "line": 2954,
           "tag": "button",
           "id": "dissect-missing-pill",
           "class": "piece-pill",
@@ -4700,7 +4700,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2954,
+          "line": 2955,
           "tag": "button",
           "id": "dissect-save-pill",
           "class": "piece-pill",
@@ -4710,7 +4710,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 3274,
+          "line": 3275,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7736,11 +7736,7 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 2947
-            },
-            {
-              "page": "backend/backend.html",
-              "line": 2952
+              "line": 2948
             },
             {
               "page": "backend/backend.html",
@@ -7752,7 +7748,11 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 3274
+              "line": 2955
+            },
+            {
+              "page": "backend/backend.html",
+              "line": 3275
             },
             {
               "page": "backend/operation-workspace.html",

@@ -353,7 +353,7 @@ html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex
 /* Operation Room geometry is independent of generation state and shared with preview. */
 [data-maya-operation-layout]{display:grid;grid-template-columns:minmax(0,34fr) minmax(0,66fr);gap:var(--maya-form-field-gap,16px);align-items:start}
 [data-maya-operation-layout]>*{min-width:0}
-.operation-layout-garment{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.operation-layout-garment{min-width:0;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
 .operation-layout-image{width:100%;height:100%;object-fit:contain}
 [data-maya-operation-layout] .operation-layout-toolbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:var(--maya-icon-pill-gap,6px);min-height:0;margin:0}
 #operations-layout-preview{max-width:none}
@@ -361,11 +361,11 @@ html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex
 [data-maya-operation-layout] .operation-layout-toolbar:has(#retry-pattern-save:not([hidden])){flex-wrap:wrap}
 .operation-layout-toolbar .picker-wrap{min-width:0;max-width:100%;flex:0 1 auto}
 .operation-layout-toolbar select{max-width:100%}
-.operation-layout-pattern{position:relative;overflow:hidden;text-align:center;display:flex;align-items:center;justify-content:center}
+.operation-layout-pattern{min-width:0;position:relative;overflow:hidden;text-align:center;display:flex;align-items:center;justify-content:center}
 /* Subgrid shares the toolbar and image rows. Only the garment's 3:4 frame
    determines their height; incoming drawings and logs cannot stretch either panel. */
 [data-maya-operation-fixed]{row-gap:var(--maya-inner-padding-y,12px);align-items:stretch}
-[data-maya-operation-fixed]>*{display:grid;grid-row:1 / span 2;grid-template-rows:subgrid;row-gap:var(--maya-inner-padding-y,12px);align-self:stretch}
+[data-maya-operation-fixed]>*{display:grid;grid-row:1 / span 2;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;row-gap:var(--maya-inner-padding-y,12px);align-self:stretch}
 [data-maya-operation-fixed] .operation-layout-pattern{height:auto;min-height:0;contain:size}
 [data-maya-operation-fixed] .operation-layout-pattern>img{position:absolute;inset:0;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;margin:0}
 @media(max-width:768px){
