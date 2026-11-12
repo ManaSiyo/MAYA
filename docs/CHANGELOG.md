@@ -4,6 +4,12 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 11 — CLO asset sourcing research:** document desktop and CLO-SET API
+  inventory, distinguish CONNECT marketplace coverage from account libraries,
+  inspect the existing Plan B proxy, and propose OpenAI-selected digital garment
+  references with durable submission jobs and private evidence-backed research.
+  Runtime behavior and provider configuration are unchanged.
+
 - **November 11 — Backend 2 playground and studio fabrics:** add a separate
   single-screen Backend 2 entry under MAYA, preserving the original Brief layout.
   Combine Full view/dissected images, Mark 1/Pipeline and a horizontal fabric strip;

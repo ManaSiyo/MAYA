@@ -201,6 +201,17 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 11 — CLO digital asset sourcing research:
+[Integration plan](clo-assets-integration.md) maps CONNECT marketplace discovery,
+CLO-SET account-library APIs and desktop pattern tooling to MAYA's saved garment
+and fabric-sourcing flow. It identifies the existing incomplete Plan B proxy,
+proposes OpenAI-selected shortlists and durable submission-ready jobs, and records
+the unverified marketplace API/coverage gap. Research only; runtime implementation,
+live matching validation and automatic sourcing remain pending.
+Documentation diff checks and packaging/syntax passed. The code-only suite on
+available Node24 stopped at `backend-two-operation` (`window is not defined`);
+concurrent Backend 2 edits were left untouched. This is not a release-test pass.
+
 November 11 — Backend 2 playground, prepared locally (not pushed or deployed):
 Admin orders Users and traffic → Ad campaigns → Leads. Every collapsed fold uses
 the same saved Closed sections spacing, including Recent changes and Feature
