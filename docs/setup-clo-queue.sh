@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Owner-authorized dedicated CLO infrastructure; no keys or existing env replacement.
 set -euo pipefail
+# The slim SDK image exposes its bundled interpreter through gcloud info.
+sdk_python=$(gcloud info --format='value(basic.python_location)')
+test -x "$sdk_python"
 project=pro-maya
 region=us-west1
 queue=maya-clo-assets
@@ -22,7 +25,7 @@ gcloud tasks queues update "$queue" --location="$region" --project="$project" --
 # The build/runtime identity may already inherit enqueue and actAs permissions.
 caller=$(gcloud config get-value account)
 if [ "$caller" = "$runtime" ]; then
-  python3 - "$project" "$region" "$queue" "$dispatch" <<'CAPABILITIES'
+  "$sdk_python" - "$project" "$region" "$queue" "$dispatch" <<'CAPABILITIES'
 import json,sys,urllib.request,subprocess
 project,region,queue,dispatch=sys.argv[1:]
 token=subprocess.check_output(['gcloud','auth','print-access-token'],text=True).strip()
@@ -40,7 +43,7 @@ fi
 # Cloud Tasks' automatically provisioned service-agent role supplies OIDC token
 # creation. The public API already permits transport access; its worker still
 # verifies the dedicated signed email/audience. No IAM gate is removed or widened.
-python3 - "$origin" <<'TRANSPORT'
+"$sdk_python" - "$origin" <<'TRANSPORT'
 import sys,urllib.request,json
 with urllib.request.urlopen(sys.argv[1]+'/api/healthz') as response:
     if response.status!=200: raise SystemExit('CLO transport requires owner review.')
