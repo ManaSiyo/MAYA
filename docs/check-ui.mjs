@@ -129,7 +129,11 @@ try{
  await notes.getByRole('button',{name:'Design Notes',exact:true}).click();
  assert.equal(await notes.locator('.maya-design-notes').evaluate(e=>e.inert),false);
  assert.equal(await notes.locator('.maya-notes-content').getByText('Midnight blue',{exact:true}).count(),1);
- await notes.getByRole('button',{name:'Design Notes',exact:true}).click();
+ await gallery.waitForFunction(()=>{const e=document.querySelector('.maya-notes-preview .maya-design-notes');return e.getBoundingClientRect().left-e.closest('.maya-notes-preview').getBoundingClientRect().left>=12;});
+ const notesGeometry=await notes.locator('.maya-design-notes').evaluate(e=>({width:e.getBoundingClientRect().width,label:e.parentNode.querySelector('.maya-notes-label').hidden,left:e.getBoundingClientRect().left-e.closest('.maya-notes-preview').getBoundingClientRect().left}));assert.equal(notesGeometry.width,272);assert.equal(notesGeometry.label,true);assert.ok(notesGeometry.left>=12);
+ await notes.locator('.maya-design-notes').dispatchEvent('pointerdown',{pointerId:55,isPrimary:true,button:0,clientX:30,clientY:50});await notes.locator('.maya-design-notes').dispatchEvent('pointermove',{pointerId:55,isPrimary:true,button:0,clientX:100,clientY:50});await notes.locator('.maya-design-notes').dispatchEvent('pointerup',{pointerId:55,isPrimary:true,button:0,clientX:100,clientY:50});
+ assert.equal(await notes.locator('.maya-design-notes').evaluate(e=>e.inert),true,'A rightward swipe closes the active Notes sample');
+ await notes.getByRole('button',{name:'Design Notes',exact:true}).click();await notes.getByRole('button',{name:'Collapse design notes',exact:true}).click();
  await notes.locator('img').click();
  const expanded=gallery.locator('.maya-image-viewer');assert.ok(await expanded.isVisible());
  const bounds=await expanded.boundingBox();assert.equal(bounds.width,1194);assert.equal(bounds.height,834);
@@ -147,6 +151,7 @@ try{
  await checkSubmissionDrawer();
  await checkOperationLayout();
  await checkProjectActions();
+ await checkFrontendCards();
  await checkFabricGallery();
  await checkBackendTwo();
  console.log('UI, responsive layout, sharing performance and saved aesthetics passed',JSON.stringify(measure));
@@ -265,15 +270,59 @@ async function checkProjectActions(){
   await page.evaluate(()=>{document.getElementById('signin-gate').style.setProperty('display','none','important');_renderSessionsDropdown=()=>{};toggleNotesDrawer(true);const list=document.getElementById('drawer-sessions-list');list.style.display='block';list.innerHTML=_projectRows([{id:'fixture-project',name:'A new reference project',createdAt:1}]);});
   for(const changed of [false,true]){
    await page.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.pillX=18;d.pillY=9;d.type.P3.size=14;}MayaTypographyControls.apply(d);},changed);
+   await page.mouse.move(1,1);await page.evaluate(()=>document.activeElement?.blur());
+   const centered=await page.locator('.session-item').evaluate(row=>{const r=row.getBoundingClientRect(),text=row.querySelector('.session-item-title').getBoundingClientRect();return {offset:Math.abs((text.left+text.right-r.left-r.right)/2),coarse:matchMedia('(any-pointer:coarse)').matches};});if(!centered.coarse)assert.ok(centered.offset<1,'Project name is centered across the full row when actions are hidden');
+   await page.locator('.session-item').hover();
    const bounds=await page.locator('.session-item-actions').evaluate(group=>{const row=group.closest('.session-item'),r=row.getBoundingClientRect();return {width:row.clientWidth,scroll:row.scrollWidth,rowRight:r.right,buttons:[...group.children].map(b=>{const r=b.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width,height:r.height};})};});
    assert.ok(bounds.scroll<=bounds.width+1,'Project action row fits the drawer');
-   for(let i=1;i<3;i++)assert.ok(bounds.buttons[i].left-bounds.buttons[i-1].right>=5,'Project action circles do not overlap');
+   for(let i=1;i<3;i++)assert.ok(bounds.buttons[i].left-bounds.buttons[i-1].right>=2,'Closer project action circles do not overlap');
    assert.ok(bounds.buttons[2].right<=bounds.rowRight);
    if(width<1400)assert.ok(bounds.buttons.every(b=>b.width>=44&&b.height>=44),'Touch targets remain full size');
   }
   await page.locator('.session-item-rename').evaluate(e=>e.click());assert.equal(await page.locator('.pg-project-rename').count(),1,'Rename is reachable from the action group');
   assert.deepEqual(page.errors,[]);await page.close();
  }
+}
+
+async function checkFrontendCards(){
+ const page=await open('/frontend/index.html',1440,900);
+ await page.evaluate(()=>{
+  document.getElementById('signin-gate').style.setProperty('display','none','important');
+  const card=document.createElement('div');card.id='caption-fixture';card.className='item-card inspo touched';card.tabIndex=0;card.style.cssText='left:100px;top:120px;width:220px;height:230px;animation:none';
+  card.innerHTML='<img class="inspo-thumb" src="/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg"><div class="item-caption" data-maya-type="P3">A velvet coat</div><div class="item-card-actions"><button class="dissect-btn" data-maya-pill="glass">Dissect</button><button class="stack-btn" data-maya-pill="glass" data-maya-shape="circle"><span>⧉</span></button><button class="delete-btn" data-maya-dismiss><span>×</span></button></div>';document.getElementById('maya-canvas').append(card);
+  const reference=document.createElement('div');reference.className='community-card';reference.style.cssText='position:absolute;left:400px;top:120px';reference.innerHTML='<span class="cc-summary">A velvet coat</span>';document.getElementById('maya-canvas').append(reference);
+ });
+ for(const width of [390,768,1440])for(const changed of [false,true]){
+  await page.setViewportSize({width,height:900});await page.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.type.P1.size=16;d.type.P1.weight=400;d.type.H2.font='jost';d.pillX=9;d.pillY=7;}MayaTypographyControls.apply(d);document.activeElement?.blur();},changed);
+  await page.mouse.move(2,2);await page.waitForFunction(()=>getComputedStyle(document.querySelector('#caption-fixture .item-caption')).opacity==='0');
+  const copy=await page.locator('#caption-fixture .item-caption,.community-card .cc-summary').evaluateAll(nodes=>nodes.map(e=>{const s=getComputedStyle(e);return [s.fontFamily,s.fontSize,s.fontWeight,s.fontStyle,s.textTransform];}));assert.deepEqual(copy[0],copy[1],'Inspo and Community descriptions share typography, including saved settings');
+  await page.locator('#caption-fixture').hover();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#caption-fixture .item-caption')).opacity==='1');
+  const buttons=await page.locator('#caption-fixture .item-card-actions>button').evaluateAll(nodes=>nodes.map(e=>{const r=e.getBoundingClientRect();return {y:r.y,height:r.height};}));for(const b of buttons){assert.ok(Math.abs(b.y-buttons[0].y)<1);assert.ok(Math.abs(b.height-buttons[0].height)<1,'Dissect, stack and X have one pill height');}
+  await page.mouse.move(2,2);await page.keyboard.press('Tab');await page.locator('#caption-fixture').focus();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#caption-fixture .item-caption')).opacity==='1');await page.locator('#caption-fixture').evaluate(e=>e.blur());
+ }
+ await page.evaluate(()=>{
+  document.getElementById('notes-drawer').classList.add('open');document.body.classList.add('drawer-open');
+  document.getElementById('pinterest-drawer').classList.add('open');document.getElementById('fabrics-drawer').classList.add('open');
+  document.getElementById('pinterest-drawer-body').innerHTML='<div class="pin-grid">'+Array.from({length:16},()=>'<button class="pin-pic"><img src="/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg" alt="Preview"></button>').join('')+'</div>';
+  document.getElementById('fabrics-drawer-body').innerHTML='<div class="fabrics-grid">'+Array.from({length:16},()=>'<div class="fabric-card"><div class="fabric-swatch"></div><div class="fabric-meta">Velvet</div></div>').join('')+'</div>';
+ });
+ for(const width of [390,768,1440])for(const which of ['pinterest','fabrics']){
+  await page.setViewportSize({width,height:900});await page.evaluate(which=>{for(const pane of document.querySelectorAll('#notes-drawer .pg-pane'))pane.style.display=pane.id==='pg-pane-'+which?'flex':'none';},which);
+  const wall=await page.locator('#'+which+'-drawer-body').evaluate(body=>{const s=getComputedStyle(body),r=body.getBoundingClientRect(),grid=body.querySelector('.pin-grid,.fabrics-grid').getBoundingClientRect(),card=body.querySelector('.pin-pic,.fabric-card').getBoundingClientRect();return {padding:[s.paddingTop,s.paddingRight,s.paddingBottom,s.paddingLeft],gutter:s.scrollbarGutter,left:grid.left-r.left,right:r.right-grid.right,card:{width:card.width,height:card.height}};});
+  assert.deepEqual(wall.padding,['4px','4px','4px','4px']);assert.equal(wall.gutter,'stable both-edges');assert.ok(Math.abs(wall.left-wall.right)<1,'Gallery gutters are symmetric');if(which==='fabrics')assert.ok(Math.abs(wall.card.width-wall.card.height)<1,'Frontend fabric tiles stay square');
+ }
+ assert.deepEqual(page.errors,[]);await page.close();
+ const preview=await open('/aesthetics/aesthetic-control.html');await preview.locator('.frontend-card-preview').waitFor();
+ for(const width of [390,768,1440])for(const changed of [false,true]){
+  await preview.setViewportSize({width,height:1000});await preview.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.type.P1.size=16;d.type.H2.font='jost';}MayaTypographyControls.apply(d);document.activeElement?.blur();},changed);
+  const cards=preview.locator('.frontend-card-preview-grid>*');
+  for(const [i,selector]of ['.item-caption','.cc-meta','.fc-summary','.fabric-meta','.pin-caption'].entries()){
+   const card=cards.nth(i),caption=card.locator(selector);await preview.mouse.move(1,1);await preview.waitForFunction(e=>getComputedStyle(e).opacity==='0',await caption.elementHandle());await card.hover();await preview.waitForFunction(e=>getComputedStyle(e).opacity==='1',await caption.elementHandle());
+  }
+  const square=await cards.nth(3).boundingBox();assert.ok(Math.abs(square.width-square.height)<1,'Fabric preview stays square');
+ }
+ await preview.locator('.frontend-card-preview .item-card').hover();await preview.locator('.frontend-card-preview .dissect-btn').click();assert.equal(await preview.locator('[data-card-preview-status]').textContent(),'Preview: coat body, sleeve and collar');
+ assert.deepEqual(preview.errors,[]);await preview.close();
 }
 
 async function checkFabricGallery(){
@@ -431,7 +480,7 @@ try{
   await backendTwoPreview.getByRole('button',{name:'Pipeline',exact:true}).click();
   assert.deepEqual(await snapshotBounds(),snapshot,'Backend 2 preview keeps its paired geometry when Pipeline replaces the pattern at '+width);
  }
- const projectPreview=page.locator('#project-actions-preview');await projectPreview.getByRole('button',{name:'Rename preview project'}).click();await projectPreview.getByRole('textbox',{name:'Rename preview project'}).fill('Renamed preview');await projectPreview.getByRole('textbox',{name:'Rename preview project'}).press('Tab');assert.equal(await projectPreview.locator('[data-maya-type=H4]').textContent(),'Renamed preview');
+ const projectPreview=page.locator('#project-actions-preview');await projectPreview.locator('.session-item').hover();await projectPreview.getByRole('button',{name:'Rename preview project'}).click();await projectPreview.getByRole('textbox',{name:'Rename preview project'}).fill('Renamed preview');await projectPreview.getByRole('textbox',{name:'Rename preview project'}).press('Tab');assert.equal(await projectPreview.locator('[data-maya-type=H4]').textContent(),'Renamed preview');
  const preview=page.locator('#workspace-previews');await preview.getByRole('button',{name:'Global',exact:true}).click();assert.equal(await preview.locator('.fa-status').textContent(),'Searching for Fabrics');assert.equal(await preview.locator('.fa-status').getAttribute('data-maya-type'),'P1');await preview.locator('.fa-product-image').first().evaluate(image=>image.decode());
  for(const width of [390,768,1440]){await page.setViewportSize({width,height:1000});const rect=()=>preview.locator('.fa-results').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight,rows:getComputedStyle(el).gridTemplateRows,cards:[...el.children].map(c=>[c.clientWidth,c.clientHeight,c.querySelector('img').clientWidth,c.querySelector('img').clientHeight])}));await preview.getByRole('button',{name:'In House',exact:true}).click();const local=await rect();await preview.getByRole('button',{name:'Global',exact:true}).click();assert.deepEqual(await rect(),local);assert.ok(local.cards.every(([, ,w,h])=>Math.abs(w-h)<1),'Original fabric preview keeps square photographs at '+width);}
  for(const changed of [false,true]){

@@ -2,6 +2,56 @@
 // Each named check has its own scope; run all through node docs/check.mjs.
 export const checks = {};
 
+checks['frontend-pinterest-performance']=async function(){
+ const {default:assert}=await import('node:assert/strict'),vm=await import('node:vm'),{readFileSync}=await import('node:fs'),{parseHTML}=await import('linkedom');
+ const source=readFileSync('frontend/index.html','utf8'),{document}=parseHTML('<html><body><div id="pinterest-drawer"><span id="pin-drawer-title"></span><div id="pin-tabs"><button id="pin-tab-all"></button><button id="pin-tab-boards"></button><input id="pin-search-input"></div><div id="pinterest-drawer-body"></div><div id="pin-drawer-foot"><button id="pin-import-btn"></button></div></div></body></html>');
+ let owner='A',googleOwner='A',project='first',signedIn=true;const requests=[],held=new Map(),imports=[],notices=[],observers=[];
+ const token=who=>'fixture.'+Buffer.from(JSON.stringify({sub:who,exp:Date.now()/1000+3600})).toString('base64')+'.fixture';
+ const delay=()=>new Promise(resolve=>setTimeout(resolve,0)),settle=async()=>{for(let i=0;i<12;i++)await Promise.resolve();};
+ const hold=(who,path)=>{let release;const promise=new Promise(resolve=>release=resolve);held.set(who+'|'+path,{promise,release});return release;};
+ const c=vm.createContext({document,URLSearchParams,DOMException,AbortController,atob,setTimeout,clearTimeout,setInterval,clearInterval,requestAnimationFrame:fn=>setTimeout(fn,0),console,
+  location:{origin:'https://maya.test'},addEventListener(){},removeEventListener(){},getApiKey:()=>signedIn?token(googleOwner):'',projectStore:{_uid:()=>signedIn?'firebase-'+owner:null},firebase:{auth:()=>({currentUser:signedIn?{uid:'firebase-'+owner,providerData:[{providerId:'google.com',uid:owner}]}:null})},
+  escapeHtml:v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),_safeImgSrc:v=>v,showToast:v=>notices.push(v),showError:v=>notices.push(v),
+  _opContext:()=>({owner,project}),_opStillValid:ctx=>ctx.owner===owner&&ctx.project===project,
+  importPictureFromUrl:(url,alt,options)=>new Promise(resolve=>imports.push({url,alt,options,resolve})),
+  IntersectionObserver:class{constructor(fn){this.fn=fn;observers.push(this);}observe(el){this.el=el;}disconnect(){this.el=null;}},
+  fetch:async(path,options)=>{const who=JSON.parse(Buffer.from(options.headers.Authorization.split('.')[1],'base64')).sub;requests.push({who,path,signal:options.signal});await held.get(who+'|'+path)?.promise;
+   const u=new URL(path,'https://maya.test'),board=u.searchParams.get('board')||'all';let data;
+   const pin=i=>({id:who+'-'+board+'-'+i,url:'https://pinimg.example/'+who+'/'+board+'/'+i+'.jpg',alt:'Wool coat '+i});
+   if(u.pathname==='/api/pinterest/status')data={configured:true,connected:true};
+   else if(u.pathname==='/api/pinterest/boards')data={boards:[{id:'coats',name:'Coats',pins:6,cover:pin(0).url},{id:'slow',name:'Slow board',pins:6,cover:pin(1).url}]};
+   else if(u.pathname==='/api/pinterest/pins')data=u.searchParams.has('bookmark')?{pins:[pin(0),pin(6)],bookmark:''}:{pins:Array.from({length:6},(_,i)=>pin(i)),bookmark:'next'};
+   else if(u.pathname==='/api/pinterest/everywhere')data={pins:[{id:'search',url:'https://pinimg.example/'+who+'/search.jpg',alt:'Search coat'}]};
+   else throw Error('Unexpected Pinterest request '+path);
+   return {ok:true,json:async()=>data};}
+ });c.window=c;
+ const start=source.indexOf('const PIN_PICK_MAX'),end=source.indexOf('// v13.41: FEEDBACK.',start);vm.runInContext(source.slice(start,end),c);
+ vm.runInContext(source.slice(source.indexOf('function _pinSearch(q)'),source.indexOf('// v14.13: one step, the right kind.')),c);
+ const run=code=>vm.runInContext(code,c),body=document.getElementById('pinterest-drawer-body'),count=path=>requests.filter(r=>r.path===path).length;
+ c._pinAccountChanged();assert.equal(requests.length,0,'Login warmup waits until after the first paint');
+ for(let i=0;i<20&&requests.length<2;i++)await delay();await settle();
+ assert.deepEqual(requests.map(r=>r.path),['/api/pinterest/status','/api/pinterest/pins?']);assert.equal(body.childElementCount,0,'Preload keeps the hidden drawer unmounted');assert.equal(document.getElementById('pinterest-drawer').classList.contains('open'),false);
+ assert.equal(run('[..._pinSession.pages.get("all").grid.querySelectorAll("img")].filter(img=>img.loading==="eager").length'),4,'Warmup is bounded to four first-page photographs');assert.equal(notices.length,0);
+ await c.openPinterestDrawer();const first=body.querySelector('img'),allGrid=body.querySelector('.pin-grid');body.scrollTop=137;c._pinToggle(body.querySelector('.pin-pic'));
+ for(let i=0;i<10;i++){project='new-project-'+i;c.closePinterestDrawer();await c.openPinterestDrawer();await c.setPinterestTab('all');}
+ assert.equal(body.querySelector('img'),first);assert.equal(body.querySelector('.pin-grid'),allGrid);assert.equal(body.scrollTop,137);assert.equal(body.querySelector('.pin-pic').classList.contains('picked'),true);assert.equal(requests.length,2,'Ten new projects and drawer reopenings reuse the two warmup reads');
+ await Promise.all([c.setPinterestTab('boards'),c.setPinterestTab('boards')]);const boardImage=body.querySelector('img');body.scrollTop=81;
+ for(let i=0;i<10;i++){await c.setPinterestTab('all');assert.equal(body.querySelector('img'),first);await c.setPinterestTab('boards');assert.equal(body.querySelector('img'),boardImage);}
+ assert.equal(count('/api/pinterest/boards'),1);assert.equal(count('/api/pinterest/pins?'),1);assert.equal(body.scrollTop,81,'Cached board directory preserves its scroll position');
+ await Promise.all([c._pinDrawerPins('coats','Coats'),c._pinDrawerPins('coats','Coats')]);const coatImage=body.querySelector('img');assert.equal(count('/api/pinterest/pins?board=coats'),1);
+ await c.setPinterestTab('all');await Promise.all([c._pinLoadNext(),c._pinLoadNext()]);assert.equal(count('/api/pinterest/pins?bookmark=next'),1);assert.equal(body.querySelectorAll('.pin-pic').length,7,'Pagination appends only the unseen pin');assert.equal(body.querySelector('img'),first);
+ const releaseSlow=hold('A','/api/pinterest/pins?board=slow'),slow=c._pinDrawerPins('slow','Slow board');await c.setPinterestTab('all');releaseSlow();await slow;assert.equal(body.querySelector('img'),first,'An inactive board response cannot replace the active wall');await c._pinDrawerPins('slow','Slow board');assert.equal(count('/api/pinterest/pins?board=slow'),1);
+ await c._pinDrawerPins('coats','Coats');assert.equal(body.querySelector('img'),coatImage);body.scrollTop=99;const beforeSearch=requests.length;c._pinSearchInput('wool');await settle();assert.equal(requests.length,beforeSearch,'Typing never runs a provider search');
+ await c._pinWideSearch('coat','everywhere');assert.match(body.querySelector('img').src,/search/);c._pinSearchRestore();assert.equal(body.querySelector('img'),coatImage);assert.equal(body.scrollTop,99,'Clearing wider search restores the same board and scroll');assert.equal(requests.length,beforeSearch+1);
+ const releaseOld=hold('A','/api/pinterest/pins?board=stale'),stale=c._pinDrawerPins('stale','Stale board');const oldRequest=requests.at(-1);owner=googleOwner='B';c._pinAccountChanged();assert.equal(body.childElementCount,0);assert.equal(oldRequest.signal.aborted,true);await c._pinDrawerBoot();releaseOld();await stale;assert.ok(body.querySelector('img').src.includes('/B/'),'Old account response stays discarded');
+ const beforeMismatch=requests.length;googleOwner='C';c._pinAccountChanged();assert.equal(body.childElementCount,0);await settle();assert.equal(requests.length,beforeMismatch,'Google/Firebase identity mismatch clears old data without starting new reads');
+ owner='C';c._pinAccountChanged();await c._pinDrawerBoot();assert.ok(body.querySelector('img').src.includes('/C/'));
+ body.querySelectorAll('.pin-pic').forEach(el=>c._pinToggle(el));const batch=c._pinImport();await settle();assert.equal(imports.length,2);assert.ok(imports.every(i=>i.options.context.project===project));project='another-project';imports.forEach(i=>i.resolve(false));await batch;assert.equal(imports.length,2,'Project change cancels the rest of the selected-pin import queue');
+ signedIn=false;c._pinAccountChanged();assert.equal(body.childElementCount,0);assert.equal(run('_pinSession'),null);
+ assert.match(source,/\_firebaseAuthUid = nextUid;\s*try \{ if\(typeof _pinAccountChanged/);assert.match(source,/_googleIdToken = null;[\s\S]*?_pinClearAccount/);
+ console.log('Pinterest performance: 2 warmup reads, 4 eager thumbnails, 10 project reopenings + 20 tab swaps with 0 repeat page reads; image/grid identity and scroll retained; pagination, search, account cancellation and import isolation passed.');
+};
+
 checks['deployment-verification']=async function(){
  const {default:assert}=await import('node:assert/strict'),{verifyDeployment}=await import('./build-site.mjs');
  const commit='a'.repeat(40),seen=[];let fault='';
@@ -2467,6 +2517,33 @@ checks['image-inspection']=async function(){
  console.log('Image inspection: anchored zoom, bounds, pinch, reset, click suppression and deduplicated notes passed.');
 };
 
+checks['frontend-notes-and-wall']=async function(){
+ const {default:assert}=await import('node:assert/strict'),{parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const {document,Event}=parseHTML('<html><body><div id="viewer"><img id="anchor"></div><div id="community-scroller"><div class="community-row"></div><div class="community-row"></div><div class="community-row"></div></div></body></html>');
+ const parent=document.getElementById('viewer'),anchor=document.getElementById('anchor');anchor.getClientRects=()=>[{}];anchor.getBoundingClientRect=parent.getBoundingClientRect=()=>({top:0,left:0,width:600,height:400});
+ let now=1000;const c=vm.createContext({document,Date:{now:()=>now},console,ResizeObserver:class{observe(){}},requestAnimationFrame:()=>1,clearTimeout(){}});c.window=c;c.addEventListener=()=>{};
+ vm.runInContext(readFileSync('docs/aesthetics/ui/image-viewer.js','utf8'),c);const notes=c.MayaImageViewer.notesDrawer({parent,anchor,card:{caption:'First'}}),dock=notes.element,button=dock.querySelector('button'),panel=dock.querySelector('aside');
+ dock.setPointerCapture=()=>{};button.focus=()=>{};
+ const event=(type,props={})=>{const e=new Event(type,{bubbles:true,cancelable:true});Object.assign(e,{button:0,isPrimary:true,pointerId:1,clientX:20,clientY:40,...props});panel.dispatchEvent(e);return e;};
+ notes.set(true);assert.equal(button.getAttribute('aria-label'),'Collapse design notes');assert.equal(button.querySelector('.maya-notes-label').hidden,true);assert.equal(panel.inert,false);
+ event('pointerdown');event('pointermove',{clientX:90});event('pointerup',{clientX:90});assert.equal(panel.inert,true,'A rightward swipe dismisses Design Notes');assert.equal(button.getAttribute('aria-label'),'Design Notes');assert.equal(button.querySelector('.maya-notes-label').hidden,false);
+ now+=600;notes.set(true);event('pointerdown');const vertical=event('pointermove',{clientY:130});event('pointerup',{clientX:90,clientY:130});assert.equal(vertical.defaultPrevented,false);assert.equal(panel.inert,false,'Vertical reading does not close Notes');
+ event('pointerdown');event('pointermove',{clientX:90});event('pointercancel');event('pointerup',{clientX:90});assert.equal(panel.inert,false,'Cancelled gestures cannot close Notes');
+ const wheel=event('wheel',{deltaX:0,deltaY:90});assert.equal(wheel.defaultPrevented,false);event('wheel',{deltaX:-80,deltaY:0,deltaMode:0});assert.equal(panel.inert,true,'Rightward trackpad navigation dismisses Notes');
+ notes.set(true);notes.update({caption:'Second'});assert.equal(panel.inert,true);assert.match(panel.textContent,/Second/);assert.doesNotMatch(panel.textContent,/First/);
+ const source=readFileSync('frontend/index.html','utf8'),start=source.indexOf('  render() {',source.indexOf('const communityBoard =')),end=source.indexOf('\n  // v13.33:',start);
+ c.escapeHtml=value=>String(value??'').replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;');
+ vm.runInContext('globalThis.wall={'+source.slice(start,end)+'};',c);Object.assign(c.wall,{posts:Array.from({length:60},(_,i)=>({id:'post-'+i,imageUrl:'https://photos.test/'+i+'.jpg',author:'Owner',summary:'Design '+i})),_measure(){},_wireRow(){}});
+ c.wall.render();const images=[...document.querySelectorAll('.cc-img')],nodes=[...document.querySelectorAll('.community-card')];assert.equal(images.length,60);
+ let sourceWrites=0;for(const image of images){const set=image.setAttribute.bind(image);image.setAttribute=(name,value)=>{if(name==='src')sourceWrites++;return set(name,value);};}
+ const pausedRow=c.wall._rows[0];pausedRow.paused=true;c.wall.posts[4].summary='Updated description';c.wall.render();assert.equal(c.wall._rows[0],pausedRow);assert.equal(pausedRow.paused,true,'Live updates retain the hovered row and its pause state');assert.equal(document.querySelectorAll('.cc-img').length,60);assert.equal(sourceWrites,0);assert.ok(images.every(image=>image.isConnected),'A one-caption update retains every decoded image');assert.ok(nodes.every(node=>node.isConnected));
+ assert.equal(document.querySelector('[data-id="post-4"] .cc-summary').textContent,'Updated description');assert.equal(document.querySelectorAll('.cc-author').length,0);
+ document.querySelector('[data-id="post-4"]').style.display='none';c.wall.posts[4].imageUrl='https://photos.test/replaced.jpg';c.wall.render();assert.equal(sourceWrites,1,'Only the changed picture source is reassigned');assert.equal(document.querySelector('[data-id="post-4"]').style.display,'','A corrected picture can recover from an earlier broken image');
+ c.wall.posts=c.wall.posts.filter(p=>p.id!=='post-10');c.wall.render();assert.equal(document.querySelector('[data-id="post-10"]'),null);assert.ok(images.filter(image=>image.closest('.community-card').dataset.id!=='post-10').every(image=>image.isConnected),'Row redistribution preserves surviving images');
+ c.wall.posts=[];c.wall.render();assert.equal(document.querySelectorAll('.community-card').length,0);
+ console.log('Frontend notes/wall: directional and cancelled gestures; 60/60 image nodes retained and zero image-source writes for a caption update (previous renderer replaced all 60).');
+};
+
 checks['pattern-work']=async function(){
  const {createPatternWork,createSubmissionDeletion}=await import('../backend/server/submission-list.mjs');
  const records=new Map(),key='submissions/project-A/',user={sub:'owner-A'},piece={id:'coat',name:'Coat',category:'jacket',fabric:'Wool',_image:'data:image/png;base64,aW1hZ2U='};
@@ -3025,4 +3102,76 @@ checks['fabric-compact-rail']=async function(){
  await api.open({host,automatic:true,savedOnly:true,compactRail:false});assert.equal(workspace.classList.contains('is-rail'),false);assert.equal(workspace.classList.contains('fa-compact-cards'),false);assert.equal(header.parentElement,workspace);assert.equal(results.parentElement.className,'fa-body');const regular=api.fixtureCard(product);assert.equal(regular.querySelector('.fa-card-title').dataset.mayaType,'H4');assert.equal(regular.querySelector('.fa-card-copy'),null,'The ordinary gallery retains its original caption structure');
  assert.equal(requests,0,'Layout transitions and card reveal never call a provider');
  console.log('Fabric rail: shared scrolling structure, compact roles/actions, first-touch reveal, expansion/collapse and ordinary-layout restoration passed.');
+};
+
+checks['frontend-card-performance']=async function(){
+ const {default:assert}=await import('node:assert/strict'),{parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const html=readFileSync('frontend/index.html','utf8'),{document,Event}=parseHTML(html);
+ const scope={uid:'owner',auth:1,epoch:1,project:'project-a'},frames=new Map(),listeners={},placed=[];
+ let frameId=0,requests=0,compressions=0,saves=0,clearedNotes=0,resolveManifest;
+ const c=vm.createContext({document,Event,URL,AbortController,setTimeout,clearTimeout,queueMicrotask,location:{origin:'https://maya.test'},MAYA_IS_PUBLIC:true,
+  console:{log(){},warn(){}},fabricsInventory:[],fabricsFolderHandle:null,_fabricsTab:'house',myFabrics:[],_fabricPickerMode:'visualize',_fabricPickerSelection:[],_imageRefPickedIdxes:[],items:[],
+  _opContext:()=>({...scope}),_opStillValid:ctx=>ctx.uid===scope.uid&&ctx.auth===scope.auth&&ctx.epoch===scope.epoch,
+  getApiKey:()=> 'token',showToast(){},showError(){},updateFabricPickConfirm(){},toggleFabricPick(){},pickImageRef(){},scanFabricsFolder:async()=>{},maybeAskImageRef:async()=>{},
+  fetch:()=>{requests++;return new Promise(resolve=>resolveManifest=resolve);},
+  requestAnimationFrame:fn=>{const id=++frameId;frames.set(id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id),
+  pgZoomLevel:()=>1,_groupOf:()=>null,bringCardToFront(){},_persistSession:()=>saves++,innerWidth:1000,innerHeight:800,
+  addEventListener:(name,fn)=>listeners[name]=fn,findFreeSpot:()=>({x:100,y:150}),
+  compressBlobForUpload:async blob=>{compressions++;return blob;},FileReader:class{readAsDataURL(){this.result='data:image/jpeg;base64,YQ==';queueMicrotask(()=>this.onload());}},
+  placeItem:card=>placed.push(card),placeItemAt:(card,x,y)=>placed.push({...card,x,y}),
+  renderViewerVersionNav(){},renderViewerFabrics(){},renderViewerRefs(){},renderViewerNotes(){},_refreshViewerHeart(){},_refreshStagedChips(){},
+  exitPhotoFullscreen(){},viewerNotesDrawer:{set(){},update(value){if(!Object.keys(value).length)clearedNotes++;},clear(){}},MayaImageViewer:{bind:()=>({reset(){}})},visualizeListening:false,_resetModifyStage(){},renderModificationsBar(){}
+ });c.window=c;
+ const load=(start,end)=>{const at=html.indexOf(start),to=html.indexOf(end,at);assert.ok(at>=0&&to>at,start);vm.runInContext(html.slice(at,to),c);};
+ load('function _safeImgSrc(', 'function _safeRealism(');load('function escapeHtml(', '// v8.1: collapse');
+ load('function _fabricThumb(', 'let fabricsInventory =');load('let _fabricAssetsLoaded=', 'async function scanFabricsFolder(');
+ load('function updateFabricsDrawerSub(', 'function renameFabric(');load('let _fabricModeChoice=', 'function closeFabricPicker(');
+ const first=c.scanFabricsFromAssets(false,false),second=c.scanFabricsFromAssets(false,false);assert.equal(requests,1,'Concurrent drawer/chooser opens share one manifest read');
+ resolveManifest({ok:true,json:async()=>({items:Array.from({length:24},(_,i)=>({id:'fabric-'+i,fileName:'Fabric '+i+'.JPG',name:'Fabric '+i,analyzed:true,color:'navy'}))})});await Promise.all([first,second]);
+ assert.equal(document.querySelector('[data-house-grid]'),null,'Warming the chooser reads only metadata and does not mount swatch images');await c.scanFabricsFromAssets();
+ const house=document.querySelector('[data-house-grid]'),houseCards=[...house.children],houseSwatches=houseCards.map(n=>n.querySelector('.fabric-swatch'));
+ for(let i=0;i<30;i++){await c.scanFabricsFromAssets();c.renderFabricsGrid();}
+ assert.equal(requests,1);assert.deepEqual([...house.children],houseCards,'Thirty warm opens retain every fabric card');
+ assert.deepEqual([...house.querySelectorAll('.fabric-swatch')],houseSwatches,'Unchanged swatches retain their media nodes');
+ assert.equal(houseCards[0].getAttribute('tabindex'),'0');assert.equal(houseCards[0].getAttribute('aria-label'),'Fabric 0');
+ c.fabricsInventory[0].name='Updated fabric';c.renderFabricsGrid();assert.equal(house.firstElementChild,houseCards[0]);assert.equal(houseCards[0].querySelector('input').value,'Updated fabric');
+ c.openFabricPicker();const grid=document.getElementById('fabric-pick-grid'),choiceNodes=[...grid.children],choiceMedia=choiceNodes.map(n=>n.querySelector('.swatch'));
+ choiceNodes[0].classList.add('selected');choiceNodes[0].querySelector('.order-badge').textContent='1';
+ for(let i=0;i<30;i++)c.openFabricPicker();
+ assert.deepEqual([...grid.children],choiceNodes);assert.deepEqual([...grid.querySelectorAll('.swatch')],choiceMedia);assert.equal(choiceNodes[0].getAttribute('aria-pressed'),'false');assert.equal(choiceNodes[0].querySelector('.order-badge').textContent,'');
+ let picked=-1;const refs=[{key:'a',image:'https://pictures.example/a.jpg',label:'A'},{key:'b',image:'https://pictures.example/b.jpg',label:'B'}];
+ const refGrid=document.getElementById('image-ref-grid');c._renderMediaChoices(refGrid,refs,index=>picked=index);const retained=refGrid.firstElementChild;
+ c._renderMediaChoices(refGrid,[refs[1],{...refs[0],label:'Updated A'}],index=>picked=index,[1]);assert.equal(refGrid.children[1],retained);retained.click();assert.equal(picked,1,'Retained handlers follow reordered choice indices');assert.equal(retained.getAttribute('aria-pressed'),'true');
+ const enter=new Event('keydown',{cancelable:true});enter.key='Enter';retained.dispatchEvent(enter);assert.equal(enter.defaultPrevented,true);
+ scope.epoch++;c._renderMediaChoices(refGrid,refs,()=>{});assert.notEqual(refGrid.firstElementChild,retained,'Private reference grids do not retain old-project nodes');
+ document.getElementById('fabric-picker-modal').classList.remove('open');c.fabricsInventory=[];let finishScan;c.scanFabricsFolder=()=>new Promise(resolve=>finishScan=resolve);
+ const choosing=c.chooseFabricMode('house');scope.epoch++;c.fabricsInventory=[{id:'new',name:'New fabric'}];finishScan();await choosing;assert.equal(document.getElementById('fabric-picker-modal').classList.contains('open'),false,'Late loading cannot reopen a picker in a different project');
+ load('function _clearViewerImage(', 'function renderViewerFabrics(');load('function closeGarmentModal(', '// v8.9: generic Esc closer');
+ const photo=document.getElementById('garment-image'),setPhoto=photo.setAttribute.bind(photo);let sourceWrites=0;
+ photo.setAttribute=(name,value)=>{if(name==='src')sourceWrites++;return setPhoto(name,value);};
+ for(let i=0;i<30;i++){c.renderViewerContent({card:{image:'https://pictures.example/garment.jpg',caption:'Updated caption '+i}});c.closeGarmentModal();}
+ assert.equal(sourceWrites,1,'Thirty viewer close/reopen cycles write the image source only once');c._clearViewerImage();assert.equal(photo.hasAttribute('src'),false);assert.equal(photo.onload,null,'A project/account boundary clears the retained private photo');assert.equal(clearedNotes,1,'The same boundary clears retained private notes');
+ load('function makeDraggable(', '// v8.2: keep the glow');
+ const card=document.createElement('div');card.className='item-card';card.style.left='10px';card.style.top='20px';document.body.append(card);c.items=[{el:card,card:{}}];c.makeDraggable(card);
+ const pointer=(type,x,y,kind='mouse')=>{const e=new Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerType:kind,pointerId:1,isPrimary:true,button:0,clientX:x,clientY:y});card.dispatchEvent(e);};
+ pointer('pointerdown',10,20);assert.equal(card.classList.contains('touched'),false,'Mouse clicks never leave touch captions pinned');
+ for(let i=1;i<=240;i++)pointer('pointermove',10+i,20+i);
+ assert.equal(frames.size,1,'240 incoming moves queue only one paint');assert.equal(card.style.left,'10px','No layout writes happen before the next paint');
+ const paint=frames.values().next().value;frames.clear();paint();assert.equal(card.style.left,'250px');assert.equal(card.style.top,'260px');pointer('pointerup',250,260);assert.equal(saves,1);frames.clear();
+ pointer('pointerdown',250,260);pointer('pointermove',300,310);scope.epoch++;pointer('pointerup',300,310);assert.equal(card.style.left,'250px');assert.equal(saves,1,'A cancelled old-project drag cannot dirty the new project');assert.equal(frames.size,0);
+ load('const LINK_IMPORT_MAX =', 'async function runLinkImport(');load('const dropHint =', '// ════════════════════════════════════════════════════════════\n// v5.12:');
+ const canvas=document.getElementById('maya-canvas');canvas.getBoundingClientRect=()=>({left:0,top:0});Object.defineProperty(canvas,'offsetWidth',{value:1000});
+ let finishImport,importSignal;c.fetch=async(url,options)=>{requests++;importSignal=options.signal;return new Promise(resolve=>finishImport=resolve);};
+ const importing=c.importPictureFromUrl('https://pictures.example/pin.jpg','Pin',{context:{...scope},preview:true,position:{x:40,y:70}});assert.equal(canvas.querySelectorAll('.is-importing').length,1);assert.equal(placed.length,0,'Pending previews never enter saved card state');
+ scope.epoch++;c._cancelPictureImports();assert.equal(canvas.querySelectorAll('.is-importing').length,0);assert.equal(importSignal.aborted,true);finishImport({ok:true,blob:async()=>({})});assert.equal(await importing,false);assert.equal(compressions,0,'Stale imports stop before image decoding');
+ c.fetch=async()=>{requests++;return {ok:true,blob:async()=>({})};};
+ const pin=document.createElement('button');pin.className='pin-pic';pin.dataset.url='https://pictures.example/original.jpg';pin.dataset.alt='Original title';const thumbnail=document.createElement('img');pin.append(thumbnail);document.body.append(pin);
+ function transfer(){const data=new Map();return {files:[],setData:(key,value)=>data.set(key,value),getData:key=>data.get(key)||''};}
+ const dragData=transfer(),dragEvent=new Event('dragstart',{bubbles:true});dragEvent.dataTransfer=dragData;thumbnail.dispatchEvent(dragEvent);
+ const beforeDrop=requests;await listeners.drop({preventDefault(){},dataTransfer:dragData,clientX:360,clientY:280});
+ assert.equal(requests,beforeDrop+1);assert.equal(placed.length,1);assert.equal(placed[0].title,'Original title');assert.equal(placed[0].image,'data:image/jpeg;base64,YQ==');assert.equal(placed[0].x,240);assert.equal(placed[0].y,200);assert.equal(canvas.querySelectorAll('.is-importing').length,0);
+ const staleData=transfer(),staleDrag=new Event('dragstart',{bubbles:true});staleDrag.dataTransfer=staleData;thumbnail.dispatchEvent(staleDrag);scope.epoch++;const beforeStale=requests;
+ await listeners.drop({preventDefault(){},dataTransfer:staleData,clientX:400,clientY:300});assert.equal(requests,beforeStale);assert.equal(placed.length,1,'A drag started in another project cannot import into this one');
+ assert.match(html,/\_boardEpoch\+\+;\s*_cancelPictureImports\(\);\s*_clearViewerImage\(\)/);
+ console.log('Frontend performance: 30 fabric opens/1 manifest read; 24 cards retained across 30 picker opens; 30 viewer updates/1 source write; 240 moves/1 paint; isolated drag/import and picker races passed.');
 };

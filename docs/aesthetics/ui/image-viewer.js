@@ -47,13 +47,42 @@
     const head=document.createElement('h2');head.dataset.mayaType='H2';head.textContent='Design Notes';
     const content=document.createElement('div');content.className='maya-notes-content';panel.append(head,content);dock.append(button,panel);parent.append(dock);
     let open=false;
-    function set(value){open=value;dock.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open));panel.inert=!open;button.querySelector('.maya-notes-drop').textContent=open?'−':'+';}
-    button.onclick=()=>set(!open);
+    function set(value){open=!!value;dock.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open));button.setAttribute('aria-label',open?'Collapse design notes':'Design Notes');panel.inert=!open;button.querySelector('.maya-notes-label').hidden=open;button.querySelector('.maya-notes-drop').textContent=open?'−':'+';}
+    button.onclick=event=>{set(!open);if(event.detail>0)button.blur();};
+    // A rightward swipe dismisses Notes without turning vertical reading into
+    // a drawer gesture. Buttons, fields and links keep their own interactions.
+    let gesture=null,suppressUntil=0,wheelDistance=0,wheelAt=0;
+    const interactive='a,input,textarea,select,summary,[contenteditable],button';
+    dock.addEventListener('pointerdown',event=>{
+      if(!open||event.isPrimary===false||event.button!==0||event.target.closest(interactive)&&!button.contains(event.target)){gesture=null;return;}
+      gesture={id:event.pointerId,x:event.clientX,y:event.clientY,locked:false,fromTrigger:button.contains(event.target)};
+    });
+    dock.addEventListener('pointermove',event=>{
+      if(!gesture||gesture.id!==event.pointerId)return;
+      const x=event.clientX-gesture.x,y=event.clientY-gesture.y;
+      if(!gesture.locked){if(Math.abs(y)>10&&Math.abs(y)>=Math.abs(x)){gesture=null;return;}if(x<12||x<Math.abs(y)*1.5)return;gesture.locked=true;try{dock.setPointerCapture?.(event.pointerId);}catch{}}
+      if(event.cancelable)event.preventDefault();
+    },{passive:false});
+    dock.addEventListener('pointerup',event=>{
+      if(!gesture||gesture.id!==event.pointerId)return;const drag=gesture;gesture=null;
+      const x=event.clientX-drag.x,y=event.clientY-drag.y;
+      if(drag.locked&&x>=44&&x>Math.abs(y)*1.5){suppressUntil=drag.fromTrigger?Date.now()+400:0;set(false);button.focus();}
+    });
+    dock.addEventListener('pointercancel',()=>{gesture=null;});
+    dock.addEventListener('lostpointercapture',()=>{gesture=null;});
+    dock.addEventListener('click',event=>{if(Date.now()<suppressUntil&&button.contains(event.target)){event.preventDefault();event.stopImmediatePropagation();}},true);
+    dock.addEventListener('wheel',event=>{
+      if(!open||event.ctrlKey||event.metaKey||Math.abs(event.deltaX)<=Math.abs(event.deltaY)*1.5)return;
+      if(event.target.closest(interactive)&&!button.contains(event.target))return;
+      if(event.cancelable)event.preventDefault();const now=Date.now();if(now-wheelAt>240)wheelDistance=0;wheelAt=now;
+      wheelDistance+=event.deltaX*(event.deltaMode===1?16:1);
+      if(wheelDistance<=-60){wheelDistance=0;set(false);button.focus();}
+    },{passive:false});
     const place=()=>{if(!anchor?.isConnected||!anchor.getClientRects().length)return;const r=anchor.getBoundingClientRect(),p=parent.getBoundingClientRect(),top=(parent.classList.contains('maya-notes-preview')?r.top-p.top+r.height/2:r.top+r.height/2)+'px';if(dock.style.top!==top)dock.style.top=top;};
     let placementFrame=0;const schedulePlace=()=>{if(!placementFrame)placementFrame=requestAnimationFrame(()=>{placementFrame=0;place();});};
     new ResizeObserver(schedulePlace).observe(anchor);window.addEventListener('resize',schedulePlace);document.addEventListener('scroll',schedulePlace,true);place();
     dock.addEventListener('keydown',event=>{if(event.key==='Escape'&&open){event.stopPropagation();set(false);button.focus();}});
-    renderNotes(content,card);
+    set(false);renderNotes(content,card);
     return {element:dock,set,update:card=>{set(false);renderNotes(content,card);}};
   }
   const bound=new WeakMap();let active=null;

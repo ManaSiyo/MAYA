@@ -4,6 +4,17 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 12 — frontend demo polish and performance (local):** unify hover
+  descriptions with Community typography/tint, restore square fabric cards and
+  balanced wall insets, center project labels, align card controls, and narrow
+  Design Notes with swipe dismissal. Retain account-bound Pinterest pages and
+  preload the first page; reuse fabric/viewer/Community images and batch drag
+  paints. Cancel imports and clear private retained views at identity boundaries.
+  Add working previews and consolidated count/race/gesture regressions. Local
+  fixture counts distinguish reduced work from unmeasured live latency/FPS. The
+  complete Node20 code-only gate passed; no browser or live provider calls.
+  Presentation acceptance and Push remain pending.
+
 - **November 12 — square sourcing and interaction fixes (local):** move Backend 2
   fabric controls into the leading scroll rail, use square hover-caption cards,
   smaller corner actions and a shorter strip. Align the title numeral. Request

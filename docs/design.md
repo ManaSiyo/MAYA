@@ -67,6 +67,15 @@ Favorites and all Community rows fit the visible viewport, including iPad landsc
 without cropping their top/bottom. The frontend uses the backend's circular logo.
 Project rows use a spaced action group: Glass bubbles are 5% smaller and their
 glyphs 5% larger on desktop; touch keeps the shared minimum hit area. The active
+frontend centers project names/dates across the full row while actions are hidden;
+hover/keyboard reveal the unchanged-size actions with half the shared icon gap.
+Inspo, Favorites, Community, Pinterest and fabric descriptions share Community's
+italic treatment: H2 font family and P1 size, weight and color. Desktop descriptions
+appear only on hover or visible keyboard focus, never persistent pointer selection.
+They sit on a bottom tint; Community copy omits the author/yours line while retaining
+accessible attribution. Dissect, stack and X align in one shared Glass row. Frontend
+fabric tiles are square; Pinterest and fabric walls share equal outer padding and
+balanced scrollbar gutters. Working card samples live in Aesthetic Control.
 Project actions preview shares these rules. New projects auto-save on the first
 photo/import, text or microphone action and appear in Projects after cloud
 acknowledgement. Selecting an avatar alone does not create a project.
@@ -84,10 +93,12 @@ Fabric captions retain their original source links. Pinching must not swipe to
 another version or zoom the board behind the image. Changing/removing a private
 source closes its expanded view.
 
-Design Notes starts closed at the left edge of the app card viewer. Its vertical
+Design Notes starts closed 12px inside the left edge of the app card viewer. Its vertical
 P3 label and Glass plus droplet follow the image center and reveal a sliding Glass
 surface (data-maya-material="glass"), using shared Glass fill, border, frost and
-padding without capsule geometry. Notes use H4/P1,
+padding without capsule geometry. The panel is 272px wide (20% narrower), constrained
+on phones. When open the trigger shows only minus; rightward swipe dismisses it,
+while vertical reading and cancelled gestures do not. Notes use H4/P1,
 merge repeated color/reference values and contain no attribute pills. A working
 notes/image preview lives beside the existing Drawer preview. Saved Drawer, Inner,
 Glass, icon and typography settings retain authority.

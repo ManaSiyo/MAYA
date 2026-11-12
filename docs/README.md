@@ -209,6 +209,29 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 12 — frontend demo polish and reuse (local, not pushed):
+Hover-only card descriptions share Community typography and bottom tint. Frontend
+fabrics are square; Pinterest/fabric walls have balanced gutters and padding.
+Project names/dates center when actions are hidden, with closer unchanged-size
+buttons on reveal. Dissect/stack/X share one height and vertical position. Design
+Notes is 20% narrower, inset from the bezel, with a symbol-only open trigger and
+rightward swipe dismissal. Active Aesthetic Control samples use the same styling.
+Pinterest preloads status and one saved page after first paint, warms four images,
+and retains actual account-bound pages/photos/scroll/selections across project and
+tab changes. Background work never starts a wider search; typing filters locally,
+and explicit wider search remains available. Identity changes abort and clear it.
+Fabric menus share one pending manifest and retain swatches; viewer close/reopen
+retains its photo until an account/project boundary. Community updates retain
+unaffected images, including row pause state. Drags paint once per animation frame;
+Pinterest drops show immediate temporary previews and cannot land in a later project.
+Fixture results: zero repeat Pinterest page reads over 10 project reopenings and
+20 tab swaps; 30 fabric opens use one manifest read; 30 viewer reopen cycles use one
+source assignment; 240 pointer events coalesce to one paint; a Community caption
+update retains all 60 tested photographs. These are local operation counts, not
+live latency or frame-rate measurements. The complete Node20 code-only release
+gate passed. CI presentation checks were extended but not run locally; owner
+visual acceptance remains pending after Push. No Chrome or local browser was used.
+
 November 12 — Backend 2 square sourcing cards and interaction fixes (local):
 Fabric tabs/tools now lead the same horizontal rail as square photos and scroll
 away with it. Captions use P1/P3, hidden until hover, focus or first touch; heart/X
