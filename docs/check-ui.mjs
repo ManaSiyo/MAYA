@@ -17,7 +17,7 @@ async function open(path,width=1194,height=834){
  await page.route('**/*',async route=>{const url=new URL(route.request().url());if(url.hostname!=='maya.test')return route.abort();
   if(url.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true,folders:[],threads:[]}});
   let path=decodeURIComponent(url.pathname);if(path.startsWith('/aesthetics/'))path=assets+path;
-  try{return route.fulfill({body:readFileSync(root+path),contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg'})[extname(path)]||'application/octet-stream'});}catch{return route.abort();}
+  try{return route.fulfill({body:readFileSync(root+path),contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg'})[extname(path)]||'application/octet-stream'});}catch{return route.abort();}
  });
  await page.goto('https://maya.test'+path);await page.waitForFunction(()=>window.MayaTypographyControls);await page.waitForTimeout(80);return page;
 }
@@ -306,7 +306,7 @@ await page.route('**/*',async route=>{
   return route.fulfill({contentType:'application/x-ndjson',body:events.map(e=>JSON.stringify(e)).join('\n')+'\n'});
  }
  if(u.pathname.startsWith('/api/'))return route.fulfill({json:{items:[],generation:'0'}});
- try{return route.fulfill({body:readFileSync(resolve(root,'.'+(u.pathname.startsWith('/aesthetics/')?'/docs':'')+decodeURIComponent(u.pathname))),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.JPG':'image/jpeg'})[extname(u.pathname)]||'text/plain'});}catch{return route.abort();}
+ try{return route.fulfill({body:readFileSync(resolve(root,'.'+(u.pathname.startsWith('/aesthetics/')?'/docs':'')+decodeURIComponent(u.pathname))),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.JPG':'image/jpeg'})[extname(u.pathname)]||'text/plain'});}catch{return route.abort();}
 });
 const tab=name=>page.locator('.fa-tabs').getByRole('button',{name,exact:true});
 const refreshSearch=async()=>{
@@ -454,6 +454,7 @@ async function checkBackendTwo(){
   await page.route('**/api/admin/patterns?*',route=>route.fulfill({json:{generation:'0',runs:[],settings:{}}}));
   await page.route('**/api/admin/fabrics/research?*',route=>route.fulfill({json:{generation:'0',items:[],searched:true}}));
   await page.route('**/api/admin/fabrics/favorites',route=>route.fulfill({json:{generation:'0',items:[]}}));
+  await page.route('**/api/admin/digital-assets/research?*',route=>route.fulfill({json:{status:'complete',items:[{url:'https://connect.clo-set.com/detail/3001c20cd5d2481fa7f3357acc5ff44c',title:'Saved jacket reference',image:'https://maya.test/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',thumbnail:'',formats:[],price:null,priceType:'unknown',patternStatus:'unknown',physicalProduction:'unknown',match:'Preview fixture only',alterations:'Review length'}],fingerprint:'preview',generation:'1',searchReady:true,review:{selected:null,dismissed:[],generation:'0'}}}));
   await page.evaluate(()=>{
    localStorage.setItem('maya_admin_tok','fixture.'+btoa(JSON.stringify({sub:'snapshot-owner',exp:Math.floor(Date.now()/1000)+3600}))+'.fixture');
    document.getElementById('upload-gate').classList.add('hidden');
@@ -462,10 +463,11 @@ async function checkBackendTwo(){
   });
   const engineFrame=page.frames().find(f=>f.url().includes('operation-workspace.html'));
   await engineFrame.waitForFunction(()=>document.getElementById('test-picker').value==='__full__');
+  assert.ok(await page.locator('#workspace-title').evaluate(e=>parseFloat(getComputedStyle(e.querySelector('.backend-two-number')).fontSize)<parseFloat(getComputedStyle(e).fontSize)),'Backend 2 numeral is smaller than the title');
   for(const changed of [false,true]){
    for(const target of [page,engineFrame])await target.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.pillX=18;d.pillY=9;d.inner.paddingX=18;d.inner.paddingY=19;d.inner.background='blue';d.inner.fill=65;d.inner.blur=12;d.type.P3.size=14;d.drawer.background='green';d.drawer.fill=80;d.drawer.paddingX=20;d.drawer.paddingY=22;d.drawer.blur=14;d.drawer.radius=12;}MayaTypographyControls.apply(d);},changed);
    const bounds=await page.evaluate(()=>{const r=id=>{const b=document.getElementById(id).getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right,height:b.height};};return {screen:r('screens'),image:r('operations-embed'),fabric:r('backend-two-fabric-strip')};});
-   assert.ok(bounds.image.height>150&&bounds.fabric.height>150);assert.ok(bounds.image.bottom<bounds.fabric.top);assert.ok(bounds.fabric.bottom<=height&&bounds.screen.right<=width);
+   assert.ok(bounds.image.height>height*.65&&bounds.fabric.height>=112&&bounds.fabric.height<=153,'Square rail gives the upper workspace most of the height');assert.ok(bounds.image.bottom<bounds.fabric.top);assert.ok(bounds.fabric.bottom<=height&&bounds.screen.right<=width);
    assert.equal(await engineFrame.locator('#plan-a-view > .cols > .panel').count(),0,'Backend 2 has no outer column panels');
    const pair=await engineFrame.locator('#plan-a-view > .cols > .backend-two-column').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right};}));
    assert.ok(pair[0].right<pair[1].left&&Math.abs(pair[0].bottom-pair[1].bottom)<2);assert.ok(pair[1].right<=bounds.image.right-bounds.image.left+1);
@@ -475,11 +477,22 @@ async function checkBackendTwo(){
    if(changed)assert.ok(compact.frames.every(f=>f.bg==='rgba(35, 76, 125, 0.65)'&&f.blur.includes('blur(12px)')),'Saved Inner material still reaches compact frames');
    assert.ok(compact.controls.every(c=>c.font==='9px'&&c.padding==='5px'&&c.right<=compact.width+1),'Compact toolbar text and padding remain scoped and contained with either saved preset');
    const fabricCompact=await page.locator('#backend-two-fabric-strip .fabric-assistant').evaluate(e=>{const s=getComputedStyle(e),b=getComputedStyle(e.querySelector('.fa-tabs button'));return {padding:s.paddingTop,paddingX:s.paddingLeft,border:s.borderTopWidth,bg:s.backgroundColor,font:b.fontSize,pillY:b.paddingTop};});
-   assert.deepEqual(fabricCompact,{padding:'0px',paddingX:'0px',border:'0px',bg:'rgba(0, 0, 0, 0)',font:'9px',pillY:'5px'});
+   assert.deepEqual(fabricCompact,{padding:'0px',paddingX:'0px',border:'0px',bg:'rgba(0, 0, 0, 0)',font:'9px',pillY:'3px'});
+   await page.locator('#backend-two-fabric-strip').getByRole('button',{name:'In House',exact:true}).click();
+   await page.waitForFunction(()=>document.querySelector('#backend-two-fabric-strip .fa-rail .fa-product'));
+   const rail=page.locator('#backend-two-fabric-strip .fa-rail');
+   const railGeometry=await rail.evaluate(e=>{const h=e.querySelector('.fa-header').getBoundingClientRect(),card=e.querySelector('.fa-product').getBoundingClientRect();return {headerLeft:h.left,headerRight:h.right,cardLeft:card.left,width:card.width,height:card.height};});
+   assert.ok(railGeometry.headerRight<=railGeometry.cardLeft+1,'Fabric controls sit to the left of the photos');assert.ok(await rail.locator('.fa-header').evaluate(e=>{const box=e.getBoundingClientRect();return [...e.querySelectorAll('button')].filter(b=>!b.hidden&&getComputedStyle(b).display!=='none').every(b=>{const r=b.getBoundingClientRect();return r.top>=box.top-1&&r.bottom<=box.bottom+1;});}),'Leading controls fit without a nested vertical scroll');assert.ok(Math.abs(railGeometry.width-railGeometry.height)<2,'Fabric tiles are square');
+   await rail.evaluate(e=>e.scrollLeft=100);
+   assert.ok(await rail.evaluate((e,before)=>e.querySelector('.fa-header').getBoundingClientRect().left<before-50,railGeometry.headerLeft),'Controls scroll away with the fabrics');await rail.evaluate(e=>e.scrollLeft=0);
+   const firstCard=rail.locator('.fa-product').first();assert.equal(await firstCard.locator('.fa-card-title').getAttribute('data-maya-type'),'P1');
+   await firstCard.locator('.fa-product-link').focus();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#backend-two-fabric-strip .fa-card-copy')).opacity==='1');await firstCard.locator('.fa-product-link').evaluate(e=>e.blur());
    const drawerStyle=await page.locator('#clients-drawer').evaluate(e=>{const s=getComputedStyle(e);return {role:e.hasAttribute('data-maya-drawer'),padding:s.paddingTop,paddingX:s.paddingLeft,radius:s.borderTopLeftRadius,bg:s.backgroundColor,blur:s.backdropFilter};});
    assert.equal(drawerStyle.role,true);assert.equal(drawerStyle.padding,changed?'22px':'16px');assert.equal(drawerStyle.paddingX,changed?'20px':'12px');assert.equal(drawerStyle.radius,changed?'12px':'18px');assert.equal(drawerStyle.bg,changed?'rgba(23, 91, 59, 0.8)':'rgba(3, 15, 29, 0.9)');assert.ok(drawerStyle.blur.includes(changed?'blur(14px)':'blur(28px)'),'Backend 2 drawer follows shared saved Drawer effects');
    await engineFrame.getByRole('tab',{name:'CLO 3D',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-clo').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
    const cloBounds=await engineFrame.locator('#backend-two-clo').boundingBox();assert.ok(cloBounds.width>0&&cloBounds.height>0&&cloBounds.x>=bounds.image.left-1&&cloBounds.x+cloBounds.width<=bounds.image.right+1);
+   await engineFrame.waitForFunction(()=>document.querySelector('#backend-two-clo .clo-photo img')?.naturalWidth>0);
+   const cloCard=await engineFrame.locator('#backend-two-clo .clo-card').first().boundingBox();assert.ok(Math.abs(cloCard.width-cloCard.height)<2&&cloCard.width<400,'CLO uses bounded square photo previews');
    await engineFrame.getByRole('tab',{name:'Pipeline',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-pipeline').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
    await engineFrame.getByRole('tab',{name:'Pattern',exact:true}).click();assert.ok(await engineFrame.locator('#stage').isVisible());
   }

@@ -70,13 +70,13 @@
  settings.addEventListener('focusout',()=>queueMicrotask(syncSettings));
  const originalToggle=toggleClientsDrawer;
  toggleClientsDrawer=function(force){originalToggle(force);const open=drawer.classList.contains('open');drawer.inert=!open;const button=document.querySelector('#top-actions .hamburger');button.setAttribute('aria-expanded',String(open));if(open){selectTab(activeTab);tabs.querySelector('[aria-selected="true"]')?.focus({preventScroll:true});}else button.focus({preventScroll:true});};
- toggleWorkspaceDrawer=function(){toggleClientsDrawer();};
+ toggleWorkspaceDrawer=function(force){toggleClientsDrawer(force);};
  document.addEventListener('keydown',e=>{
   if(!drawer.classList.contains('open'))return;
   if(e.key==='Escape'){e.preventDefault();toggleClientsDrawer(false);}
   if(e.key==='Tab'){const items=[...drawer.querySelectorAll('button,a,input,textarea,select,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.getClientRects().length);if(!items.length)return;const first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
  });
- _updateBrandSub=function(){ $('workspace-title').textContent='Backend 2';$('workspace-version').hidden=true;const menu=document.querySelector('#top-actions .hamburger');menu.title='Workspace menu';menu.setAttribute('aria-controls','clients-drawer');};
+ _updateBrandSub=function(){ const label=$('workspace-title'),number=document.createElement('span');number.className='backend-two-number';number.textContent='2';label.replaceChildren(document.createTextNode('Backend '),number);$('workspace-version').hidden=true;const menu=document.querySelector('#top-actions .hamburger');menu.title='Workspace menu';menu.setAttribute('aria-controls','clients-drawer');};
  goToScreen=function(){screens.scrollTop=0;};_updateBrandSub();
  // Keep legacy render targets but present only the integrated snapshot.
  $('screen-onepager').hidden=true;$('screen-operating').setAttribute('aria-label','Image, pattern, CLO 3D and pipeline');
@@ -93,7 +93,7 @@
   const key=JSON.stringify([context.account,context.sid,context.local,piece?.id,saved?.referenceImage,valid?saved.pieces:[]]);
   if(!window.MayaFabricAssistant||key===fabricKey)return;fabricKey=key;const serial=++fabricSerial;
   window.MayaFabricAssistant.reset();
-  await window.MayaFabricAssistant.open({host:fabricHost,automatic:true,savedOnly:true,submissionId:valid?context.sid:'',referenceImage:valid?saved.referenceImage:'',preferences:valid?saved.preferences:'',piece:piece||{},pieces:valid?saved.pieces:[],reopenSaved:()=>{fabricKey='';return refreshFabrics(selectedGarment);}});
+  await window.MayaFabricAssistant.open({host:fabricHost,compactRail:true,automatic:true,savedOnly:true,submissionId:valid?context.sid:'',referenceImage:valid?saved.referenceImage:'',preferences:valid?saved.preferences:'',piece:piece||{},pieces:valid?saved.pieces:[],reopenSaved:()=>{fabricKey='';return refreshFabrics(selectedGarment);}});
   if(serial!==fabricSerial)return;
  }
  const publish=_publishSavedOperations;

@@ -209,6 +209,28 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 12 — Backend 2 square sourcing cards and interaction fixes (local):
+Fabric tabs/tools now lead the same horizontal rail as square photos and scroll
+away with it. Captions use P1/P3, hidden until hover, focus or first touch; heart/X
+controls are smaller and grouped at top right while touch targets remain usable.
+A 112–152px strip returns vertical space to the image/pattern frames. The title's
+numeral 2 is smaller and baseline-aligned. This compact view is scoped to Backend 2;
+the original Backend's recent separate layout remains intact.
+CLO explicitly requests image search and retains sourced thumbnail alternatives,
+with square previews and matching hover/focus details. Old image-less research
+requires explicit Refresh; blocked CONNECT metadata is not scraped, guessed or
+replaced with generated images. No automatic paid preview retry was added.
+Pipeline cells now reflect actual waiting/running/done/saved/unavailable/failed
+states, including reopened runs and preflight errors. Shared drawer gestures use
+handle/edge-only starts, direction lock, cancellation and one action per wheel
+burst; original Backend gestures open the same drawer as its hamburger.
+Aesthetic Control has working rail, CLO illustration and pipeline state samples.
+Node20 code-only checks pass, including rail transitions, sourced preview
+fallbacks, pipeline states and drawer gestures. CI geometry assertions cover
+phone/tablet/desktop with changed saved settings; they have not run locally.
+These changes are committed locally and are not deployed.
+
+
 November 12 — original Backend presentation update (local, not pushed):
 The original pattern window now has Mark 1 / Logic / SVG with live pipeline and
 retrieval details inside the existing frame. Logic stays selected during progress;

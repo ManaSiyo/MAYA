@@ -1,0 +1,16 @@
+/* Source previews use the same image-first card interaction as fabric cards.
+   Shared Inner/Glass/typography materials retain authority. */
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-results{grid-template-columns:repeat(auto-fill,minmax(min(160px,100%),220px));grid-auto-rows:max-content;gap:5px;align-content:start;align-items:start;justify-content:start}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-card{position:relative;display:block;aspect-ratio:1/1;min-height:0;padding:0!important;gap:0;overflow:hidden;isolation:isolate}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-photo{position:absolute;inset:0;display:grid;place-items:center;aspect-ratio:1/1;width:100%;height:100%;min-height:0;padding:0;border:0;text-decoration:none;overflow:hidden}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-photo img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-photo>span{max-width:75%;text-align:center}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-caption{position:absolute;inset:auto 0 0;z-index:1;display:flex;flex-direction:column;gap:3px;max-height:calc(100% - 36px);padding:24px 8px 8px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55) 45%,rgba(0,0,0,.9));overflow:auto;opacity:0;pointer-events:none;transition:opacity .16s}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-title{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-caption :is(p,summary){margin:0;text-align:left}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-card-actions{position:absolute;top:4px;right:4px;z-index:2;display:flex;gap:3px;flex-wrap:nowrap;opacity:0;pointer-events:none;transition:opacity .16s}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-card:is(:hover,:focus-within,:focus,.is-revealed) :is(.clo-caption,.clo-card-actions){opacity:1;pointer-events:auto}
+html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-action-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(pointer:fine){html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-card-actions button{width:24px!important;height:24px!important;min-width:24px!important;min-height:24px!important;padding:0!important}html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-card-actions svg{width:14px!important;height:14px!important}}
+@media(hover:none){html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-card-actions{opacity:1;pointer-events:auto}html body :is(#backend-two-clo,#clo-result,.maya-clo-assets) .clo-caption{max-height:calc(100% - 52px)}}
+@media(prefers-reduced-motion:reduce){.maya-clo-assets :is(.clo-caption,.clo-card-actions){transition:none!important}}

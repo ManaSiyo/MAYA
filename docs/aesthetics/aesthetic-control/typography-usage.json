@@ -15,6 +15,7 @@
     "docs/aesthetics/ui/backend-two-operation.js",
     "docs/aesthetics/ui/backend-two.js",
     "docs/aesthetics/ui/clo-assets.js",
+    "docs/aesthetics/ui/drawer-gestures.js",
     "docs/aesthetics/ui/fabric-assistant.js",
     "docs/aesthetics/ui/image-viewer.js",
     "docs/aesthetics/ui/lead-stage-menu.js",
@@ -78,7 +79,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 274,
+          "line": 278,
           "tag": "h1",
           "id": null,
           "class": "",
@@ -156,7 +157,7 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 274
+              "line": 278
             },
             {
               "page": "backend/verify.html",
@@ -222,7 +223,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 389,
+          "line": 401,
           "tag": "h2",
           "id": "operation-settings-title",
           "class": "",
@@ -306,7 +307,7 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 389
+              "line": 401
             }
           ]
         }
@@ -357,7 +358,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 317,
+          "line": 321,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -367,7 +368,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 339,
+          "line": 343,
           "tag": "h3",
           "id": null,
           "class": "col-head",
@@ -377,7 +378,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 403,
+          "line": 415,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -1078,7 +1079,7 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 317
+              "line": 321
             },
             {
               "page": "backend/status.html",
@@ -1099,11 +1100,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 339
+              "line": 343
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 403
+              "line": 415
             },
             {
               "page": "backend/privacy.html",
@@ -1380,7 +1381,7 @@
       "locations": [
         {
           "page": "backend/operation-workspace.html",
-          "line": 423,
+          "line": 435,
           "tag": "h4",
           "id": null,
           "class": "",
@@ -1390,7 +1391,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 423,
+          "line": 435,
           "tag": "h4",
           "id": null,
           "class": "",
@@ -1455,11 +1456,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 423
+              "line": 435
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 423
+              "line": 435
             },
             {
               "page": "docs/aesthetics/ui/fabric-assistant.js",
@@ -1566,7 +1567,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 319,
+          "line": 323,
           "tag": "input",
           "id": "m-waist",
           "class": "",
@@ -1576,7 +1577,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 320,
+          "line": 324,
           "tag": "input",
           "id": "m-hip",
           "class": "",
@@ -1586,7 +1587,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 323,
+          "line": 327,
           "tag": "input",
           "id": "m-crotch",
           "class": "",
@@ -1596,7 +1597,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 324,
+          "line": 328,
           "tag": "input",
           "id": "m-inseam",
           "class": "",
@@ -1606,7 +1607,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 327,
+          "line": 331,
           "tag": "input",
           "id": "m-length",
           "class": "",
@@ -1616,7 +1617,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 337,
+          "line": 341,
           "tag": "pre",
           "id": "live-log",
           "class": "",
@@ -1626,7 +1627,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 347,
+          "line": 359,
           "tag": "pre",
           "id": "t-prompt",
           "class": "",
@@ -1636,7 +1637,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 399,
+          "line": 411,
           "tag": "div",
           "id": null,
           "class": "kb-status",
@@ -1646,7 +1647,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 404,
+          "line": 416,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1656,7 +1657,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 405,
+          "line": 417,
           "tag": "select",
           "id": "pattern-type",
           "class": "",
@@ -1666,7 +1667,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 406,
+          "line": 418,
           "tag": "input",
           "id": "pattern-hits",
           "class": "",
@@ -1676,7 +1677,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 407,
+          "line": 419,
           "tag": "textarea",
           "id": "pattern-direction",
           "class": "",
@@ -1686,7 +1687,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 409,
+          "line": 421,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1696,7 +1697,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 410,
+          "line": 422,
           "tag": "textarea",
           "id": "pattern-grammar",
           "class": "",
@@ -1706,7 +1707,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 411,
+          "line": 423,
           "tag": "textarea",
           "id": "pattern-classifier",
           "class": "",
@@ -1716,7 +1717,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 414,
+          "line": 426,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1726,7 +1727,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 415,
+          "line": 427,
           "tag": "input",
           "id": "pattern-band",
           "class": "",
@@ -1736,7 +1737,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 415,
+          "line": 427,
           "tag": "input",
           "id": "pattern-underlap",
           "class": "",
@@ -1746,7 +1747,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 415,
+          "line": 427,
           "tag": "input",
           "id": "pattern-yoke",
           "class": "",
@@ -1756,7 +1757,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 416,
+          "line": 428,
           "tag": "textarea",
           "id": "pattern-prompt",
           "class": "",
@@ -1766,7 +1767,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 417,
+          "line": 429,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1776,7 +1777,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 420,
+          "line": 432,
           "tag": "p",
           "id": "pattern-save-status",
           "class": "",
@@ -1786,7 +1787,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 423,
+          "line": 435,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1796,7 +1797,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 423,
+          "line": 435,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1806,7 +1807,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 429,
+          "line": 441,
           "tag": "textarea",
           "id": "logic-edit",
           "class": "",
@@ -1816,7 +1817,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 527,
+          "line": 540,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3417,39 +3418,39 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 399
+              "line": 411
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 404
+              "line": 416
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 409
+              "line": 421
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 414
+              "line": 426
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 417
+              "line": 429
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 420
+              "line": 432
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 423
+              "line": 435
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 423
+              "line": 435
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 527
+              "line": 540
             },
             {
               "page": "backend/privacy.html",
@@ -3882,14 +3883,6 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 319
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 320
-            },
-            {
-              "page": "backend/operation-workspace.html",
               "line": 323
             },
             {
@@ -3902,43 +3895,51 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 405
+              "line": 328
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 406
+              "line": 331
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 407
+              "line": 417
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 410
+              "line": 418
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 411
+              "line": 419
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 415
+              "line": 422
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 415
+              "line": 423
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 415
+              "line": 427
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 416
+              "line": 427
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 429
+              "line": 427
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 428
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 441
             },
             {
               "page": "backend/status.html",
@@ -3987,11 +3988,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 337
+              "line": 341
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 347
+              "line": 359
             },
             {
               "page": "backend/status.html",
@@ -4221,7 +4222,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 394,
+          "line": 406,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4231,7 +4232,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 425,
+          "line": 437,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4241,7 +4242,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 440,
+          "line": 452,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4251,7 +4252,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 449,
+          "line": 461,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4412,19 +4413,19 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 394
+              "line": 406
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 425
+              "line": 437
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 440
+              "line": 452
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 449
+              "line": 461
             },
             {
               "page": "backend/status.html",
@@ -5227,7 +5228,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 276,
+          "line": 280,
           "tag": "button",
           "id": null,
           "class": "icon-btn hamburger",
@@ -5237,7 +5238,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 287,
+          "line": 291,
           "tag": "select",
           "id": "test-picker",
           "class": "head-select",
@@ -5247,7 +5248,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 288,
+          "line": 292,
           "tag": "button",
           "id": "start-test",
           "class": "pill primary",
@@ -5257,7 +5258,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 289,
+          "line": 293,
           "tag": "button",
           "id": "retry-pattern-save",
           "class": "pill",
@@ -5267,7 +5268,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 319,
+          "line": 323,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5277,7 +5278,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 320,
+          "line": 324,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5287,7 +5288,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 323,
+          "line": 327,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5297,7 +5298,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 324,
+          "line": 328,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5307,7 +5308,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 327,
+          "line": 331,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5317,7 +5318,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 330,
+          "line": 334,
           "tag": "div",
           "id": "dim-derived",
           "class": "kb-status",
@@ -5327,7 +5328,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 341,
+          "line": 353,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5337,7 +5338,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 342,
+          "line": 354,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5347,7 +5348,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 343,
+          "line": 355,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5357,7 +5358,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 344,
+          "line": 356,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5367,7 +5368,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 386,
+          "line": 398,
           "tag": "button",
           "id": null,
           "class": "maya-icon-button drawer-burger",
@@ -5377,7 +5378,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 396,
+          "line": 408,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5387,7 +5388,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 397,
+          "line": 409,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5397,7 +5398,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 405,
+          "line": 417,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5407,7 +5408,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 406,
+          "line": 418,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5417,7 +5418,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 407,
+          "line": 419,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5427,7 +5428,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 410,
+          "line": 422,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5437,7 +5438,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 411,
+          "line": 423,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5447,7 +5448,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 415,
+          "line": 427,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5457,7 +5458,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 415,
+          "line": 427,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5467,7 +5468,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 415,
+          "line": 427,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5477,7 +5478,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 416,
+          "line": 428,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5487,7 +5488,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 419,
+          "line": 431,
           "tag": "button",
           "id": null,
           "class": "pill",
@@ -5497,7 +5498,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 431,
+          "line": 443,
           "tag": "button",
           "id": "logic-edit-btn",
           "class": "pill sm",
@@ -5507,7 +5508,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 432,
+          "line": 444,
           "tag": "button",
           "id": "logic-save-btn",
           "class": "pill sm",
@@ -5517,7 +5518,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 433,
+          "line": 445,
           "tag": "button",
           "id": "logic-reset-btn",
           "class": "pill sm",
@@ -5527,7 +5528,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 434,
+          "line": 446,
           "tag": "button",
           "id": "logic-lock-btn",
           "class": "pill sm",
@@ -5537,7 +5538,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 442,
+          "line": 454,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5547,7 +5548,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 443,
+          "line": 455,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5557,7 +5558,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 444,
+          "line": 456,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5567,7 +5568,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 453,
+          "line": 465,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5577,7 +5578,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 454,
+          "line": 466,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5587,7 +5588,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 462,
+          "line": 474,
           "tag": "div",
           "id": "toast",
           "class": "",
@@ -5597,7 +5598,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1012,
+          "line": 1025,
           "tag": "button",
           "id": null,
           "class": "pill ${act}",
@@ -5607,7 +5608,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1014,
+          "line": 1027,
           "tag": "button",
           "id": null,
           "class": "pill ${CUR.kind==='grounded'?'active':''}",
@@ -5617,7 +5618,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1016,
+          "line": 1029,
           "tag": "button",
           "id": null,
           "class": "pill ${CUR.kind==='svg'?'active':''}",
@@ -5627,7 +5628,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 525,
+          "line": 538,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8150,11 +8151,11 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 330
+              "line": 334
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 462
+              "line": 474
             },
             {
               "page": "backend/status.html",
@@ -8487,51 +8488,31 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 276
+              "line": 280
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 288
+              "line": 292
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 289
+              "line": 293
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 386
+              "line": 398
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 396
+              "line": 408
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 397
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 419
+              "line": 409
             },
             {
               "page": "backend/operation-workspace.html",
               "line": 431
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 432
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 433
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 434
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 442
             },
             {
               "page": "backend/operation-workspace.html",
@@ -8543,7 +8524,11 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 453
+              "line": 445
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 446
             },
             {
               "page": "backend/operation-workspace.html",
@@ -8551,19 +8536,35 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1012
+              "line": 455
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1014
+              "line": 456
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1016
+              "line": 465
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 525
+              "line": 466
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 1025
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 1027
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 1029
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 538
             },
             {
               "page": "backend/status.html",
@@ -9440,21 +9441,13 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 287
+              "line": 291
             }
           ]
         },
         "label": {
           "count": 23,
           "locations": [
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 319
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 320
-            },
             {
               "page": "backend/operation-workspace.html",
               "line": 323
@@ -9469,39 +9462,47 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 405
+              "line": 328
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 406
+              "line": 331
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 407
+              "line": 417
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 410
+              "line": 418
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 411
+              "line": 419
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 415
+              "line": 422
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 415
+              "line": 423
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 415
+              "line": 427
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 416
+              "line": 427
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 427
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 428
             },
             {
               "page": "backend/status.html",
@@ -9546,19 +9547,19 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 341
+              "line": 353
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 342
+              "line": 354
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 343
+              "line": 355
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 344
+              "line": 356
             },
             {
               "page": "backend/status.html",

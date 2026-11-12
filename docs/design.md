@@ -148,3 +148,17 @@ with 9px P3 controls locally. These size exceptions do not alter global Aestheti
 Control defaults. Shared Inner/Drawer/Glass colors, materials and icons retain
 authority. Drawer order/default is Submissions (folder), Bio, Settings. Fabric
 strip/card dimensions are smaller to recover vertical and horizontal space.
+
+Backend 2 sourcing update (November 12): its fabric strip is a single horizontal
+rail with view tabs/tools first, followed by square edge-to-edge photographs.
+The controls scroll away with the photos. P1 titles/P3 source captions overlay
+photos on hover/focus/first touch; source-only failures stay readable. Smaller
+heart/X actions cluster at top right, preserving shared coarse-pointer targets.
+The strip is 112–152px so the upper image/pattern workspace receives more height.
+CLO uses bounded square photo cards with equivalent captions/actions and truthful
+missing-preview fallbacks. Its imagery must come from source evidence. The
+Backend 2 numeral uses 0.62em on the title baseline. Shared materials/fonts remain
+controlled centrally; the compact control-size exception remains local.
+Pipeline stages report real run/restored/error states; previews explicitly label
+sample transitions. Drawer gestures must originate on handles or empty edges,
+never hijack card/fabric scrolling or interactive controls.

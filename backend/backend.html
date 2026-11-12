@@ -1409,8 +1409,8 @@
 <script src="/aesthetics/ui/presentation-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=29"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=18">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=21"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=19">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=22"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=4"></script>
 </head>
 <body class="backend-original">
@@ -1659,9 +1659,9 @@ function goToScreen(n) {
 let _currentScreen = 0;
 const SCREEN_LABELS = ['Backend', 'Operation Room'];
 let _operationsSettingsOpen=false;
-function toggleWorkspaceDrawer(){
-  if(_currentScreen===1){document.getElementById('operations-embed')?.contentWindow?.postMessage({maya:'ops-settings',open:!_operationsSettingsOpen},location.origin);return;}
-  toggleClientsDrawer();
+function toggleWorkspaceDrawer(force){
+  if(_currentScreen===1){document.getElementById('operations-embed')?.contentWindow?.postMessage({maya:'ops-settings',open:force===undefined?!_operationsSettingsOpen:!!force},location.origin);return;}
+  toggleClientsDrawer(force);
 }
 // v12.8: arriving from a Systems Map submission card. Instant paint from the
 // URL params, then the full brief (summary.json + garment) loads from Drive
@@ -5115,47 +5115,9 @@ window.renderActivePiece3D = function() {
 // Ignores swipes that begin inside the horizontal pattern swiper or the
 // drawer itself, and ignores mostly-vertical gestures.
 // ════════════════════════════════════════════════════════════════
-(function wireDrawerSwipe() {
-  // v0.31: works for touch, mouse-drag AND trackpad two-finger swipe.
-  // Right-to-left opens the clients/hamburger drawer; left-to-right closes.
-  const OPEN_AT = 60, V_LIMIT = 60, WHEEL_AT = 90;
-  function exempt(t) {
-    // The hamburger may only be pulled from EMPTY space, never from inside
-    // a panel that has its own horizontal swipe (Brief item/pills, Brief
-    // fabrics grid, Op Room 3D viewer, Op Room pattern swiper) or a drawer.
-    return !!(t && t.closest && (
-      t.closest('#op-pattern-swiper') || t.closest('#op-room-3d') ||
-      t.closest('.op-image-col')      || t.closest('.op-room-col') ||
-      t.closest('#piece-swiper')      || t.closest('#brief-fabrics') ||
-      t.closest('.fab-grid')          ||
-      t.closest('#clients-drawer')    || t.closest('#drawer-settings')));
-  }
-  // ── pointer drag (covers mouse + touch + pen) ──
-  let x0 = null, y0 = null, ok = false;
-  window.addEventListener('pointerdown', e => {
-    ok = !exempt(e.target); x0 = e.clientX; y0 = e.clientY;
-  }, { passive: true });
-  window.addEventListener('pointerup', e => {
-    if (!ok || x0 === null) { x0 = y0 = null; return; }
-    const dx = e.clientX - x0, dy = e.clientY - y0;
-    x0 = y0 = null;
-    if (Math.abs(dy) > V_LIMIT) return;
-    if (dx <= -OPEN_AT)      { if (typeof toggleClientsDrawer === 'function') toggleClientsDrawer(true); }
-    else if (dx >= OPEN_AT)  { if (typeof toggleClientsDrawer === 'function') toggleClientsDrawer(false); }
-  }, { passive: true });
-  // ── trackpad horizontal wheel ──
-  let accX = 0, accTimer = null;
-  window.addEventListener('wheel', e => {
-    if (exempt(e.target)) return;
-    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;   // vertical scroll
-    accX += e.deltaX;
-    clearTimeout(accTimer);
-    accTimer = setTimeout(() => { accX = 0; }, 220);
-    if (accX >= WHEEL_AT)       { if (typeof toggleClientsDrawer === 'function') toggleClientsDrawer(true);  accX = 0; }
-    else if (accX <= -WHEEL_AT) { if (typeof toggleClientsDrawer === 'function') toggleClientsDrawer(false); accX = 0; }
-  }, { passive: true });
-})();
+// Shared handle/edge gestures are mounted after the workspace adapter.
 </script>
 <script>MayaImageViewer.watch("#op-image-frame img");</script>
+<script src="/aesthetics/ui/drawer-gestures.js?v=1"></script>
 </body>
 </html>

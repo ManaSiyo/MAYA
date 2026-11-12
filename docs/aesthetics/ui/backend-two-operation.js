@@ -6,7 +6,7 @@
  // The frame owns the shared Inner material; its column is only a layout track.
  for(const column of document.querySelectorAll('#plan-a-view > .cols > .panel')){column.classList.remove('panel');column.classList.add('backend-two-column');}
  for(const frame of document.querySelectorAll('#hero-frame,#stage'))frame.dataset.mayaPanel='inner';
- const style=document.createElement('link');style.rel='stylesheet';style.href='/aesthetics/ui/backend-two.css?v=5';document.head.append(style);
+ const style=document.createElement('link');style.rel='stylesheet';style.href='/aesthetics/ui/backend-two.css?v=6';document.head.append(style);
  document.addEventListener('pointerdown',()=>parent.postMessage({maya:'backend-two-workspace-pointer'},location.origin),{capture:true});
  const trace=document.querySelector('#plan-a-view > .trace'),stage=$('stage');
  trace.id='backend-two-pipeline';trace.dataset.mayaPanel='inner';trace.dataset.mayaScrollbar='visible';trace.setAttribute('role','tabpanel');trace.tabIndex=0;stage.after(trace);

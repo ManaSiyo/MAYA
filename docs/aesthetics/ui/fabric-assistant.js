@@ -166,14 +166,21 @@
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.6');
     const shape=document.createElementNS(svg.namespaceURI,'path');shape.setAttribute('d',path);svg.append(shape);b.append(svg);return b;
   }
+  function syncLayout() {
+    if(!els)return;
+    const compact=!!context.compactRail,rail=compact&&workspace.classList.contains('is-inline');
+    workspace.classList.toggle('fa-compact-cards',compact);workspace.classList.toggle('is-rail',rail);
+    if(rail){if(els.rail.parentNode!==els.body)els.body.insertBefore(els.rail,els.saveStatus);els.rail.append(els.header,els.results);}
+    else {if(els.header.parentNode!==workspace)workspace.prepend(els.header);if(els.results.parentNode!==els.body)els.body.insertBefore(els.results,els.saveStatus);els.rail.remove();}
+  }
   function collapse() {
     if(dialog.open)dialog.close();
     if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');}
-    els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');
+    els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');syncLayout();
   }
   function expand() {
     if(dialog.open && host)return collapse();
-    workspace.classList.remove('is-inline');dialog.append(workspace);workspace.hidden=false;
+    workspace.classList.remove('is-inline');dialog.append(workspace);workspace.hidden=false;syncLayout();
     if(!dialog.open)dialog.showModal();els.expand.textContent=host?'Collapse':'Close';els.expand.setAttribute('aria-expanded','true');
   }
   function close() {
@@ -205,6 +212,7 @@
     const storeWrap=node('div','fa-store-wrap');storeWrap.hidden=true;storeWrap.setAttribute('role','group');storeWrap.setAttribute('aria-label','Optional separate retailer searches');
     const storeButtons=storeGroups.map(group=>{const button=action(group.label,()=>chooseSearch('retailers',group.id));button.classList.add('fa-store-filter');button.dataset.mayaSegment='';button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
     tabs.append(inhouse,search,saved,filter,fresh);
+    const rail=node('div','fa-rail');rail.dataset.mayaScrollbar='visible';rail.tabIndex=0;rail.setAttribute('aria-label','Fabric views and suggestions');
     const body=node('div','fa-body');body.dataset.mayaScrollbar='visible';body.tabIndex=0;body.setAttribute('aria-label','Fabric results');
     const transcript=node('div','fa-transcript');transcript.setAttribute('aria-label','Your requests');
     const observation=node('p','fa-observation'),results=node('div','fa-results'),saveStatus=node('p','fa-save-status');saveStatus.setAttribute('role','status');results.dataset.mayaScrollbar='visible';results.tabIndex=0;results.setAttribute('aria-label','Fabric suggestions');body.append(transcript,observation,results,saveStatus);
@@ -230,8 +238,8 @@
     const outside=event=>{const r=dialog.getBoundingClientRect();return event.target===dialog&&(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom);};
     dialog.addEventListener('pointerdown',event=>{outsideDown=outside(event);});
     dialog.addEventListener('click',event=>{if(outsideDown&&outside(event)){if(host)collapse();else close();}outsideDown=false;});
-    dialog.addEventListener('close',()=>{if(dialog.open)return;if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');}else{controller?.abort();recognition?.stop();}});
-    els={exportButton,details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,upload,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
+    dialog.addEventListener('close',()=>{if(dialog.open)return;if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');syncLayout();}else{controller?.abort();recognition?.stop();}});
+    els={header,rail,exportButton,details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,upload,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
   }
   let recognition;
   function dictate() {
@@ -453,25 +461,32 @@
   }
   // Photo evidence can arrive late. It updates the mounted image without
   // discarding a healthy photograph or restarting URLs that already failed.
-  const cardSignature=p=>JSON.stringify([view,!!context.automatic,p.url]);
+  const cardSignature=p=>JSON.stringify([view,!!context.automatic,!!context.compactRail,p.url]);
   function card(p) {
     const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);item._fabricView=view;
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
     mountProductPhoto(item,link,p);
-    const title=node('h3','fa-card-title',p.title);title.dataset.mayaType='H4';
+    const title=node('h3','fa-card-title',p.title);title.dataset.mayaType=context.compactRail?'P1':'H4';
     const caption=node('p','fa-card-caption');caption.dataset.mayaType='P3';
     item._fabricUpdateText=updated=>{
       p=updated;const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
       const use=[p.garment?'For '+p.garment:'',p.materialLabel].filter(Boolean).join(' · '),source=p.evidence==='atelier_inventory'?'Atelier inventory':p.merchant||'View fabric source';
       title.textContent=p.title;caption.textContent=[knownPrice,source].filter(Boolean).join(' · ');link.setAttribute('aria-label',[p.title,use,source,knownPrice,p.reason].filter(Boolean).join(' · '));
     };item._fabricUpdateText(p);
-    link.append(title,caption);item.append(link);
+    if(context.compactRail){
+      const copy=node('div','fa-card-copy'),unavailable=node('span','fa-preview-unavailable','Preview unavailable');unavailable.dataset.mayaType='P3';copy.append(unavailable,title,caption);link.append(copy);
+      // First touch exposes the caption; a second activates the source/inspector.
+      // Keyboard focus reveals the same content without changing link semantics.
+      let touch=false;link.addEventListener('pointerdown',e=>{touch=e.pointerType==='touch'||e.pointerType==='pen';});
+      link.addEventListener('click',e=>{if(!touch||e.detail===0)return;touch=false;if(item.classList.contains('is-revealed'))return;e.preventDefault();e.stopImmediatePropagation();for(const other of els.results.querySelectorAll('.is-revealed'))other.classList.remove('is-revealed');item.classList.add('is-revealed');link.focus({preventScroll:true});},{capture:true});
+    }else link.append(title,caption);
+    item.append(link);
     const controls=node('div','fa-card-actions');
     const favorite=icon('Save to studio favorites','M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z',()=>toggleFavorite(p));
-    favorite.classList.add('fa-favorite');controls.append(favorite);
+    favorite.classList.add('fa-favorite');if(context.compactRail)favorite.dataset.mayaShape='circle';controls.append(favorite);
     let removing=false,remove;
     if(view==='search'&&context.automatic){
-      remove=icon('Remove this source','M6 6l12 12M18 6L6 18',async()=>{if(removing)return;removing=true;try{await dismiss(p,remove);}finally{removing=false;item._fabricUpdateControls?.();}});controls.append(remove);
+      remove=icon('Remove this source','M6 6l12 12M18 6L6 18',async()=>{if(removing)return;removing=true;try{await dismiss(p,remove);}finally{removing=false;item._fabricUpdateControls?.();}});if(context.compactRail)remove.dataset.mayaShape='circle';controls.append(remove);
     }
     item._fabricUpdateControls=()=>{
       const saved=favorites.items.some(row=>row.url===p.url),label=saved?'Remove from studio favorites':'Save to studio favorites';
@@ -612,7 +627,7 @@
     const stamp=epoch,preparationSequence=searchSeq;
     if(next.host instanceof HTMLElement){collapse();host=next.host;host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';}
     else if(!next.silent){host=null;expand();}
-    workspace.hidden=!!next.silent;
+    syncLayout();workspace.hidden=!!next.silent;
     els.sub.textContent=next.submissionId?'This submission’s fabrics'+(next.piece?.name?' · '+next.piece.name:''):'Studio favorites are shared across the backend';
     if(changed&&!restored)searchState='preparing';
     paint();

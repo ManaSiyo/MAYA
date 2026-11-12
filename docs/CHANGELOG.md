@@ -4,6 +4,15 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 12 — square sourcing and interaction fixes (local):** move Backend 2
+  fabric controls into the leading scroll rail, use square hover-caption cards,
+  smaller corner actions and a shorter strip. Align the title numeral. Request
+  source-backed CLO images explicitly and retain thumbnail fallbacks; use square
+  CLO cards without silently researching old results. Restore truthful pipeline
+  phase states and replace competing drawer swipe handlers with one scoped,
+  cancellation-safe gesture module. Extend functional previews and regressions.
+  Node20 code checks pass; no local browser, paid search, Push or deployment.
+
 - **November 12 — original Backend aesthetic pass (local):** put Pipeline Live
   and retrieval details in a Logic tab between Mark 1 and SVG without resizing the
   pattern frame. Keep Logic selected during runs and hydrate the saved drawing for

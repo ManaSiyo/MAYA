@@ -2503,14 +2503,14 @@ checks['pattern-reuse']=async function(){
  const vm=await import('node:vm'),{readFileSync}=await import('node:fs');const source=readFileSync('backend/operation-workspace.html','utf8');
  const start=source.indexOf('async function startTest('),end=source.indexOf('\n}',start)+2,code=source.slice(start,end);
  const run={id:'saved-v1',passes:[{img:'data:image/png;base64,aW1hZ2U='}]},notices=[],opened=[];let paid=0;
- const context=vm.createContext({RUNNING:false,ACTIVE_TEST:'Coat',HERO:'saved-photo',FILES:{piece:{id:'coat'}},_patternReady:Promise.resolve(),_patternSave:Promise.resolve(),_patternRecord:{runs:[run]},_patternTimer:null,_patternDirty:false,_patternSettingsError:'',patternContext:()=>({garmentId:'coat'}),patternScope:()=>true,restorePatternRun:value=>opened.push(value),toast:text=>notices.push(text),getKey:()=>{paid++;return 'token';},clearTimeout});vm.runInContext(code,context);
+ const context=vm.createContext({RUNNING:false,ACTIVE_TEST:'Coat',HERO:'saved-photo',FILES:{piece:{id:'coat'}},_patternReady:Promise.resolve(),_patternSave:Promise.resolve(),_patternRecord:{runs:[run]},_patternTimer:null,_patternDirty:false,_patternSettingsError:'',patternContext:()=>({garmentId:'coat'}),patternScope:()=>true,restorePatternRun:value=>opened.push(value),liveOpen(){},toast:text=>notices.push(text),getKey:()=>{paid++;return 'token';},clearTimeout});vm.runInContext(code,context);
  await vm.runInContext('startTest()',context);assert.equal(opened.length,1);assert.equal(paid,0,'Repeated Start restores saved work before any provider setup');
  context._patternReady=Promise.reject(Error('Storage unavailable'));await vm.runInContext('startTest()',context);assert.equal(paid,0);assert.match(notices.at(-1),/Storage unavailable/);
  context._patternReady=Promise.resolve();context._patternSettingsError='Invalid grammar';await vm.runInContext('startTest(true)',context);assert.equal(paid,0);assert.match(notices.at(-1),/Invalid grammar/);
  context._patternSettingsError='';context.patternScope=()=>false;await vm.runInContext('startTest(true)',context);assert.equal(paid,0,'Changed garment cannot cross the paid boundary');
  const loadStart=source.indexOf('async function loadPatternWork('),loadEnd=source.indexOf('\n}',loadStart)+2;assert.doesNotMatch(source.slice(loadStart,loadEnd),/gptImageEdit|runGrounded|classifyGarment/);
  const restoreStart=source.indexOf('function restorePatternRun('),restoreEnd=source.indexOf('\n}',restoreStart)+2;
- Object.assign(context,{structuredClone,$:()=>({textContent:''}),_patternRun:{id:'new-version'},renderLogic(){},renderChunks(){},applyView(){},cancelPatternTrace(){},HERO:'saved-photo'});vm.runInContext(source.slice(restoreStart,restoreEnd),context);
+ Object.assign(context,{structuredClone,$:()=>({textContent:''}),_patternRun:{id:'new-version'},pipelineReset(){},pipelineStep(){},liveOpen(){},renderLogic(){},renderChunks(){},applyView(){},cancelPatternTrace(){},HERO:'saved-photo'});vm.runInContext(source.slice(restoreStart,restoreEnd),context);
  context.saved=run;vm.runInContext('restorePatternRun(saved)',context);assert.equal(context._patternRun,null,'Viewing history cannot overwrite a newer run on the next settings save');
  console.log('Pattern reuse: Start restores saved versions, storage/invalid settings/changed garment block paid generation.');
 };
@@ -2566,7 +2566,7 @@ checks['fabric-loading-reuse']=async function(){
  const reference={submissionId:'project',automatic:true,piece:{id:'coat'},referenceImage:'saved-reference',preferences:'green'};
  const noop=()=>{},control={textContent:'',setAttribute:noop};
  const c=vm.createContext({HTMLElement:class{},context:{...reference,inhouse:[{title:'Wool'}]},identity:'project|coat',originalImage:'',epoch:1,searchSeq:0,autoStarted:true,research:{items:[],searched:true},searchState:'complete',busy:false,
-   make:noop,rememberResults:noop,scope:()=> 'project|coat',reset:()=>resets++,restoreResults:()=>false,collapse:noop,expand:noop,workspace:{},els:{sub:{},send:{},input:{focus:noop},expand:control},paint:noop,account:()=> 'owner',loadBook:noop,loadFavorites:noop,loadInventory:async()=>{},loadResearch:async()=>{researchReads++;return {items:[],searched:true};},preparedPhoto:async()=> 'prepared',loadContext:async()=>{},current:()=>true,run:async()=>searches++,status:noop});
+   make:noop,syncLayout:noop,rememberResults:noop,scope:()=> 'project|coat',reset:()=>resets++,restoreResults:()=>false,collapse:noop,expand:noop,workspace:{},els:{sub:{},send:{},input:{focus:noop},expand:control},paint:noop,account:()=> 'owner',loadBook:noop,loadFavorites:noop,loadInventory:async()=>{},loadResearch:async()=>{researchReads++;return {items:[],searched:true};},preparedPhoto:async()=> 'prepared',loadContext:async()=>{},current:()=>true,run:async()=>searches++,status:noop});
  vm.runInContext(fn('  async function open(','  function guardAccount'),c);c.next=reference;
  await vm.runInContext('open(next)',c);await vm.runInContext('open(next)',c);
  assert.equal(resets,0,'Reopening saved research does not compare the source to an unprepared image');assert.equal(researchReads,0);assert.equal(searches,0);assert.equal(c.context.inhouse.length,1);
@@ -2659,7 +2659,7 @@ checks['operation-single-drawing']=async function(){
  context.g.components=['side pockets'];context._patternSettings.logic.pants=gram.panels;assert.equal(vm.runInContext('buildCutList(g,gram).length',context),3,'Explicit owner cut list stays authoritative');context._patternSettings.logic={};
  let drawings=0,saves=0,traces=0;const node={textContent:'',innerHTML:''};
  Object.assign(context,{HERO:'photo',EMB:{},RUN:1,_operationInputContext:null,ANSWER:null,FILES:{},KB:{chapters:{}},PASSES:[],BEST_IDX:0,_patternRun:{},window:{},structuredClone,console,
- operationAccount:()=> 'owner',operationContext:()=>({}),operationCurrent:()=>true,requireOperationSettings(){},requireOperation(){},patternGrammar:()=>({types:{pants:gram}}),classifyGarment:async()=>context.g,resolveType:()=> 'pants',renderLogic(){},renderGrammar(){},renderChunks(){},buildQuery:()=>'',embedTexts:async()=>[[1]],retrieve:()=>[],composeGroundedPrompt:()=> 'draw all cut pieces',getQuality:()=> 'medium',gptImageEdit:async()=>{drawings++;return 'pattern';},persistPatternWork:async()=>{saves++;},viewGrounded(){},liveOpen(){},liveLine(){},liveStatus(){},cancelPatternTrace(){},buildSVGfromGrounded(){traces++;},$:()=>node,esc:v=>v,toast:m=>{throw Error(m);}});
+ operationAccount:()=> 'owner',operationContext:()=>({}),operationCurrent:()=>true,requireOperationSettings(){},requireOperation(){},patternGrammar:()=>({types:{pants:gram}}),classifyGarment:async()=>context.g,resolveType:()=> 'pants',renderLogic(){},renderGrammar(){},renderChunks(){},buildQuery:()=>'',embedTexts:async()=>[[1]],retrieve:()=>[],composeGroundedPrompt:()=> 'draw all cut pieces',getQuality:()=> 'medium',gptImageEdit:async()=>{drawings++;return 'pattern';},persistPatternWork:async()=>{saves++;},viewGrounded(){},liveOpen(){},liveLine(){},liveStatus(){},pipelineStep(){},pipelineFailed(){},cancelPatternTrace(){},buildSVGfromGrounded(){traces++;},$:()=>node,esc:v=>v,toast:m=>{throw Error(m);}});
  vm.runInContext(fn('runGrounded'),context);await vm.runInContext('runGrounded()',context);
  assert.equal(drawings,1,'Even an older three-pass setting cannot trigger another paid drawing');assert.equal(context.PASSES.length,1);assert.ok(saves>0);assert.equal(traces,0,'Drawing completion must not start CPU-heavy SVG tracing');
  console.log('Pattern generation: one drawing, saved output, explicit pocket pieces and non-doubled cutting labels passed.');
@@ -2942,4 +2942,87 @@ checks['clo-assets-client']=async function(){
  resolveOld=true;context={...context,garmentId:'pants'};ui.update();await settle();assert.equal(typeof resolveOld,'function');const completeOld=resolveOld;resolveOld=null;context={account:'B',submissionId:'sub-two',garmentId:'dress'};token='B';saved={...saved,items:[],review:{generation:'0',selected:null,dismissed:[]}};ui.update();await settle();completeOld({ok:true,json:async()=>({status:'complete',items:[item],review:{dismissed:[]}})});await settle();assert.equal(host.querySelectorAll('.clo-card').length,0,'Old account and garment results cannot reappear');
  assert.equal(calls.at(-1).options.headers.Authorization,'Bearer B');ui.reset();assert.equal(host.querySelectorAll('.clo-card').length,0);
  console.log('CLO UI: saved-only opening, free prices, private selection, tab reuse and stale account/garment responses passed.');
+};
+
+checks['clo-preview-evidence']=async function(){
+ const {cloResults,cloSearchBody}=await import('../backend/server/digital-assets.mjs');
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs'),{default:assert}=await import('node:assert/strict');
+ const url='https://connect.clo-set.com/detail/e13b408cb5854b768e0fe22df9f4be98';
+ const images=['https://images.example.com/asset.jpg','https://images.example.com/thumb.jpg','https://images.example.com/alternate.jpg'];
+ const result=cloResults({status:'completed',output:[{type:'web_search_call',results:[{type:'image_result',source_website_url:url,image_url:images[0],thumbnail_url:images[1],caption:'Jacket'},{type:'source_result',url,image_url:images[2]},{type:'source_result',url:'https://connect.clo-set.com/detail/'+ 'b'.repeat(32),image_url:'http://localhost/private'}]},{type:'message',content:[{type:'output_text',annotations:[{type:'url_citation',url,title:'Jacket'}],text:JSON.stringify({items:[{url,title:'Jacket',image_url:'https://invented.example.com/not-evidence.jpg'},{url:'https://connect.clo-set.com/detail/'+ 'b'.repeat(32),image_url:images[0]}]})}]}]});
+ assert.deepEqual(result[0].imageCandidates,images,'Image and text source evidence preserve paired preview alternatives');assert.equal(result[0].image,images[0]);assert.equal(result[1].image,'','Model JSON and unsafe source photos cannot invent a preview');
+ const request=cloSearchBody({garment:{},image:'data:image/png;base64,YQ==',preferences:''});assert.match(request.instructions,/Use web image search/);assert.equal(request.max_tool_calls,1,'Preview sourcing stays within the original single provider call');
+ const {document,Event}=parseHTML('<html><head></head><body><section id="clo"></section></body></html>');
+ const c=vm.createContext({document,URL,URLSearchParams,AbortController,Date,setTimeout,clearTimeout,console,matchMedia:()=>({matches:true})});c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/clo-assets.js','utf8'),c);
+ const state={status:'complete',generation:'1',fingerprint:'scope',items:result,review:{generation:'0',selected:null,dismissed:[]},searchReady:true};let calls=0;
+ const host=document.getElementById('clo'),ui=c.MayaCloAssets.create({host,getContext:()=>({account:'A',submissionId:'sub-one'}),getToken:()=> 'token',fetchImpl:async()=>{calls++;return {ok:true,json:async()=>state};}});ui.setActive(true);for(let i=0;i<20;i++)await Promise.resolve();
+ assert.equal(document.querySelectorAll('#maya-clo-assets-style').length,1);assert.equal(calls,1,'Opening only reads saved research');
+ const card=host.querySelector('.clo-card'),img=card.querySelector('img');assert.equal(img.src,images[0]);img.onerror();assert.equal(img.src,images[1]);img.onerror();assert.equal(img.src,images[2]);img.onerror();assert.ok(card.classList.contains('has-missing-photo'));assert.match(card.querySelector('.clo-photo').textContent,/Preview unavailable/);assert.ok(card.querySelector('.clo-caption .clo-title'));assert.equal(card.querySelector('.clo-title').dataset.mayaType,'P1');
+ assert.equal(card.querySelector('.clo-card-actions button').getAttribute('aria-label'),'Select Jacket');assert.ok(card.querySelector('.clo-card-actions svg'));
+ card.focus=()=>{};const click=new Event('click',{bubbles:true,cancelable:true});card.querySelector('.clo-photo').dispatchEvent(click);assert.equal(click.defaultPrevented,true);assert.ok(card.classList.contains('is-revealed'),'First touch reveals source details rather than unexpectedly navigating');
+ assert.match(host.querySelector('.clo-status').textContent,/Refresh to search for missing previews/);assert.equal(calls,1,'Image failures do not trigger another paid search');ui.reset();
+ console.log('CLO previews: sourced alternatives, unsafe/invented image rejection, thumbnail fallbacks, hover/focus card structure and touch reveal passed.');
+};
+
+
+checks['pattern-pipeline-state']=async function(){
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const html=readFileSync('backend/operation-workspace.html','utf8'),{document}=parseHTML(html);
+ const c=vm.createContext({document,$:id=>document.getElementById(id),_pipelineStage:'',HERO:'saved-photo',RUN:2,EMB:{},RUNNING:true,FILES:{},_patternSettings:{type:'auto'},LAST:{},operationAccount:()=> 'owner',operationContext:()=>({}),requireOperationSettings(){},viewGrounded(){},toast(){},console:{error(){}},classifyGarment:async()=>{throw Error('Provider unavailable');}});
+ vm.runInContext(html.slice(html.indexOf('function pipelineStep('),html.indexOf('/* ---- streaming chat:')),c);
+ c.pipelineReset('Ready');assert.equal(document.getElementById('live-status').textContent,'Ready');assert.ok(document.getElementById('live').classList.contains('on'));
+ c.pipelineStep('vision','running');assert.equal(document.querySelector('[data-pipeline-stage="vision"]').dataset.state,'running');
+ c.pipelineFailed('No response');assert.equal(document.querySelector('[data-pipeline-stage="vision"]').dataset.state,'failed');assert.match(document.getElementById('live-log').textContent,/No response/);
+ c.pipelineReset('Next garment');assert.ok([...document.querySelectorAll('[data-pipeline-stage]')].every(n=>n.dataset.state==='waiting'));assert.equal(document.getElementById('live-log').textContent,'');assert.match(document.getElementById('t-type').textContent,/Awaiting/);
+ const start=html.indexOf('async function runGrounded(){'),end=html.indexOf('/* ---------- ACCURACY',start);vm.runInContext(html.slice(start,end),c);await c.runGrounded();
+ assert.equal(document.querySelector('[data-pipeline-stage="vision"]').dataset.state,'failed','A real pipeline-stage failure is shown at the failed stage');assert.match(document.getElementById('live-status').textContent,/Stopped/);assert.match(document.getElementById('live-log').textContent,/Provider unavailable/);
+ const restoreStart=html.indexOf('function restorePatternRun('),restoreEnd=html.indexOf('function renderPatternHistory(',restoreStart);Object.assign(c,{structuredClone,cancelPatternTrace(){},renderChunks(){},renderLogic(){},applyView(){}});vm.runInContext(html.slice(restoreStart,restoreEnd),c);
+ c.restorePatternRun({passes:[{img:'saved'}],inputs:{garment:{type:'coat'},type:'coat',cutlist:[{label:'Front',qty:2}],hits:[{}],prompt:'saved prompt'}});assert.ok([...document.querySelectorAll('[data-pipeline-stage]')].every(n=>n.dataset.state==='saved'));assert.equal(document.getElementById('live-status').textContent,'Saved pattern · no new run');
+ c.restorePatternRun({passes:[{img:'legacy'}]});assert.equal(document.querySelector('[data-pipeline-stage="vision"]').dataset.state,'unavailable');assert.equal(document.querySelector('[data-pipeline-stage="drawing"]').dataset.state,'saved');
+ console.log('Pattern pipeline: waiting, real failure, restored stages and legacy unavailable states passed.');
+};
+
+checks['drawer-gestures']=async function(){
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const {document}=parseHTML('<html><body><div id="top-actions"><button class="hamburger"></button></div><aside id="clients-drawer"><div class="drawer-title">Submissions</div><a id="card">Saved item</a></aside><section id="brief-fabrics"><button id="fabric">Global</button></section></body></html>');
+ const listeners={},docListeners={},actions=[];let now=1000,timer;
+ document.addEventListener=(name,fn)=>docListeners[name]=fn;
+ const c=vm.createContext({document,innerWidth:1000,Date:{now:()=>now},setTimeout:fn=>(timer=fn,1),clearTimeout(){},addEventListener:(name,fn)=>listeners[name]=fn,toggleWorkspaceDrawer(value){actions.push(value);document.body.classList.toggle('drawer-open',value);}});c.window=c;
+ vm.runInContext(readFileSync('docs/aesthetics/ui/drawer-gestures.js','utf8'),c);
+ const handle=document.querySelector('.hamburger'),fire=(name,values={})=>listeners[name]?.({target:handle,isPrimary:true,button:0,pointerId:1,clientX:980,clientY:40,cancelable:true,preventDefault(){},...values});
+ fire('pointerdown');fire('pointermove',{clientX:910});fire('pointerup',{clientX:910});assert.deepEqual(actions,[true]);
+ let stopped=false;docListeners.click({target:handle,preventDefault(){},stopImmediatePropagation(){stopped=true;}});assert.equal(stopped,true,'A drag cannot also toggle through the hamburger click');now+=600;
+ fire('pointerdown',{clientX:600});fire('pointermove',{clientX:670});fire('pointerup',{clientX:670});assert.deepEqual(actions,[true,false]);
+ for(const target of [document.getElementById('fabric'),document.getElementById('card')]){fire('pointerdown',{target});fire('pointermove',{clientX:800});fire('pointerup',{clientX:800});}assert.equal(actions.length,2,'Content scrollers and links cannot open a drawer');
+ fire('pointerdown');fire('pointermove',{clientX:978,clientY:70});fire('pointerup',{clientX:850,clientY:80});assert.equal(actions.length,2,'Vertical intent cancels the drawer gesture');
+ fire('pointerdown');fire('pointermove',{clientX:900});fire('pointercancel');fire('pointerup',{clientX:850});assert.equal(actions.length,2,'Cancelled gestures never toggle');
+ fire('wheel',{deltaX:80,deltaY:0,deltaMode:0});fire('wheel',{deltaX:-100,deltaY:0,deltaMode:0});assert.deepEqual(actions,[true,false,true],'One wheel burst only toggles once');timer();fire('wheel',{deltaX:-80,deltaY:0,deltaMode:0});assert.equal(actions.at(-1),false);
+ fire('wheel',{deltaX:100,deltaY:0,deltaMode:0,ctrlKey:true});assert.equal(actions.length,4,'Zoom gestures never move the drawer');
+ for(const path of ['backend/backend.html','backend/backend2.html'])assert.match(readFileSync(path,'utf8'),/drawer-gestures.js/);
+ assert.match(readFileSync('backend/backend.html','utf8'),/open:force===undefined\?!_operationsSettingsOpen:!!force/,'Original drawer gestures use the same screen-specific target as the hamburger');
+ console.log('Drawer gestures: handle/edge scope, direction lock, cancelled drags, click suppression and wheel-burst isolation passed.');
+};
+
+checks['fabric-compact-rail']=async function(){
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const {document,Event,HTMLElement,Element,CustomEvent}=parseHTML('<html><head></head><body><section id="host"></section></body></html>');
+ const matches=Element.prototype.matches;Element.prototype.matches=function(selector){return selector===':popover-open'?false:matches.call(this,selector);};
+ const create=document.createElement.bind(document);document.createElement=function(tag){const el=create(tag);if(tag==='dialog'){el.open=false;el.showModal=()=>{el.open=true;};el.close=()=>{el.open=false;el.dispatchEvent(new Event('close'));};}return el;};
+ let requests=0;const c=vm.createContext({document,HTMLElement,CustomEvent,URL,URLSearchParams,AbortController,AbortSignal,structuredClone,atob,Date,console,queueMicrotask,localStorage:{getItem:()=>''},setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,addEventListener(){},dispatchEvent(){},fetch:async()=>{requests++;throw Error('No provider call expected');}});c.window=c;
+ const source=readFileSync('docs/aesthetics/ui/fabric-assistant.js','utf8');
+ vm.runInContext(source.replace('window.MayaFabricAssistant={open,','window.MayaFabricAssistant={fixtureCard:card,open,'),c);
+ const api=c.MayaFabricAssistant,host=document.getElementById('host');await api.open({host,automatic:true,savedOnly:true,compactRail:true});
+ const workspace=host.querySelector('.fabric-assistant'),rail=workspace.querySelector('.fa-rail'),results=workspace.querySelector('.fa-results'),header=workspace.querySelector('.fa-header');
+ assert.ok(workspace.classList.contains('is-rail'));assert.ok(workspace.classList.contains('fa-compact-cards'));assert.equal(rail.parentElement.className,'fa-body');assert.deepEqual([...rail.children],[header,results],'Controls and cards share the same scroll container');
+ const product={url:'https://cloth.example/wool',title:'Wool cloth',image:'https://images.example/wool.jpg',merchant:'Cloth source'};
+ const card=api.fixtureCard(product);results.append(card);const photo=card.querySelector('img'),link=card.querySelector('.fa-product-link');
+ assert.equal(card.querySelector('.fa-card-copy .fa-card-title').dataset.mayaType,'P1');assert.equal(card.querySelector('.fa-card-copy .fa-card-caption').dataset.mayaType,'P3');assert.equal(card.querySelectorAll('.fa-card-actions [data-maya-shape="circle"]').length,2);
+ let focused=0;link.focus=()=>focused++;const pointer=new Event('pointerdown',{bubbles:true});pointer.pointerType='touch';link.dispatchEvent(pointer);const first=new Event('click',{bubbles:true,cancelable:true});first.detail=1;link.dispatchEvent(first);assert.equal(first.defaultPrevented,true);assert.ok(card.classList.contains('is-revealed'));assert.equal(focused,1,'First touch reveals and focuses captions without navigating');
+ link.dispatchEvent(pointer);const second=new Event('click',{bubbles:true,cancelable:true});second.detail=1;link.dispatchEvent(second);assert.equal(second.defaultPrevented,false,'Second touch can activate the source or image inspector');
+ api.expand();assert.equal(workspace.parentElement.tagName,'DIALOG');assert.equal(workspace.classList.contains('is-rail'),false);assert.equal(header.parentElement,workspace);assert.equal(results.parentElement.className,'fa-body');assert.equal(rail.isConnected,false);assert.equal(card.querySelector('img'),photo,'Expansion preserves decoded image nodes');
+ api.expand();assert.equal(workspace.parentElement,host);assert.equal(workspace.classList.contains('is-rail'),true);assert.deepEqual([...rail.children],[header,results]);assert.equal(card.querySelector('img'),photo,'Collapse restores the rail without rebuilding cards');
+ const dialog=document.querySelector('dialog');api.expand();dialog.close();assert.equal(workspace.parentElement,host);assert.equal(workspace.classList.contains('is-rail'),true,'Native dialog close restores inline controls as well');
+ await api.open({host,automatic:true,savedOnly:true,compactRail:false});assert.equal(workspace.classList.contains('is-rail'),false);assert.equal(workspace.classList.contains('fa-compact-cards'),false);assert.equal(header.parentElement,workspace);assert.equal(results.parentElement.className,'fa-body');const regular=api.fixtureCard(product);assert.equal(regular.querySelector('.fa-card-title').dataset.mayaType,'H4');assert.equal(regular.querySelector('.fa-card-copy'),null,'The ordinary gallery retains its original caption structure');
+ assert.equal(requests,0,'Layout transitions and card reveal never call a provider');
+ console.log('Fabric rail: shared scrolling structure, compact roles/actions, first-touch reveal, expansion/collapse and ordinary-layout restoration passed.');
 };

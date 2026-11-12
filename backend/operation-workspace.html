@@ -198,7 +198,11 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
   .live.on{display:block}
   .live .lh{display:flex;align-items:center;gap:9px;padding:10px 16px;border-bottom:var(--maya-hairline) solid var(--hair);
     font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
-  .live .dot{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:pulse 1.1s infinite}
+  .live .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.45}
+  .live.is-running .dot{background:var(--good);box-shadow:0 0 8px var(--good);animation:pulse 1.1s infinite}
+  .pipeline-steps{display:flex;flex-wrap:wrap;gap:6px 12px;list-style:none;margin:0 0 12px;padding:0}
+  .pipeline-steps [data-state="running"]{text-decoration:underline;text-underline-offset:3px}
+  .pipeline-steps [data-state="failed"]{color:var(--bad)}
   @keyframes pulse{50%{opacity:.3}}
   .live .lstatus{margin-left:auto;color:var(--ink);text-transform:none;letter-spacing:.02em;font-size:var(--maya-text-caption)}
   .live pre{margin:0;padding:12px 16px;max-height:200px;overflow:auto;white-space:pre-wrap;
@@ -333,10 +337,18 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
   <!-- TRACE -->
   <div class="trace panel">
       <div class="live" id="live">
-        <div class="lh"><span class="dot"></span> Pipeline · live <span class="lstatus" id="live-status">idle</span></div>
+        <div class="lh"><span class="dot"></span> Pipeline <span class="lstatus" id="live-status" role="status" aria-live="polite">Choose a saved garment.</span></div>
         <pre id="live-log" data-maya-scrollbar="visible" tabindex="0"></pre>
       </div>
     <h3 class="col-head" data-maya-type="H3">Retrieval Trace</h3>
+    <ol class="pipeline-steps" aria-label="Pattern pipeline stages">
+      <li data-pipeline-stage="vision" data-maya-type="P3">Vision · waiting</li>
+      <li data-pipeline-stage="route" data-maya-type="P3">Chapter · waiting</li>
+      <li data-pipeline-stage="rules" data-maya-type="P3">Panels · waiting</li>
+      <li data-pipeline-stage="retrieve" data-maya-type="P3">Retrieval · waiting</li>
+      <li data-pipeline-stage="prompt" data-maya-type="P3">Prompt · waiting</li>
+      <li data-pipeline-stage="drawing" data-maya-type="P3">Drawing · waiting</li>
+    </ol>
     <div class="trace-grid">
       <div class="trace-card"><div class="k">1 · Vision · garment</div><div class="v" id="t-type">&#8230;</div></div>
       <div class="trace-card"><div class="k">2 · Routed chapter</div><div class="v" id="t-chapter">&#8230;</div></div>
@@ -481,7 +493,7 @@ let _operationInputContext=null,_operationRevision=-1,_operationLoadSequence=0;
 // Saved submission work: no model call on load, selection or reopening.
 let _patternRecord=null,_patternReady=Promise.resolve(),_patternSave=Promise.resolve(),_patternTimer=null,_patternRun=null,_patternDirty=false,_patternSettingsError='';
 let _patternSettings={logic:{}};
-let _patternNavigation=0;
+let _patternNavigation=0,_pipelineStage='';
 function lockPatternSettings(locked){
   document.querySelectorAll('#pattern-settings input,#pattern-settings select,#pattern-settings textarea,#pattern-settings button,#logic button,#logic textarea,[data-q]').forEach(el=>el.disabled=locked);
 }
@@ -499,7 +511,7 @@ function patternScope(context){return operationGarmentCurrent(context)&&context.
 function patternContext(){return {...operationContext(),garmentId:FILES.piece?.id};}
 async function loadPatternWork(){
   clearTimeout(_patternTimer);_patternTimer=null;_patternRecord=null;_patternRun=null;_patternDirty=false;_patternSettingsError='';_patternSave=Promise.resolve();
-  _patternSettings=patternDefaults();syncPatternSettings();$('retry-pattern-save').hidden=true;
+  _patternSettings=patternDefaults();syncPatternSettings();$('retry-pattern-save').hidden=true;pipelineReset(FILES.piece?._pattern?'Saved drawing available; pipeline details were not saved.':'Loading saved pattern work…');
   if(!FILES.saved||!FILES.piece?.id)return;
   const context=patternContext();lockPatternSettings(true);$('start-test').disabled=true;$('pattern-save-status').textContent='';
   try{
@@ -507,16 +519,17 @@ async function loadPatternWork(){
     const data=await r.json();if(!r.ok)throw Error(data.error||'Saved patterns unavailable.');if(!patternScope(context))return;
     _patternRecord=data;_patternSettings={...patternDefaults(),...data.settings,passes:1,logic:data.settings.logic||{}};syncPatternSettings();
     if(!data.stale&&data.runs.length)restorePatternRun(data.runs[data.runs.length-1]);
-    if(data.stale)$('pattern-save-status').textContent='The garment changed. Previous patterns remain in Saved pattern versions.';
-  }catch(e){if(patternScope(context)){$('pattern-save-status').textContent=e.message;throw e;}}
+    if(data.stale){$('pattern-save-status').textContent='The garment changed. Previous patterns remain in Saved pattern versions.';liveOpen('Garment changed · create a new pattern version.');}else if(!data.runs.length)liveOpen(FILES.piece?._pattern?'Saved drawing available; pipeline details were not saved.':'Ready · press Start to run this garment.');
+  }catch(e){if(patternScope(context)){$('pattern-save-status').textContent=e.message;liveOpen('Saved pattern work unavailable · reopen to retry.');throw e;}}
   finally{if(patternScope(context)){lockPatternSettings(!_patternRecord);$('start-test').disabled=false;}}
 }
 function restorePatternRun(run){
-  _patternRun=null;cancelPatternTrace();
+  _patternRun=null;cancelPatternTrace();pipelineReset('Saved pattern · no new run');
   PASSES=structuredClone(run.passes);BEST_IDX=Math.min(run.bestIndex||0,PASSES.length-1);CUR={kind:'grounded',idx:BEST_IDX};
   LAST={...(run.inputs||{}),bestGrounded:PASSES[BEST_IDX]?.img,bestHero:HERO};
   if(run.inputs){$('t-type').textContent=JSON.stringify(run.inputs.garment||{});$('t-chapter').textContent=run.inputs.type||'';$('t-panels').textContent=JSON.stringify(run.inputs.cutlist||[]);renderChunks(run.inputs.hits||[]);$('t-prompt').textContent=run.inputs.prompt||'';$('t-fixes').textContent=run.inputs.cutlistSource||'';}
   if(run.inputs?.type){LOGIC_TYPE=run.inputs.type;renderLogic();}
+  const saved=run.inputs||{};for(const [step,present]of [['vision',!!saved.garment],['route',!!saved.type],['rules',!!saved.cutlist?.length],['retrieve',!!saved.hits?.length],['prompt',!!saved.prompt],['drawing',!!PASSES.length]])pipelineStep(step,present?'saved':'unavailable');_pipelineStage='';liveOpen('Saved pattern · no new run');
   TRACE=null;applyView();$('start-test').textContent='Open saved pattern';
 }
 function renderPatternHistory(){
@@ -644,7 +657,7 @@ function saveMeasures(){
 function syncMeasures(){const panel=$('standalone-measurements');if(panel)panel.hidden=EMBEDDED||!!_operationInputContext;const measures=getMeasures();for(const key of ['waist','length','hip','crotch','inseam'])if($('m-'+key))$('m-'+key).value=measures[key]??'';renderDimDerived();}
 function setOperationRunning(on){
   if(on){_runMeasures=getMeasures();_runQuality=getQuality();}
-  RUNNING=on;
+  RUNNING=on;$('live')?.classList.toggle('is-running',!!on);
   if(on){_lockedOperationInputs=[...document.querySelectorAll('input,select,textarea,[data-q],#logic-save-btn,#logic-reset-btn,#drawer button:not(.drawer-burger)')].map(el=>[el,el.disabled]);_lockedOperationInputs.forEach(([el])=>el.disabled=true);}
   else{_lockedOperationInputs.forEach(([el,disabled])=>el.disabled=disabled);_lockedOperationInputs=[];_runMeasures=null;_runQuality=null;}
 }
@@ -657,7 +670,7 @@ function invalidateOperation(){
   setOperationRunning(false);HERO=null;ANSWER=null;RD=null;RD_PROMISE=null;RD_IS_RAW=false;TRACE=null;PASSES=[];LAST={type:null,garment:null};ACTIVE_TEST=null;FILES={};_tv=null;
   for(const id of ['hero-img','hero-img-b','img-grounded','img-rd']){const image=$(id);if(image){image.removeAttribute('src');image.style.display='none';}}
   for(const id of ['clo-result','live-log','live-status','t-type','t-chapter','t-panels','t-fixes','t-chunks','t-prompt','trace-view'])if($(id))$(id).textContent='';
-  if($('live'))$('live').classList.remove('on');
+  pipelineReset('Choose a saved garment.');
   if($('hero-empty'))$('hero-empty').style.display='';
   if($('hero-empty-b'))$('hero-empty-b').style.display='';
   if($('start-test'))$('start-test').textContent='Start';
@@ -944,7 +957,7 @@ let _legacyCloAssets=null;
 function startCloMatch(){
   if(!window.MayaCloAssets)return;
   if(!_legacyCloAssets){
-    const style=document.createElement('link');style.rel='stylesheet';style.href='/aesthetics/ui/backend-two.css?v=5';document.head.append(style);
+    const style=document.createElement('link');style.rel='stylesheet';style.href='/aesthetics/ui/backend-two.css?v=6';document.head.append(style);
     _legacyCloAssets=window.MayaCloAssets.create({host:$('clo-result'),getToken:getKey,getContext:()=>({account:operationAccount(),submissionId:_operationInputContext?.submissionId||'',garmentId:FILES.piece?.id||'',revision:_operationRevision}),});
     globalThis.MayaLegacyCloAssets=_legacyCloAssets;
     window.addEventListener('storage',()=>_legacyCloAssets.update());
@@ -1121,9 +1134,9 @@ if(EMBEDDED){
 // Start → redraw the answer (RD), then Raw, then Grounded (scored vs RD). Answer/RD shown left for side-by-side.
 async function startTest(newVersion=false){
   if(RUNNING){ toast('A run is already going, let it finish.'); return; }
-  if(!ACTIVE_TEST&&!HERO){toast('Choose a saved garment first.');return;}
+  if(!ACTIVE_TEST&&!HERO){liveOpen('Choose a saved garment first.');toast('Choose a saved garment first.');return;}
   const requested=patternContext();
-  try{await _patternReady;if(!patternScope(requested))return;if(!_patternRecord)throw Error('Saved patterns must load before generating.');if(_patternTimer){clearTimeout(_patternTimer);_patternTimer=null;await persistPatternWork();}await _patternSave;if(_patternDirty||_patternSettingsError)throw Error(_patternSettingsError||'Review and save the pattern settings first.');}catch(e){toast(e.message);return;}
+  try{await _patternReady;if(!patternScope(requested))return;if(!_patternRecord)throw Error('Saved patterns must load before generating.');if(_patternTimer){clearTimeout(_patternTimer);_patternTimer=null;await persistPatternWork();}await _patternSave;if(_patternDirty||_patternSettingsError)throw Error(_patternSettingsError||'Review and save the pattern settings first.');}catch(e){liveOpen(e.message);toast(e.message);return;}
   if(RUNNING||!patternScope(requested))return;
   if(!newVersion&&(_patternRecord.runs.length||FILES.piece?._pattern)){if(_patternRecord.runs.length)restorePatternRun(_patternRecord.runs.at(-1));else {PASSES=[{img:FILES.piece._pattern,badge:'saved'}];viewGrounded(0);}return;}
   if(newVersion)LAST={type:null,garment:null};
@@ -1132,12 +1145,13 @@ async function startTest(newVersion=false){
   try{requireOperationSettings();}catch(error){toast(error.message);return;}
   RUN++;const started=RUN;setOperationRunning(true);
   const context=operationContext();
+  pipelineReset('Preparing pattern inputs…');
   const btn=$('start-test'); const orig=btn.textContent; btn.innerHTML='<span class="spinner"></span>Running…';
   try{
     await _garmentReady;requireOperation(context);
     if(!_measurementGarment)throw Error('The garment is not ready. Select it again.');
     requireOperationSettings();
-    if(!EMB){toast('Building embeddings first…');await buildEmbeddings(context);requireOperation(context);if(!EMB)return;}
+    if(!EMB){liveOpen('Preparing the pattern book…');toast('Building embeddings first…');await buildEmbeddings(context);requireOperation(context);if(!EMB)throw Error('Pattern book preparation failed. Open Settings to retry.');}
     // pipeline input = whatever view is picked on the left (answer isn't an input, falls back to front)
     const pick='front';
     if(ACTIVE_TEST)HERO=(pick!=='answer'&&FILES[pick])?FILES[pick]:FILES.front;
@@ -1150,7 +1164,7 @@ async function startTest(newVersion=false){
     await runGrounded();    // One book-grounded drawing; no automatic refinement image.
     await redraw.catch(()=>{});
     // the left frame stays on whatever view the user picked, the redrawn answer never hijacks it
-  }catch(e){ if(operationCurrent(context)){toast('Start failed: '+e.message);console.error(e);liveLine('Start failed: '+e.message);} }
+  }catch(e){ if(operationCurrent(context)){toast('Start failed: '+e.message);console.error(e);pipelineFailed('Start failed: '+e.message);} }
   finally{ if(started===RUN){btn.textContent=PASSES.length?'Open saved pattern':orig;setOperationRunning(false);renderPatternHistory();} }
 }
 
@@ -1209,7 +1223,7 @@ async function runGrounded(){
   PASSES=[]; BEST_IDX=0; viewGrounded(0); liveOpen('grounding…');
   try{
     // 1 · VISION, classify + read construction
-    liveStatus('reading garment…');
+    pipelineStep('vision','running');liveStatus('Reading garment…');
     const g = await classifyGarment(inputHero);
     if(myRun!==RUN||inputAccount!==operationAccount()) return;
     LAST.garment=g;
@@ -1222,6 +1236,7 @@ async function runGrounded(){
     $('t-type').innerHTML = `<b style="color:var(--accent)">${esc(g.type)}</b>${g.subtype?' · '+esc(g.subtype):''}<br>`+
       `<span style="color:var(--dim)">${esc((g.attributes||[]).slice(0,6).join(' · '))}</span>`;
 
+    pipelineStep('vision','done');pipelineStep('route','running');liveStatus('Routing construction…');
     // 2 · ROUTE
     const grammar = patternGrammar().types[typeKey];
     const route = KB.chapters[typeKey] || (grammar?[{ch:grammar.chapter,title:'(chapter '+grammar.chapter+')'}]:[]);
@@ -1229,6 +1244,7 @@ async function runGrounded(){
       ? route.map(r=>`Ch.${r.ch}, ${r.title}`).join('<br>')
       : '<span style="color:var(--warn)">adaptive fallback (no named chapter)</span>';
 
+    pipelineStep('route','done');pipelineStep('rules','running');
     // 3 · RULES
     const gram = grammar || null;
     LAST.garmentGram = gram;
@@ -1236,6 +1252,7 @@ async function runGrounded(){
     liveLine('Cut-list authority: '+(LAST.cutlistSource||'…')+'.');
     renderGrammar(gram, typeKey);
 
+    pipelineStep('rules','done');pipelineStep('retrieve','running');liveStatus('Retrieving pattern-book passages…');
     // 4 · RETRIEVE
     const query = buildQuery(g, typeKey, gram);
     const qvec = await embedTexts([query]).then(v=>v[0]);
@@ -1243,12 +1260,14 @@ async function runGrounded(){
     const hits = retrieve(qvec, retrievalType, _patternSettings.hits||5);
     renderChunks(hits);
 
+    pipelineStep('retrieve','done');pipelineStep('prompt','running');liveStatus('Composing the pattern prompt…');
     // 5 · COMPOSE base grounded prompt
     const basePrompt = _patternSettings.prompt.trim()||composeGroundedPrompt(g, typeKey, gram, hits);
     Object.assign(LAST,{hits,prompt:basePrompt,measurements:structuredClone(_operationInputContext?.measurements||{}),quality:getQuality()});
     const {bestGrounded,bestHero,...savedInputs}=LAST;_patternRun.inputs=structuredClone({...savedInputs,settings:_patternSettings});
     $('t-prompt').textContent = basePrompt;
 
+    pipelineStep('prompt','done');pipelineStep('drawing','running');
     // 6 · MARK ONE, base grounded, or CONTINUE from the previous run's best pass of this same input
     let img;
     if(LAST.bestGrounded && LAST.bestHero===inputHero){
@@ -1268,10 +1287,10 @@ async function runGrounded(){
     BEST_IDX=0;
     LAST.bestGrounded=PASSES[0].img; LAST.bestHero=inputHero;
     viewGrounded(0);
-    await persistPatternWork();requireOperation(context);liveStatus('done');
+    await persistPatternWork();requireOperation(context);pipelineStep('drawing','done');liveStatus('Pattern saved');
     cancelPatternTrace();TRACE=null; // SVG is computed only when explicitly opened.
 
-  }catch(e){ if(myRun!==RUN||inputAccount!==operationAccount())return;toast('Grounded failed: '+e.message); console.error(e); liveLine('Grounded failed: '+e.message); }
+  }catch(e){ if(myRun!==RUN||inputAccount!==operationAccount())return;toast('Grounded failed: '+e.message); console.error(e); pipelineFailed('Grounded failed: '+e.message); }
 }
 
 /* ---------- ACCURACY · vision grades a grounded pass vs BOTH answers ----------
@@ -1501,6 +1520,17 @@ function clearTrace(){ view('grounded'); }
 
 
 /* ---- live critique console ---- */
+function pipelineStep(key,state){
+  const labels={vision:'Vision',route:'Chapter',rules:'Panels',retrieve:'Retrieval',prompt:'Prompt',drawing:'Drawing'};
+  const node=document.querySelector('[data-pipeline-stage="'+key+'"]');if(node){node.dataset.state=state;node.textContent=(labels[key]||key)+' · '+state;}
+  if(state==='running')_pipelineStage=key;else if(_pipelineStage===key)_pipelineStage='';
+}
+function pipelineReset(message){
+  _pipelineStage='';for(const key of ['vision','route','rules','retrieve','prompt','drawing'])pipelineStep(key,'waiting');
+  for(const [id,label]of [['t-type','Awaiting garment analysis.'],['t-chapter','Awaiting garment routing.'],['t-panels','Awaiting construction rules.'],['t-fixes','Awaiting construction review.'],['t-chunks','Book passages appear after retrieval.'],['t-prompt','The composed prompt appears during a run.']])if($(id))$(id).textContent=label;
+  if($('live-log'))$('live-log').textContent='';liveOpen(message);
+}
+function pipelineFailed(message){if(_pipelineStage)pipelineStep(_pipelineStage,'failed');liveStatus('Stopped · review the message below');liveLine(message);}
 function liveOpen(status){ $('live').classList.add('on'); $('live-status').textContent=status||''; }
 function liveStatus(s){ $('live-status').textContent=s; }
 function liveLog(line, replace){ const el=$('live-log'); if(replace) el.textContent=line; else el.textContent+=line; el.scrollTop=el.scrollHeight; }
@@ -1897,7 +1927,7 @@ function renderGrammar(gram, typeKey){
     ((gram&&gram.common_hallucinations)||[]).slice(0,3).map(h=>`<span class="tag">${h.replace(/\.$/,'')}</span>`).join('');
 }
 function renderChunks(hits){
-  if(!hits.length){ $('t-chunks').textContent='No chunks (build embeddings).'; return; }
+  if(!hits.length){ $('t-chunks').textContent='No retrieved passages saved for this pattern.'; return; }
   $('t-chunks').innerHTML = hits.map(h=>
     `<div class="chunk"><b>Ch.${h.ch} · p${h.page} · sim ${h.score.toFixed(3)}</b><br>${h.text.slice(0,300).trim()}…</div>`).join('');
 }
@@ -1972,8 +2002,9 @@ function refreshKbStatus(){
   if(EMB) $('kb-bar').style.width='100%';
 }
 </script>
-<script src="/aesthetics/ui/clo-assets.js?v=1"></script>
+<script>pipelineReset('Choose a saved garment.');</script>
+<script src="/aesthetics/ui/clo-assets.js?v=2"></script>
 <script src="/aesthetics/ui/original-operation.js?v=1"></script>
-<script src="/aesthetics/ui/backend-two-operation.js?v=5"></script>
+<script src="/aesthetics/ui/backend-two-operation.js?v=6"></script>
 </body>
 </html>
