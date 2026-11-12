@@ -3,14 +3,19 @@
  'use strict';
  if(new URLSearchParams(location.search).get('layout')!=='backend2'||!EMBEDDED)return;
  document.body.classList.add('backend-two-operation');
- const style=document.createElement('link');style.rel='stylesheet';style.href='/aesthetics/ui/backend-two.css?v=2';document.head.append(style);
+ // The frame owns the shared Inner material; its column is only a layout track.
+ for(const column of document.querySelectorAll('#plan-a-view > .cols > .panel')){column.classList.remove('panel');column.classList.add('backend-two-column');}
+ for(const frame of document.querySelectorAll('#hero-frame,#stage'))frame.dataset.mayaPanel='inner';
+ const style=document.createElement('link');style.rel='stylesheet';style.href='/aesthetics/ui/backend-two.css?v=4';document.head.append(style);
  document.addEventListener('pointerdown',()=>parent.postMessage({maya:'backend-two-workspace-pointer'},location.origin),{capture:true});
  const trace=document.querySelector('#plan-a-view > .trace'),stage=$('stage');
- trace.id='backend-two-pipeline';trace.dataset.mayaScrollbar='visible';trace.setAttribute('role','tabpanel');trace.tabIndex=0;stage.after(trace);
- let pipeline=false,fullView=true,viewSelection=0;
+ trace.id='backend-two-pipeline';trace.dataset.mayaPanel='inner';trace.dataset.mayaScrollbar='visible';trace.setAttribute('role','tabpanel');trace.tabIndex=0;stage.after(trace);
+ let selectedPanel='pattern',fullView=true,viewSelection=0;
+ const clo=document.createElement('section');clo.id='backend-two-clo';clo.dataset.mayaPanel='inner';clo.setAttribute('role','tabpanel');clo.setAttribute('aria-labelledby','backend-two-clo-tab');clo.tabIndex=0;stage.after(clo);
  const inputScope=()=>_operationInputContext?{account:_operationInputContext.account,submissionId:_operationInputContext.submissionId,local:_operationInputContext.local,revision:_operationRevision,garmentId:FILES.piece?.id||''}:null;
  window.backendTwoContext=inputScope;
- const notify=()=>parent.postMessage({maya:'backend-two-selected',...inputScope(),garmentId:FILES.piece?.id||''},location.origin);
+ const assets=window.MayaCloAssets?.create({host:clo,getContext:()=>{const scope=inputScope();return scope?{...scope,garmentId:fullView?'':scope.garmentId}:null;},getToken:()=>getKey()});
+ const notify=()=>{assets?.update();parent.postMessage({maya:'backend-two-selected',...inputScope(),garmentId:FILES.piece?.id||''},location.origin);};
  const notifySettings=()=>parent.postMessage({maya:'backend-two-settings',...inputScope()},location.origin);
  // Backend 2 always presents the integrated pattern route. A saved Plan B
  // preference belongs to the original workspace and must not hide this snapshot.
@@ -20,17 +25,17 @@
   const host=$('pass-pills');
   if(!host.querySelector('#backend-two-pattern-tab')){
    host.replaceChildren();
-   for(const [key,label]of [['pattern','Mark 1'],['pipeline','Pipeline']]){
-    const b=document.createElement('button');b.type='button';b.className='pill';b.dataset.mayaType='P3';b.dataset.mayaSegment='';b.setAttribute('role','tab');b.id='backend-two-'+key+'-tab';b.setAttribute('aria-controls',key==='pipeline'?trace.id:stage.id);
+   for(const [key,label]of [['pattern','Pattern'],['clo','CLO 3D'],['pipeline','Pipeline']]){
+    const b=document.createElement('button');b.type='button';b.className='pill';b.dataset.mayaType='P3';b.dataset.mayaSegment='';b.setAttribute('role','tab');b.id='backend-two-'+key+'-tab';b.setAttribute('aria-controls',key==='pipeline'?trace.id:key==='clo'?clo.id:stage.id);
     b.append(document.createTextNode(label));if(key==='pipeline'){const dot=document.createElement('span');dot.className='backend-two-pipeline-dot';dot.setAttribute('aria-hidden','true');b.append(dot);}
-    b.onclick=()=>{pipeline=key==='pipeline';if(!pipeline)viewGrounded();paintTabs();};
-    b.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();pipeline=!pipeline;if(!pipeline)viewGrounded();paintTabs();$('backend-two-'+(pipeline?'pipeline':'pattern')+'-tab').focus();}});
+    b.onclick=()=>{selectedPanel=key;if(key==='pattern')viewGrounded();paintTabs();};
+    b.addEventListener('keydown',e=>{if(['ArrowRight','ArrowLeft','Home','End'].includes(e.key)){e.preventDefault();const keys=['pattern','clo','pipeline'],i=keys.indexOf(selectedPanel);selectedPanel=keys[e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowRight'?1:2))%3];if(selectedPanel==='pattern')viewGrounded();paintTabs();$('backend-two-'+selectedPanel+'-tab').focus();}});
     host.append(b);
    }
   }
-  for(const key of ['pattern','pipeline']){const button=$('backend-two-'+key+'-tab'),active=(key==='pipeline')===pipeline;button.setAttribute('aria-selected',String(active));button.setAttribute('aria-pressed',String(active));button.tabIndex=active?0:-1;}
+  for(const key of ['pattern','clo','pipeline']){const button=$('backend-two-'+key+'-tab'),active=key===selectedPanel;button.setAttribute('aria-selected',String(active));button.setAttribute('aria-pressed',String(active));button.tabIndex=active?0:-1;}
   host.querySelector('.backend-two-pipeline-dot').classList.toggle('running',RUNNING);
-  host.setAttribute('role','tablist');host.setAttribute('aria-label','Pattern view');stage.setAttribute('role','tabpanel');stage.setAttribute('aria-labelledby','backend-two-pattern-tab');trace.setAttribute('aria-labelledby','backend-two-pipeline-tab');stage.hidden=pipeline;trace.hidden=!pipeline;
+  host.setAttribute('role','tablist');host.setAttribute('aria-label','Pattern, CLO 3D and pipeline');stage.setAttribute('role','tabpanel');stage.setAttribute('aria-labelledby','backend-two-pattern-tab');trace.setAttribute('aria-labelledby','backend-two-pipeline-tab');stage.hidden=selectedPanel!=='pattern';trace.hidden=selectedPanel!=='pipeline';clo.hidden=selectedPanel!=='clo';assets?.setActive(selectedPanel==='clo');
  }
  renderPassPills=paintTabs;
  const running=setOperationRunning;setOperationRunning=function(...args){const result=running(...args);paintTabs();notifySettings();return result;};
@@ -55,7 +60,7 @@
  const pick=onPickTest;
  onPickTest=async function(value){
   const selection=++viewSelection;
-  if(value==='__full__'){++_patternNavigation;fullView=true;showFullView();return;}
+  if(value==='__full__'){++_patternNavigation;fullView=true;showFullView();notify();return;}
   await pick(value);
   if(selection!==viewSelection)return;
   if(ACTIVE_TEST===value){fullView=false;showView('front');$('test-picker').value=value;notify();}
@@ -63,7 +68,7 @@
  };
  const install=installOperationContext;
  installOperationContext=function(...args){viewSelection++;fullView=true;const result=install(...args);decoratePicker();showFullView();paintTabs();notify();return result;};
- const init=initTests;initTests=function(...args){const result=init(...args);decoratePicker();if(fullView)showFullView();return result;};
+ const init=initTests;initTests=function(...args){const result=init(...args);decoratePicker();if(fullView)showFullView();assets?.update();return result;};
  const dissect=document.createElement('button');dissect.type='button';dissect.className='pill';dissect.dataset.mayaType='P3';dissect.textContent='Dissect';dissect.hidden=true;dissect.onclick=()=>parent.postMessage({maya:'backend-two-dissect',...inputScope()},location.origin);$('start-test').after(dissect);
  // An empty pipeline still exposes the architecture, with no implied live run.
  decoratePicker();showFullView();paintTabs();syncPlan();

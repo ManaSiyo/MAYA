@@ -372,11 +372,16 @@ try{
  const backendTwoPreview=page.locator('#backend-two-layout-preview');
  const snapshotBounds=()=>backendTwoPreview.locator('.backend-two-preview-columns').evaluate(el=>{const origin=el.getBoundingClientRect(),rect=e=>{const r=e.getBoundingClientRect();return {left:r.left-origin.left,right:r.right-origin.left,top:r.top-origin.top,bottom:r.bottom-origin.top,width:r.width,height:r.height};};return {width:origin.width,height:origin.height,panels:[...el.children].map(rect),frames:[...el.querySelectorAll('.operation-layout-garment,.operation-layout-pattern')].map(rect)};});
  for(const width of [390,768,1440]){
-  await page.setViewportSize({width,height:1000});await backendTwoPreview.getByRole('button',{name:'Mark 1',exact:true}).click();
+  await page.setViewportSize({width,height:1000});await backendTwoPreview.getByRole('button',{name:'Pattern',exact:true}).click();
   const snapshot=await snapshotBounds(),[left,right]=snapshot.panels,[garment,pattern]=snapshot.frames;
+  assert.ok(await backendTwoPreview.locator('.backend-two-preview-columns').evaluate(el=>[...el.children].every(c=>!c.hasAttribute('data-maya-panel'))&&[...el.querySelectorAll('.operation-layout-garment,.operation-layout-pattern')].every(c=>c.dataset.mayaPanel==='inner')),'Compact preview puts Inner material on frames only');
+  assert.equal(await backendTwoPreview.getByRole('button',{name:'Start',exact:true}).evaluate(e=>getComputedStyle(e).fontSize),'9px');
   assert.ok(left.right<=right.left+1&&right.right<=snapshot.width+1,'Backend 2 preview keeps both panels side by side at '+width);
   assert.ok(Math.abs(garment.top-pattern.top)<2&&Math.abs(garment.bottom-pattern.bottom)<2,'Backend 2 preview aligns garment and pattern frames despite wrapped controls at '+width);
   for(const frame of snapshot.frames)assert.ok(frame.width>0&&frame.height>0&&frame.top>=0&&frame.bottom<=snapshot.height+1,'Backend 2 preview contains both complete frames at '+width);
+  await backendTwoPreview.getByRole('button',{name:'CLO 3D',exact:true}).click();
+  await backendTwoPreview.locator('.clo-card').waitFor();
+  assert.deepEqual(await snapshotBounds(),snapshot,'CLO references preserve the paired frame geometry');
   await backendTwoPreview.getByRole('button',{name:'Pipeline',exact:true}).click();
   assert.deepEqual(await snapshotBounds(),snapshot,'Backend 2 preview keeps its paired geometry when Pipeline replaces the pattern at '+width);
  }
@@ -412,15 +417,30 @@ async function checkBackendTwo(){
   const engineFrame=page.frames().find(f=>f.url().includes('operation-workspace.html'));
   await engineFrame.waitForFunction(()=>document.getElementById('test-picker').value==='__full__');
   for(const changed of [false,true]){
-   for(const target of [page,engineFrame])await target.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.pillX=18;d.pillY=9;d.inner.paddingX=18;d.type.P3.size=14;}MayaTypographyControls.apply(d);},changed);
+   for(const target of [page,engineFrame])await target.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.pillX=18;d.pillY=9;d.inner.paddingX=18;d.inner.paddingY=19;d.inner.background='blue';d.inner.fill=65;d.inner.blur=12;d.type.P3.size=14;d.drawer.background='green';d.drawer.fill=80;d.drawer.paddingX=20;d.drawer.paddingY=22;d.drawer.blur=14;d.drawer.radius=12;}MayaTypographyControls.apply(d);},changed);
    const bounds=await page.evaluate(()=>{const r=id=>{const b=document.getElementById(id).getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right,height:b.height};};return {screen:r('screens'),image:r('operations-embed'),fabric:r('backend-two-fabric-strip')};});
    assert.ok(bounds.image.height>150&&bounds.fabric.height>150);assert.ok(bounds.image.bottom<bounds.fabric.top);assert.ok(bounds.fabric.bottom<=height&&bounds.screen.right<=width);
-   const pair=await engineFrame.locator('#plan-a-view > .cols > .panel').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right};}));
+   assert.equal(await engineFrame.locator('#plan-a-view > .cols > .panel').count(),0,'Backend 2 has no outer column panels');
+   const pair=await engineFrame.locator('#plan-a-view > .cols > .backend-two-column').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right};}));
    assert.ok(pair[0].right<pair[1].left&&Math.abs(pair[0].bottom-pair[1].bottom)<2);assert.ok(pair[1].right<=bounds.image.right-bounds.image.left+1);
+   const compact=await engineFrame.evaluate(()=>{const style=e=>{const s=getComputedStyle(e);return {padding:s.paddingTop,paddingX:s.paddingLeft,border:s.borderTopWidth,bg:s.backgroundColor,blur:s.backdropFilter,font:s.fontSize};};return {columns:[...document.querySelectorAll('.backend-two-column')].map(style),frames:[...document.querySelectorAll('#hero-frame,#stage')].map(e=>({...style(e),inner:e.dataset.mayaPanel})),controls:[...document.querySelectorAll('.operation-layout-toolbar button:not([hidden]),.operation-layout-toolbar select')].map(e=>({...style(e),right:e.getBoundingClientRect().right})),width:innerWidth};});
+   assert.ok(compact.columns.every(c=>c.padding==='0px'&&c.border==='0px'&&c.bg==='rgba(0, 0, 0, 0)'),'Column wrappers contribute no nested material or padding');
+   assert.ok(compact.frames.every(f=>f.inner==='inner'&&f.padding==='0px'&&f.paddingX==='0px'&&parseFloat(f.border)>0),'Only the image/pattern frames retain Inner material, without image padding');
+   if(changed)assert.ok(compact.frames.every(f=>f.bg==='rgba(35, 76, 125, 0.65)'&&f.blur.includes('blur(12px)')),'Saved Inner material still reaches compact frames');
+   assert.ok(compact.controls.every(c=>c.font==='9px'&&c.padding==='5px'&&c.right<=compact.width+1),'Compact toolbar text and padding remain scoped and contained with either saved preset');
+   const fabricCompact=await page.locator('#backend-two-fabric-strip .fabric-assistant').evaluate(e=>{const s=getComputedStyle(e),b=getComputedStyle(e.querySelector('.fa-tabs button'));return {padding:s.paddingTop,paddingX:s.paddingLeft,border:s.borderTopWidth,bg:s.backgroundColor,font:b.fontSize,pillY:b.paddingTop};});
+   assert.deepEqual(fabricCompact,{padding:'0px',paddingX:'0px',border:'0px',bg:'rgba(0, 0, 0, 0)',font:'9px',pillY:'5px'});
+   const drawerStyle=await page.locator('#clients-drawer').evaluate(e=>{const s=getComputedStyle(e);return {role:e.hasAttribute('data-maya-drawer'),padding:s.paddingTop,paddingX:s.paddingLeft,radius:s.borderTopLeftRadius,bg:s.backgroundColor,blur:s.backdropFilter};});
+   assert.equal(drawerStyle.role,true);assert.equal(drawerStyle.padding,changed?'22px':'16px');assert.equal(drawerStyle.paddingX,changed?'20px':'12px');assert.equal(drawerStyle.radius,changed?'12px':'18px');assert.equal(drawerStyle.bg,changed?'rgba(23, 91, 59, 0.8)':'rgba(3, 15, 29, 0.9)');assert.ok(drawerStyle.blur.includes(changed?'blur(14px)':'blur(28px)'),'Backend 2 drawer follows shared saved Drawer effects');
+   await engineFrame.getByRole('tab',{name:'CLO 3D',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-clo').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
+   const cloBounds=await engineFrame.locator('#backend-two-clo').boundingBox();assert.ok(cloBounds.width>0&&cloBounds.height>0&&cloBounds.x+cloBounds.width<=bounds.image.right-bounds.image.left+1);
    await engineFrame.getByRole('tab',{name:'Pipeline',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-pipeline').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
-   await engineFrame.getByRole('tab',{name:'Mark 1',exact:true}).click();assert.ok(await engineFrame.locator('#stage').isVisible());
+   await engineFrame.getByRole('tab',{name:'Pattern',exact:true}).click();assert.ok(await engineFrame.locator('#stage').isVisible());
   }
-  await page.locator('#top-actions .hamburger').click();await page.getByRole('tab',{name:'Bio',exact:true}).click();assert.ok(await page.locator('#backend-two-bio').isVisible());
+  await page.locator('#top-actions .hamburger').click();assert.deepEqual(await page.locator('.backend-two-tabs button').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label'))),['Submissions','Bio','Settings']);assert.equal(await page.getByRole('tab',{name:'Submissions',exact:true}).getAttribute('aria-selected'),'true');assert.equal(await page.locator('#clients-drawer>.drawer-title').isVisible(),false);
+  await page.waitForFunction(()=>document.getElementById('clients-drawer').getBoundingClientRect().right<=innerWidth+1);
+  const drawerBounds=await page.locator('#clients-drawer').boundingBox();assert.ok(drawerBounds.x>=0&&drawerBounds.x+drawerBounds.width<=width+1,'Drawer stays within the viewport');
+  await page.getByRole('tab',{name:'Bio',exact:true}).click();assert.ok(await page.locator('#backend-two-bio').isVisible());
   await page.getByRole('tab',{name:'Settings',exact:true}).click();assert.ok(await page.locator('#backend-two-settings').isVisible());
   await page.getByRole('tab',{name:'Submissions',exact:true}).click();assert.ok(await page.locator('#backend-two-submissions').isVisible());
   await page.keyboard.press('Escape');assert.equal(await page.locator('#clients-drawer').evaluate(e=>e.inert),true);

@@ -209,6 +209,52 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 11 — compact Backend 2 and authorized CLO rollout:
+Remove the outer operation/fabric surfaces; retain the shared Inner frames.
+Use 5px toolbar padding and 9px toolbar text within Backend 2 only, a thinner
+fabric strip and narrower fabric cards. Drawer opens Submissions (folder), Bio,
+Settings and retains shared Drawer/Glass/icon materials. Aesthetic Control preview
+mirrors the layout; the compact sizing is an explicit owner-requested exception.
+Server-side image/summary upload completion now schedules CLO, with the frontend
+ready request as a duplicate-safe fallback. Canonical image limit matches 25MiB.
+Cloud Build provisions the dedicated `maya-clo-assets` queue and
+`maya-clo-dispatch` identity, adds scoped grants, and updates only CLO env values.
+The owner authorized this production setup and Push. A one-time live check uses
+the screenshot submission and saves a rollout receipt after source-backed results;
+future releases reuse the receipt without paid searches or depending on that
+submission remaining. Build results and live verification remain pending until
+the authorized release completes. No Chrome or local browser testing.
+
+
+November 11 — integrated CLO asset sourcing in Backend 2 (local):
+The right window now switches Pattern → CLO 3D → Pipeline, retaining the larger
+pattern area, left reference and lower fabric strip. CLO shows up to ten
+OpenAI-ordered CONNECT listings with free/paid and editable-pattern filters,
+source links, alteration notes and source-reported price/format/rights evidence.
+Selections and dismissed links persist privately per admin and submission.
+Opening or switching tabs only reads saved work; Refresh explicitly starts a
+new paid search. The original Plan B uses this same component and no longer
+claims automatic grading; the old configurable proxy returns 410.
+
+`server/digital-assets.mjs` owns canonical input reads, bounded Responses search,
+generation-checked research and durable job claims. A submission-ready request
+runs after uploads; saving dissection prepares up to 12 garment jobs. Automatic
+worker dispatch needs the dedicated CLO_TASK_* configuration. Pending jobs remain
+available for interactive Find without it. No credentials or production settings
+were changed. The [integration checklist](clo-assets-integration.md) records routes,
+storage, queue setup, provider limits and release acceptance.
+
+Both Backend 2 pushes were verified: `1af6666` completed at 8:53 PM Pacific,
+and the newer aesthetic/model commit `27d446e` completed around 9:02 PM Pacific
+November 11. Google Cloud Build passed every step for the latter, including seven
+live endpoint checks; independent release/API reads matched its full SHA. The
+new aesthetic changes are now live at `/backend2.html`. This CLO change is local.
+Aesthetic Control includes a functional CLO fixture and CI
+checks the three-tab geometry with default/changed settings. No local browser,
+live OpenAI search or CLO download was used. Owner visual acceptance, queue
+activation and deployment of this change remain pending. Node20 code-only checks
+pass, including the new CLO service and DOM checks; no tests were skipped.
+
 November 11 — Backend 2 final code review and current OpenAI tiers:
 Fix Full view being replaced by a pending garment pick, stale drawer controls and
 submission navigation after account/garment changes, and save-status/history updates
@@ -235,17 +281,6 @@ CI geometry checks were extended but not run locally. Owner visual acceptance,
 deployment and live inference remain pending; no Chrome, paid calls or Push.
 This completed run supersedes the concurrent in-progress fixture failure recorded
 in the CLO research note below.
-
-November 11 — CLO digital asset sourcing research:
-[Integration plan](clo-assets-integration.md) maps CONNECT marketplace discovery,
-CLO-SET account-library APIs and desktop pattern tooling to MAYA's saved garment
-and fabric-sourcing flow. It identifies the existing incomplete Plan B proxy,
-proposes OpenAI-selected shortlists and durable submission-ready jobs, and records
-the unverified marketplace API/coverage gap. Research only; runtime implementation,
-live matching validation and automatic sourcing remain pending.
-Documentation diff checks and packaging/syntax passed. The code-only suite on
-available Node24 stopped at `backend-two-operation` (`window is not defined`);
-concurrent Backend 2 edits were left untouched. This is not a release-test pass.
 
 November 11 — Backend 2 playground, prepared locally (not pushed or deployed):
 Admin orders Users and traffic → Ad campaigns → Leads. Every collapsed fold uses

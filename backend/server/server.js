@@ -32,6 +32,7 @@ import { TEXT_MODEL, IMAGE_MODEL, MODEL_TERRA, MODEL_LUNA, MODEL_SOL, MODEL_UPGR
 import {createEventQueue,mountEventTriggers} from './event-triggers.mjs';
 import {createTextAutomations} from './text-automations.mjs';
 import { mountFabricSearch } from './fabrics.mjs';
+import {createDigitalAssets,createCloQueue,mountDigitalAssets} from './digital-assets.mjs';
 import { createCrmAI } from './crm-ai.mjs';
 import { createMessageArchive } from './message-archive.mjs';
 import { createOwnerSMSAccess } from './owner-sms-access.mjs';
@@ -641,6 +642,11 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
       try{await submissionDeletion.assertActive(subId);}catch(e){if(e.status===410)await gcsRemove(path);throw e;}
       _subsCache = { ts: 0, body: null };
       console.log('[submit] upload OK —', path, Math.round(bytes.length / 1024) + 'kb');
+      // Queue from acknowledged server writes so closing the client after the
+      // upload cannot skip sourcing. The last image/summary upload wins safely;
+      // the client's ready request remains an idempotent enqueue fallback.
+      try{await digitalAssets.uploaded(subId,safeName);}
+      catch(e){console.warn('[clo] upload sourcing pending',e.status||503);}
       return res.json({ ok: true, file_id: pathToId(path), name: safeName });
     } catch (e) {
       console.error('[submit] 500 upload_failed for "' + body.name + '" —', e.message);
@@ -2258,7 +2264,11 @@ app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb
     _subsCache = { ts: 0, body: null };
     if(!/^[1-9]\d*$/.test(String(saved?.generation||'')))return res.status(503).json({error:'save_unconfirmed',detail:'Storage did not confirm the saved version. Keep this draft and reload to check the saved work.'});
     console.log('[admin] pieces.json saved for', subId, Math.round(body.length / 1024) + 'kb');
-    res.json({ ok: true, id: pathToId(path),generation:String(saved.generation) });
+    // Persist pending research before dispatch. Missing queue configuration keeps
+    // manual Find available; it never turns a successful dissection into a failure.
+    const cloPieces=data.pieces.filter(p=>p.id&&!p.skip&&!p._virtual&&p._image).slice(0,12);
+    const clo=[];for(let i=0;i<cloPieces.length;i+=2)clo.push(...await Promise.allSettled(cloPieces.slice(i,i+2).map(p=>digitalAssets.schedule(subId,p.id))));
+    res.json({ ok: true, id: pathToId(path),generation:String(saved.generation),cloPrepared:clo.filter(r=>r.status==='fulfilled').length });
   } catch (e) {
     if(e.status===412)return res.status(409).json({error:'dissection_conflict',detail:'Saved work changed in another window. Keep this draft and review the latest submission before saving.'});
     console.error('[admin] savepieces failed,', e.message);
@@ -2278,6 +2288,21 @@ app.post('/api/admin/patterns',requireAuthHeader,express.json({limit:'30mb'}),as
 
 mountFabricSearch(app, { requireAdmin, requireAuthHeader, json: express.json,
   rateLimit, read: async path=>{if(path.startsWith(SUB_PREFIX))await submissionDeletion.assertActive(path.split('/')[1]);return gcsGet(path);}, write: async(path,...args)=>{const match=path.match(/^private\/fabrics\/[^/]+\/([^/]+)\//),id=path.startsWith(SUB_PREFIX)?path.split('/')[1]:match?.[1];if(id)await submissionDeletion.assertActive(id);const saved=await gcsPut(path,...args);if(id)try{await submissionDeletion.assertActive(id);}catch(e){if(e.status===410)await gcsRemove(path,saved?.generation);throw e;}return saved;}, apiKey: () => process.env.OPENAI_API_KEY,
+});
+
+const cloTaskConfig={queue:process.env.CLO_TASK_QUEUE,origin:process.env.CLO_TASK_ORIGIN,email:process.env.CLO_TASK_SERVICE_ACCOUNT,audience:process.env.CLO_TASK_AUDIENCE};
+const cloQueue=createCloQueue({config:cloTaskConfig,token:()=>serviceToken('https://www.googleapis.com/auth/cloud-platform')});
+const digitalAssets=createDigitalAssets({
+  read:async path=>{await submissionDeletion.assertActive(path.split('/')[1]);return gcsGet(path);},
+  write:async(path,...args)=>{const id=path.split('/')[1];await submissionDeletion.assertActive(id);const saved=await gcsPut(path,...args);try{await submissionDeletion.assertActive(id);}catch(e){if(e.status===410)await gcsRemove(path,saved?.generation);throw e;}return saved;},
+  assertActive:submissionDeletion.assertActive,apiKey:()=>process.env.OPENAI_API_KEY,queue:cloQueue,
+});
+mountDigitalAssets(app,{service:digitalAssets,requireAuthHeader,requireAdmin,requireUser:requireGoogleUser,ownerOf:subOwner,rateLimit,json:express.json,
+  verifyWorker:async req=>{
+    if(!cloQueue.ready())throw Object.assign(new Error('CLO worker is not configured.'),{status:503});
+    try{const bearer=(req.headers.authorization||'').match(/^Bearer (.+)$/)?.[1];if(!bearer)throw Error();const p=await verifyGoogleJwt(bearer,cloTaskConfig.audience);if(!p.email_verified||p.email!==cloTaskConfig.email||!Number.isFinite(p.exp))throw Error();}
+    catch{throw Object.assign(new Error('CLO worker identity was not verified.'),{status:401});}
+  },
 });
 
 // Retired merchant feeds, extra ranking and synthetic fabric previews.
@@ -3036,42 +3061,10 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
   }
 });
 
-// ── v13.64: the CLO route's real library. CLO-SET's public CONNECT
-// marketplace has no open search API (the site refuses outside fetches), so
-// the honest wiring is CLO-SET's own account API: Fromsa issues a token in
-// the CLO-SET dashboard, sets CLOSET_API_TOKEN (and CLOSET_SEARCH_URL, the
-// documented search endpoint with {q} where the words go), and this proxy
-// searches his workroom assets. Until then it says plainly that it is not
-// connected, and the page falls back to the local manifest plus a CONNECT
-// link. ──
-app.post('/api/admin/clo-search', requireAuthHeader, express.json({ limit: '16kb' }), async (req, res) => {
-  let user;
-  try { user = await requireAdmin(req); }
-  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
-  const rl = rateLimit(user.sub, user.email);
-  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
-  const q = String((req.body && req.body.q) || '').trim().slice(0, 200);
-  if (!q) return res.status(400).json({ error: 'q_required' });
-  const token = process.env.CLOSET_API_TOKEN, urlT = process.env.CLOSET_SEARCH_URL;
-  if (!token || !urlT) return res.status(503).json({ error: 'clo_not_connected' });
-  try {
-    const r = await fetch(urlT.replace('{q}', encodeURIComponent(q)), {
-      headers: { 'Authorization': 'Bearer ' + token }, signal: AbortSignal.timeout(15000),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error('clo-set ' + r.status);
-    // best-effort mapping over whatever shape the endpoint returns
-    const rows = Array.isArray(j) ? j : (j.items || j.results || j.data || j.list || []);
-    const items = rows.slice(0, 12).map(it => ({
-      name: String(it.name || it.title || it.itemName || it.fileName || 'untitled').slice(0, 140),
-      thumb: String(it.thumbnail || it.thumbnailUrl || it.image || it.imageUrl || '').slice(0, 500),
-      url: String(it.url || it.link || it.itemUrl || '').slice(0, 500),
-    }));
-    return res.json({ ok: true, q, items });
-  } catch (e) {
-    console.error('[clo-search] failed —', String(e.message).slice(0, 200));
-    return res.status(502).json({ error: 'clo_search_failed' });
-  }
+// Legacy configurable CLO proxy is replaced by canonical, saved asset research.
+app.all('/api/admin/clo-search',requireAuthHeader,async(req,res)=>{
+  try{await requireAdmin(req);res.status(410).json({error:'Use the CLO 3D tab to find saved asset references.'});}
+  catch(e){res.status(e.status||401).json({error:'unauthorized'});}
 });
 
 // ── v13.62: the Lead Station. A summary per lead, a note file per lead, and

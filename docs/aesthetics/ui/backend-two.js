@@ -9,13 +9,13 @@
  const submissions=document.createElement('section');submissions.id='backend-two-submissions';submissions.setAttribute('role','tabpanel');submissions.append($('clients-count'),$('clients-list'));
  const settings=document.createElement('section');settings.id='backend-two-settings';settings.dataset.mayaScrollbar='visible';settings.setAttribute('role','tabpanel');
  const tabs=document.createElement('nav');tabs.className='backend-two-tabs pg-tabrow';tabs.dataset.mayaControl='segmented';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Workspace drawer');
- const panels={bio,submissions,settings};let activeTab='bio',selectedGarment='';
- for(const [key,label]of [['bio','Bio'],['submissions','Submissions'],['settings','Settings']]){
-  const button=document.createElement('button');button.className='maya-icon-button pg-tab';button.dataset.mayaShape='circle';button.dataset.mayaType='P3';button.dataset.mayaSegment='';button.type='button';button.setAttribute('aria-label',label);button.title=label;const paths={bio:'M20 21v-2a7 7 0 0 0-14 0v2M17 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',submissions:'M3 7h7l2-3h9v16H3Z',settings:'M4 7h16M4 17h16M8 4v6M16 14v6'};button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="'+paths[key]+'"/></svg>';button.id='backend-two-tab-'+key;button.setAttribute('role','tab');button.setAttribute('aria-controls',panels[key].id);panels[key].setAttribute('aria-labelledby',button.id);button.addEventListener('click',()=>selectTab(key));
+ const panels={submissions,bio,settings};let activeTab='submissions',selectedGarment='';
+ for(const [key,label]of [['submissions','Submissions'],['bio','Bio'],['settings','Settings']]){
+  const button=document.createElement('button');button.className='maya-icon-button pg-tab';button.dataset.mayaShape='circle';button.dataset.mayaType='P3';button.dataset.mayaSegment='';button.type='button';button.setAttribute('aria-label',label);button.title=label;const paths={bio:'M20 21v-2a7 7 0 0 0-14 0v2M17 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',submissions:'M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z',settings:'M4 7h16M4 17h16M8 4v6M16 14v6'};button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="'+paths[key]+'"/></svg>';button.id='backend-two-tab-'+key;button.setAttribute('role','tab');button.setAttribute('aria-controls',panels[key].id);panels[key].setAttribute('aria-labelledby',button.id);button.addEventListener('click',()=>selectTab(key));
   button.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const list=Object.keys(panels),i=list.indexOf(key),next=e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowRight'?1:2))%3;selectTab(list[next]);tabs.children[next].focus();});tabs.append(button);
  }
  const tabTitle=document.createElement('span');tabTitle.className='pg-tabtitle';tabTitle.dataset.mayaType='H2';tabs.append(tabTitle);
- const title=drawer.querySelector('.drawer-title');title.dataset.mayaType='H2';title.textContent='Backend 2';title.after(tabs,bio,submissions,settings);
+ const title=drawer.querySelector('.drawer-title');title.dataset.mayaType='H2';title.textContent='Backend 2';title.hidden=true;title.after(tabs,submissions,bio,settings);
  drawer.querySelector('.drawer-meta-row').hidden=true;
  drawer.setAttribute('role','dialog');drawer.setAttribute('aria-label','Backend 2 workspace');drawer.setAttribute('aria-modal','true');drawer.inert=true;
  function selectTab(key){
@@ -79,7 +79,7 @@
  _updateBrandSub=function(){ $('workspace-title').textContent='Backend 2';$('workspace-version').hidden=true;const menu=document.querySelector('#top-actions .hamburger');menu.title='Workspace menu';menu.setAttribute('aria-controls','clients-drawer');};
  goToScreen=function(){screens.scrollTop=0;};_updateBrandSub();
  // Keep legacy render targets but present only the integrated snapshot.
- $('screen-onepager').hidden=true;$('screen-operating').setAttribute('aria-label','Image, pattern and pipeline');
+ $('screen-onepager').hidden=true;$('screen-operating').setAttribute('aria-label','Image, pattern, CLO 3D and pipeline');
  $('page-indicator')?.remove();
  const strip=document.createElement('section');strip.id='backend-two-fabric-strip';strip.setAttribute('aria-label','Studio fabrics');
  const fabricHost=$('brief-fabrics');fabricHost.style.display='flex';strip.append(fabricHost);screens.append(strip);
@@ -121,6 +121,6 @@
  });
  frame.addEventListener('load',()=>{_postPiecesToOps();syncSettings();});
  window.addEventListener('maya-owner-session-changed',()=>{submissionNavigation++;bindings=[];settings.replaceChildren();fabricKey='';selectedGarment='';});
- selectTab('bio');
+ selectTab('submissions');
  document.addEventListener('DOMContentLoaded',()=>{void refreshFabrics();});
 })();

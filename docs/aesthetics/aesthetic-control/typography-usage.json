@@ -14,6 +14,7 @@
     "docs/aesthetics/ui/avatar-camera.js",
     "docs/aesthetics/ui/backend-two-operation.js",
     "docs/aesthetics/ui/backend-two.js",
+    "docs/aesthetics/ui/clo-assets.js",
     "docs/aesthetics/ui/fabric-assistant.js",
     "docs/aesthetics/ui/image-viewer.js",
     "docs/aesthetics/ui/lead-stage-menu.js",
@@ -1045,7 +1046,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19191,
+          "line": 19197,
           "tag": "h2",
           "id": "avatar-camera-title",
           "class": "",
@@ -1349,7 +1350,7 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 19191
+              "line": 19197
             }
           ]
         },
@@ -1640,7 +1641,7 @@
           "class": "kb-status",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<div class=\"kb-status\" data-maya-type=\"P1\">A generates the pattern from the photo. B matches the photo to the CLO library and grades "
+          "snippet": "<div class=\"kb-status\" data-maya-type=\"P1\">A drafts a pattern from the photo. B sources similar CLO garment references for review.</d"
         },
         {
           "page": "backend/operation-workspace.html",
@@ -3364,7 +3365,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16695,
+          "line": 16701,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3374,7 +3375,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16701,
+          "line": 16707,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3384,7 +3385,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19192,
+          "line": 19198,
           "tag": "p",
           "id": "avatar-camera-status",
           "class": "",
@@ -3863,15 +3864,15 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 16695
-            },
-            {
-              "page": "frontend/index.html",
               "line": 16701
             },
             {
               "page": "frontend/index.html",
-              "line": 19192
+              "line": 16707
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 19198
             }
           ]
         },
@@ -5595,7 +5596,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1072,
+          "line": 1011,
           "tag": "button",
           "id": null,
           "class": "pill ${act}",
@@ -5605,7 +5606,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1074,
+          "line": 1013,
           "tag": "button",
           "id": null,
           "class": "pill ${CUR.kind==='grounded'?'active':''}",
@@ -5615,7 +5616,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1076,
+          "line": 1015,
           "tag": "button",
           "id": null,
           "class": "pill ${CUR.kind==='svg'?'active':''}",
@@ -6605,7 +6606,7 @@
         },
         {
           "page": "docs/aesthetics/ui/backend-two-operation.js",
-          "line": 24,
+          "line": 29,
           "tag": "button",
           "id": null,
           "class": "",
@@ -6615,7 +6616,7 @@
         },
         {
           "page": "docs/aesthetics/ui/backend-two-operation.js",
-          "line": 67,
+          "line": 72,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8015,7 +8016,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17150,
+          "line": 17156,
           "tag": "button",
           "id": "mcp-upgrade",
           "class": "mcp-upgrade",
@@ -8025,7 +8026,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17151,
+          "line": 17157,
           "tag": "button",
           "id": "mcp-later",
           "class": "mcp-later",
@@ -8035,7 +8036,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17701,
+          "line": 17707,
           "tag": "button",
           "id": "pg-maya-chip",
           "class": "maya-pill",
@@ -8045,7 +8046,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 18035,
+          "line": 18041,
           "tag": "button",
           "id": null,
           "class": "pin-pic",
@@ -8055,7 +8056,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19195,
+          "line": 19201,
           "tag": "button",
           "id": "avatar-camera-capture",
           "class": "drawer-action",
@@ -8065,7 +8066,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19195,
+          "line": 19201,
           "tag": "button",
           "id": "avatar-camera-retake",
           "class": "drawer-action",
@@ -8075,7 +8076,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19195,
+          "line": 19201,
           "tag": "button",
           "id": "avatar-camera-use",
           "class": "maya-glass-button",
@@ -8085,7 +8086,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 19195,
+          "line": 19201,
           "tag": "button",
           "id": "avatar-camera-cancel",
           "class": "drawer-action",
@@ -8105,7 +8106,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17540,
+          "line": 17546,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8115,7 +8116,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 18048,
+          "line": 18054,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8539,15 +8540,15 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1072
+              "line": 1011
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1074
+              "line": 1013
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1076
+              "line": 1015
             },
             {
               "page": "backend/operation-workspace.html",
@@ -8827,11 +8828,11 @@
             },
             {
               "page": "docs/aesthetics/ui/backend-two-operation.js",
-              "line": 24
+              "line": 29
             },
             {
               "page": "docs/aesthetics/ui/backend-two-operation.js",
-              "line": 67
+              "line": 72
             },
             {
               "page": "docs/aesthetics/ui/backend-two.js",
@@ -9375,35 +9376,35 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 17150
+              "line": 17156
             },
             {
               "page": "frontend/index.html",
-              "line": 17151
+              "line": 17157
             },
             {
               "page": "frontend/index.html",
-              "line": 17701
+              "line": 17707
             },
             {
               "page": "frontend/index.html",
-              "line": 18035
+              "line": 18041
             },
             {
               "page": "frontend/index.html",
-              "line": 19195
+              "line": 19201
             },
             {
               "page": "frontend/index.html",
-              "line": 19195
+              "line": 19201
             },
             {
               "page": "frontend/index.html",
-              "line": 19195
+              "line": 19201
             },
             {
               "page": "frontend/index.html",
-              "line": 19195
+              "line": 19201
             },
             {
               "page": "frontend/index.html",
@@ -9411,11 +9412,11 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 17540
+              "line": 17546
             },
             {
               "page": "frontend/index.html",
-              "line": 18048
+              "line": 18054
             }
           ]
         },

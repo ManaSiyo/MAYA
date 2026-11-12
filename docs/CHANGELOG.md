@@ -4,6 +4,23 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 11 — compact Backend 2 and CLO rollout:** remove nested outer
+  panels, tighten controls to 5px vertical padding/9px text, thin the fabric strip
+  and cards, and order drawer Submissions/Bio/Settings using shared materials.
+  Add server-side upload sourcing, concurrent-finalization protection and 25MiB
+  references. Add owner-authorized scoped Cloud Tasks provisioning and a one-time
+  real-submission release check; no local browser or account-profile access.
+
+- **November 11 — CLO sourcing in Backend 2:** add Pattern / CLO 3D / Pipeline
+  tabs and a source-backed CONNECT gallery, OpenAI ordering, filters, private
+  selections and dismissals. Add canonical saved-input research, generation
+  guards, durable paid-call claims, submission-ready and dissection triggers,
+  plus a dedicated OIDC Cloud Tasks adapter. Queue activation remains owner setup;
+  interactive searches use the existing OpenAI connection. Replace the old Plan B
+  proxy/ranker with the shared component. Add Aesthetic Control previews and
+  consolidated storage, authorization, race, deadline and DOM checks. No Push,
+  credential changes, native file downloads or local browser testing.
+
 - **November 11 — Backend 2 review and model tiers:** fix pending Full view and
   submission navigation races, scope mirrored Settings to the current operation,
   synchronize save errors/history while typing, and keep engine settings in the

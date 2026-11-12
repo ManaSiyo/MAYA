@@ -1,4 +1,4 @@
-import {setupPresentation} from './presentation-controls.js?v=7';
+import {setupPresentation} from './presentation-controls.js?v=9';
 import {setupSharedSurfaces} from './shared-surfaces.js?v=2';
 import {setupInputControls} from './input-controls.js';
 import {formatTools,formatIcon,formatIcons} from './format-tools.js';

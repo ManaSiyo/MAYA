@@ -360,16 +360,16 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
         <img id="hero-img-b" alt="garment">
       </div>
       <div class="left-actions">
-        <span class="pill primary" onclick="startCloMatch()">Find closest CLO</span>
+        <span class="pill primary" onclick="startCloMatch()">Open CLO assets</span>
       </div>
     </div>
     <!-- RIGHT: the closest proven CLO reference -->
     <div class="panel">
       <div class="col-head"><span class="pill active">Closest CLO reference</span></div>
       <div class="stage-empty" id="clo-result" style="min-height:320px">
-        The CLO route matches the photo to the closest proven garment in the
-        CLO library, then grades its pattern to the client's measurements.<br><br>
-        Press <b>Find closest CLO</b> to run the match.
+        Find similar digital garments on CONNECT and save a reference for
+        pattern work. Review the asset's native pattern and fit in CLO.<br><br>
+        Press <b>Open CLO assets</b> to view saved research.
       </div>
     </div>
   </div>
@@ -395,7 +395,7 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
       <button type="button" class="pill sm" data-plan="A" onclick="setPlan('A')">Plan A · Photo → Pattern</button>
       <button type="button" class="pill sm" data-plan="B" onclick="setPlan('B')">Plan B · CLO Route</button>
     </div>
-    <div class="kb-status" data-maya-type="P1">A generates the pattern from the photo. B matches the photo to the CLO library and grades it.</div>
+    <div class="kb-status" data-maya-type="P1">A drafts a pattern from the photo. B sources similar CLO garment references for review.</div>
   </div>
 
   <section class="sec" id="pattern-settings">
@@ -670,6 +670,7 @@ window.addEventListener('maya-owner-session-changed',()=>queueMicrotask(operatio
 function installOperationContext(context,selected=''){
   invalidateOperation();
   _operationInputContext=context;
+  globalThis.MayaLegacyCloAssets?.reset();
   for(const key of Object.keys(TESTS))delete TESTS[key];
   for(const [index,piece] of (context.pieces||[]).entries()){
     const front=piece?._image||piece?.front||piece?.views?.front;
@@ -937,80 +938,18 @@ function _syncPlanB(){
   else { b.removeAttribute('src'); b.style.display='none'; if(e) e.style.display=''; }
 }
 
-// Classify the photo, then rank the CLO library: grammar type match 3 points,
-// each tag seen in the garment 1 point. Top three, or the honest truth that
-// the library has nothing close yet.
-async function startCloMatch(){
-  if(RUNNING){toast('A run is already going, let it finish.');return;}
-  const img=$('hero-img-b'), out=$('clo-result');
-  if(!img || !img.src || img.style.display==='none'){ toast('Load a photo in Plan A first: pick a test or Upload.'); return; }
-  if(!getKey()){toast('Sign in before matching a garment.');return;}
-  RUN++;const started=RUN;setOperationRunning(true);
-  const context=operationContext(),image=img.src;
-  try{
-  const lib=Array.isArray(window.CLO_LIBRARY)?window.CLO_LIBRARY:[];
-  out.innerHTML='Reading the garment&#8230;';
-  let g;
-  try{g=await classifyGarment(image);if(!operationCurrent(context))return;}
-  catch(e){if(operationCurrent(context))out.innerHTML='Vision failed: '+esc(e&&e.message||e)+'<br><br>Check the key in the menu, then try again.';return;}
-  const typeKey=resolveType(g.type);
-  const words=[g.type,g.subtype].concat(g.attributes||[],g.visible_seams||[],[g.closure])
-    .filter(Boolean).map(s=>String(s).toLowerCase());
-  const head='<div style="text-align:left;font-size:12px;line-height:1.9;color:var(--dim)">'
-    +'Seen: <b style="color:var(--ink);font-weight:400">'+esc(g.type||'?')+'</b>'
-    +(g.subtype?' · '+esc(g.subtype):'')+' &rarr; grammar <b style="color:var(--accent);font-weight:400">'+esc(typeKey)+'</b><br><br>';
-  // v13.64: ask MAYA's CLO-SET proxy first: with a CLO-SET API token on the
-  // server this searches the real workroom assets. Without one it says so
-  // and the local manifest plus a CONNECT search link stand in.
-  const q=[g.type,g.subtype].concat((g.attributes||[]).slice(0,3)).filter(Boolean).join(' ');
-  let closet=null, closetWhy='';
-  try{
-    const r=await fetch('/api/admin/clo-search',{method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+context.token},
-      body:JSON.stringify({q})});
-    const j=await r.json().catch(()=>({}));
-    if(!operationCurrent(context))return;
-    if(r.ok&&j.ok) closet=j.items||[];
-    else closetWhy=j.error||('clo '+r.status);
-  }catch(e){if(!operationCurrent(context))return;closetWhy=String(e&&e.message||e);}
-  const connectLink='https://connect.clo-set.com/search?keyword='+encodeURIComponent(q);
-  if(closet&&closet.length){
-    out.innerHTML=head+'From the CLO-SET library, closest to "'+esc(q)+'":<br><br>'+
-      closet.map((it,i)=>'<div class="panel-row" style="text-align:left">'+
-        (it.thumb?'<img src="'+esc(it.thumb)+'" alt="" style="width:34px;height:34px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-right:10px">':'')+
-        '<span class="q">'+(i+1)+'</span> &nbsp;'+(it.url?'<a href="'+esc(it.url)+'" target="_blank" rel="noopener" style="color:var(--ink)">'+esc(it.name)+'</a>':esc(it.name))+
-        '</div>').join('')+'</div>';
-    return;
+// The legacy Plan B opens the same saved research component as Backend 2.
+let _legacyCloAssets=null;
+function startCloMatch(){
+  if(!window.MayaCloAssets)return;
+  if(!_legacyCloAssets){
+    const style=document.createElement('link');style.rel='stylesheet';style.href='/aesthetics/ui/backend-two.css?v=4';document.head.append(style);
+    _legacyCloAssets=window.MayaCloAssets.create({host:$('clo-result'),getToken:getKey,getContext:()=>({account:operationAccount(),submissionId:_operationInputContext?.submissionId||'',garmentId:FILES.piece?.id||'',revision:_operationRevision}),});
+    globalThis.MayaLegacyCloAssets=_legacyCloAssets;
+    window.addEventListener('storage',()=>_legacyCloAssets.update());
+    window.addEventListener('maya-owner-session-changed',()=>_legacyCloAssets.update());
   }
-  if(closet&&!closet.length){
-    out.innerHTML=head+'The CLO-SET library answered but found nothing for "'+esc(q)+'". '+
-      '<a href="'+connectLink+'" target="_blank" rel="noopener" style="color:var(--accent)">Search CLO-SET CONNECT for it</a>.</div>';
-    return;
-  }
-  if(!lib.length){
-    out.innerHTML=head+
-      (closetWhy==='clo_not_connected'
-        ? 'MAYA is not connected to your CLO-SET account yet, so it cannot pull the real assets. Issue an API token in the CLO-SET dashboard and set it on the server, and this panel searches your library directly. Meanwhile: '
-        : 'The CLO-SET search did not answer ('+esc(closetWhy)+'). Meanwhile: ')+
-      '<a href="'+connectLink+'" target="_blank" rel="noopener" style="color:var(--accent)">search CLO-SET CONNECT for "'+esc(q)+'"</a>.</div>';
-    return;
-  }
-  const ranked=lib.map(item=>{
-    let score=0;
-    if((item.types||[]).indexOf(typeKey)>=0) score+=3;
-    (item.tags||[]).forEach(tag=>{ const t=String(tag).toLowerCase(); if(words.some(w=>w.indexOf(t)>=0||t.indexOf(w)>=0)) score+=1; });
-    return {item,score};
-  }).sort((x,y)=>y.score-x.score).slice(0,3).filter(r=>r.score>0);
-  if(!ranked.length){
-    out.innerHTML=head+'No CLO reference matches this garment yet ('+lib.length+' on file).</div>';
-    return;
-  }
-  out.innerHTML=head+ranked.map((r,i)=>
-    '<div class="panel-row" style="text-align:left"><span class="q">'+(i+1)+'</span> &nbsp;'
-    +esc(r.item.name||r.item.id)+' &nbsp;<span style="color:var(--faint)">match '+r.score
-    +(r.item.file?' · '+esc(r.item.file):'')+'</span></div>'
-  ).join('')+'</div>';
-  }finally{if(started===RUN)setOperationRunning(false);}
+  _legacyCloAssets.setActive(true);
 }
 
 
@@ -2032,6 +1971,7 @@ function refreshKbStatus(){
   if(EMB) $('kb-bar').style.width='100%';
 }
 </script>
-<script src="/aesthetics/ui/backend-two-operation.js?v=2"></script>
+<script src="/aesthetics/ui/clo-assets.js?v=1"></script>
+<script src="/aesthetics/ui/backend-two-operation.js?v=4"></script>
 </body>
 </html>

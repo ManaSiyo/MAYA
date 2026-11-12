@@ -2750,7 +2750,7 @@ checks['backend-two-shell']=async function(){
  assert.equal(document.getElementById('workspace-title').textContent,'Backend 2');
  assert.ok(document.querySelector('#backend-two-bio #op-biography'));assert.ok(document.querySelector('#backend-two-bio #op-measurements'));
  assert.ok(document.querySelector('#backend-two-submissions #clients-list'));assert.ok(document.querySelector('#backend-two-fabric-strip #brief-fabrics'));assert.equal(document.getElementById('screen-onepager').hidden,true);
- c.toggleWorkspaceDrawer();assert.equal(document.getElementById('clients-drawer').inert,false);
+ c.toggleWorkspaceDrawer();assert.equal(document.getElementById('clients-drawer').inert,false);assert.deepEqual([...document.querySelectorAll('.backend-two-tabs [role=tab]')].map(e=>e.getAttribute('aria-label')),['Submissions','Bio','Settings']);assert.equal(document.getElementById('backend-two-tab-submissions').getAttribute('aria-selected'),'true');
  document.getElementById('backend-two-tab-settings').click();assert.equal(document.getElementById('backend-two-settings').hidden,false);
  const field=document.getElementById('b2-setting-pattern-hits');assert.ok(field);field.value='8';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(engine.document.getElementById('pattern-hits').value,'8');assert.equal(edits,1);
  document.getElementById('b2-setting-test-save').click();assert.equal(clicks,1);
@@ -2766,7 +2766,7 @@ checks['backend-two-shell']=async function(){
  scope={...scope,local:2};field.value='99';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(edits,1,'A stale mirror cannot write into a later project generation');scope={...scope,local:1};document.activeElement=null;
  garmentId='pants';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(edits,1,'A stale mirror cannot edit the newly selected garment before its message arrives');garmentId='coat';
 
- document.getElementById('backend-two-tab-submissions').click();assert.equal(reads,1);assert.equal(document.getElementById('backend-two-settings').hidden,true);
+ document.getElementById('backend-two-tab-submissions').click();assert.equal(reads,2);assert.equal(document.getElementById('backend-two-settings').hidden,true);
  c.toggleWorkspaceDrawer();assert.equal(document.getElementById('clients-drawer').inert,true);
  await c.openBackendTwoSubmission({id:'project-B',name:'Second'});assert.equal(flushed,1);assert.match(c.location.href,/^\/backend2.html\?submission=project-B/);
  frame.contentWindow.flushPatternBeforeNavigation=async()=>false;c.location.href='unchanged';await c.openBackendTwoSubmission({id:'project-C'});assert.equal(c.location.href,'unchanged','Failed settings saves block submission navigation');
@@ -2796,7 +2796,9 @@ checks['backend-two-operation']=async function(){
  c.installOperationContext(context);assert.equal(picker.value,'__full__');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);
  assert.equal(picker.querySelector('optgroup').label,'Dissected view');assert.equal(c.FILES.piece.id,'coat','Full view does not replace the active pattern input');
  await c.onPickTest('Coat');assert.equal(picker.value,'Coat');assert.equal(document.getElementById('hero-img').getAttribute('src'),c.FILES.front);
- document.getElementById('backend-two-pipeline-tab').click();assert.equal(document.getElementById('stage').hidden,true);assert.equal(document.getElementById('backend-two-pipeline').hidden,false);
+ assert.deepEqual([...document.querySelectorAll('#pass-pills [role=tab]')].map(b=>b.textContent),['Pattern','CLO 3D','Pipeline']);
+ document.getElementById('backend-two-clo-tab').click();assert.equal(document.getElementById('backend-two-clo').hidden,false);assert.equal(document.getElementById('stage').hidden,true);
+ document.getElementById('backend-two-pipeline-tab').click();assert.equal(document.getElementById('backend-two-clo').hidden,true);assert.equal(document.getElementById('stage').hidden,true);assert.equal(document.getElementById('backend-two-pipeline').hidden,false);
  assert.ok(document.querySelector('#backend-two-pipeline #t-chunks'));assert.ok(document.querySelector('#backend-two-pipeline #live-log'));
  const patternTab=document.getElementById('backend-two-pattern-tab');
  c.setOperationRunning(true);assert.equal(document.querySelector('.backend-two-pipeline-dot').classList.contains('running'),true);
@@ -2834,4 +2836,74 @@ checks['studio-favorites-client']=async function(){
  while(typeof releasePost!=='function')await Promise.resolve();releasePost();await pending;assert.equal(vm.runInContext('favorites.items.length',c),0);
  assert.match(c.els.saveStatus.textContent,/Removed/);
  console.log('Studio favorites client: shared reads, heart save/remove, failed-read retention and duplicate-click suppression passed.');
+};
+
+checks['clo-assets']=async function(){
+ const {createDigitalAssets,cloResults,cloSearchBody,cloListingURL,createCloQueue,mountDigitalAssets}=await import('../backend/server/digital-assets.mjs');
+ const {default:assert}=await import('node:assert/strict');
+ const urls=['https://connect.clo-set.com/detail/e13b408cb5854b768e0fe22df9f4be98','https://connect.clo-set.com/detail/c6c2de5fb82842e2936735ce05fe912a'];
+ const output={id:'response-test',status:'completed',output:[{type:'web_search_call',results:[{type:'image_result',source_website_url:urls[0],image_url:'https://images.example.com/garment.jpg',caption:'Wrap dress'},{type:'source_result',url:urls[1],title:'Corset dress'},{type:'source_result',url:'https://connect.clo-set.com/explore/guide',title:'Not an asset'}]},{type:'message',content:[{type:'output_text',text:JSON.stringify({items:[{url:'https://connect.clo-set.com/detail/'+ 'a'.repeat(32),title:'Invented'},{url:urls[1],title:'Corset dress',price:10,currency:'USD'},{url:urls[0],title:'Wrap dress',match:'Similar shape',price:0,currency:'USD',priceType:'free',formats:['zprj'],patternStatus:'editable',physicalProduction:'allowed',factsEvidence:'Listing reports free project with editable panels and production permission.'},{url:urls[0]}]})}]}]};
+ assert.equal(cloListingURL('https://connect.clo-set.com.evil.test/detail/'+ 'a'.repeat(32)),'');assert.equal(cloListingURL('javascript:alert(1)'),'');
+ const items=cloResults(output);assert.equal(items.length,2);assert.equal(items[0].url,urls[1],'OpenAI order is retained');assert.equal(items[0].price,null,'Unsupported facts remain unknown');assert.equal(items[1].price,0);assert.equal(items[1].priceType,'free');assert.equal(items[1].image,'https://images.example.com/garment.jpg');
+ assert.throws(()=>cloResults({...output,status:'incomplete'}),/stopped/);assert.throws(()=>cloResults({status:'completed',output:[]}),/could not/);
+ const request=cloSearchBody({image:'data:image/png;base64,YQ==',garment:{category:'dress'},preferences:'',garmentId:'dress'});assert.equal(request.max_tool_calls,1);assert.deepEqual(request.tools[0].filters.allowed_domains,['connect.clo-set.com']);assert.equal(request.store,false);
+ let generation=0,deleted=false,readFailure='',providerCalls=0,provider=null,now=10000;
+ const files=new Map(),seed=(path,data,type='application/json')=>files.set(path,{buf:Buffer.isBuffer(data)?data:Buffer.from(JSON.stringify(data)),type,generation:String(++generation)});
+ const prefix='submissions/test-sub/';seed(prefix+'submission.json',{openedBy:'owner@example.com'});seed(prefix+'summary.json',{fabric_preferences:'cotton',email:'private@example.com',_measurements:{waist:32}});seed(prefix+'dream-garment.png',Buffer.from('image'),'image/png');
+ seed(prefix+'pieces.json',{pieces:[{id:'coat',name:'Coat',_image:'data:image/png;base64,YQ=='}]});
+ const deps={read:async path=>{if(path===readFailure)return {ok:false,status:503};const value=files.get(path);return value?{ok:true,...value}:{ok:false,status:404};},write:async(path,buf,type,expected)=>{if(String(files.get(path)?.generation||'0')!==expected)throw Object.assign(Error('conflict'),{status:412});seed(path,buf,type);return {generation:files.get(path).generation};},assertActive:async()=>{if(deleted)throw Object.assign(Error('Deleted'),{status:410});},apiKey:()=> 'fixture',now:()=>now,fetchImpl:async(_url,options)=>{providerCalls++;const body=JSON.parse(options.body);assert.ok(!JSON.stringify(body).includes('private@example.com'));assert.ok(!JSON.stringify(body).includes('waist'));if(provider)return provider(options);return Response.json(output);}};
+ const service=createDigitalAssets(deps),user={sub:'admin-A'};
+ // Sourcing is prepared by the server when the final canonical input lands,
+ // including larger PNGs accepted by the existing submission upload endpoint.
+ const uploadPrefix='submissions/upload-sub/',uploadTasks=[];
+ seed(uploadPrefix+'submission.json',{openedBy:'owner@example.com'});seed(uploadPrefix+'dream-garment.png',Buffer.alloc(5*1024*1024,1),'image/png');
+ const uploadService=createDigitalAssets({...deps,queue:{ready:()=>true,enqueue:async job=>uploadTasks.push(job)}});
+ assert.equal((await uploadService.uploaded('upload-sub','dream-garment.png')).status,'waiting');assert.equal(uploadTasks.length,0);
+ assert.equal((await uploadService.uploaded('upload-sub','one-pager.pdf')).status,'irrelevant');
+ seed(uploadPrefix+'summary.json',{fabric_preferences:'cotton'});
+ const uploaded=await Promise.all([uploadService.uploaded('upload-sub','summary.json'),uploadService.uploaded('upload-sub','dream-garment.png')]);
+ assert.ok(uploaded.every(r=>r.queued));assert.equal(new Set(uploadTasks.map(t=>t.attempt)).size,1,'Concurrent uploads reuse one paid-search attempt');assert.equal(providerCalls,0);
+ assert.ok((await uploadService.snapshot('upload-sub')).image.length>6*1024*1024,'Accepted large submission images remain sourceable');
+ for(const path of [...files.keys()])if(path.startsWith(uploadPrefix))files.delete(path);
+ const queued=await service.schedule('test-sub');assert.equal(queued.queued,false);assert.equal(providerCalls,0,'Preparing work does not pay without a worker');
+ let pending=await service.prepare('test-sub');await Promise.all([service.execute('test-sub','',pending.attempt),service.execute('test-sub','',pending.attempt)]);assert.equal(providerCalls,1,'A generation-checked claim prevents duplicate paid work');
+ let state=await service.view(user,'test-sub');assert.equal(state.status,'complete');assert.equal(state.items.length,2);await service.prepare('test-sub');await service.view(user,'test-sub');assert.equal(providerCalls,1,'Reopening is read-only');
+ await assert.rejects(service.prepare('test-sub','missing'),/saved dissection/);
+ state=await service.saveReview(user,{submissionId:'test-sub',action:'select',url:urls[0],generation:state.review.generation,fingerprint:state.fingerprint});assert.equal(state.review.selected.url,urls[0]);assert.equal((await service.view({sub:'admin-B'},'test-sub')).review.selected,null);
+ await assert.rejects(service.saveReview(user,{submissionId:'test-sub',action:'dismiss',url:urls[0],generation:'0',fingerprint:state.fingerprint}),/changed/);
+ state=await service.saveReview(user,{submissionId:'test-sub',action:'dismiss',url:urls[0],generation:state.review.generation,fingerprint:state.fingerprint});assert.deepEqual(state.review.dismissed,[urls[0]]);assert.equal(state.review.selected,null);
+ readFailure=prefix+'digital-assets/research/look.json';await assert.rejects(service.prepare('test-sub'),/unavailable/);readFailure='';
+ seed(prefix+'dream-garment.png',Buffer.from('changed image'),'image/png');pending=await service.prepare('test-sub');state=await service.view(user,'test-sub');assert.equal(state.stale,true,'Preserved old results remain stale during new work');
+ await assert.rejects(service.saveReview(user,{submissionId:'test-sub',action:'select',url:urls[0],generation:state.review.generation,fingerprint:state.fingerprint}),/changed/);
+ provider=async()=>new Response('',{status:503});await assert.rejects(service.execute('test-sub','',pending.attempt),/stopped/);const calls=providerCalls;await service.execute('test-sub','',pending.attempt);assert.equal(providerCalls,calls,'Failed and uncertain requests are never retried automatically');
+ state=await service.view(user,'test-sub');provider=null;pending=await service.prepare('test-sub','',{force:true,generation:state.generation});await service.execute('test-sub','',pending.attempt);assert.equal((await service.view(user,'test-sub')).stale,false);
+ let resolve;provider=()=>new Promise(r=>resolve=r);state=await service.view(user,'test-sub');pending=await service.prepare('test-sub','',{force:true,generation:state.generation});const late=service.execute('test-sub','',pending.attempt);while(!resolve)await Promise.resolve();deleted=true;resolve(Response.json(output));await assert.rejects(late,/Deleted|deleted/);deleted=false;assert.notEqual((await service.load('test-sub')).status,'complete','Late results cannot complete after deletion');
+ // A request that ignores abort is still bounded and leaves a durable failed claim.
+ provider=()=>new Promise(()=>{});const short=createDigitalAssets({...deps,timeoutMs:20});state=await short.load('test-sub');now+=100000;pending=await short.prepare('test-sub','',{force:true,generation:state.generation});const keep=setTimeout(()=>{},200);await assert.rejects(short.execute('test-sub','',pending.attempt),/stopped/);clearTimeout(keep);assert.equal((await short.load('test-sub')).status,'failed');
+ const tasks=[];const config={queue:'projects/pro-maya/locations/us-west1/queues/clo-assets',origin:'https://maya-api-example.us-west1.run.app',email:'worker@example.com',audience:'https://maya-api-example.us-west1.run.app'};
+ const queue=createCloQueue({config,token:async()=> 'fixture',fetchImpl:async(url,options)=>{tasks.push(JSON.parse(options.body).task);return new Response('',{status:409});}});assert.equal(queue.ready(),true);await queue.enqueue({submissionId:'test-sub',garmentId:'coat',attempt:'attempt'});await queue.enqueue({submissionId:'test-sub',garmentId:'coat',attempt:'attempt'});assert.equal(tasks[0].name,tasks[1].name);assert.equal(tasks[0].httpRequest.oidcToken.audience,config.origin);assert.match(tasks[0].httpRequest.url,/api\/tasks\/clo-assets$/);
+ // Route authorization rejects clients before exposing research or scheduling another owner's submission.
+ const routes=new Map(),app={get:(p,...handlers)=>routes.set(p,handlers.at(-1)),post:(p,...handlers)=>routes.set(p,handlers.at(-1))};
+ mountDigitalAssets(app,{service,requireAuthHeader(){},json:()=>()=>{},requireAdmin:async()=>{throw Object.assign(Error('denied'),{status:403});},requireUser:async()=>({email:'other@example.com'}),ownerOf:async()=> 'owner@example.com',verifyWorker:async()=>{throw Object.assign(Error('denied'),{status:401});},rateLimit:()=>({ok:true})});
+ const res={status(code){this.code=code;return this;},json(body){this.body=body;return this;},set(){return this;},on(){}};
+ await routes.get('/api/admin/digital-assets/research')({query:{submissionId:'test-sub'}},res);assert.equal(res.code,403);
+ await routes.get('/api/submissions/clo-ready')({body:{submissionId:'test-sub'}},res);assert.equal(res.code,403);
+ await routes.get('/api/tasks/clo-assets')({body:{}},res);assert.equal(res.code,401);
+ console.log('CLO: sourced ranking, zero prices, canonical inputs, claims, account reviews, stale work, failed reads, deletion, deadlines, worker scope and duplicate dispatch passed.');
+};
+
+checks['clo-assets-client']=async function(){
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs'),{default:assert}=await import('node:assert/strict');
+ const {document}=parseHTML('<html><body><section id="clo"></section></body></html>');
+ const c=vm.createContext({document,URL,URLSearchParams,AbortController,Date,setTimeout,clearTimeout,console});c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/clo-assets.js','utf8'),c);
+ let context={account:'A',submissionId:'sub-one',garmentId:'coat'},token='A',calls=[],resolveOld=null;
+ const item={url:'https://connect.clo-set.com/detail/e13b408cb5854b768e0fe22df9f4be98',title:'Wrap dress',price:0,priceType:'free',formats:['zprj'],patternStatus:'editable',physicalProduction:'unknown'};
+ let saved={status:'complete',generation:'1',fingerprint:'one',items:[item],review:{generation:'0',selected:null,dismissed:[]},searchReady:true};
+ const host=document.getElementById('clo'),ui=c.MayaCloAssets.create({host,getContext:()=>context,getToken:()=>token,fetchImpl:async(url,options)=>{calls.push({url,options});if(resolveOld===true)return new Promise(resolve=>resolveOld=resolve);const body=options.body&&JSON.parse(options.body);if(body?.action==='select')saved={...saved,review:{...saved.review,generation:'1',selected:{...item,fingerprint:'one'}}};return {ok:true,json:async()=>structuredClone(saved)};}});
+ const settle=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};ui.update();assert.equal(calls.length,0);ui.setActive(true);await settle();assert.equal(calls.length,1);assert.ok(calls[0].url.includes('research?'));assert.match(host.textContent,/Free/);assert.equal(host.querySelectorAll('.clo-card').length,1);
+ const select=[...host.querySelectorAll('button')].find(b=>b.textContent==='Select');await select.onclick();assert.match(host.querySelector('.clo-selection').textContent,/Selected reference/);assert.equal(JSON.parse(calls.at(-1).options.body).generation,'0');
+ ui.setActive(false);ui.setActive(true);await settle();assert.equal(calls.filter(c=>c.url.endsWith('/search')).length,0,'Tab changes never pay');
+ resolveOld=true;context={...context,garmentId:'pants'};ui.update();await settle();assert.equal(typeof resolveOld,'function');const completeOld=resolveOld;resolveOld=null;context={account:'B',submissionId:'sub-two',garmentId:'dress'};token='B';saved={...saved,items:[],review:{generation:'0',selected:null,dismissed:[]}};ui.update();await settle();completeOld({ok:true,json:async()=>({status:'complete',items:[item],review:{dismissed:[]}})});await settle();assert.equal(host.querySelectorAll('.clo-card').length,0,'Old account and garment results cannot reappear');
+ assert.equal(calls.at(-1).options.headers.Authorization,'Bearer B');ui.reset();assert.equal(host.querySelectorAll('.clo-card').length,0);
+ console.log('CLO UI: saved-only opening, free prices, private selection, tab reuse and stale account/garment responses passed.');
 };

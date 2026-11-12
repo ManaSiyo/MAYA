@@ -123,7 +123,9 @@ Backend 2 is the separate November 11 playground, not a replacement for Brief.
 Its image/pattern upper window retains 34/66 proportions at desktop/tablet (40/60
 on a phone for usable controls), with contained images and original garment pan.
 Full view only changes the displayed image, never the active garment's pattern
-input. Mark 1 and Pipeline swap the right panel; green pulses only while running.
+input. Pattern, CLO 3D and Pipeline swap the right panel; green pulses only while
+the pattern engine is running. CLO keeps source-backed reference cards, filters,
+alteration details and per-admin selections inside the same right-panel frame.
 The bottom strip uses the same fabric cards/captions with horizontal scrolling.
 Bio, Submissions and Settings use the frontend's three circular filing tabs and
 shared Drawer material. Small-height windows may scroll for access; content never
@@ -132,3 +134,10 @@ whole backend, with a Glass heart immediately left of Global's X. Active hearts
 use the existing icon color. Aesthetic Control includes matching interactive
 snapshot/fabric/drawer samples. All collapsed Admin folds use Closed sections
 spacing, with wrappers contributing no extra vertical gap.
+
+Backend 2 compact experiment (owner requested November 11): remove outer
+operation and fabric panels, keep one Inner frame, and use 5px toolbar padding
+with 9px P3 controls locally. These size exceptions do not alter global Aesthetic
+Control defaults. Shared Inner/Drawer/Glass colors, materials and icons retain
+authority. Drawer order/default is Submissions (folder), Bio, Settings. Fabric
+strip/card dimensions are smaller to recover vertical and horizontal space.

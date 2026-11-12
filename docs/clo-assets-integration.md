@@ -1,234 +1,217 @@
-# CLO asset sourcing for MAYA
+# CLO asset sourcing in MAYA
 
-Research and proposed integration, November 11, 2026. Runtime implementation and
-live matching validation are pending.
+Implemented locally on November 11, 2026. The feature is ready for code review;
+The owner has authorized production deployment, queue activation and live matching
+evaluation. The current release adds automated provisioning and a one-time check. CLO source files are neither purchased nor downloaded automatically.
 
-MAYA should prepare a shortlist of digital garment assets when a completed client
-submission arrives. OpenAI should choose the closest references and explain the
-alterations needed. Start with up to ten useful results, including free and paid
-assets; return fewer when the evidence is weak. This gives the atelier a reusable
-starting point while image-to-pattern remains experimental.
+## Delivery checklist
 
-## Which CLO library
+1. **Done — verify Backend 2 deployment.** Both the initial `1af6666` push and
+   the newer `27d446ec40ce9d5cdaed9361e83f62fe66943c00` aesthetic/model push passed
+   Google Cloud Build, including seven live endpoint checks. The latter finished
+   around 9:02 PM Pacific November 11; independent `/release.json` and
+   `/api/healthz` reads matched it. Those newer aesthetics are live. Backend 2
+   has its own `/backend2.html` entry; this CLO implementation is still local.
+2. **Done — integrate the right panel.** Backend 2 now has Pattern → CLO 3D →
+   Pipeline tabs. The image remains on the left and the fabric strip below. The
+   existing 34/66 desktop/tablet and 40/60 phone image/right-panel ratios remain.
+   Tab switching retains pattern state and never initiates a paid search.
+3. **Done — implement CONNECT sourcing.** One server-side OpenAI Responses search
+   uses the saved reference and CONNECT domain restriction. OpenAI orders up to
+   ten source-backed garment references. Free/paid and editable-pattern filters,
+   match reasons, alterations, source links and available commercial facts appear
+   in the CLO tab. Fewer results and unknown facts are valid outcomes.
+4. **Done — retain private work.** Research survives reopening. Each admin's
+   selection and dismissed URLs are saved separately. Stale inputs, conflicting
+   writes, unreadable records and deleted submissions cannot silently replace
+   current work. Refresh is explicit and may incur another provider charge.
+5. **Done — implement submission automation.** After the saved image/summary writes, the server schedules work. As a fallback, the
+   client calls the submission-ready route. The server verifies ownership and
+   saved image/summary, writes pending work and enqueues it when configured.
+   Saving dissection prepares up to 12 garment jobs; additional garments can be
+   searched individually. Durable claims prevent duplicate task deliveries from
+   issuing another paid search. Failed/uncertain attempts require explicit retry.
+6. **Authorized rollout — activate automatic dispatch.** Cloud Build now configures a dedicated
+   Cloud Tasks queue, dispatch service account and OIDC settings listed below.
+   Without them, pending work remains saved and Find assets works interactively
+   through the existing OpenAI connection. No new CLO account token is required
+   for public-listing discovery.
+7. **Authorized release — Push and live verification.** Local commits do not deploy.
+   After an owner-authorized Push, inspect Google Cloud Build, verify all seven
+   release stamps and test one real submission through matching and saved
+   selection. Review the layout on phone, tablet and desktop. Code checks do not
+   establish live provider quality or owner visual acceptance.
+8. **Optional later integration — owned library and desktop CLO.** Add a documented
+   CLO-SET account-library adapter once account scope/access is available. Broader
+   CONNECT catalog access needs vendor confirmation. Acquired native projects can
+   later be handed to licensed desktop CLO for adaptation, fit review and export.
 
-**CLO-SET CONNECT Store** is the public marketplace the request describes. Its
-categories include Garment, Fabric, Trim, Avatar and Scene. It carries free and
-paid assets. **CLO-SET Company Library** is a separate account-accessible content
-repository. **CLO desktop Library** is the software's asset panel. Access to one
-does not establish access to the others. See the [CONNECT Store](https://connect.clo-set.com/store)
-and [CLO service explanation](https://support.clo3d.com/hc/en-us/articles/115012666347-What-other-services-do-you-have-other-than-CLO).
+[Verified Google build](https://github.com/ManaSiyo/MAYA/runs/130982536294).
 
-For the first release, prioritize garment and pattern assets for each garment in
-the submission. Digital fabrics and trims can be separate searches later. A
-digital fabric asset is distinct from the physical fabric procurement handled by
-MAYA's existing Fabrics feature.
+## Current integration
 
-## API inventory
+`backend/server/digital-assets.mjs` owns sourcing, parsing, canonical input reads,
+research storage, durable execution claims, queue dispatch and HTTP routes.
+`docs/aesthetics/ui/clo-assets.js` owns the gallery, selection, filters and saved-only
+polling. Backend 2 mounts it through `backend-two-operation.js`; the older Plan B
+opens the same component. The legacy configurable `/api/admin/clo-search` proxy
+returns 410. Its arbitrary endpoint mapping and local tag-ranking fallback are
+retired, and the unsupported automatic-grading copy has been removed.
 
-There are two documented integration families relevant to this work, plus an
-unverified marketplace-access requirement. This is not a claim that CLO has only
-two APIs across all its products.
+The implementation follows the existing Fabrics conventions but keeps digital
+assets separate from physical fabric sourcing. It uses one bounded Responses
+image/text web-search call, with `connect.clo-set.com` as the allowed domain.
+Only sourced `/detail/` URLs can become cards; model text cannot introduce an
+uncited listing or photograph. Model-selected order is retained without a custom
+server ranking formula. Free prices preserve numeric zero. Commercial facts
+require listing-evidence text; unknown formats, price, currency, pattern contents
+and physical-production permission remain unknown.
+[OpenAI web-search documentation](https://developers.openai.com/api/docs/guides/tools-web-search).
 
-| Surface | Verified scope | Use in MAYA |
+The input is the canonical saved image and a small garment/material description.
+Names, contacts and body measurements are not included in the request. The model
+is instructed to keep private image URLs and identifying data out of search
+queries. Listing text is evidence, not executable instructions. Matching is labeled
+as listing-search evidence; it does not claim native-file inspection or a separate
+visual comparison of every candidate.
+
+Full view sources the complete submitted look. A dissected selection sources that
+saved garment. Initial preparation and subsequent reads do not pay for model
+calls; the configured worker or explicit Find/Refresh performs the search.
+Background work survives the browser closing when the task queue is active.
+Tab navigation only reads stored results. Scope changes cancel interactive
+requests and discard late responses; an uncertain attempt is not retried silently.
+
+## Routes and stored data
+
+| Route | Access and behavior |
+| --- | --- |
+| `POST /api/submissions/clo-ready` | Verified submission owner; prepares full-look work after uploads. Repeated requests reuse the input fingerprint and task identity. |
+| `GET /api/admin/digital-assets/research` | Admin-only; reads canonical state and that admin's review. No model call. |
+| `POST /api/admin/digital-assets/search` | Admin-only and rate-limited; runs pending work or explicitly refreshes with a generation guard. |
+| `POST /api/admin/digital-assets/review` | Admin-only; select, clear, hide or restore, bound to research fingerprint and review generation. |
+| `POST /api/tasks/clo-assets` | Dedicated OIDC worker identity/audience; executes only the matching pending attempt. |
+
+All routes remain same-origin behind the current Cloud Run API. No credential or
+production environment setting was changed during implementation.
+
+Research/job state is stored at
+`submissions/{id}/digital-assets/research/look.json` or
+`submissions/{id}/digital-assets/research/garment-{garmentId}.json`.
+Each record has input and result fingerprints, an attempt ID, status,
+timestamps and at most ten current candidates. It doubles as the durable job
+record; there is no separate job collection. A failed refresh retains the last
+successful candidates and marks changed-input results stale.
+
+Reviews live at
+`submissions/{id}/digital-assets/reviews/{adminUid}/look.json` or the matching
+`garment-{garmentId}.json`. A selected reference retains its source metadata and
+input fingerprint; dismissed URLs are capped at 500 with an explicit restore
+control. Client-specific work is not copied into shared studio Favorites.
+
+Writes use Cloud Storage generations and the existing before/after submission
+deletion barrier, including cleanup of a write racing deletion. Failed reads do
+not become empty replacement stores. Workers claim before contacting OpenAI.
+A worker crash or ambiguous paid response leaves running/failed work for explicit
+review and refresh rather than an automatic second charge. Enqueue failures leave
+pending work available for manual search or a later idempotent ready request.
+
+## Automatic dispatch setup
+
+The service reads these settings; they must be provisioned separately by the owner:
+
+| Setting | Required value |
+| --- | --- |
+| `CLO_TASK_QUEUE` | Dedicated queue resource: `projects/{project}/locations/{region}/queues/{queue}`. |
+| `CLO_TASK_ORIGIN` | The HTTPS Cloud Run service origin, without a trailing slash. |
+| `CLO_TASK_SERVICE_ACCOUNT` | Dedicated account used in the task's OIDC token. |
+| `CLO_TASK_AUDIENCE` | Exactly the same origin as `CLO_TASK_ORIGIN`. |
+
+Grant the API service the permissions needed to enqueue tasks and use the dispatch
+identity. Confirm Cloud Tasks can issue its OIDC token and reach the worker.
+Use conservative queue concurrency for the first live submission. Do not reuse
+callback-lead worker identity or queue configuration implicitly. The worker checks
+its own email and audience through the existing Google JWT verifier.
+
+Queue configuration is not required for interactive sourcing. The existing
+`OPENAI_API_KEY` and configured text model are used; code does not inspect or
+change their values. CLO-SET account tokens and a desktop CLO installation are
+not required to discover public listing references.
+
+## CLO API inventory and coverage
+
+| Surface | Verified scope | Remaining integration |
 | --- | --- | --- |
-| CLO desktop API/SDK | Six main modules: EXPORT_API, FABRIC_API, IMPORT_API, PATTERN_API, REST_API and UTILITY_API. Python/C++ access and additional GUI, event and Library plug-in interfaces are documented. | Later: open an acquired project, inspect or edit patterns, simulate, and export through an installed CLO application. |
-| CLO-SET API V2 | The published machine-readable index lists 68 operation entries across 14 groups, including one explicitly labeled dummy endpoint; 67 entries exclude that dummy. This counts documentation entries, not independently tested production endpoints. | Search/list permitted styles, retrieve previews and download links, manage versions, rendering and tech-pack data. |
-| CONNECT marketplace | Public Store and individual listings are accessible through web search. No public marketplace catalog-search API was verified in the reviewed documentation. | Initial discovery through source-linked search; complete inventory access remains a vendor question. |
+| CLO desktop SDK | Six main modules: export, fabric, import, pattern, REST helpers and utilities; additional Python/GUI/event/Library interfaces. | Native file editing, simulation and export require a licensed desktop runtime and a tested workflow. |
+| CLO-SET V2 | 68 documented operation entries across 14 groups, including one dummy entry; 67 excluding it. | Account-authorized library access, previews, downloads, rendering and tech packs. |
+| CONNECT Store | Public free/paid garment, fabric, trim, avatar and scene listings. | No public full-marketplace search API was verified; web discovery has partial coverage. |
 
 Sources: [desktop API reference](https://developer.clo3d.com/list.html),
-[SDK overview](https://developer.clo3d.com/),
-[CLO-SET V2 operation index](https://closet-api-v2.apidog.io/llms.txt).
-The V2 count includes Auth 2, Group 1, Company 5, Brand 4, Line 4, Season 4,
-Room 5, Style 28, Space 1, Render 6, Linesheet 1, Workflow 2, Category 2 and
-WebTechpack 3. Schemas and the tutorial are excluded.
+[CLO-SET V2 index](https://closet-api-v2.apidog.io/llms.txt),
+[CONNECT Store](https://connect.clo-set.com/store).
+The cloud count is documentation entries, not independently tested endpoints:
+Auth 2, Group 1, Company 5, Brand 4, Line 4, Season 4, Room 5, Style 28, Space 1,
+Render 6, Linesheet 1, Workflow 2, Category 2 and WebTechpack 3.
 
-Desktop REST_API supplies HTTP request helpers; its name does not imply a hosted
-marketplace search service. The [Library Window plug-in](https://developer.clo3d.com/library.html)
-lets a developer show an external content source inside CLO. It does not grant a
-feed of everything sold on CONNECT.
-
-CLO-SET documents `GET /api/styles` with group, keyword, paging and filter inputs.
-Its scope is styles the caller can access. The response example uses `styleId`,
-`fileName`, `thumbnailPath` and `thumbnailName`; a proper adapter must resolve
-previews and content URLs through documented behavior.
+`GET /api/styles` searches styles the caller can access, with group, keyword and
+paging inputs. It does not establish access to everything for sale on CONNECT.
 [Style-list reference](https://closet-api-v2.apidog.io/get-style-list-42347750e0).
+Developer-page group tokens require the acting member's `X-User-Email` alongside
+Bearer authorization. [Authentication tutorial](https://closet-api-v2.apidog.io/clo-set-api-tutorial-2469682m0).
 
-Developer-page group tokens require the acting group member's `X-User-Email`
-alongside Bearer authorization. Other authentication paths exist, and the
-tutorial contains legacy wording, so verify the chosen path against its endpoint
-documentation before implementation.
-[Authentication tutorial](https://closet-api-v2.apidog.io/clo-set-api-tutorial-2469682m0).
+CLO-SET's published Premium plan lists $40/user/month and 300 API calls per
+user/month; additional 300-call usage is listed at $5, and Enterprise lists
+unlimited API calls. Those are account-library terms, not a CONNECT marketplace
+API offer. [Pricing](https://style.clo-set.com/service/pricing).
 
-Published CLO-SET pricing lists Premium at $40/user/month with 300 API calls per
-user/month, $5 for an additional 300 calls, and Enterprise with unlimited API
-calls. These are cloud-library terms, not a CONNECT marketplace API offer.
-Catalog synchronization and cached metadata would conserve calls.
-[CLO-SET pricing](https://style.clo-set.com/service/pricing).
+CLO-SET provides image similarity search in its UI for accessible content, but
+its public API availability and marketplace coverage were not established.
+[Search guide](https://support.clo-set.com/hc/en-us/articles/45303160683161-Search).
+The desktop [Library plug-in API](https://developer.clo3d.com/library.html) can show
+MAYA's external content inside CLO; it does not grant a marketplace catalog feed.
 
-CLO-SET also offers image similarity search in its UI for content the user can
-access. That is useful evidence of a product capability, but its availability as
-a public API and coverage of CONNECT were not established.
-[CLO-SET search guide](https://support.clo-set.com/hc/en-us/articles/45303160683161-Search).
+Native ZPRJ/ZPAC files are useful signals, not proof of editable panels or
+production-ready patterns. Mesh-only assets can be visual references. CONNECT
+allows sellers to set physical-production permission separately from license
+pricing. Maya displays source-reported permission without treating an asset's
+format or price as a manufacturing grant.
+[Seller documentation](https://support-connect.clo-set.com/hc/en-us/articles/45304331487769-Uploading-Items).
 
-## What MAYA already has
+## Verification
 
-| Current source | Existing behavior | Integration implication |
-| --- | --- | --- |
-| `backend/server/fabrics.mjs` | One OpenAI Responses image/text search; source-backed URLs; saved garment context; private research, dismissals and selections; deadlines and cancellation. | Reuse these conventions in a separate digital-assets service. OpenAI owns relevance decisions. |
-| `frontend/index.html`, submission upload flow | Initializes a submission, then uploads the image and summary concurrently. Individual uploads can fail or retry. | Submission initialization is too early to trigger matching. Add a durable ready/finalization contract. |
-| `backend/server/server.js`, `/api/admin/savepieces` | Validates and saves dissection with unique garment IDs and generation checks. | Use canonical saved garments when available; refine full-look research after dissection. |
-| `backend/server/server.js`, `/api/admin/clo-search` | Admin-authenticated keyword proxy using `CLOSET_API_TOKEN` and a configurable `CLOSET_SEARCH_URL`; returns at most 12 loosely mapped rows. | This is incomplete account-library plumbing, not verified marketplace sourcing. |
-| `backend/operation-workspace.html`, `startCloMatch` | Classifies the photo, sends keywords to that proxy, then displays returned rows. Its fallback scores a `window.CLO_LIBRARY` manifest by type/tags and returns three matches. | Replace the legacy route through a deliberate migration. It neither visually reranks returned candidates nor saves a submission shortlist. |
-| `docs/check.mjs` | Explicitly excludes the retired `clo-library.js` from published assets. | Do not restore the old manifest as the active integration. |
+Node20 code-only checks pass. The consolidated runtime tests cover sourced ordering and rejected invented URLs,
+zero-price preservation, canonical inputs, private reviews, generation conflicts,
+failed reads, changed-input staleness, duplicate claims/dispatch, provider failure,
+deletion races, deadlines and owner/worker authorization. DOM tests cover the
+three tabs, saved-only opening, selected assets and stale account/garment results.
+Aesthetic Control has a functional CLO gallery sample using a local fixture;
+CI assertions check tab/frame containment at phone, tablet and desktop sizes and
+changed aesthetic settings. No local browser was launched.
 
-The older Plan B copy says it grades the selected pattern, but the inspected match
-function only renders links/reference rows. That claim must be corrected when the
-feature is implemented. No working grading pipeline was found in this path.
-The current proxy also lacks canonical submission/garment context and does not
-map the documented style-list preview fields. Its configuration was not inspected;
-source presence alone does not establish a live connection.
+Live match usefulness, actual provider entitlement, queue activation and native
+CLO file compatibility remain unverified until the corresponding live checks.
 
-## Proposed sourcing flow
+## November 11 rollout
 
-1. **Finish the submission.** Add an authenticated, idempotent finalization action
-   after required uploads succeed. The server verifies ownership, the deletion
-   barrier and saved reference/summary before marking an immutable input revision
-   ready. Missing required uploads leave a recoverable incomplete submission.
-2. **Create durable work.** Save a job/outbox record within the submission and
-   dispatch it to a dedicated worker. Key it by account, submission, reference
-   revision and search-policy version. Persist claims/results so duplicate events
-   and worker restarts cannot casually duplicate paid searches. Reconcile an
-   uncertain provider outcome rather than automatically paying again.
-3. **Use canonical images.** If dissection is available, source against each saved
-   garment ID and its image. Otherwise prepare a full-look shortlist under a
-   separate look scope, without generating pattern drawings or pretending the
-   look is one garment. Bind later garment matches to saved piece revisions.
-4. **Search CONNECT.** Use the existing Responses image/text search design with
-   `connect.clo-set.com` as the allowed domain. Request actual Store listings;
-   exclude guides, community posts, gallery-only work and collection pages from
-   the asset shortlist. Keep manual source-link addition available for listings
-   that search does not discover.
-5. **Let OpenAI choose.** Compare garment category, silhouette, construction,
-   neckline, sleeves, closure, seams, length and drape. Prefer a useful editable
-   starting pattern over superficial color similarity. Include free and paid
-   candidates; price is a tie-breaker unless the owner sets a constraint.
-6. **Save and present.** Show up to ten distinct, supported choices with the
-   image, listing link, match explanation, required changes, and available
-   format/price/license facts. Keep unknown facts explicitly unknown. Saving,
-   dismissing and reopening use the same durable conventions as Fabrics.
-7. **Select a production starting point.** Save the chosen asset/version against
-   its garment. Acquisition and opening in CLO are separate from sourcing.
-   Adaptation, fit review and pattern export follow after acquiring an appropriate
-   native project and confirming the permitted use.
+`docs/setup-clo-queue.sh` is an idempotent Cloud Build step: dedicated queue
+`maya-clo-assets` in us-west1, one concurrent dispatch, three transport attempts,
+10–60 second backoff. Runtime receives enqueue on that queue and actAs on
+`maya-clo-dispatch`; dispatch receives invoke on maya-api. Cloud Tasks uses its
+service agent to issue OIDC. Existing provider environment values are preserved.
+[Google queue permissions](https://docs.cloud.google.com/tasks/docs/secure-queue-configuration),
+[authenticated tasks](https://docs.cloud.google.com/tasks/docs/creating-http-target-tasks).
 
-The first search-only implementation should use one provider request and a bounded
-tool call, like Fabrics. It can rank source-backed suggestions, but search captions
-alone do not establish that every candidate image was visually inspected. Record
-whether the match used listing text, a preview image, or both. If a pilot shows
-that explicit candidate-image comparison is necessary, add a separately budgeted
-OpenAI vision comparison over a bounded set of retrieved previews. Do not describe
-that extra pass as part of today's fabric implementation.
+`docs/check-clo-live.mjs` schedules the real submission shown in the owner's
+screenshot using the build identity, then observes the deployed worker's saved
+results. It never calls OpenAI locally, resets failed work, or retries an uncertain
+paid call. Successful verification writes a durable rollout receipt outside client
+submissions; later releases reuse it without paying again or relying on that
+submission remaining. It verifies queue/provider/storage, while authenticated
+browser interactions and match usefulness still need owner review.
 
-Automatic work must survive closing the browser; do not start a detached promise
-inside the submission request. Cloud Tasks infrastructure exists for callback
-leads, but digital sourcing needs its own job scope, worker authorization and
-deployment configuration. Existing callback credentials/queues are not assumed
-to authorize this workload. Limit work per submission and concurrency, especially
-for multi-garment looks; reopening saved research must never start another charge.
-
-## Matching evidence and asset usefulness
-
-MAYA should distinguish **editable pattern candidate**, **visual reference** and
-**unknown contents**. Native project/garment formats such as ZPRJ/ZPAC are useful
-signals, but file extension alone does not prove editable panels, sewing,
-measurements or production readiness. A mesh-only FBX/OBJ/GLTF listing can still
-be a reference. It should not be presented as a usable sewing pattern.
-
-Store free/paid/unknown independently from numeric price, so a genuine zero price
-survives normalization. Preserve the quoted currency and license tier. Record
-format, software version, pattern contents and rights only when supported by a
-listing or inspected file. A visually close asset with unknown rights may appear
-as a reference, but cannot be labeled production-ready. CONNECT provides a
-seller-controlled Physical Production option separately from its Basic/Extended
-price fields. [Seller documentation](https://support-connect.clo-set.com/hc/en-us/articles/45304331487769-Uploading-Items).
-
-Public discovery was demonstrated with real listings such as this
-[halter-neck wrap maxi dress](https://connect.clo-set.com/detail/e13b408cb5854b768e0fe22df9f4be98)
-and [corset mini dress](https://connect.clo-set.com/detail/c6c2de5fb82842e2936735ce05fe912a).
-These establish discoverability, not matches to a particular client submission.
-Search-index text and opened pages exposed different amounts of metadata. That
-supports a partial-coverage pilot, not a claim to search the entire marketplace
-or verify all formats, prices and permissions automatically.
-
-## Proposed implementation contract
-
-Create `backend/server/digital-assets.mjs` with provider adapters for CONNECT web
-discovery and, later, account-authorized CLO-SET content. Leave fabric-specific
-prompts and physical material storage in `fabrics.mjs`.
-
-Suggested private storage under `submissions/{id}/digital-assets/`:
-
-- `jobs/{jobId}.json`: immutable input revision, job state, attempt/claim,
-  provider status and result reference. Workers run under a service identity;
-  they do not invent an admin UID for jobs created by client submissions.
-- `research/{scopeId}.json`: source-backed automatic results for the full look
-  or a saved garment, bound to submission ownership and input revision.
-- `reviews/{adminUid}/{scopeId}.json`: private dismissals and selection, with
-  storage-generation checks. No client-specific research enters studio favorites.
-
-Each result needs provider/source ID, source URL, sourced preview, title, formats,
-price status and optional amount/currency/tier, pattern-content evidence,
-physical-production status, match reasons, differences, evidence mode and checked
-time. Store provenance for commercial claims; model confidence is not evidence.
-Keep access tokens and temporary signed download URLs out of persistent cards.
-
-Suggested new routes: an authenticated submission finalization action,
-admin-only `GET /api/admin/digital-assets/research`, explicit search/refresh and
-review mutation routes, and a separately authenticated task worker. These are
-proposed MAYA contracts, not existing CLO endpoints.
-
-Use the submission tombstone barrier before reads and before/after writes; reject
-stale input revisions and generation conflicts. Preserve successful stored data
-on read/provider failures. Enforce exact source hosts and safe HTTPS links, and
-never let model output introduce an uncited source or arbitrary server fetch.
-Send only the necessary reference image and garment descriptors to OpenAI; names,
-contacts, body measurements and private image URLs do not belong in web queries.
-
-In Brief and Backend 2, present **CLO Assets** alongside Fabrics using existing
-gallery, Inner, Glass, typography and image-inspection components. Keep preview
-cards compact; show alterations and evidence details on selection. The retired
-Plan B should delegate to this shared research rather than maintain another
-search/ranking implementation. Aesthetic Control previews and owner review remain
-required for visible changes.
-
-## Delivery sequence and acceptance
-
-1. **CONNECT sourcing pilot:** implement the separate service, private saved
-   research and gallery; evaluate on a small owner-reviewed set of real garments.
-   Measure relevant results, usable-pattern evidence, unsupported claims, latency
-   and provider usage. A valid result has a real listing and a useful explanation;
-   empty or short results are acceptable. Ten unrelated assets are not success.
-2. **Submission automation:** add finalization, durable jobs and worker dispatch;
-   prepare full-look research on submission and garment research after saved
-   dissection. Test duplicate delivery, partial uploads, deletion, worker restart,
-   stale revisions and paid-call uncertainty before activation.
-3. **Owned library:** integrate documented CLO-SET style listing/detail/preview
-   endpoints with explicit group scope, pagination and caching. Prefer already
-   acquired useful assets where appropriate; continue OpenAI matching.
-4. **CLO handoff:** open acquired projects through a validated desktop workflow;
-   inspect native patterns, adapt and review fit, then export. A later plug-in can
-   expose MAYA's selected assets inside CLO's Library. This needs a licensed CLO
-   runtime; the web backend is not assumed to provide headless CLO execution.
-
-Extend the consolidated checks for source-only results, zero-price preservation,
-unknown rights/formats, cross-submission denial, stale results, durable dismissals,
-read failures, cancellation/deadlines and no-charge reopening. Validate integration
-with actual provider responses separately from fixtures. No live OpenAI search,
-account-library call, asset download or CLO pattern edit was performed for this
-research.
-
-For broader coverage, obtain vendor answers on CONNECT catalog/search or partner
-API availability, preview reuse/caching rights, free/paid filters, format and
-physical-production fields, rate limits and image-search API availability. The
-immediate implementation can proceed as limited public-listing discovery while
-that access question remains open; it must not promise an exhaustive catalog.
+The server upload path now prepares the job before returning the final image or
+summary upload acknowledgment; the browser ready request is a fallback. Large
+references up to the existing 25MiB limit are accepted. Compact Backend 2 keeps
+Inner materials, removes outer panels, uses 5px toolbar padding/9px toolbar text,
+and opens Submissions/Bio/Settings in the drawer. Default and changed shared
+materials remain covered by CI; no local browser has been launched.

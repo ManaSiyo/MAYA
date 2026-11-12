@@ -16144,6 +16144,12 @@ async function doSaveToCloud() {
   }
   setStatus('');
   if (failed === 0) {
+    // Finalize CLO sourcing only after every submission upload is acknowledged.
+    // This queues durable work; reloading a shortlist never initiates a paid call.
+    try {
+      const ready=await fetch('/api/submissions/clo-ready',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({submissionId:folder_id}),signal:AbortSignal.timeout(15000)});
+      if(!ready.ok)console.warn('[Maya CLO] automatic sourcing pending');
+    } catch { console.warn('[Maya CLO] automatic sourcing pending'); }
     showToast('Submitted, ' + folder_name);
   } else if (ok === 0) {
     showError('The submission opened but no files landed (0/' + queue.length + '). ' +
