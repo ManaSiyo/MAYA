@@ -209,6 +209,14 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 12 — original fabric release correction:
+Build `8adab27e` for `13a7370` passed runtime, original drawer/operation and frontend
+browser checks, then stopped on fabric card padding. The generated Inner selector
+has ID specificity, which overrode the original-grid zero-padding rule. Qualify
+all original-grid layout selectors with the same component/preview ID scope used
+by the existing compact rail. Retain the real browser geometry assertions and
+Backend 2 behavior. Production remained on `0ddef69` before this correction.
+
 November 12 — original Backend drawer, Pipeline and card consistency:
 Four square fabric tiles per row (two on phones for readable captions and touch
 actions) use white Community-style hover descriptions and matching line spacing.

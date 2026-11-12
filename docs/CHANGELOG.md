@@ -4,6 +4,11 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 12 — original fabric release correction:** fix CSS specificity so
+  shared Inner padding cannot override edge-to-edge square fabric cards. The
+  Google browser gate caught the conflict and blocked deployment of `13a7370`;
+  keep its geometry assertions and Backend 2 styling intact.
+
 - **November 12 — original Backend consistency:** four square fabric columns
   (two on phones), white Community-style hover captions, one Submissions/Settings
   drawer across Brief and Operations, Pipeline with a running indicator and SVG
