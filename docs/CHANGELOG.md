@@ -4,6 +4,18 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 11 — Backend 2 playground and studio fabrics:** add a separate
+  single-screen Backend 2 entry under MAYA, preserving the original Brief layout.
+  Combine Full view/dissected images, Mark 1/Pipeline and a horizontal fabric strip;
+  move Bio, Submissions and engine-backed Settings into three circular drawer tabs.
+  Restore the original Backend's screen indicator. Add shared durable Global and
+  In House fabric favorites, with hearts left of X, optimistic concurrency and
+  failed-read protection; keep private research and selections separate. Order
+  Admin Users and traffic → Ad campaigns → Leads and unify collapsed fold spacing.
+  Add active Aesthetic Control previews, non-browser DOM/storage tests and CI
+  geometry checks. Node20 code checks pass; owner visual acceptance and deployment
+  remain pending. No Push or live provider calls.
+
 - **November 9 — stable Operation Room and retained drawer:** align inner/outer
   frames across empty/running/saved states, center the paired garment controls,
   balance header spacing and match Mark One/SVG to P3/Glass. Move Pipeline Live

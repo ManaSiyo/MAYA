@@ -12,6 +12,7 @@ Fabrics; there is no separate public Operation Room or WR workspace.
 | frontend/index.html | Client app: Inspo → Favorites → Community, drawer and sharing |
 | backend/status.html | Admin at /status.html |
 | backend/backend.html | Brief at /backend.html |
+| backend/backend2.html | Separate Backend 2 playground at /backend2.html |
 | backend/operation-workspace.html | Brief's embedded pattern workspace; direct visits return to Brief |
 | backend/privacy.html | Privacy and Terms; old Terms URLs redirect to #terms |
 | backend/verify.html | Public deployment check page |
@@ -118,14 +119,21 @@ caches recheck tombstones across server instances before returning old cards.
 
 Exact duplicates are presentation-grouped only when complete authored content and
 owner/client/project evidence agree. No approximate destructive deduplication.
-Fabrics lookbooks remain private to account/submission/garment, generation-checked,
+Fabric research and garment selections remain private to account/submission/garment, generation-checked,
 and respect client exclusions. Saved dissection reads never generate missing work.
 New private work is inside the submission prefix:
 `patterns/{adminUid}/{garmentId}.json` contains settings, input snapshots and image
 passes; `fabrics/{adminUid}/{garmentId}.json` contains research and dismissed URLs;
-`fabrics/{adminUid}/lookbook.json` contains favorites. Legacy private lookbooks are
+`fabrics/{adminUid}/lookbook.json` retains legacy bookmarks and garment selections. Legacy private lookbooks are
 read without writes and copied into the submission only on an explicit mutation.
 Deleting the submission removes its new work through the same tombstone barrier.
+Studio Favorites lives separately at `private/fabrics/studio-favorites.json`, behind
+Admin-authenticated GET/POST `/api/admin/fabrics/favorites`. It is shared by all
+backend admins, independent of clients and garments, and survives submission
+removal. Global and In House hearts save source bookmarks here. Generation checks
+reject stale writes; failed reads never become empty replacement stores. Client
+garment IDs, descriptions and selections are not copied into this shared library.
+Existing private lookbooks remain readable and are not automatically published.
 
 Lead stores use generation checks, deletion tombstones and bounded request receipts.
 Private Messages overflow is archived before trimming; archive failure blocks trim.
@@ -192,6 +200,35 @@ runs are bounded to 25 MB/100 versions per garment and research to 100 links/500
 dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
+
+November 11 — Backend 2 playground, prepared locally (not pushed or deployed):
+Admin orders Users and traffic → Ad campaigns → Leads. Every collapsed fold uses
+the same saved Closed sections spacing, including Recent changes and Feature
+requests. Hover/focus on MAYA exposes Backend and Backend 2; touch shows the links.
+The existing Backend keeps its layout, with its left-side screen indicator restored
+and shared studio fabric hearts added immediately left of each Global dismissal X.
+Favorites includes all saved Global/In House bookmarks, across admins and clients.
+
+Backend 2 is a separate copy at `/backend2.html`. The upper snapshot embeds the
+existing engine with an opt-in presentation adapter: Full view and dissected
+items on the left, Mark 1 / Pipeline on the right. Pipeline contains the live log,
+retrieval trace, source passages and composed prompt; its dot pulses only during
+an active run. A horizontal In House / Global / Favorites strip sits underneath.
+It loads saved fabric research without starting a paid search; Refresh remains an
+explicit search. The circular filing drawer tabs are Bio (biography, vision,
+measurements), Submissions and Settings. Settings forwards to the same saved
+pattern engine; failed saves block submission switching. The original Operation
+Room layout is unchanged outside the opt-in adapter.
+
+Aesthetic Control includes functional fabric hearts, a Backend 2 snapshot and
+three-tab drawer preview. Shared typography, Glass, Inner, fields and icon settings
+remain authoritative. Node20 code-only checks pass, including shared favorites,
+conflict/failed-read protection and DOM-based Backend 2 interactions. Linkedom is
+pinned for these non-browser DOM tests. CI includes phone/tablet/desktop checks at
+default and changed settings; these browser checks were not run locally. Fromsa's
+visual/interaction review is pending. No live model calls or Chrome access were
+used. Release verification now includes Backend 2 as a seventh endpoint.
+
 
 November 9 follow-up: Operation Room keeps 34/66 columns and center-view
 panning. Shared grid rows align both panels through empty, running and saved

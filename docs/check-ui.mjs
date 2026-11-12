@@ -148,6 +148,7 @@ try{
  await checkOperationLayout();
  await checkProjectActions();
  await checkFabricGallery();
+ await checkBackendTwo();
  console.log('UI, responsive layout, sharing performance and saved aesthetics passed',JSON.stringify(measure));
 }finally{await browser.close();}
 
@@ -373,4 +374,44 @@ try{
  console.log('Fabric gallery: exact In House/Global parity, two caption rows, same scrolling, default/saved settings, six widths, photo failure/recovery and active preview passed.');
 }catch(error){console.error(error);console.error((await page.locator('body').innerText()).slice(-2500));process.env.MAYA_CAPTURE&&await page.screenshot({path:'/private/tmp/maya-global-gallery-failure.png'});throw error;}finally{await browser.close();}
 
+}
+
+// CI-only geometry and keyboard checks; local code-only verification never launches this.
+async function checkBackendTwo(){
+ for(const [width,height]of [[390,844],[768,1024],[1440,900]]){
+  const page=await open('/backend/backend2.html',width,height);
+  await page.route('**/api/admin/patterns?*',route=>route.fulfill({json:{generation:'0',runs:[],settings:{}}}));
+  await page.route('**/api/admin/fabrics/research?*',route=>route.fulfill({json:{generation:'0',items:[],searched:true}}));
+  await page.route('**/api/admin/fabrics/favorites',route=>route.fulfill({json:{generation:'0',items:[]}}));
+  await page.evaluate(()=>{
+   localStorage.setItem('maya_admin_tok','fixture.'+btoa(JSON.stringify({sub:'snapshot-owner',exp:Math.floor(Date.now()/1000)+3600}))+'.fixture');
+   document.getElementById('upload-gate').classList.add('hidden');
+   const photo='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400"><rect width="900" height="400" fill="gray"/></svg>');
+   const pieces=[{id:'coat',name:'Coat',_image:photo,fabric:'Wool'}];window._openedSubmission={id:'snapshot-project'};window._currentSnap={lastSummary:{}};window._dissectTarget={hero:photo,card:{_dissection:{pieces}}};_publishSavedOperations({pieces});
+  });
+  const engineFrame=page.frames().find(f=>f.url().includes('operation-workspace.html'));
+  await engineFrame.waitForFunction(()=>document.getElementById('test-picker').value==='__full__');
+  for(const changed of [false,true]){
+   for(const target of [page,engineFrame])await target.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.pillX=18;d.pillY=9;d.inner.paddingX=18;d.type.P3.size=14;}MayaTypographyControls.apply(d);},changed);
+   const bounds=await page.evaluate(()=>{const r=id=>{const b=document.getElementById(id).getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right,height:b.height};};return {screen:r('screens'),image:r('operations-embed'),fabric:r('backend-two-fabric-strip')};});
+   assert.ok(bounds.image.height>150&&bounds.fabric.height>150);assert.ok(bounds.image.bottom<bounds.fabric.top);assert.ok(bounds.fabric.bottom<=height&&bounds.screen.right<=width);
+   const pair=await engineFrame.locator('#plan-a-view > .cols > .panel').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right};}));
+   assert.ok(pair[0].right<pair[1].left&&Math.abs(pair[0].bottom-pair[1].bottom)<2);assert.ok(pair[1].right<=bounds.image.right-bounds.image.left+1);
+   await engineFrame.getByRole('tab',{name:'Pipeline',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-pipeline').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
+   await engineFrame.getByRole('tab',{name:'Mark 1',exact:true}).click();assert.ok(await engineFrame.locator('#stage').isVisible());
+  }
+  await page.locator('#top-actions .hamburger').click();await page.getByRole('tab',{name:'Bio',exact:true}).click();assert.ok(await page.locator('#backend-two-bio').isVisible());
+  await page.getByRole('tab',{name:'Settings',exact:true}).click();assert.ok(await page.locator('#backend-two-settings').isVisible());
+  await page.getByRole('tab',{name:'Submissions',exact:true}).click();assert.ok(await page.locator('#backend-two-submissions').isVisible());
+  await page.keyboard.press('Escape');assert.equal(await page.locator('#clients-drawer').evaluate(e=>e.inert),true);
+  assert.deepEqual(page.errors,[]);await page.close();
+ }
+ const admin=await open('/backend/status.html');
+ const order=await admin.locator('details.fold[data-maya-section]').evaluateAll(nodes=>nodes.map(n=>n.id));assert.deepEqual(order.slice(0,3),['users-fold','ads-fold','leads-fold']);
+ await admin.evaluate(()=>document.querySelectorAll('details.fold').forEach(e=>e.open=false));
+ for(const gap of [16,34]){
+  await admin.evaluate(gap=>{const d=structuredClone(MayaTypographyControls.defaults);d.sectionSpacing={...d.sectionSpacing,insights:gap};MayaTypographyControls.apply(d);},gap);
+  const margins=await admin.locator('#users-fold,#ads-fold,#leads-fold,#changes-fold,#features-fold').evaluateAll(nodes=>nodes.map(n=>parseFloat(getComputedStyle(n).marginTop)));assert.ok(margins.every(value=>value===gap));
+ }
+ assert.deepEqual(admin.errors,[]);await admin.close();
 }

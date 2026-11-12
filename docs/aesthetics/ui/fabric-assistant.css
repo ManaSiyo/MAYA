@@ -23,3 +23,5 @@
 @media(any-pointer:coarse) and (max-width:600px){.fa-store-wrap{flex-wrap:nowrap;align-self:stretch;overflow-x:auto;overscroll-behavior-x:contain}}
 
 @media(hover:hover) and (pointer:fine){.fa-card-actions{opacity:0;pointer-events:none;transition:opacity .16s}.fa-product:hover .fa-card-actions,.fa-product:focus-within .fa-card-actions{opacity:1;pointer-events:auto}}
+
+.fa-favorite[aria-pressed="true"] svg path{fill:currentColor}

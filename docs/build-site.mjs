@@ -23,7 +23,7 @@ export function buildSite(commit='local'){
 }
 export async function verifyDeployment(commit,{fetchImpl=fetch}={}){
  if(!/^[0-9a-f]{40}$/.test(commit||''))throw Error('Use a full Git commit SHA.');
- const paths=['/release.json','/api/healthz','/','/status.html','/backend.html','/backend/operation-workspace.html'];
+ const paths=['/release.json','/api/healthz','/','/status.html','/backend.html','/backend2.html','/backend/operation-workspace.html'];
  const results=await Promise.allSettled(paths.map(async path=>{
   const response=await fetchImpl('https://maya.manasiyo.com'+path+'?release_check='+commit,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000)});
   if(!response.ok)throw Error(path+': HTTP '+response.status);

@@ -11,8 +11,8 @@ checks['deployment-verification']=async function(){
   const actual=fault===path?'b'.repeat(40):commit;
   return path==='/release.json'||path==='/api/healthz'?Response.json({commit:actual}):new Response(fault==='missing'&&path==='/backend.html'?'<head></head>':'<head><meta name="maya-build" content="'+actual+'"></head>');
  };
- assert.equal((await verifyDeployment(commit,{fetchImpl})).paths.length,6);assert.equal(seen.length,6);
- for(fault of ['/api/healthz','/backend.html','/backend/operation-workspace.html','missing','http'])await assert.rejects(verifyDeployment(commit,{fetchImpl}),/Production release is not verified/);
+ assert.equal((await verifyDeployment(commit,{fetchImpl})).paths.length,7);assert.equal(seen.length,7);
+ for(fault of ['/api/healthz','/backend.html','/backend2.html','/backend/operation-workspace.html','missing','http'])await assert.rejects(verifyDeployment(commit,{fetchImpl}),/Production release is not verified/);
  await assert.rejects(verifyDeployment('short',{fetchImpl}),/full Git commit/);
  console.log('Production verification: exact Hosting/API/Brief/iframe stamps required; stale, missing and failed responses cannot report success.');
 };
@@ -1658,6 +1658,27 @@ function store(){
 }
 const put=(s,key,data)=>s.records.set(key,{buf:Buffer.from(JSON.stringify(data)),generation:'1'});
 const create=(options={})=>createFabricSearch({apiKey:()=> 'fixture',fetchImpl:async()=>response([entry()]),...options});
+await test('studio favorites persist across admins, garments and submission deletion without leaking client metadata',async()=>{
+ const s=store(),service=create(s),product={url,title:'Red wool',image:'https://photo.example/red.jpg',garment:'PRIVATE CLIENT COAT',garmentId:'coat',description:'PRIVATE REQUEST'};
+ let book=await service.loadFavorites(user);assert.equal(book.generation,'0');
+ book=await service.saveFavorite(user,{generation:book.generation,action:'save',product});
+ assert.deepEqual(await service.loadFavorites(second),book);assert.doesNotMatch(JSON.stringify(book),/PRIVATE|garmentId/);
+ s.records.delete('submissions/project-A/submission.json');put(s,'deleted-submissions/project-A.json',{deleted:true});
+ assert.equal((await service.loadFavorites(second)).items[0].url,url,'Deleting a client does not delete studio bookmarks');
+ await assert.rejects(service.saveFavorite(second,{generation:'0',action:'remove',product}),e=>e.status===409);
+ book=await service.saveFavorite(second,{generation:book.generation,action:'save',product:{url:'/aesthetics/fabrics/Midnight%20Velvet.JPG',title:'Midnight Velvet'}});
+ assert.equal(book.items.length,2);assert.equal(book.items[0].evidence,'atelier_inventory');
+ book=await service.saveFavorite(user,{generation:book.generation,action:'remove',product});assert.equal(book.items.length,1);
+ await assert.rejects(service.loadFavorites({}),e=>e.status===401);
+ await assert.rejects(service.saveFavorite(user,{generation:book.generation,action:'save',product:{url:'javascript:alert(1)'}}));
+ let writes=0;const broken=create({read:async()=>({ok:false,status:503}),write:async()=>writes++});
+ await assert.rejects(broken.saveFavorite(user,{generation:'0',action:'save',product}),e=>e.status===503);assert.equal(writes,0);
+ const corrupt=create({read:async()=>({ok:true,buf:Buffer.from('{'),generation:'1'}),write:async()=>writes++});
+ await assert.rejects(corrupt.saveFavorite(user,{generation:'1',action:'save',product}),e=>e.status===503);assert.equal(writes,0);
+ const raceStore=store(),race=create(raceStore);
+ const outcomes=await Promise.allSettled([race.saveFavorite(user,{generation:'0',action:'save',product}),race.saveFavorite(second,{generation:'0',action:'save',product:{url:other,title:'Other'}})]);
+ assert.equal(outcomes.filter(r=>r.status==='fulfilled').length,1);assert.equal(outcomes.find(r=>r.status==='rejected').reason.status,409);assert.equal((await race.loadFavorites(user)).items.length,1);
+});
 await test('one direct OpenAI request returns up to ten source-linked photos without a second engine',async()=>{
  let calls=0;const events=[];
  const service=create({fetchImpl:async(target,options)=>{
@@ -2469,12 +2490,12 @@ checks['fabric-photo-retention']=async function(){
   addEventListener(type,fn){this.listeners[type]=fn;}
  }
  const nodes=[],node=(tag,cls)=>{const n=new Node(tag);n.className=cls;nodes.push(n);return n;};
- const context=vm.createContext({URL,location:{href:'https://maya.test/',origin:'https://maya.test'},view:'search',searchMode:'worldwide',context:{automatic:true,piece:{id:'coat'}},research:{generation:'1'},busy:false,saves:{pending:new Set()},window:{},node,icon:()=>node('button'),action:()=>node('button'),queueMicrotask(){},setTimeout:()=>1,clearTimeout(){}});
+ const context=vm.createContext({URL,location:{href:'https://maya.test/',origin:'https://maya.test'},view:'search',searchMode:'worldwide',context:{automatic:true,piece:{id:'coat'}},research:{generation:'1'},busy:false,saves:{pending:new Set()},favorites:{items:[]},favoriteQueue:{pending:new Set()},account:()=> 'owner',window:{},node,icon:()=>node('button'),action:()=>node('button'),queueMicrotask(){},setTimeout:()=>1,clearTimeout(){}});
  vm.runInContext(source.slice(source.indexOf('  function photoCandidates('),source.indexOf('  function paint()')),context);
  context.product={url:'https://cloth.example/coat',title:'Wool',image:'https://photos.example/wool.jpg',garmentId:'coat'};
  const original=vm.runInContext('card(product)',context);context.original=original;
  const photo=nodes.find(n=>n.tag==='img');photo.listeners.load();
- const remove=nodes.find(n=>n.tag==='button');assert.equal(remove.disabled,false);
+ const buttons=nodes.filter(n=>n.tag==='button'),favorite=buttons[0],remove=buttons[1];assert.equal(remove.disabled,false);assert.equal(favorite.attributes['aria-pressed'],'false');context.favorites.items=[context.product];vm.runInContext('reuseCard(original,product)',context);assert.equal(favorite.attributes['aria-pressed'],'true');
  context.busy=true;assert.equal(vm.runInContext('reuseCard(original,product)',context),original);assert.equal(remove.disabled,true);
  context.busy=false;context.research={generation:'2'};context.product={...context.product,image:'https://photos.example/new.jpg',price:'20',currency:'USD',unit:'yard'};
  assert.equal(vm.runInContext('reuseCard(original,product)',context),original);assert.equal(remove.disabled,false);assert.equal(nodes.filter(n=>n.tag==='img').length,1);assert.equal(photo.src,'https://photos.example/wool.jpg','New search evidence keeps the already loaded photograph');
@@ -2491,11 +2512,12 @@ checks['fabric-loading-reuse']=async function(){
  const reference={submissionId:'project',automatic:true,piece:{id:'coat'},referenceImage:'saved-reference',preferences:'green'};
  const noop=()=>{},control={textContent:'',setAttribute:noop};
  const c=vm.createContext({HTMLElement:class{},context:{...reference,inhouse:[{title:'Wool'}]},identity:'project|coat',originalImage:'',epoch:1,searchSeq:0,autoStarted:true,research:{items:[],searched:true},searchState:'complete',busy:false,
-   make:noop,rememberResults:noop,scope:()=> 'project|coat',reset:()=>resets++,restoreResults:()=>false,collapse:noop,expand:noop,workspace:{},els:{sub:{},send:{},input:{focus:noop},expand:control},paint:noop,account:()=> 'owner',loadBook:noop,loadInventory:async()=>{},loadResearch:async()=>{researchReads++;return {items:[],searched:true};},preparedPhoto:async()=> 'prepared',loadContext:async()=>{},current:()=>true,run:async()=>searches++,status:noop});
+   make:noop,rememberResults:noop,scope:()=> 'project|coat',reset:()=>resets++,restoreResults:()=>false,collapse:noop,expand:noop,workspace:{},els:{sub:{},send:{},input:{focus:noop},expand:control},paint:noop,account:()=> 'owner',loadBook:noop,loadFavorites:noop,loadInventory:async()=>{},loadResearch:async()=>{researchReads++;return {items:[],searched:true};},preparedPhoto:async()=> 'prepared',loadContext:async()=>{},current:()=>true,run:async()=>searches++,status:noop});
  vm.runInContext(fn('  async function open(','  function guardAccount'),c);c.next=reference;
  await vm.runInContext('open(next)',c);await vm.runInContext('open(next)',c);
  assert.equal(resets,0,'Reopening saved research does not compare the source to an unprepared image');assert.equal(researchReads,0);assert.equal(searches,0);assert.equal(c.context.inhouse.length,1);
  c.next={...reference,referenceImage:'changed-reference'};await vm.runInContext('open(next)',c);assert.equal(resets,1,'A changed input still resets');
+ c.autoStarted=false;c.research=null;c.loadResearch=async()=>null;c.next={...reference,savedOnly:true,referenceImage:'snapshot-reference'};await vm.runInContext('open(next)',c);assert.equal(searches,0,'Backend 2 snapshot never starts a paid search on opening');
  let fetches=0,resolveFetch,activeEpoch=1;const paints=[];
  const inventory=vm.createContext({epoch:1,context:{},inventoryRequest:null,inventoryData:null,inventoryVersion:0,inventoryStatus:'',AbortSignal,fetch:()=>{fetches++;return new Promise(resolve=>resolveFetch=resolve);},current:stamp=>stamp===activeEpoch,paint:()=>paints.push(activeEpoch)});
  vm.runInContext(fn('  async function loadInventory(','  async function loadContext('),inventory);
@@ -2655,4 +2677,78 @@ checks['submission-drawer-reuse']=async function(){
  run('clearSubmissionDrawer()');folders.length=0;wait=null;await run('openClientsDrawer()');release();await pending;
  assert.equal(list.children.length,0,'Invalidated or deleted submissions cannot reappear from a late response');
  console.log('Submission drawer: shared feed, concurrent opens, retained cards/photos, refresh failure, account reset and deletion races passed.');
+};
+
+checks['backend-two-shell']=async function(){
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const {document,Event}=parseHTML(readFileSync('backend/backend2.html','utf8'));
+ const engine=parseHTML('<html><body><select id="test-picker"><option>Coat</option></select><div id="drawer"><section class="sec" id="pattern-settings"><label for="pattern-hits">Passages</label><input id="pattern-hits" value="5"><button id="test-save">Save</button></section></div></body></html>');
+ const frame=document.getElementById('operations-embed');let edits=0,clicks=0,reads=0,flushed=0;
+ engine.document.getElementById('pattern-hits').addEventListener('input',()=>edits++);engine.document.getElementById('test-save').addEventListener('click',()=>clicks++);
+ Object.defineProperty(frame,'contentDocument',{value:engine.document});Object.defineProperty(frame,'contentWindow',{value:{Event:engine.Event,postMessage(){},flushPatternBeforeNavigation:async()=>{flushed++;return true;}}});
+ const listeners=new Map(),c=vm.createContext({document,location:{origin:'https://maya.test',href:''},queueMicrotask,URLSearchParams,
+  _savedOperation:null,_piecesContext:()=>({sid:'project',account:'owner',local:1,hero:'photo'}),_publishSavedOperations(){},_clearBriefPrivate(){},_postPiecesToOps(){},_updateBrandSub(){},goToScreen(){},toggleWorkspaceDrawer(){},showBriefFabrics(){},toggleBriefFabrics(){},showBriefItem(){},_briefView:'item',beginDissection(){},
+  openClientsDrawer:async()=>reads++,toggleClientsDrawer(force){const d=document.getElementById('clients-drawer');d.classList.toggle('open',force===undefined?!d.classList.contains('open'):force);},
+  addEventListener:(name,fn)=>listeners.set(name,fn),MayaFabricAssistant:{reset(){},open:async()=>{}}
+ });c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/backend-two.js','utf8'),c);
+ assert.equal(document.getElementById('workspace-title').textContent,'Backend 2');
+ assert.ok(document.querySelector('#backend-two-bio #op-biography'));assert.ok(document.querySelector('#backend-two-bio #op-measurements'));
+ assert.ok(document.querySelector('#backend-two-submissions #clients-list'));assert.ok(document.querySelector('#backend-two-fabric-strip #brief-fabrics'));assert.equal(document.getElementById('screen-onepager').hidden,true);
+ c.toggleWorkspaceDrawer();assert.equal(document.getElementById('clients-drawer').inert,false);
+ document.getElementById('backend-two-tab-settings').click();assert.equal(document.getElementById('backend-two-settings').hidden,false);
+ const field=document.getElementById('b2-setting-pattern-hits');assert.ok(field);field.value='8';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(engine.document.getElementById('pattern-hits').value,'8');assert.equal(edits,1);
+ document.getElementById('b2-setting-test-save').click();assert.equal(clicks,1);
+ document.getElementById('backend-two-tab-submissions').click();assert.equal(reads,1);assert.equal(document.getElementById('backend-two-settings').hidden,true);
+ c.toggleWorkspaceDrawer();assert.equal(document.getElementById('clients-drawer').inert,true);
+ await c.openBackendTwoSubmission({id:'project-B',name:'Second'});assert.equal(flushed,1);assert.match(c.location.href,/^\/backend2.html\?submission=project-B/);
+ frame.contentWindow.flushPatternBeforeNavigation=async()=>false;c.location.href='unchanged';await c.openBackendTwoSubmission({id:'project-C'});assert.equal(c.location.href,'unchanged','Failed settings saves block submission navigation');
+ console.log('Backend 2: snapshot DOM, drawer tabs, engine-backed settings and failed-save navigation passed without a browser.');
+};
+
+checks['backend-two-operation']=async function(){
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const {document,MutationObserver}=parseHTML(readFileSync('backend/operation-workspace.html','utf8'));
+ // Linkedom exposes select.value as a getter; browsers also provide the setter.
+ const picker=document.getElementById('test-picker');Object.defineProperty(picker,'value',{value:'',writable:true});
+ const notices=[],context={account:'owner',submissionId:'project',referenceImage:'data:image/png;base64,ZnVsbA=='};
+ const c=vm.createContext({document,MutationObserver,URLSearchParams,location:{search:'?layout=backend2',origin:'https://maya.test'},EMBEDDED:true,RUNNING:false,queueMicrotask,
+  $:id=>document.getElementById(id),parent:{postMessage:data=>notices.push(data)},operationAccount:()=> 'owner',operationSubmission:()=> 'project',FILES:{},TESTS:{},ACTIVE_TEST:null,_operationInputContext:context,
+  renderPassPills(){},setOperationRunning(value){c.RUNNING=value;},syncPatternSettings(){},lockPatternSettings(){},renderPatternHistory(){},viewGrounded(){},
+  showView(){document.getElementById('hero-img').src=c.FILES.front;},
+  pickTest(name){c.ACTIVE_TEST=name;c.FILES=c.TESTS[name];},
+  async onPickTest(name){c.pickTest(name);},
+  installOperationContext(next){c._operationInputContext=next;c.TESTS={Coat:{front:'data:image/png;base64,Y29hdA==',piece:{id:'coat'}}};picker.innerHTML='<option value="Coat">Coat</option>';c.pickTest('Coat');}
+ });vm.runInContext(readFileSync('docs/aesthetics/ui/backend-two-operation.js','utf8'),c);
+ c.installOperationContext(context);assert.equal(picker.value,'__full__');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);
+ assert.equal(picker.querySelector('optgroup').label,'Dissected view');assert.equal(c.FILES.piece.id,'coat','Full view does not replace the active pattern input');
+ await c.onPickTest('Coat');assert.equal(picker.value,'Coat');assert.equal(document.getElementById('hero-img').getAttribute('src'),c.FILES.front);
+ document.getElementById('backend-two-pipeline-tab').click();assert.equal(document.getElementById('stage').hidden,true);assert.equal(document.getElementById('backend-two-pipeline').hidden,false);
+ assert.ok(document.querySelector('#backend-two-pipeline #t-chunks'));assert.ok(document.querySelector('#backend-two-pipeline #live-log'));
+ c.setOperationRunning(true);assert.equal(document.querySelector('.backend-two-pipeline-dot').classList.contains('running'),true);
+ c.setOperationRunning(false);assert.equal(document.querySelector('.backend-two-pipeline-dot').classList.contains('running'),false);
+ document.getElementById('backend-two-pattern-tab').click();assert.equal(document.getElementById('stage').hidden,false);
+ await c.onPickTest('__full__');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);assert.equal(c.FILES.piece.id,'coat');
+ assert.ok(notices.some(n=>n.garmentId==='coat'));
+ console.log('Backend 2: full/dissected images, stable pattern input, Pipeline/Mark 1 and running indicator passed without a browser.');
+};
+
+checks['studio-favorites-client']=async function(){
+ const vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const source=readFileSync('docs/aesthetics/ui/fabric-assistant.js','utf8');
+ let owner='A',writes=0,state={items:[],generation:'0'},failRead=false,releasePost;
+ const c=vm.createContext({structuredClone,AbortSignal,account:()=>owner,window:{addEventListener(){}},els:{saveStatus:{textContent:''}},paint(){},json:async(url,options)=>{
+  assert.equal(url,'/api/admin/fabrics/favorites');
+  if(options?.method==='POST'){writes++;const body=JSON.parse(options.body);assert.equal(body.generation,state.generation);if(releasePost)await new Promise(resolve=>releasePost=resolve);state={items:body.action==='save'?[body.product]:[],generation:String(Number(state.generation)+1)};}
+  else if(failRead)throw Error('Unavailable');
+  return structuredClone(state);
+ }});
+ vm.runInContext(source.slice(source.indexOf('  let favorites='),source.indexOf('  let bookRead=')),c);
+ await vm.runInContext('loadFavorites()',c);c.product={url:'https://cloth.example/wool',title:'Wool'};
+ await vm.runInContext('toggleFavorite(product)',c);assert.equal(writes,1);assert.equal(vm.runInContext('favorites.items.length',c),1);
+ owner='B';await vm.runInContext('loadFavorites(true)',c);assert.equal(vm.runInContext('favorites.items[0].url',c),c.product.url);
+ failRead=true;await vm.runInContext('loadFavorites(true)',c);assert.equal(vm.runInContext('favorites.items.length',c),1,'Failed reads retain saved fabrics');failRead=false;
+ releasePost=true;const pending=vm.runInContext('toggleFavorite(product)',c);await Promise.resolve();await Promise.resolve();vm.runInContext('toggleFavorite(product)',c);assert.equal(writes,2,'Repeated clicks are deduplicated');
+ while(typeof releasePost!=='function')await Promise.resolve();releasePost();await pending;assert.equal(vm.runInContext('favorites.items.length',c),0);
+ assert.match(c.els.saveStatus.textContent,/Removed/);
+ console.log('Studio favorites client: shared reads, heart save/remove, failed-read retention and duplicate-click suppression passed.');
 };

@@ -62,6 +62,47 @@
     ({submittedRequest,lastSearchStores,completedStatus,filterTouched,image,originalImage,view}=cached);products=structuredClone(cached.products);searchDetails=structuredClone(cached.searchDetails);history=structuredClone(cached.history);activeStores=new Set(cached.stores);context.inhouse=cached.inhouse;searchState=cached.searchState==='complete'?'complete':'interrupted';autoStarted=true;els.details.set(searchDetails);els.observation.textContent=cached.observation||searchDetails?.observation||'';paintPhoto();status(searchState==='complete'?completedStatus:'Search interrupted. Loaded suggestions are kept; Refresh to continue.');return true;
   }
   let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null,inventoryData=null,inventoryVersion=0;
+  let favorites={items:[],generation:null},favoriteAccount='',favoriteEpoch=0,favoriteSeq=0,favoriteRead=null;
+  let favoriteQueue={tail:Promise.resolve(),pending:new Set()};
+  const favoriteChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('maya-studio-fabrics'):null;
+  function checkFavoriteAccount(){
+    const next=account();if(next===favoriteAccount)return;
+    favoriteAccount=next;favoriteEpoch++;favoriteSeq++;favoriteRead=null;
+    favorites={items:[],generation:null};favoriteQueue={tail:Promise.resolve(),pending:new Set()};
+  }
+  async function loadFavorites(force=false){
+    checkFavoriteAccount();if(!favoriteAccount)return;
+    if(favoriteRead&&!force)return favoriteRead;
+    const owner=favoriteAccount,stamp=favoriteEpoch,seq=++favoriteSeq;
+    const valid=()=>owner===account()&&stamp===favoriteEpoch&&seq===favoriteSeq;
+    const task=(async()=>{try{
+      const data=await json('/api/admin/fabrics/favorites',{signal:AbortSignal.timeout(10000)});
+      if(!Array.isArray(data.items)||typeof data.generation!=='string')throw Error('Favorites unavailable. Try again.');
+      if(valid()){favorites=data;paint();}
+    }catch(e){if(valid())els.saveStatus.textContent=e.message;}})();
+    favoriteRead=task;try{await task;}finally{if(favoriteRead===task)favoriteRead=null;}
+  }
+  function toggleFavorite(product){
+    checkFavoriteAccount();if(!favoriteAccount)return;
+    const queue=favoriteQueue,owner=favoriteAccount,stamp=favoriteEpoch;
+    const valid=()=>owner===account()&&stamp===favoriteEpoch;
+    if(queue.pending.has(product.url))return;
+    const snapshot=structuredClone(product),actionName=favorites.items.some(p=>p.url===product.url)?'remove':'save';
+    queue.pending.add(product.url);paint();
+    queue.tail=queue.tail.catch(()=>{}).then(async()=>{
+      if(!valid())return;
+      if(favorites.generation===null){await loadFavorites(true);if(!valid()||favorites.generation===null)return;}
+      favoriteSeq++;
+      try{
+        const data=await json('/api/admin/fabrics/favorites',{method:'POST',body:JSON.stringify({generation:favorites.generation,action:actionName,product:snapshot})});
+        if(!valid())return;favoriteSeq++;favorites=data;els.saveStatus.textContent=actionName==='save'?'Saved to studio favorites.':'Removed from studio favorites.';
+        favoriteChannel?.postMessage({changed:true});
+      }catch(e){if(valid()){favorites.generation=null;els.saveStatus.textContent=e.name==='TimeoutError'?'Save not confirmed. Refresh Favorites before retrying.':e.message;await loadFavorites(true);}}
+    }).finally(()=>{queue.pending.delete(product.url);if(valid())paint();});
+    return queue.tail;
+  }
+  favoriteChannel?.addEventListener('message',()=>{if(els&&account())void loadFavorites(true);});
+  window.addEventListener('focus',()=>{if(els&&account())void loadFavorites(true);});
   let bookRead=null,bookLoadedAt=0;
   // Only decoded cards survive a tab switch. Pending image requests retain
   // their normal deadlines; private nodes are discarded on every scope reset.
@@ -114,7 +155,7 @@
   function showStatus(){els.status.textContent=view==='search'?searchStatus:view==='inhouse'?inventoryStatus:'';}
   function status(message){searchStatus=message||'';showStatus();}
   function reset() {
-    searchStatus='';inventoryStatus='';epoch++;photoSeq++;searchSeq++;autoStarted=false;searchMode='worldwide';activeStores=new Set();filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();clearParkedCards();
+    checkFavoriteAccount();searchStatus='';inventoryStatus='';epoch++;photoSeq++;searchSeq++;autoStarted=false;searchMode='worldwide';activeStores=new Set();filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();clearParkedCards();
     const nextProject=projectScope();if(nextProject!==projectIdentity){resultCache.clear();preparedPhotos.clear();bookRead=null;bookLoadedAt=0;bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
     controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
     research=null;researchRead=null;researchReady=Promise.resolve();retracted=new Set();searchDetails=null;searchState='idle';els?.details.set(null);
@@ -157,7 +198,7 @@
     const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');tabs.dataset.mayaControl='segmented';
     const inhouse=action('In House',()=>{view='inhouse';paint();});
     const search=action('Global',()=>chooseSearch('worldwide'));
-    const saved=action('Favorites',async()=>{view='saved';paint();await loadBook();});
+    const saved=action('Favorites',async()=>{view='saved';paint();await loadFavorites(true);});
     const fresh=action('New search',()=>open({...context,forceReset:true}));
     for(const button of [inhouse,search,saved])button.dataset.mayaSegment='';
     const filter=icon('Search specific shops','M4 5h16M7 12h10M10 19h4',()=>{storeWrap.hidden=!storeWrap.hidden;filter.setAttribute('aria-expanded',String(!storeWrap.hidden));if(!storeWrap.hidden)storeButtons[0].focus();});filter.setAttribute('aria-expanded','false');
@@ -425,13 +466,20 @@
       title.textContent=p.title;caption.textContent=[knownPrice,source].filter(Boolean).join(' · ');link.setAttribute('aria-label',[p.title,use,source,knownPrice,p.reason].filter(Boolean).join(' · '));
     };item._fabricUpdateText(p);
     link.append(title,caption);item.append(link);
+    const controls=node('div','fa-card-actions');
+    const favorite=icon('Save to studio favorites','M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z',()=>toggleFavorite(p));
+    favorite.classList.add('fa-favorite');controls.append(favorite);
+    let removing=false,remove;
     if(view==='search'&&context.automatic){
-      let removing=false;const controls=node('div','fa-card-actions'),remove=icon('Remove this source','M6 6l12 12M18 6L6 18',async()=>{if(removing)return;removing=true;try{await dismiss(p,remove);}finally{removing=false;item._fabricUpdateControls?.();}});item._fabricUpdateControls=()=>{remove.disabled=removing||busy||!research;};controls.append(remove);item.append(controls);
+      remove=icon('Remove this source','M6 6l12 12M18 6L6 18',async()=>{if(removing)return;removing=true;try{await dismiss(p,remove);}finally{removing=false;item._fabricUpdateControls?.();}});controls.append(remove);
     }
-    if(view==='saved'){
-      const controls=node('div','fa-card-actions'),remove=action('Remove',()=>save(p,'remove',remove));
-      item._fabricUpdateControls=()=>{remove.disabled=saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''));};controls.append(remove);item.append(controls);
-    }
+    item._fabricUpdateControls=()=>{
+      const saved=favorites.items.some(row=>row.url===p.url),label=saved?'Remove from studio favorites':'Save to studio favorites';
+      favorite.setAttribute('aria-pressed',String(saved));favorite.setAttribute('aria-label',label);favorite.title=label;
+      favorite.disabled=!account()||favoriteQueue.pending.has(p.url);
+      if(remove)remove.disabled=removing||busy||!research;
+    };
+    item.append(controls);
     item._fabricUpdateControls?.();return item;
   }
   function reuseCard(old,product){
@@ -450,7 +498,7 @@
     els.details.setEnabled(view==='search'&&!context.automatic);
     els.filter.hidden=view!=='search'||!!context.automatic;if(view!=='search'||context.automatic){els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');}
     for(const button of els.storeButtons){button.setAttribute('aria-pressed',String(activeStores.has(button.dataset.storeGroup)));button.disabled=searchState==='preparing';}
-    const candidates=view==='saved'?book.items.filter(p=>!context.piece?.id||p.garmentId===context.piece.id||book.selectedByGarment?.[context.piece.id]===p.url):view==='inhouse'?inventory():products;
+    const candidates=view==='saved'?favorites.items:view==='inhouse'?inventory():products;
     const allowed=new Set(storeGroups.filter(group=>activeStores.has(group.id)).flatMap(group=>group.hosts));
     const items=candidates.filter(p=>view!=='search'||searchMode==='worldwide'||(()=>{try{return allowed.has(new URL(p.url).hostname.replace(/^www\./,''));}catch{return false;}})());
     // Retained cards keep their actual image/link nodes through Refresh and
@@ -466,7 +514,7 @@
     for(const item of cards)item.hidden=false;
     const keep=new Set(cards);for(const child of [...els.results.children])if(!keep.has(child))releaseCard(child);
     cards.forEach((el,index)=>{if(els.results.children[index]!==el)els.results.insertBefore(el,els.results.children[index]||null);});
-    if(!items.length&&!(context.automatic&&view==='search')&&(view!=='search'||(!busy&&searchState!=='preparing'))&&!(view==='inhouse'&&inventoryRequest))els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?(inventoryStatus||'No in-house fabrics yet.'):searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
+    if(!items.length&&!(context.automatic&&view==='search')&&(view!=='search'||(!busy&&searchState!=='preparing'))&&!(view==='inhouse'&&inventoryRequest))els.results.append(node('p','fa-empty',view==='saved'?'Studio favorites appear here across every client and admin.':view==='inhouse'?(inventoryStatus||'No in-house fabrics yet.'):searchState==='interrupted'?'Search not completed. Refresh to retry.':searchState==='complete'?'No source-backed fabric suggestions yet.':context.automatic?'Ready to search this saved look.':'Describe a fabric or add a reference photo.'));
     els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
   }
   async function chooseSearch(mode,group){
@@ -482,7 +530,7 @@
   async function refreshView(){
     // Retry only failed photographs on explicit Refresh; healthy loaded images stay mounted.
     for(const item of els.results.querySelectorAll('.has-missing-photo'))item._fabricSignature='';
-    if(view==='saved')return loadBook(true);
+    if(view==='saved')return loadFavorites(true);
     if(view==='inhouse'){try{if(context.loadInhouse){const stamp=epoch;const items=await context.loadInhouse();if(current(stamp)){context.inhouse=items;paint();}}else await loadInventory(true);}catch(e){inventoryStatus=e.message;showStatus();}return;}
     if(context.automatic&&!context.submissionId&&reopenSaved)return reopenSaved();
     if(searchState==='preparing')return;
@@ -565,26 +613,27 @@
     if(next.host instanceof HTMLElement){collapse();host=next.host;host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';}
     else if(!next.silent){host=null;expand();}
     workspace.hidden=!!next.silent;
-    els.sub.textContent=next.submissionId?'This submission’s fabrics'+(next.piece?.name?' · '+next.piece.name:''):'Open a submission to save favorites';
+    els.sub.textContent=next.submissionId?'This submission’s fabrics'+(next.piece?.name?' · '+next.piece.name:''):'Studio favorites are shared across the backend';
     if(changed&&!restored)searchState='preparing';
     paint();
     if(!account()){status('Sign in to Admin to search fabrics.');return;}
     // The book belongs to the project, so photo loading or garment changes must
     // not cancel its only hydration request.
     if(!restored)void loadBook();
+    void loadFavorites();
     // Inventory must remain usable even if the private reference photo fails.
     void loadInventory().catch(()=>{});
-    if(changed&&!restored)status(context.automatic?'Searching for Fabrics':'Describe what you need. A photo is optional.');
+    if(changed&&!restored)status(next.savedOnly?'':context.automatic?'Searching for Fabrics':'Describe what you need. A photo is optional.');
     els.send.disabled=true;
     try{
       if(context.automatic&&(changed||!research)){
         researchReady=loadResearch(stamp);const saved=await researchReady;if(!current(stamp)||preparationSequence!==searchSeq)return;
         if(saved&&(saved.searched||saved.items.length)){restored=true;autoStarted=true;searchState='complete';completedStatus=saved.items.length?'':'No saved sources. Refresh to search.';status(completedStatus);paint();rememberResults();}
       }
-      if(changed&&!restored&&next.referenceImage){const value=await preparedPhoto(next.referenceImage);if(!current(stamp)||preparationSequence!==searchSeq)return;image=value;originalImage=next.referenceImage;paintPhoto();}
-      if(!restored)await loadContext(stamp);if(!current(stamp)||preparationSequence!==searchSeq)return;
-      if(searchState==='preparing'){searchState='idle';paint();}
-      if(current(stamp)&&context.automatic&&!next.silent&&!autoStarted){autoStarted=true;await run();}
+      if(changed&&!restored&&!next.savedOnly&&next.referenceImage){const value=await preparedPhoto(next.referenceImage);if(!current(stamp)||preparationSequence!==searchSeq)return;image=value;originalImage=next.referenceImage;paintPhoto();}
+      if(!restored&&!next.savedOnly)await loadContext(stamp);if(!current(stamp)||preparationSequence!==searchSeq)return;
+      if(searchState==='preparing'){searchState='idle';if(next.savedOnly)status('No saved fabric research yet. Refresh to search.');paint();}
+      if(current(stamp)&&context.automatic&&!next.silent&&!next.savedOnly&&!autoStarted){autoStarted=true;await run();}
     }catch(e){if(current(stamp)){searchState='interrupted';status(e.message);paint();}}
     finally{if(current(stamp)&&!busy)els.send.disabled=false;}
     if(current(stamp)&&!next.silent&&!context.automatic)els.input.focus();

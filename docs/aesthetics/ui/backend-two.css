@@ -1,0 +1,60 @@
+/* Layout only. Aesthetic Control owns materials, typography, fields and icons. */
+body.backend-two #screens{position:fixed;inset:68px 18px 16px;display:grid;grid-template-rows:minmax(0,1fr) clamp(180px,27dvh,270px);gap:var(--maya-form-field-gap,12px);height:auto;padding:0;overflow:hidden;scroll-snap-type:none}
+body.backend-two #screen-onepager{display:none!important}
+body.backend-two #screen-operating{display:block;min-height:0;height:100%;padding:0;margin:0;overflow:hidden}
+body.backend-two #operations-embed{height:100%!important;min-height:0;display:block}
+#backend-two-fabric-strip{min-height:0;overflow:hidden}
+body.backend-two #brief-fabrics{display:flex!important;width:100%;height:100%;min-height:0;margin:0;padding:0}
+#backend-two-fabric-strip .fabric-assistant.is-inline{overflow:hidden}
+#backend-two-fabric-strip .fa-header{flex-wrap:nowrap;gap:var(--maya-form-field-gap,8px)}
+#backend-two-fabric-strip .fa-header .fa-tabs{flex:1 1 auto;flex-wrap:nowrap;overflow-x:auto}
+#backend-two-fabric-strip .fa-toolbar{flex-wrap:nowrap}
+#backend-two-fabric-strip .fa-body{min-height:0;flex:1 1 0;overflow:hidden}
+#backend-two-fabric-strip .fa-results{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:clamp(150px,15vw,230px);grid-template-rows:minmax(0,1fr);grid-auto-rows:auto;overflow-x:auto;overflow-y:hidden;flex:1 1 0;align-content:stretch;align-items:stretch}
+#backend-two-fabric-strip .fa-product{height:auto;min-height:0;grid-column:auto;align-self:stretch}
+#backend-two-fabric-strip .fa-empty{grid-column:auto;width:max-content;max-width:72vw;align-self:center}
+#backend-two-fabric-strip .fa-product-image{aspect-ratio:auto}
+#backend-two-fabric-strip .fa-product-link{height:100%}
+#backend-two-fabric-strip .fa-card-actions{top:4px;right:4px;flex-wrap:nowrap}
+#backend-two-fabric-strip .fa-save-status{flex:none}
+body.backend-two #clients-drawer{display:flex;flex-direction:column;overflow:hidden}
+body.backend-two #clients-drawer [hidden]{display:none!important}
+.backend-two-tabs{display:flex;gap:var(--maya-icon-pill-gap,6px);flex:none;justify-content:center;margin-bottom:var(--maya-form-field-gap,12px)}
+.backend-two-tabs button{flex:1 1 0;min-width:0}
+#backend-two-bio,#backend-two-settings,#backend-two-submissions{flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain}
+#backend-two-bio .op-info-col{width:100%;height:auto;max-height:none;overflow:visible;padding:0}
+#backend-two-submissions{display:flex;flex-direction:column}
+#backend-two-submissions #clients-list{flex:1 1 0;overflow:auto}
+#backend-two-settings .sec{margin-bottom:var(--maya-form-field-gap,16px)}
+#backend-two-settings :is(input,select,textarea){max-width:100%;width:100%;box-sizing:border-box}
+#backend-two-settings .row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--maya-form-field-gap,8px)}
+#backend-two-settings .pillrow,#backend-two-settings .logic-actions{display:flex;flex-wrap:wrap;gap:var(--maya-icon-pill-gap,6px)}
+#backend-two-settings .logic textarea{display:none}
+#backend-two-settings .logic.editing textarea{display:block}
+#backend-two-settings .logic.editing .logic-chips{display:none}
+#backend-two-settings p,#backend-two-settings pre{overflow-wrap:anywhere;white-space:pre-wrap}
+body.backend-two-operation,html:has(body.backend-two-operation){height:100%;min-height:0;overflow:hidden}
+body.backend-two-operation #hscroll,body.backend-two-operation .hpane-main,body.backend-two-operation .wrap,body.backend-two-operation #plan-a-view{height:100%;min-height:0;margin:0;padding:0;max-width:none;overflow:hidden}
+body.backend-two-operation .cols[data-maya-operation-layout]{height:100%;min-height:0;grid-template-columns:minmax(0,34fr) minmax(0,66fr);grid-template-rows:auto minmax(0,1fr);gap:var(--maya-form-field-gap,12px)}
+body.backend-two-operation .cols[data-maya-operation-fixed]>.panel{grid-row:1 / span 2;grid-template-rows:subgrid;min-height:0;overflow:hidden}
+body.backend-two-operation .operation-layout-toolbar{min-height:0;max-width:100%}
+body.backend-two-operation .operation-layout-garment,body.backend-two-operation .operation-layout-pattern{height:100%;min-height:0;aspect-ratio:auto;contain:size}
+body.backend-two-operation .operation-layout-garment>img{position:absolute;inset:0;max-width:100%;max-height:100%}
+body.backend-two-operation .pattern-head{justify-content:center}
+body.backend-two-operation [hidden]{display:none!important}
+#backend-two-pipeline{margin:0;min-height:0;overflow:auto;overscroll-behavior:contain;contain:size;grid-row:2}
+#backend-two-pipeline .trace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#backend-two-pipeline pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:none}
+#backend-two-pipeline .live{margin-top:0}
+.backend-two-pipeline-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good,#5acf6e);margin-left:8px;opacity:.4}
+.backend-two-pipeline-dot.running{opacity:1;animation:backend-two-live 1.4s ease-in-out infinite}
+@keyframes backend-two-live{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.backend-two-pipeline-dot.running{animation:none}}
+@media(max-width:600px){body.backend-two #screens{inset:62px 8px 8px;grid-template-rows:minmax(0,1fr) clamp(200px,32dvh,260px)}#backend-two-fabric-strip .fa-header{flex-wrap:wrap}#backend-two-fabric-strip .fa-header .fa-tabs{flex-basis:100%}#backend-two-fabric-strip .fa-toolbar{margin-left:auto}body.backend-two-operation .cols[data-maya-operation-layout]{grid-template-columns:minmax(0,40fr) minmax(0,60fr)}body.backend-two-operation .operation-layout-toolbar:has(.picker-wrap){flex-wrap:wrap}#backend-two-pipeline .trace-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-height:520px){body.backend-two #screens{position:relative;inset:auto;margin:62px 8px 8px;min-height:560px;grid-template-rows:340px 210px;overflow:visible}body.backend-two{overflow:auto}}
+/* The frontend's three circular filing tabs, using shared Glass icon controls. */
+body.backend-two .backend-two-tabs{justify-content:flex-start;gap:14px;position:relative}
+body.backend-two .backend-two-tabs .pg-tab{flex:none;position:relative;overflow:visible}
+body.backend-two .pg-tab.on::after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-5px;border:5px solid transparent;border-top-color:var(--maya-glass-border,currentColor)}
+body.backend-two .pg-tabtitle{flex:1;min-width:0;padding-left:4px}
+html.embedded body.backend-two-operation #hscroll>.hpane-main>.wrap{padding:0}

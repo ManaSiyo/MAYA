@@ -280,6 +280,35 @@ export function createFabricSearch({fetchImpl=fetch,read,write,apiKey=()=>'',mod
     // A saved suggestion is a bookmark, never newly verified inventory.
     return {url:safe,image:sourceURL(input.image),imageCandidates:list(input.imageCandidates).map(sourceURL).filter(Boolean).slice(0,4),title:text(input.title,180),description:text(input.description,1400),merchant:new URL(safe).hostname,garment:text(input.garment,80),garmentId:text(input.garmentId,100),evidence:'web_suggestion',availability:'unknown',price:'',unit:'',currency:'',composition:'',savedAt:new Date(now()).toISOString()};
   }
+  // Studio bookmarks are deliberately independent of an account, client or submission.
+  // Private research and garment selections retain their existing scoped stores.
+  const favoritesPath='private/fabrics/studio-favorites.json';
+  async function loadFavorites(user){
+    if(!user?.sub)throw fail('Sign in to Admin.',401);
+    const found=await read(favoritesPath);
+    if(!found.ok){if(found.status===404)return {items:[],generation:'0'};throw fail('Favorites unavailable. Try again.',503);}
+    try{
+      const data=JSON.parse(found.buf.toString('utf8'));
+      if(data.schema!==1||!Array.isArray(data.items)||data.items.length>1000||!found.generation||data.items.some(p=>!p||savedProduct(p).url!==p.url)||new Set(data.items.map(p=>p.url)).size!==data.items.length)throw Error();
+      return {items:data.items,generation:String(found.generation)};
+    }catch{throw fail('Favorites could not be read. Nothing was changed.',503);}
+  }
+  async function saveFavorite(user,body){
+    if(!['save','remove'].includes(body.action))throw fail('Choose a favorites action.');
+    const book=await loadFavorites(user);
+    if(String(body.generation)!==book.generation)throw fail('Favorites changed. Review the refreshed list and try again.',409);
+    const product=savedProduct(body.product);
+    // Do not copy client-specific garment IDs, names or research descriptions into
+    // the studio library. This is a source bookmark, not a shared client record.
+    for(const key of ['garment','garmentId','description'])delete product[key];
+    const existing=book.items.find(p=>p.url===product.url);
+    const items=book.items.filter(p=>p.url!==product.url);
+    if(body.action==='save')items.unshift(existing||{...product,savedAt:new Date(now()).toISOString()});
+    if(items.length>1000)throw fail('Favorites is full. Remove a fabric before adding another.');
+    try{await write(favoritesPath,Buffer.from(JSON.stringify({schema:1,items})),'application/json',book.generation);}
+    catch(e){throw fail(e.status===412?'Favorites changed. Review the refreshed list and try again.':'Favorite did not save. Try again.',e.status===412?409:503);}
+    return loadFavorites(user);
+  }
   async function saveBook(user, body) {
     const id = text(body.submissionId, 121);
     let garments;
@@ -367,7 +396,7 @@ export function createFabricSearch({fetchImpl=fetch,read,write,apiKey=()=>'',mod
     return stats;
     })(),signal);
   }
-  return {search,loadBook,saveBook,loadResearch,dismissResearch,exportResearch};
+  return {search,loadBook,saveBook,loadFavorites,saveFavorite,loadResearch,dismissResearch,exportResearch};
 }
 
 export function mountFabricSearch(app, { requireAdmin, requireAuthHeader, json, rateLimit, ...deps }) {
@@ -397,6 +426,14 @@ export function mountFabricSearch(app, { requireAdmin, requireAuthHeader, json, 
       if (res.headersSent) res.end(JSON.stringify({ type: 'error', message: error }) + '\n');
       else res.status(e.status || 503).json({ error });
     }
+  });
+  app.get('/api/admin/fabrics/favorites',requireAuthHeader,async(req,res)=>{
+    try{const user=await requireAdmin(req);res.set('Cache-Control','no-store').json({ok:true,...await service.loadFavorites(user)});}
+    catch(e){res.status(e.status||503).json({error:e.status?e.message:'Favorites unavailable.'});}
+  });
+  app.post('/api/admin/fabrics/favorites',requireAuthHeader,json({limit:'12kb'}),async(req,res)=>{
+    try{const user=await requireAdmin(req);res.set('Cache-Control','no-store').json({ok:true,...await service.saveFavorite(user,req.body||{})});}
+    catch(e){res.status(e.status||503).json({error:e.status?e.message:'Favorite did not save.'});}
   });
   app.get('/api/admin/fabrics/lookbook', requireAuthHeader, async (req, res) => {
     try { const user = await requireAdmin(req); res.set('Cache-Control','no-store').json({ ok: true, ...await service.loadBook(user, String(req.query.submissionId || '')) }); }

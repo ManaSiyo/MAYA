@@ -1,0 +1,103 @@
+/* Backend 2 is a separate shell around the Brief's existing saved-work contracts. */
+(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id),frame=$('operations-embed'),drawer=$('clients-drawer');
+ document.body.classList.add('backend-two');
+ const screens=$('screens');screens.setAttribute('aria-label','Backend 2 snapshot');
+ const bio=document.createElement('section');bio.id='backend-two-bio';bio.dataset.mayaScrollbar='visible';bio.setAttribute('role','tabpanel');
+ bio.append(document.querySelector('.op-info-col'));
+ const submissions=document.createElement('section');submissions.id='backend-two-submissions';submissions.setAttribute('role','tabpanel');submissions.append($('clients-count'),$('clients-list'));
+ const settings=document.createElement('section');settings.id='backend-two-settings';settings.dataset.mayaScrollbar='visible';settings.setAttribute('role','tabpanel');
+ const tabs=document.createElement('nav');tabs.className='backend-two-tabs pg-tabrow';tabs.dataset.mayaControl='segmented';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Workspace drawer');
+ const panels={bio,submissions,settings};let activeTab='bio',selectedGarment='';
+ for(const [key,label]of [['bio','Bio'],['submissions','Submissions'],['settings','Settings']]){
+  const button=document.createElement('button');button.className='maya-icon-button pg-tab';button.dataset.mayaType='P3';button.dataset.mayaSegment='';button.type='button';button.setAttribute('aria-label',label);button.title=label;const paths={bio:'M20 21v-2a7 7 0 0 0-14 0v2M17 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',submissions:'M3 7h7l2-3h9v16H3Z',settings:'M4 7h16M4 17h16M8 4v6M16 14v6'};button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="'+paths[key]+'"/></svg>';button.id='backend-two-tab-'+key;button.setAttribute('role','tab');button.setAttribute('aria-controls',panels[key].id);panels[key].setAttribute('aria-labelledby',button.id);button.addEventListener('click',()=>selectTab(key));
+  button.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const list=Object.keys(panels),i=list.indexOf(key),next=e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowRight'?1:2))%3;selectTab(list[next]);tabs.children[next].focus();});tabs.append(button);
+ }
+ const tabTitle=document.createElement('span');tabTitle.className='pg-tabtitle';tabTitle.dataset.mayaType='H2';tabs.append(tabTitle);
+ const title=drawer.querySelector('.drawer-title');title.dataset.mayaType='H2';title.textContent='Backend 2';title.after(tabs,bio,submissions,settings);
+ drawer.querySelector('.drawer-meta-row').hidden=true;
+ drawer.setAttribute('role','dialog');drawer.setAttribute('aria-label','Backend 2 workspace');drawer.setAttribute('aria-modal','true');drawer.inert=true;
+ function selectTab(key){
+  activeTab=key;tabTitle.textContent={bio:'Bio',submissions:'Submissions',settings:'Settings'}[key];for(const [name,panel]of Object.entries(panels)){panel.hidden=name!==key;const b=$('backend-two-tab-'+name);b.tabIndex=name===key?0:-1;b.setAttribute('aria-selected',String(name===key));b.classList.toggle('on',name===key);b.setAttribute('aria-pressed',String(name===key));}
+  if(key==='submissions'&&drawer.classList.contains('open'))void openClientsDrawer();
+  if(key==='settings')syncSettings();
+ }
+ // Reuse the engine's actual handlers and fields; no second settings record or
+ // model pipeline. Clones are controls only and always forward to their source.
+ function syncSettings(){
+  if(activeTab!=='settings')return;
+  const doc=frame.contentDocument,source=doc?.getElementById('drawer');
+  if(!source){settings.textContent='Pattern settings are loading.';return;}
+  const selected=doc.getElementById('test-picker')?.value||'';
+  const key=selectedGarment+'|'+(_savedOperation?.account||'')+'|'+(_savedOperation?.submissionId||'')+'|'+selected;
+  if(settings.dataset.scope===key&&settings.contains(document.activeElement)){for(const control of settings.querySelectorAll('input,select,textarea,button')){const original=doc.getElementById(control.id.replace(/^b2-setting-/,''));if(original)control.disabled=original.disabled;}return;}
+  settings.dataset.scope=key;settings.replaceChildren();
+  for(const section of source.querySelectorAll(':scope > .sec')){
+   if(section.querySelector('[data-plan],#operation-version-history'))continue;
+   const clone=section.cloneNode(true),originals=[section,...section.querySelectorAll('*')],copies=[clone,...clone.querySelectorAll('*')];
+   originals.forEach((original,i)=>{
+    const copy=copies[i];for(const attr of [...copy.attributes])if(/^on/i.test(attr.name))copy.removeAttribute(attr.name);
+    if(copy.id)copy.id='b2-setting-'+copy.id;
+    if(copy.htmlFor)copy.htmlFor='b2-setting-'+copy.htmlFor;
+    if(/^(INPUT|SELECT|TEXTAREA)$/.test(original.tagName)){
+     copy.value=original.value;copy.checked=original.checked;copy.disabled=original.disabled;
+     for(const event of ['input','change'])copy.addEventListener(event,()=>{if(!original.isConnected||original.disabled)return;original.value=copy.value;original.checked=copy.checked;original.dispatchEvent(new frame.contentWindow.Event(event,{bubbles:true}));});
+    }
+    if(original.tagName==='BUTTON')copy.addEventListener('click',()=>{if(!original.isConnected||original.disabled)return;original.click();queueMicrotask(()=>{copy.blur();syncSettings();});});
+   });settings.append(clone);
+  }
+ }
+ settings.addEventListener('focusout',()=>queueMicrotask(syncSettings));
+ const originalToggle=toggleClientsDrawer;
+ toggleClientsDrawer=function(force){originalToggle(force);const open=drawer.classList.contains('open');drawer.inert=!open;const button=document.querySelector('#top-actions .hamburger');button.setAttribute('aria-expanded',String(open));if(open){selectTab(activeTab);tabs.querySelector('[aria-selected="true"]')?.focus({preventScroll:true});}else button.focus({preventScroll:true});};
+ toggleWorkspaceDrawer=function(){toggleClientsDrawer();};
+ document.addEventListener('keydown',e=>{
+  if(!drawer.classList.contains('open'))return;
+  if(e.key==='Escape'){e.preventDefault();toggleClientsDrawer(false);}
+  if(e.key==='Tab'){const items=[...drawer.querySelectorAll('button,a,input,textarea,select,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.getClientRects().length);if(!items.length)return;const first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
+ });
+ _updateBrandSub=function(){ $('workspace-title').textContent='Backend 2';$('workspace-version').hidden=true;const menu=document.querySelector('#top-actions .hamburger');menu.title='Workspace menu';menu.setAttribute('aria-controls','clients-drawer');};
+ goToScreen=function(){screens.scrollTop=0;};_updateBrandSub();
+ // Keep legacy render targets but present only the integrated snapshot.
+ $('screen-onepager').hidden=true;$('screen-operating').setAttribute('aria-label','Image, pattern and pipeline');
+ $('page-indicator')?.remove();
+ const strip=document.createElement('section');strip.id='backend-two-fabric-strip';strip.setAttribute('aria-label','Studio fabrics');
+ const fabricHost=$('brief-fabrics');fabricHost.style.display='flex';strip.append(fabricHost);screens.append(strip);
+ showBriefItem=function(){_briefView='item';$('op-image-frame').style.display='';fabricHost.style.display='flex';};
+ let fabricKey='',fabricSerial=0;
+ async function refreshFabrics(id=''){
+  if(id)selectedGarment=id;
+  const saved=_savedOperation,context=_piecesContext();
+  const valid=saved&&saved.account===context.account&&saved.submissionId===context.sid&&saved.local===context.local&&saved.referenceImage===context.hero;
+  const piece=valid&&(saved.pieces.find(p=>p.id===selectedGarment)||saved.pieces.find(p=>p._image||p.front||p.views?.front));
+  const key=JSON.stringify([context.account,context.sid,context.local,piece?.id,saved?.referenceImage,valid?saved.pieces:[]]);
+  if(!window.MayaFabricAssistant||key===fabricKey)return;fabricKey=key;const serial=++fabricSerial;
+  window.MayaFabricAssistant.reset();
+  await window.MayaFabricAssistant.open({host:fabricHost,automatic:true,savedOnly:true,submissionId:valid?context.sid:'',referenceImage:valid?saved.referenceImage:'',preferences:valid?saved.preferences:'',piece:piece||{},pieces:valid?saved.pieces:[],reopenSaved:()=>{fabricKey='';return refreshFabrics(selectedGarment);}});
+  if(serial!==fabricSerial)return;
+ }
+ const publish=_publishSavedOperations;
+ _publishSavedOperations=function(...args){publish(...args);void refreshFabrics();};
+ const clear=_clearBriefPrivate;
+ // Existing reset handles account/submission identity; also clear mirrored controls.
+ if(typeof clear==='function')_clearBriefPrivate=function(...args){const result=clear(...args);settings.replaceChildren();fabricKey='';selectedGarment='';void refreshFabrics();return result;};
+ showBriefFabrics=()=>refreshFabrics(selectedGarment);toggleBriefFabrics=showBriefFabrics;
+ window.openBackendTwoSubmission=async folder=>{
+  const win=frame.contentWindow;if(win?.flushPatternBeforeNavigation&&!(await win.flushPatternBeforeNavigation()))return;
+  const thumb=(folder.files||[]).find(f=>/^dream-garment\./i.test(f.name||''));
+  location.href='/backend2.html?'+new URLSearchParams({submission:folder.id,name:folder.name||'',...(thumb?{img:thumb.id}:{})});
+ };
+ window.addEventListener('message',e=>{
+  if(e.origin!==location.origin||e.source!==frame.contentWindow)return;
+  const d=e.data,context=_piecesContext();
+  if(d?.maya==='backend-two-selected'&&d.account===context.account&&d.submissionId===context.sid){void refreshFabrics(d.garmentId);syncSettings();}
+  if(d?.maya==='backend-two-settings')syncSettings();
+  if(d?.maya==='backend-two-dissect')void beginDissection();
+  if(d?.maya==='backend-two-workspace-pointer'&&drawer.classList.contains('open'))toggleClientsDrawer(false);
+ });
+ frame.addEventListener('load',()=>{_postPiecesToOps();syncSettings();});
+ window.addEventListener('maya-owner-session-changed',()=>{settings.replaceChildren();fabricKey='';selectedGarment='';});
+ selectTab('bio');
+ document.addEventListener('DOMContentLoaded',()=>{void refreshFabrics();});
+})();

@@ -1395,11 +1395,11 @@
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=20">
 <link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=5"><script src="/aesthetics/ui/submission-cards.js?v=4"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
+<script src="/aesthetics/ui/presentation-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=28"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=15">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=20"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=16">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=21"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=4"></script>
 </head>
 <body>
@@ -1420,6 +1420,10 @@
   </div>
 </div>
 
+<nav id="page-indicator" data-maya-material="glass" aria-label="Backend screens">
+  <button class="page-dot active" id="dot-1" onclick="goToScreen(0)" aria-label="Backend" title="Backend" aria-current="page"></button>
+  <button class="page-dot" id="dot-2" onclick="goToScreen(1)" aria-label="Operation Room" title="Operation Room"></button>
+</nav>
 <!-- One submission, two native vertical screens. The operation workspace belongs to this Brief. -->
 
 <div id="screens">
@@ -1853,7 +1857,7 @@ function _updateBrandSub() {
   if (!host) return;
   const sections = host.querySelectorAll('section[data-screen]');
   let titleFrame=0;
-  const update=()=>{if(titleFrame)return;titleFrame=requestAnimationFrame(()=>{titleFrame=0;const position=host.scrollTop+host.clientHeight*.35;_currentScreen=position>=sections[1].offsetTop?1:0;_updateBrandSub();for(let i=1;i<=2;i++)document.getElementById('dot-'+i)?.classList.toggle('active',_currentScreen===i-1);});};
+  const update=()=>{if(titleFrame)return;titleFrame=requestAnimationFrame(()=>{titleFrame=0;const position=host.scrollTop+host.clientHeight*.35;_currentScreen=position>=sections[1].offsetTop?1:0;_updateBrandSub();for(let i=1;i<=2;i++){const dot=document.getElementById('dot-'+i);dot?.classList.toggle('active',_currentScreen===i-1);if(_currentScreen===i-1)dot?.setAttribute('aria-current','page');else dot?.removeAttribute('aria-current');}});};
   host.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update);update();
 })();
 

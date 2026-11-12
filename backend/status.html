@@ -809,6 +809,10 @@ try {
   #msg-share-menu button{display:block;width:100%;border:0;border-radius:8px;padding:8px;text-align:left;background:transparent;color:var(--ink);cursor:pointer}#msg-share-menu button:hover{background:#ffffff14}
   #adm-mkt #leads-table:has(.lead-note-inline) .lead-col-first{position:static!important}
   .lead-note-inline{width:100%;text-align:left}.lead-note-inline textarea{box-sizing:border-box;width:100%;resize:vertical;font:inherit;color:inherit;background:transparent;border:1px solid var(--maya-line);border-radius:6px;padding:6px;min-height:60px}.lead-note-inline p{margin:4px 0}.lead-note-inline .dialog-actions{display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap}
+  .card-maya{position:relative}
+  .maya-rooms{position:absolute;left:100%;top:50%;transform:translateY(-50%);display:flex;gap:8px;padding:14px;white-space:nowrap;opacity:0;visibility:hidden;transition:opacity .18s,visibility .18s}
+  .card-maya:hover .maya-rooms,.card-maya:focus-within .maya-rooms{opacity:1;visibility:visible}
+  @media(hover:none),(max-width:640px){.maya-rooms{position:static;transform:none;opacity:1;visibility:visible;flex-wrap:wrap;justify-content:center;padding:8px 0}.card-maya{display:flex;flex-direction:column}}
 </style>
 <style>
   #leads-bar button.lead-tool{font-size:12.5px;line-height:1;width:32px;height:26px;padding:0}
@@ -819,7 +823,7 @@ try {
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=20">
 <link rel="stylesheet" href="/aesthetics/ui/submission-cards.css?v=5"><script src="/aesthetics/ui/submission-cards.js?v=4"></script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/presentation-runtime.js?v=4"></script>
+<script src="/aesthetics/ui/presentation-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=28"></script>
 <script src="/aesthetics/ui/voice-preparation.js?v=3"></script>
@@ -1023,7 +1027,8 @@ try {
          doors: manasiyo.com and MAYA. -->
     <span class="card card-maya" role="link" tabindex="0"
           onclick="window.open('https://maya.manasiyo.com','_blank')"
-          onkeydown="if(event.key==='Enter')window.open('https://maya.manasiyo.com','_blank')"><b>MAYA</b>
+          onkeydown="if(event.key==='Enter'&&event.target===this)window.open('https://maya.manasiyo.com','_blank')"><b>MAYA</b>
+      <span class="maya-rooms"><a class="pg-chip" data-maya-type="P3" href="/backend.html" onclick="event.stopPropagation()">Backend</a><a class="pg-chip" data-maya-type="P3" href="/backend2.html" onclick="event.stopPropagation()">Backend 2</a></span>
 </span>
   </div>
 
@@ -1056,14 +1061,6 @@ try {
        traffic, which already pairs both windows; removed, per Fromsa. The Wix
        feed still paints into these hidden holders so paintSite stays happy. -->
   <div id="mkt-wix-tiles" class="tiles" style="display:none"></div>
-
-  <details class="fold" data-maya-section id="leads-fold" open>
-    <summary><h2 data-maya-type="H3" class="grp">Leads</h2></summary>
-
-    <div data-maya-section-content class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
-
-
-  </details>
 
   <details class="fold" data-maya-section id="ads-fold" open>
   <summary><h2 data-maya-type="H3" class="grp">Ad campaigns</h2></summary>
@@ -1098,6 +1095,14 @@ try {
     </div>
 
   </div>
+
+  </details>
+
+  <details class="fold" data-maya-section id="leads-fold" open>
+    <summary><h2 data-maya-type="H3" class="grp">Leads</h2></summary>
+
+    <div data-maya-section-content class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
+
 
   </details>
 
