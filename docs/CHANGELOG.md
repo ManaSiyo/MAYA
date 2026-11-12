@@ -4,6 +4,12 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 12 — demo release diagnostics:** the first full frontend build
+  stopped on the UI subprocess's old two-minute deadline, after code and fabric
+  checks passed. Give the expanded UI gate a bounded five-minute budget with
+  twelve-second individual waits and section progress; preserve all assertions.
+  The prior public release remains active until deployment verification succeeds.
+
 - **November 12 — frontend demo polish and performance (local):** unify hover
   descriptions with Community typography/tint, restore square fabric cards and
   balanced wall insets, center project labels, align card controls, and narrow

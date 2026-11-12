@@ -209,6 +209,14 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 12 — demo release verification in progress:
+GitHub contains all changes through `87dace3`, but build `d5919532` stopped in the
+release-contract step: the expanded UI process exceeded its previous two-minute
+overall deadline after the fabric gallery passed. Production remained coherent
+at `83c3c94`. The UI gate now has a five-minute overall budget, twelve-second
+individual waits and per-section progress, retaining every assertion. Deployment
+is not considered verified until the Google check and all live stamps agree.
+
 November 12 — frontend demo polish and reuse (local, not pushed):
 Hover-only card descriptions share Community typography and bottom tint. Frontend
 fabrics are square; Pinterest/fabric walls have balanced gutters and padding.

@@ -46,5 +46,5 @@ assert.equal(gc.status,0,'Fabric deadline/GC: '+gc.stdout+gc.stderr);console.log
 // CI retains its existing isolated regression gate.
 if(process.argv.includes('--code-only')){console.log('Code checks passed. Visual and interaction acceptance is pending owner review.');process.exit(0);}
 // Final automated presentation gate: defaults and visibly different saved settings.
-const ui=spawnSync(process.execPath,['docs/check-ui.mjs'],{encoding:'utf8',timeout:120000,maxBuffer:2*1024*1024});process.stdout.write(ui.stdout);assert.equal(ui.status,0,ui.error?.message||ui.stderr);
+const ui=spawnSync(process.execPath,['docs/check-ui.mjs'],{encoding:'utf8',timeout:300000,maxBuffer:2*1024*1024});process.stdout.write(ui.stdout);assert.equal(ui.status,0,[ui.error?.message,ui.stderr].filter(Boolean).join('\n'));
 console.log('Release checks passed in '+Math.round(performance.now()-started)+' ms. Live provider performance is separate.');
