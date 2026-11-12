@@ -95,7 +95,7 @@ html body #backend-two-layout-preview .backend-two-preview-columns :is(.operatio
 html body.backend-two-operation #plan-a-view :is(#backend-two-clo,#backend-two-pipeline){padding:5px!important;width:100%!important}
 html body.backend-two-operation .operation-layout-toolbar,
 html body.backend-two #backend-two-fabric-strip :is(.fa-header,.fa-store-wrap),
-html body #backend-two-layout-preview :is(.operation-layout-toolbar,.backend-two-preview-strip>.fa-tabs){--maya-type-P3-size:9px;--maya-pill-y:5px;--maya-pill-x:7px;--maya-control-icon-size:18px;gap:5px;margin:0;padding:0}
+html body #backend-two-layout-preview :is(.operation-layout-toolbar,.backend-two-preview-strip>.fa-tabs){--maya-type-P3-size:9px;--maya-compact-P3-size:9px;--maya-pill-y:5px;--maya-pill-x:7px;--maya-control-pillY:5px;--maya-control-pillX:7px;--ui-pill-padding-y:5px;--ui-pill-padding-x:7px;--maya-control-icon-size:18px;gap:5px;margin:0;padding:0}
 html body.backend-two-operation .pattern-head{gap:5px;margin:0}
 html body.backend-two #backend-two-fabric-strip .fabric-assistant.is-inline{padding:0!important;border:0!important;background:none!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-radius:0!important;gap:5px;overflow:hidden}
 html body.backend-two #backend-two-fabric-strip .fa-body{padding:0;gap:5px;min-height:0;flex:1 1 0}
