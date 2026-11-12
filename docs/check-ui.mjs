@@ -433,7 +433,7 @@ async function checkBackendTwo(){
    const drawerStyle=await page.locator('#clients-drawer').evaluate(e=>{const s=getComputedStyle(e);return {role:e.hasAttribute('data-maya-drawer'),padding:s.paddingTop,paddingX:s.paddingLeft,radius:s.borderTopLeftRadius,bg:s.backgroundColor,blur:s.backdropFilter};});
    assert.equal(drawerStyle.role,true);assert.equal(drawerStyle.padding,changed?'22px':'16px');assert.equal(drawerStyle.paddingX,changed?'20px':'12px');assert.equal(drawerStyle.radius,changed?'12px':'18px');assert.equal(drawerStyle.bg,changed?'rgba(23, 91, 59, 0.8)':'rgba(3, 15, 29, 0.9)');assert.ok(drawerStyle.blur.includes(changed?'blur(14px)':'blur(28px)'),'Backend 2 drawer follows shared saved Drawer effects');
    await engineFrame.getByRole('tab',{name:'CLO 3D',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-clo').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
-   const cloBounds=await engineFrame.locator('#backend-two-clo').boundingBox();assert.ok(cloBounds.width>0&&cloBounds.height>0&&cloBounds.x+cloBounds.width<=bounds.image.right-bounds.image.left+1);
+   const cloBounds=await engineFrame.locator('#backend-two-clo').boundingBox();assert.ok(cloBounds.width>0&&cloBounds.height>0&&cloBounds.x>=bounds.image.left-1&&cloBounds.x+cloBounds.width<=bounds.image.right+1);
    await engineFrame.getByRole('tab',{name:'Pipeline',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-pipeline').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
    await engineFrame.getByRole('tab',{name:'Pattern',exact:true}).click();assert.ok(await engineFrame.locator('#stage').isVisible());
   }
