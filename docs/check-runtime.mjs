@@ -2779,6 +2779,42 @@ checks['backend-two-shell']=async function(){
  console.log('Backend 2: snapshot DOM, drawer tabs, engine-backed settings and failed-save navigation passed without a browser.');
 };
 
+checks['original-operation']=async function(){
+ const {default:assert}=await import('node:assert/strict'),{parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const html=readFileSync('backend/operation-workspace.html','utf8'),adapter=readFileSync('docs/aesthetics/ui/original-operation.js','utf8');
+ function fixture(search=''){
+  const {document,Event}=parseHTML(html);let traces=0,invalidations=0,blurs=0,lastTraceSource='';
+  const c=vm.createContext({document,Event,URLSearchParams,location:{search},EMBEDDED:true,PASSES:[{img:'saved-pattern',acc:{design:90,measure:85}}],TRACE:null,RD:null,ANSWER:null,RUNNING:false,
+   $:id=>document.getElementById(id),cancelPatternTrace(){},mountTrace(){},buildSVGfromGrounded(){traces++;lastTraceSource=document.getElementById('img-grounded').getAttribute('src');},setOperationRunning(value){c.RUNNING=value;},
+   invalidateOperation(){invalidations++;c.PASSES=[];c.applyView();}
+  });c.window=c;
+  vm.runInContext(html.slice(html.indexOf("let CUR = {kind:'grounded'"),html.indexOf('/* ============================ test harness')).replace('let ANSWER = null;',''),c);
+  document.getElementById('test-picker').blur=()=>blurs++;
+  vm.runInContext(adapter,c);
+  return {c,document,Event,counts:()=>({traces,invalidations,blurs,lastTraceSource})};
+ }
+ const {c,document,Event,counts}=fixture(),stage=document.getElementById('stage'),logic=document.getElementById('original-operation-logic'),host=document.getElementById('pass-pills');
+ const tab=label=>[...host.querySelectorAll('button')].find(b=>b.textContent===label);
+ assert.equal(logic.parentElement,stage);assert.equal(document.querySelector('#plan-a-view > .trace'),null);assert.equal(logic.querySelector('h3').textContent,'Logic');
+ assert.ok(logic.querySelector('#live-log'));assert.ok(logic.querySelector('#t-chunks'));assert.ok(logic.querySelector('#t-prompt'));assert.equal(logic.hidden,true);
+ assert.deepEqual([...host.querySelectorAll('button')].map(b=>b.textContent),['Mark 1','Logic','SVG']);
+ const logicTab=tab('Logic');logicTab.click();assert.equal(logic.hidden,false);assert.equal(vm.runInContext('CUR.kind',c),'logic');assert.equal(document.getElementById('stage-empty').style.display,'none');assert.equal(counts().traces,0,'Logic must never start SVG or paid generation');
+ assert.equal(document.getElementById('img-grounded').style.display,'none');assert.ok(document.getElementById('trace-view').classList.contains('off'));
+ c.setOperationRunning(true);assert.ok(logic.classList.contains('is-running'));c.viewGrounded(0);c.viewRD();assert.equal(vm.runInContext('CUR.kind',c),'logic','Internal pipeline views preserve a selected Logic tab');
+ document.getElementById('img-grounded').removeAttribute('src');c.TRACE={source:'old-pattern'};c.PASSES=[{img:'new-pattern'}];c.viewGrounded(0);c.setOperationRunning(false);assert.equal(logic.hidden,false);assert.equal(logic.classList.contains('is-running'),false);assert.equal(tab('Logic'),logicTab,'Progress updates keep focus targets mounted');
+ assert.equal(c.TRACE,null,'A new drawing invalidates the earlier SVG even while Logic is open');tab('SVG').click();assert.equal(counts().lastTraceSource,'new-pattern','Logic can open the new SVG directly without visiting Mark 1');tab('Logic').click();
+ tab('Mark 1').click();assert.equal(logic.hidden,true);assert.equal(document.getElementById('img-grounded').getAttribute('src'),'new-pattern');
+ const beforeSVG=counts().traces;tab('SVG').click();assert.equal(counts().traces,beforeSVG+1);assert.equal(logic.hidden,true);tab('Logic').click();assert.equal(counts().traces,beforeSVG+1,'Returning to Logic does not retrace');
+ let focused=false;tab('SVG').focus=()=>focused=true;const key=new Event('keydown',{cancelable:true});key.key='ArrowRight';logicTab.dispatchEvent(key);assert.equal(focused,true);assert.equal(vm.runInContext('CUR.kind',c),'svg');assert.equal(key.defaultPrevented,true);
+ c.PASSES=[{img:'old-1'},{img:'old-2'}];c.renderPassPills();assert.ok(tab('Mark 2'),'Historical saved passes remain accessible');tab('Mark 2').click();assert.equal(document.getElementById('img-grounded').getAttribute('src'),'old-2');
+ tab('Logic').click();c.invalidateOperation();assert.equal(counts().invalidations,1);assert.equal(logic.hidden,true);assert.equal(vm.runInContext('CUR.kind',c),'grounded');
+ c.viewRD();assert.equal(tab('Mark 1').getAttribute('aria-selected'),'true');assert.equal(tab('Mark 1').getAttribute('tabindex'),'0','Internal redraw cannot remove every tab from keyboard navigation');
+ const picker=document.getElementById('test-picker');picker.dispatchEvent(new Event('pointerdown'));picker.dispatchEvent(new Event('change'));assert.equal(counts().blurs,1,'Pointer selection releases its native focus ring');
+ picker.dispatchEvent(new Event('pointerdown'));picker.dispatchEvent(new Event('keydown'));picker.dispatchEvent(new Event('change'));assert.equal(counts().blurs,1,'Keyboard selection retains accessible focus');
+ const clone=fixture('?layout=backend2');assert.ok(clone.document.querySelector('#plan-a-view > .trace'));assert.equal(clone.document.getElementById('original-operation-logic'),null);assert.equal(clone.document.documentElement.classList.contains('original-operation'),false);
+ console.log('Original Operation Room: integrated Logic, stable live updates, lazy SVG, legacy marks, identity reset and pointer/keyboard focus passed.');
+};
+
 checks['backend-two-operation']=async function(){
  const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
  const {document,MutationObserver}=parseHTML(readFileSync('backend/operation-workspace.html','utf8'));

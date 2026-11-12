@@ -1,0 +1,19 @@
+/* The original workspace uses saved control roles with a one-pixel inset trim. */
+:is(html.original-operation,#operations-layout-preview) .operation-layout-toolbar{
+ --maya-pill-x:max(0px,calc(var(--maya-control-pillX,14px) - 1px));
+ --maya-pill-y:max(0px,calc(var(--maya-control-pillY,6px) - 1px));
+}
+html.original-operation .operation-layout-toolbar .spinner{width:1em;height:1em}
+html.original-operation #pass-pills{align-items:center;justify-content:center}
+:is(html.original-operation,#operations-layout-preview) .original-operation-logic{
+ position:absolute;inset:0;min-width:0;min-height:0;margin:0;
+ padding:var(--maya-inner-padding-y,12px) var(--maya-inner-padding-x,14px);
+ overflow:auto;box-sizing:border-box;text-align:left;
+}
+:is(html.original-operation,#operations-layout-preview) .original-operation-logic[hidden]{display:none!important}
+#operations-layout-preview .operation-layout-pattern > [hidden]{display:none!important}
+html.original-operation body #original-operation-logic .trace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+html.original-operation .original-operation-logic .live{display:block}
+html.original-operation .original-operation-logic:not(.is-running) .live .dot{animation:none;box-shadow:none}
+html.original-operation .original-operation-logic pre{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:768px){html.original-operation body #original-operation-logic .trace-grid{grid-template-columns:minmax(0,1fr)}}

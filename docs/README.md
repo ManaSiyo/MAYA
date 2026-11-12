@@ -209,6 +209,20 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 12 — original Backend presentation update (local, not pushed):
+The original pattern window now has Mark 1 / Logic / SVG with live pipeline and
+retrieval details inside the existing frame. Logic stays selected during progress;
+SVG can use the finished drawing directly. Original toolbars share P3/Glass sizing
+with one pixel less X/Y padding, pointer selections release lingering focus, and
+the screen indicator has a white active dot. Fabric photos are square again with
+two caption rows and closer heart/X actions. Brief Settings shares the outer
+Drawer material; the Operation drawer already matched. Backend 2 is unchanged.
+The active Operation and Fabric previews follow these changes. The full Node 20
+code-only release gate passed, including navigation, running updates, SVG
+transitions and project reset. CI presentation checks were extended for widths,
+saved settings and frame geometry; they were not run locally. Visual and
+interaction acceptance remains pending owner review after Push.
+
 November 12 — Backend 2 and automatic CLO sourcing live:
 Release `006c575799e7eb6f20f4ef3697d3c36f9bc228fe` passed Google build
 `47e99920-7633-45d4-80d1-74d0f47bea4d`; all seven public release endpoints

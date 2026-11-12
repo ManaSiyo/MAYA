@@ -257,10 +257,11 @@ if(self===top)location.replace('/backend.html'+location.search);else document.do
   html.embedded body{background:#0000 !important}
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=20">
+<link rel="stylesheet" href="/aesthetics/ui/original-operation.css?v=1">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
-<script src="/aesthetics/ui/typography-controls.js?v=28"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=29"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=4"></script>
 </head>
 <body>
@@ -1020,7 +1021,7 @@ function renderPassPills(){
   host.innerHTML=h;
 }
 function _roll(prevKind,nextKind){
-  const order=['rd','grounded','svg'], st=$('stage'); if(!st) return;
+  const order=['rd','grounded','logic','svg'], st=$('stage'); if(!st) return;
   st.style.setProperty('--slide-from', ((order.indexOf(nextKind)>=order.indexOf(prevKind)?1:-1)*22)+'px');
   st.classList.remove('rolling'); void st.offsetWidth; st.classList.add('rolling');
 }
@@ -1111,7 +1112,7 @@ MayaImageViewer.panGarment($('hero-frame'),$('hero-img'));
 // Photo inspection starts only after an explicit expansion click.
 MayaImageViewer.watch('#hero-img,#hero-img-b,#img-grounded',{expand:image=>{if(EMBEDDED)parent.postMessage({maya:'ops-inspect',src:image.currentSrc||image.src,alt:image.alt,account:operationAccount(),submissionId:operationSubmission()},location.origin);else MayaImageViewer.open(image);}});
 // One vertical scroller: the parent Brief owns scrolling through the workspace
-// and retrieval section. No fixed-height nested viewport to clip during momentum.
+// between screens. The original Logic tab scrolls inside the fixed pattern frame.
 if(EMBEDDED){
   let resizeFrame=0,lastHeight=0;
   const report=()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{const height=Math.ceil(document.querySelector('.hpane-main').getBoundingClientRect().height);if(height!==lastHeight){lastHeight=height;parent.postMessage({maya:'ops-height',height},location.origin);}});};
@@ -1972,6 +1973,7 @@ function refreshKbStatus(){
 }
 </script>
 <script src="/aesthetics/ui/clo-assets.js?v=1"></script>
+<script src="/aesthetics/ui/original-operation.js?v=1"></script>
 <script src="/aesthetics/ui/backend-two-operation.js?v=5"></script>
 </body>
 </html>

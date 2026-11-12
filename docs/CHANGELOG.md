@@ -4,6 +4,16 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 12 — original Backend aesthetic pass (local):** put Pipeline Live
+  and retrieval details in a Logic tab between Mark 1 and SVG without resizing the
+  pattern frame. Keep Logic selected during runs and hydrate the saved drawing for
+  direct SVG selection. Match compact P3/Glass toolbars, release pointer focus,
+  restore the white page dot and square fabric photos, tighten heart/X spacing,
+  and remove Brief Settings' extra dark surface. Update working previews and
+  consolidated regression checks; preserve Backend 2. Full Node 20 code-only gate
+  passed. No browser or live provider used; owner visual acceptance and Push
+  remain pending.
+
 - **November 12 — CLO live verification:** release `006c575` passed full CI,
   Cloud Tasks setup, Cloud Run/Hosting deployment and all seven public release
   checks. A real queued search saved two sourced CONNECT assets. Existing enqueue

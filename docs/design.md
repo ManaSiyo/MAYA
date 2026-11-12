@@ -95,20 +95,27 @@ Glass, icon and typography settings retain authority.
 Operation Room version 2 restores the 34/66 garment/pattern column ratio, stacks on
 narrow screens and centers every image. Compact content-height toolbars put Start
 beside the garment selector in a centered group. Both toolbars use the same P3/Glass
-padding, with equal space above and below. Shared grid rows keep garment/pattern
+padding, trimmed one pixel in X/Y for the original Backend, with equal space above
+and below. Shared grid rows keep garment/pattern
 frames and outer panels aligned before, during and after generation; raster
 images fit inside without resizing the frame. SVG retains its interactive canvas.
-Pipeline Live is the first row of the lower reference section. Retrieval Trace
-is a plain H3 heading, never a pill. Fabrics belongs only in the Brief,
-not the Operation Room. The parent Brief owns vertical scrolling
-through patterns and retrieval, with section snap stops; there is no second
-fixed-height iframe scroller. Ordinary vertical wheel input scrolls over SVG too;
+The original pattern window switches Mark 1 → Logic → SVG. Logic contains Pipeline
+Live, retrieval details, book passages and the composed prompt, scrolling within
+the same frame. It stays open during pipeline updates and resets with the project
+or garment. The former separate Retrieval Trace section is removed only here;
+Backend 2 keeps its Pattern / CLO 3D / Pipeline layout. Fabrics belongs only in the
+original Brief, with square photos, two caption rows and adjacent heart/X actions.
+The parent Brief owns vertical scrolling between screens, with section snap stops;
+Logic owns only its internal overflow. Ordinary vertical wheel input scrolls over SVG too;
 Ctrl/Command-wheel zooms its canvas. SVG tracing runs on demand in a bounded
 worker, never automatically after the drawing. New versions generate only Mark
 One. Required pocket pieces are individual outlines; displayed mirrored halves
 each say CUT 1 instead of duplicating the pair count.
 The version label uses P3 beside the H1 title; editable Settings reuse shared fields,
 Drawer and roles. The active Operation Room preview lives in Aesthetic Control.
+Pointer selection releases the original garment control's focus ring; keyboard
+focus remains visible. The original page indicator uses the frontend's white active
+dot. Brief settings uses the same shared Drawer surface without a second dark fill.
 
 Fromsa's November 6 instruction supersedes local browser/visual acceptance:
 **do not use Chrome; Fromsa performs live visual and interaction checks after

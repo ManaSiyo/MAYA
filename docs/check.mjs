@@ -32,7 +32,7 @@ for(const folder of ['frontend','backend'])for(const file of readdirSync(output+
   const path=decodeURIComponent(match[1]);if(redirects.has(path))continue;assert.ok(existsSync(output+path),'Missing served asset '+path+' in '+file);
  }
 }
-for(const file of ['backend-two.js','backend-two-operation.js','clo-assets.js','fabric-assistant.js','presentation-runtime.js'])new vm.Script(readFileSync('docs/aesthetics/ui/'+file,'utf8'),{filename:file});
+for(const file of ['backend-two.js','backend-two-operation.js','original-operation.js','clo-assets.js','fabric-assistant.js','presentation-runtime.js'])new vm.Script(readFileSync('docs/aesthetics/ui/'+file,'utf8'),{filename:file});
 console.log('Packaging and syntax passed');
 // A separate process keeps provider fixtures and environment mutations isolated.
 const {checks}=await import('./check-runtime.mjs');

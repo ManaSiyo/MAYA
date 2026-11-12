@@ -30,3 +30,12 @@
 .fa-product.has-missing-photo{display:flex;flex-direction:column;gap:var(--maya-form-label-gap,6px)}
 .fa-product.has-missing-photo .fa-card-actions{position:static;order:-1;align-self:flex-end;flex:none;max-width:100%}
 .fa-product.has-missing-photo .fa-product-link{height:auto;padding-right:0;flex:1 1 auto;align-content:start}
+
+/* Original Backend and its active preview: square photographs plus two captions.
+   Content-sized rows prevent a tall gallery from stretching the photo frame.
+   Backend 2 retains its independent, height-constrained horizontal strip. */
+:is(body.backend-original .fabric-assistant,.workspace-fabric-gallery) .fa-results{grid-auto-rows:max-content;align-content:start}
+:is(body.backend-original .fabric-assistant,.workspace-fabric-gallery) .fa-results .fa-product:not(.has-missing-photo){height:auto}
+:is(body.backend-original .fabric-assistant,.workspace-fabric-gallery) .fa-product:not(.has-missing-photo) .fa-product-link{height:auto;grid-template-rows:auto auto auto;align-content:start}
+:is(body.backend-original .fabric-assistant,.workspace-fabric-gallery) .fa-product-image{width:100%;height:auto;aspect-ratio:1/1;align-self:start}
+:is(body.backend-original .fabric-assistant,.workspace-fabric-gallery) .fa-card-actions{gap:calc(var(--maya-icon-pill-gap,6px)/2)}

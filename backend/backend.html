@@ -1152,32 +1152,34 @@
   }
   .piece-meta .op-chip { font-size:var(--maya-text-caption); }
 
-  /* ───────── v0.25: page indicator, smaller (~20% slimmer) + pushed
-     further left so it doesn't kiss the window edges. */
-  #page-indicator {
-    position: fixed; left: 8px; top: 50%; transform: translateY(-50%);
+  /* Frontend-sized screen indicator. The high-specificity dot state keeps
+     the dense surface's generic selected-button fill from dimming it. */
+  body.backend-original #page-indicator {
+    position: fixed; left: 18px; top: 50%; transform: translateY(-50%);
     z-index: 110;
-    display: flex; flex-direction: column; gap: 8px;
-    padding: 9px 5px;
-    background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 5px;
     border-radius:var(--maya-radius-pill);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
-    box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.28),
-      inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 4px 16px rgba(0,0,0,0.22);
   }
-  .page-dot {
-    width: 5px; height: 5px; border-radius:50%;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+  body.backend-original #page-indicator .page-dot {
+    width: 6px; height: 6px; border-radius:50%;
+    border: .5px solid rgba(255,255,255,.22);
     background: transparent;
+    box-shadow:none;
+    opacity:.4;
     cursor: pointer;
     padding: 0;
-    transition: background 0.25s;
+    transition: background .25s, opacity .25s;
   }
-  .page-dot.active { background: rgba(255,255,255,0.72); border-color: transparent; }
+  body.backend-original #page-indicator .page-dot:hover { background:rgba(255,255,255,.36); }
+  body.backend-original #page-indicator .page-dot.active {
+    background:#fff; border-color:transparent; opacity:1;
+    box-shadow:0 0 6px rgba(255,255,255,.45);
+  }
+  @media(max-width:640px){
+    body.backend-original #page-indicator {left:6px;gap:8px;padding:4px;}
+    body.backend-original:is(.drawer-open,.operations-settings-open) #page-indicator {visibility:hidden;pointer-events:none;}
+  }
 
   /* ───────── v10.15: clients drawer (matches Maya's hamburger drawer) ───────── */
   #clients-drawer {
@@ -1209,6 +1211,15 @@
     display: flex; flex-direction: column;
   }
   #clients-drawer.open { transform: translateX(0); opacity: 1; }
+  /* Settings shares the outer Drawer surface, like the frontend filing tabs.
+     Hide the cards underneath instead of adding a second opaque palette. */
+  body.backend-original #drawer-settings {
+    background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+    box-shadow:none;padding:inherit;
+  }
+  body.backend-original #clients-drawer:has(#drawer-settings.open)>:not(#drawer-settings) {
+    visibility:hidden;pointer-events:none;
+  }
   /* v13.45: the hamburger never disappears. It slides left with the drawer
      and rests hanging just outside the drawer's left edge (drawer 360 wide
      at right 10; pill resting ~28 from the right edge). The same pill
@@ -1397,12 +1408,12 @@
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
-<script src="/aesthetics/ui/typography-controls.js?v=28"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=17">
+<script src="/aesthetics/ui/typography-controls.js?v=29"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=18">
 <script defer src="/aesthetics/ui/fabric-assistant.js?v=21"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=3"><script src="/aesthetics/ui/image-viewer.js?v=4"></script>
 </head>
-<body>
+<body class="backend-original">
 
 <div id="top-bar">
   <div id="brand" style="display:flex;align-items:center;gap:10px;margin-left:-8px">
@@ -2802,6 +2813,13 @@ function setPieceRenderStatus(on) {
 // v0.12: also exposed on window so the Three.js module script can read it.
 let _pieceState = { pieces: [], idx: 0 };
 window._pieceState = _pieceState;
+
+// Mouse/touch selection should not leave a keyboard focus ring behind.
+// Keyboard and assistive activation have detail=0 and keep their focus target.
+document.getElementById('piece-pills').addEventListener('click',event=>{
+  const button=event.target.closest('button[data-maya-segment]');
+  if(event.detail>0&&button)button.blur();
+});
 
 function setActivePiece(idx) {
   if (!_pieceState.pieces.length) return;
