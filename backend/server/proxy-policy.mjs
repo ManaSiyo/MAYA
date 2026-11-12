@@ -1,4 +1,4 @@
-import { chatBody } from './model-config.mjs';
+import { chatBody, isGPT6, IMAGE_MODEL } from './model-config.mjs';
 // ═══════════════════════════════════════════════════════════════════════════
 // MAYA proxy policy — v13.70 (Commit A1). PURE and testable: no I/O, no
 // globals, no network. Given one proxied /api/openai request it decides
@@ -29,10 +29,10 @@ const MODEL_BEARING = new Set([
   'v1/decisions',
 ]);
 
-// Legacy names the browser still sends, upgraded to the current tier. Only on
-// chat/completions: the browser never sends a legacy image/audio/embedding
-// name, and upgrading elsewhere would be a lie.
+// Legacy browser names use the current tier, including already-open image clients.
 function upgradeFor(upstreamPath, model, upgrades) {
+  if (/^v1\/images\/(?:generations|edits)$/.test(upstreamPath))
+    return ['gpt-image-2', 'gpt-image-2.5-flare'].includes(model) ? IMAGE_MODEL : null;
   if (upstreamPath !== 'v1/chat/completions') return null;
   return (upgrades && Object.prototype.hasOwnProperty.call(upgrades, model)) ? upgrades[model] : null;
 }
@@ -74,6 +74,7 @@ function readMultipartFields(buf, contentType, wanted) {
   if (!boundary) return { error: 'no_boundary' };
   const delim = Buffer.from('--' + boundary);
   const out = {};
+  const ranges = [];
   const ambiguous = new Set();
   let idx = buf.indexOf(delim);
   if (idx < 0) return { error: 'no_parts' };
@@ -96,12 +97,13 @@ function readMultipartFields(buf, contentType, wanted) {
       let valEnd = next;
       if (buf[valEnd - 2] === 0x0d && buf[valEnd - 1] === 0x0a) valEnd -= 2;
       const value = buf.subarray(headerEnd + 4, Math.min(valEnd, headerEnd + 4 + 512)).toString('utf8').trim();
+      ranges.push({name, start:headerEnd + 4, end:valEnd});
       if (Object.prototype.hasOwnProperty.call(out, name) && out[name] !== value) ambiguous.add(name);
       else out[name] = value;
     }
     idx = next + delim.length;
   }
-  return { fields: out, ambiguous: [...ambiguous] };
+  return { fields: out, ambiguous: [...ambiguous], ranges };
 }
 
 function reject(status, error, detail) { return { ok: false, status, error, detail }; }
@@ -135,7 +137,7 @@ function evaluateProxyPolicy(opts) {
 
   const allowed = endpointModels(cfg)[upstreamPath] || new Set();
 
-  let asked = '', n = null, quality = null, streamRequested = false, parsed = null;
+  let asked = '', n = null, quality = null, streamRequested = false, parsed = null, multipartRanges = [];
 
   if (kind === 'json') {
     try { parsed = JSON.parse(body.toString('utf8')); }
@@ -163,6 +165,7 @@ function evaluateProxyPolicy(opts) {
     const r = readMultipartFields(body, opts.contentType, new Set(['model', 'n', 'quality']));
     if (r.error) return reject(400, 'malformed_multipart', r.error);
     if (r.ambiguous && r.ambiguous.length) return reject(400, 'ambiguous_field', r.ambiguous.join(','));
+    multipartRanges = r.ranges;
     asked = String((r.fields && r.fields.model) || '');
     if (r.fields && r.fields.n != null && r.fields.n !== '') n = Number(r.fields.n);
     if (r.fields && r.fields.quality != null) quality = String(r.fields.quality);
@@ -170,7 +173,7 @@ function evaluateProxyPolicy(opts) {
 
   if (!asked) return reject(400, 'model_required', 'no model on a model-bearing route');
 
-  // legacy upgrade (chat only), then the model must be one this endpoint runs
+  // Resolve approved legacy aliases before endpoint/role enforcement.
   const upgraded = upgradeFor(upstreamPath, asked, upgrades);
   const target = upgraded || asked;
 
@@ -184,6 +187,12 @@ function evaluateProxyPolicy(opts) {
   if (isAdminOnlyModel(target, cfg) && !isAdmin) {
     return reject(403, 'model_not_allowed', 'the senior tier is atelier only');
   }
+  if (kind === 'json' && upstreamPath === 'v1/chat/completions') {
+    const hasTools = parsed.tools?.length || parsed.functions?.length || parsed.tool_choice || parsed.function_call ||
+      parsed.messages?.some?.(m => m?.role === 'tool' || m?.role === 'function' || m?.tool_calls?.length || m?.function_call);
+    if (hasTools && (/^gpt-6\.1-|^gpt-6-astra/.test(target) || (isGPT6(target) && parsed.reasoning_effort && parsed.reasoning_effort !== 'none')))
+      return reject(400, 'responses_required', 'this model and reasoning setting require Responses for tool calling');
+  }
 
   // image count and quality, enforced whatever the body size
   if (upstreamPath === 'v1/images/generations' || upstreamPath === 'v1/images/edits') {
@@ -191,15 +200,23 @@ function evaluateProxyPolicy(opts) {
     if (['high','xhigh','max'].includes(quality) && !isAdmin) return reject(403, 'quality_not_allowed', 'high quality is atelier only');
   }
 
-  // rewrite only when a legacy name was upgraded (JSON chat). The rewritten
-  // body carries the tier model; the fallback carries the original name for the
-  // one-shot retry the server does when a new tier is not yet entitled.
+  // Images never retry inference. Multipart rewrites touch only model field bytes.
+  // Chat retains its existing model-entitlement fallback, before inference only.
   let outBody = body, fallback = null;
   if (kind === 'json' && upgraded) {
     parsed.model = target;
     outBody = Buffer.from(JSON.stringify(parsed), 'utf8');
-    parsed.model = /^gpt-6-/.test(target) ? 'gpt-4o-mini' : asked;
-    fallback = Buffer.from(JSON.stringify(parsed), 'utf8');
+    if (upstreamPath === 'v1/chat/completions') {
+      parsed.model = isGPT6(target) ? 'gpt-4o-mini' : asked;
+      if (isGPT6(target)) delete parsed.reasoning_effort;
+      fallback = Buffer.from(JSON.stringify(parsed), 'utf8');
+    }
+  } else if (kind === 'multipart' && upgraded) {
+    const parts = []; let offset = 0;
+    for (const range of multipartRanges.filter(r => r.name === 'model')) {
+      parts.push(body.subarray(offset, range.start), Buffer.from(target)); offset = range.end;
+    }
+    parts.push(body.subarray(offset)); outBody = Buffer.concat(parts);
   }
 
   if (kind === 'json' && upstreamPath === 'v1/chat/completions') outBody = Buffer.from(JSON.stringify(chatBody({...JSON.parse(outBody.toString('utf8'))}, target)));

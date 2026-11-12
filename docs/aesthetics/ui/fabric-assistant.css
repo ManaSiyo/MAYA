@@ -25,3 +25,8 @@
 @media(hover:hover) and (pointer:fine){.fa-card-actions{opacity:0;pointer-events:none;transition:opacity .16s}.fa-product:hover .fa-card-actions,.fa-product:focus-within .fa-card-actions{opacity:1;pointer-events:auto}}
 
 .fa-favorite[aria-pressed="true"] svg path{fill:currentColor}
+
+/* A source without a photo still has two caption rows and two accessible actions. */
+.fa-product.has-missing-photo{display:flex;flex-direction:column;gap:var(--maya-form-label-gap,6px)}
+.fa-product.has-missing-photo .fa-card-actions{position:static;order:-1;align-self:flex-end;flex:none;max-width:100%}
+.fa-product.has-missing-photo .fa-product-link{height:auto;padding-right:0;flex:1 1 auto;align-content:start}

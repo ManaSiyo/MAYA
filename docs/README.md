@@ -77,8 +77,16 @@ configuration, not successful inference/delivery. `/api/healthz/deep` is admin-o
   Firestore owns client projects, private avatars and share records; Storage owns
   independent images and submissions. Admin access uses the server allowlist.
 - **OpenAI:** text/vision via the protected allowlisted proxy, image generation and
-  edits using **gpt-image-2.6-flare**, text default **gpt-6-luna**; Realtime voice
-  uses modality-specific configuration. Defaults are in server/model-config.mjs.
+  edits using **gpt-image-2.6-flare**, visual/text reasoning **gpt-6.1-terra**,
+  senior pattern logic **gpt-6.1-sol**, and routine text **gpt-6-luna**. Realtime
+  voice uses modality-specific configuration. Defaults and legacy tier aliases
+  are centralized in server/model-config.mjs; owner-set environment overrides remain.
+  Older image clients also upgrade to Flare 2.6 without a paid retry. Sol uses low
+  reasoning; routine chat uses none. Current chat callers do not invoke tools;
+  unsupported GPT-6.1 tool-chat requests fail before inference. Existing chat
+  model-entitlement fallback to gpt-4o-mini remains, on model-shaped 400/404 only.
+  CRM's OpenAI economy tier is Luna at $0.10 input / $0.50 output per million tokens,
+  retaining cheapest-connected-provider selection and its combined $1 daily cap.
   Fabrics uses one Responses API image search through server/fabrics.mjs. Sourcing
   photographs are independent of the generated-image model.
 - **Twilio:** SMS and calls, inbound signature validation, durable delivery/send
@@ -200,6 +208,33 @@ runs are bounded to 25 MB/100 versions per garment and research to 100 links/500
 dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
+
+November 11 — Backend 2 final code review and current OpenAI tiers:
+Fix Full view being replaced by a pending garment pick, stale drawer controls and
+submission navigation after account/garment changes, and save-status/history updates
+while typing. Engine requests open parent Settings; stored Plan B preferences do
+not hide Backend 2's snapshot. Keep pattern-tab keyboard focus and circular drawer
+tabs. Fabric captions/actions no longer overlap; short strips remain scrollable;
+narrow previews preserve both aligned image/pattern panels. Asset versions updated.
+
+OpenAI defaults were verified against the official November 11 model catalog:
+[Flare 2.6](https://developers.openai.com/api/docs/models/gpt-image-2.6-flare),
+[Terra 6.1](https://developers.openai.com/api/docs/models/gpt-6.1-terra),
+[Sol 6.1](https://developers.openai.com/api/docs/models/gpt-6.1-sol), and
+[Luna 6](https://developers.openai.com/api/docs/models/gpt-6-luna).
+Flare 2.6 has the same published token rates as Flare 2.5; no MAYA latency or
+per-image cost benchmark was run. Source defaults do not establish live provider
+entitlement or override production environment choices. Other provider/voice tiers
+are unchanged. New logic tiers preserve workload roles instead of routing all work
+through the economy model; their rates differ from Luna.
+
+Node20 `node docs/check.mjs --code-only` passes. Focused checks cover adapter races,
+settings/error propagation, image builders in both Backends, binary-safe legacy
+image upgrades, model parameters/admin gates, owner overrides and CRM metering.
+CI geometry checks were extended but not run locally. Owner visual acceptance,
+deployment and live inference remain pending; no Chrome, paid calls or Push.
+This completed run supersedes the concurrent in-progress fixture failure recorded
+in the CLO research note below.
 
 November 11 — CLO digital asset sourcing research:
 [Integration plan](clo-assets-integration.md) maps CONNECT marketplace discovery,

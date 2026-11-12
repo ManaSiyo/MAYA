@@ -262,4 +262,13 @@ html body #cell-format-toolbar{width:100%;backdrop-filter:var(--maya-frost);bord
 /* In House is the permanent layout authority for the saved-look Global gallery. */
 .workspace-fabric-gallery>.fa-status{margin:0}.workspace-fabric-gallery{height:520px;min-height:0}.workspace-fabric-gallery .fa-body{flex:1;min-height:0}.workspace-fabric-gallery .fa-results{flex:1 1 260px}.workspace-preview-card.workspace-fabric-gallery{grid-column:1/-1}
 
-.backend-two-preview-columns{max-height:420px;overflow:hidden}.backend-two-preview-columns .operation-layout-garment,.backend-two-preview-columns .operation-layout-pattern{height:300px;aspect-ratio:auto}.backend-two-preview-strip{display:flex;flex-direction:column;gap:var(--maya-form-field-gap,10px);height:220px;min-height:0}.backend-two-preview-fabrics{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:180px;grid-template-rows:minmax(0,1fr);grid-auto-rows:auto;overflow-x:auto;overflow-y:hidden;min-height:0}.backend-two-preview-fabrics .fa-product{min-height:0}.backend-two-preview-fabrics [hidden]{display:none!important}
+/* Backend 2 preview retains the same paired columns at narrow widths. */
+.backend-two-preview-columns[data-maya-operation-layout]{height:420px;max-height:none;min-height:0;grid-template-columns:minmax(0,34fr) minmax(0,66fr);grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+.backend-two-preview-columns[data-maya-operation-layout]>*{display:grid;grid-row:1 / span 2;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;min-width:0;min-height:0;overflow:hidden}
+.backend-two-preview-columns .operation-layout-garment,.backend-two-preview-columns .operation-layout-pattern{height:100%;min-height:0;aspect-ratio:auto;contain:size}
+.backend-two-preview-columns .operation-layout-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.backend-two-preview-strip{display:flex;flex-direction:column;gap:var(--maya-form-field-gap,10px);height:220px;min-height:0;overflow:auto}
+.backend-two-preview-fabrics{display:grid;flex:1 0 120px;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:180px;grid-template-rows:minmax(0,1fr);grid-auto-rows:auto;overflow-x:auto;overflow-y:hidden;min-height:120px}
+.backend-two-preview-fabrics .fa-product{min-height:0}
+.backend-two-preview-fabrics [hidden]{display:none!important}
+@media(max-width:600px){.backend-two-preview-columns[data-maya-operation-layout]{grid-template-columns:minmax(0,40fr) minmax(0,60fr)}}

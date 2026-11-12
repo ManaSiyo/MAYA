@@ -340,7 +340,16 @@ try{
  // A fresh mount of the failed saved URLs still retains all source links.
  await reopenResearch();
  await page.locator('.fa-product.has-missing-photo').first().waitFor();assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(await page.getByText('Photo unavailable',{exact:true}).count(),0);assert.equal(calls,2,'Failures do not retry the provider automatically');
- for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});assert.ok(await page.locator('.fa-results').evaluate(el=>[...el.querySelectorAll('a')].every(a=>a.href.startsWith('https://cloth.example/')&&a.getBoundingClientRect().right<=innerWidth+1)));}
+ await page.waitForFunction(()=>document.querySelectorAll('.fa-product.has-missing-photo').length===8);
+ for(const width of [320,390,768,1024,1440,1920]){
+  await page.setViewportSize({width,height:1000});assert.ok(await page.locator('.fa-results').evaluate(el=>[...el.querySelectorAll('a')].every(a=>a.href.startsWith('https://cloth.example/')&&a.getBoundingClientRect().right<=innerWidth+1)));
+  const sourceCards=await page.locator('.fa-product.has-missing-photo').evaluateAll(cards=>cards.map(card=>{const bounds=el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};};return {card:bounds(card),actions:bounds(card.querySelector('.fa-card-actions')),title:bounds(card.querySelector('.fa-card-title')),caption:bounds(card.querySelector('.fa-card-caption'))};}));
+  assert.equal(sourceCards.length,8);
+  for(const {card,actions,title,caption}of sourceCards){
+   assert.ok(actions.bottom<=title.top+1&&title.bottom<=caption.top+1,'Source-only favorite/dismiss actions leave both caption rows readable at '+width);
+   assert.ok(actions.left>=card.left-1&&actions.right<=card.right+1&&caption.bottom<=card.bottom+1,'Source-only actions and captions stay inside their card at '+width);
+  }
+ }
  failed=false;await refreshSearch();
  await page.waitForFunction(()=>{const cards=[...document.querySelectorAll('.fa-product')];return cards.length===8&&cards.every(card=>{const img=card.querySelector('.fa-product-image');return img?.complete&&img.naturalWidth>0;});});
  assert.equal(await page.locator('.fa-product:visible').count(),8);assert.equal(calls,3);
@@ -360,6 +369,17 @@ try{
  const beforePattern=await previewBounds();assert.ok(Math.abs(beforePattern.garment.height-beforePattern.pattern.height)<2);
  await operationPreview.getByRole('button',{name:'Start',exact:true}).click();await operationPreview.locator('.operation-layout-pattern img').evaluate(img=>img.decode());
  assert.deepEqual(await previewBounds(),beforePattern,'Active preview keeps its fixed frames when a drawing arrives');
+ const backendTwoPreview=page.locator('#backend-two-layout-preview');
+ const snapshotBounds=()=>backendTwoPreview.locator('.backend-two-preview-columns').evaluate(el=>{const origin=el.getBoundingClientRect(),rect=e=>{const r=e.getBoundingClientRect();return {left:r.left-origin.left,right:r.right-origin.left,top:r.top-origin.top,bottom:r.bottom-origin.top,width:r.width,height:r.height};};return {width:origin.width,height:origin.height,panels:[...el.children].map(rect),frames:[...el.querySelectorAll('.operation-layout-garment,.operation-layout-pattern')].map(rect)};});
+ for(const width of [390,768,1440]){
+  await page.setViewportSize({width,height:1000});await backendTwoPreview.getByRole('button',{name:'Mark 1',exact:true}).click();
+  const snapshot=await snapshotBounds(),[left,right]=snapshot.panels,[garment,pattern]=snapshot.frames;
+  assert.ok(left.right<=right.left+1&&right.right<=snapshot.width+1,'Backend 2 preview keeps both panels side by side at '+width);
+  assert.ok(Math.abs(garment.top-pattern.top)<2&&Math.abs(garment.bottom-pattern.bottom)<2,'Backend 2 preview aligns garment and pattern frames despite wrapped controls at '+width);
+  for(const frame of snapshot.frames)assert.ok(frame.width>0&&frame.height>0&&frame.top>=0&&frame.bottom<=snapshot.height+1,'Backend 2 preview contains both complete frames at '+width);
+  await backendTwoPreview.getByRole('button',{name:'Pipeline',exact:true}).click();
+  assert.deepEqual(await snapshotBounds(),snapshot,'Backend 2 preview keeps its paired geometry when Pipeline replaces the pattern at '+width);
+ }
  const projectPreview=page.locator('#project-actions-preview');await projectPreview.getByRole('button',{name:'Rename preview project'}).click();await projectPreview.getByRole('textbox',{name:'Rename preview project'}).fill('Renamed preview');await projectPreview.getByRole('textbox',{name:'Rename preview project'}).press('Tab');assert.equal(await projectPreview.locator('[data-maya-type=H4]').textContent(),'Renamed preview');
  const preview=page.locator('#workspace-previews');await preview.getByRole('button',{name:'Global',exact:true}).click();assert.equal(await preview.locator('.fa-status').textContent(),'Searching for Fabrics');assert.equal(await preview.locator('.fa-status').getAttribute('data-maya-type'),'P1');await preview.locator('.fa-product-image').first().evaluate(image=>image.decode());
  for(const width of [390,768,1440]){await page.setViewportSize({width,height:1000});const rect=()=>preview.locator('.fa-results').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight,rows:getComputedStyle(el).gridTemplateRows,cards:[...el.children].map(c=>[c.clientWidth,c.clientHeight,c.querySelector('img').clientHeight])}));await preview.getByRole('button',{name:'In House',exact:true}).click();const local=await rect();await preview.getByRole('button',{name:'Global',exact:true}).click();assert.deepEqual(await rect(),local);}

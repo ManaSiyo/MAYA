@@ -28,7 +28,7 @@ import {createGoogleAdsReader,createChatGPTAdsReader,createMetaAdsReader,cachedA
 // ═══════════════════════════════════════════════════════════════════════════
 
 import express from 'express';
-import { TEXT_MODEL, IMAGE_MODEL, chatBody } from './model-config.mjs';
+import { TEXT_MODEL, IMAGE_MODEL, MODEL_TERRA, MODEL_LUNA, MODEL_SOL, MODEL_UPGRADES, chatBody } from './model-config.mjs';
 import {createEventQueue,mountEventTriggers} from './event-triggers.mjs';
 import {createTextAutomations} from './text-automations.mjs';
 import { mountFabricSearch } from './fabrics.mjs';
@@ -217,23 +217,9 @@ const OPENAI_ALLOWED = new Set([
 // model change is an env var change (instant rollback), never a client edit.
 // Anything not named below is refused — the proxied key can no longer be
 // pointed at arbitrary models by editing localStorage.
-// All text roles default to Luna; explicit owner-set env overrides remain.
+// Current workload tiers are centralized in model-config; owner overrides remain.
 // Specialized image/audio/embedding models stay separate by modality.
 // ═══════════════════════════════════════════════════════════════════════════
-const MODEL_TERRA = process.env.MODEL_TERRA || TEXT_MODEL;
-const MODEL_LUNA  = TEXT_MODEL;
-const MODEL_SOL   = process.env.MODEL_SOL || TEXT_MODEL;
-const MODEL_UPGRADES = Object.freeze({
-  'gpt-4.1':      MODEL_TERRA,
-  'gpt-4o-mini':  MODEL_LUNA,
-  // v14.24: names an older browser may still hold. Refusing them as 403 left
-  // a consultation reading OPENAI ERROR: 403 with no way out.
-  'gpt-4o':       MODEL_TERRA,
-  'gpt-4':        MODEL_TERRA,
-  'gpt-4-turbo':  MODEL_TERRA,
-  'gpt-4.1-mini': MODEL_LUNA,
-  'gpt-5.6-terra': MODEL_LUNA, 'gpt-5.6-luna': MODEL_LUNA, 'gpt-5.6-sol': MODEL_LUNA,
-});
 // v13.70 (A1): the canonical inventory of models MAYA may run. ENFORCEMENT of
 // which model may hit which endpoint, plus image/quality/Sol policy, now lives
 // in docs/server/proxy-policy.mjs (evaluateProxyPolicy). Keep this list in step
@@ -3663,7 +3649,7 @@ app.post('/api/admin/lead-draft', requireAuthHeader, express.json({ limit: '64kb
     const rec = await loadLeadNotes(email);
     const emailsSent = rec.contacts.filter(c => c.type === 'email').length;
     const stage = emailsSent === 0 ? 'first contact' : emailsSent === 1 ? 'second contact (a follow up)' : 'later follow up, keep it brief and warm';
-    const parsed = await askModelJson(process.env.MODEL_TERRA || TEXT_MODEL,
+    const parsed = await askModelJson(MODEL_TERRA,
       'You draft ONE email from Fromsa, founder of Mana Siyo, a custom fashion studio in San Francisco, ' +
       'to a lead who filled the contact form. Return strict JSON {"subject": short and specific, ' +
       '"body": the email, warm and personal, 90 to 180 words, greeting the lead by first name, grounded ONLY ' +
@@ -3718,7 +3704,7 @@ app.post('/api/admin/marketing-brief', requireAuthHeader, express.json({ limit: 
     signal: AbortSignal.timeout(45000),
   });
   try {
-    let r = await askModel(process.env.MODEL_TERRA || TEXT_MODEL);
+    let r = await askModel(MODEL_TERRA);
     if (!r.ok && (r.status === 400 || r.status === 404)) {
       const errTxt = await r.text();
       if (/model/i.test(errTxt)) r = await askModel('gpt-4o-mini');

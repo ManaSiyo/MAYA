@@ -1,9 +1,10 @@
 import {randomUUID} from 'node:crypto';
 import {jsonStore,problem,clip} from './crm-store.mjs';
-// Standard text rates, USD per million tokens. Verified against provider docs 2026-09-27.
+// Standard text rates, USD per million tokens. OpenAI verified 2026-11-11;
+// other provider tiers retain their September 27 configuration.
 // Only these priced models may use the CRM's daily allowance. No tools or image inputs.
 export const ECONOMY_MODELS={
-  openai:{model:'gpt-5-nano',input:.05,output:.4},
+  openai:{model:'gpt-6-luna',input:.1,output:.5},
   anthropic:{model:'claude-haiku-4-5-20251001',input:1,output:5},
   gemini:{model:'gemini-2.5-flash-lite',input:.1,output:.4}
 };
@@ -39,7 +40,7 @@ export function createCrmAI(deps) {
       let url,headers,body;
       if(chosen.provider==='openai'){
         url='https://api.openai.com/v1/responses';headers={Authorization:'Bearer '+keys.openai};
-        body={model:chosen.model,instructions,input,max_output_tokens:maxOutput,reasoning:{effort:'minimal'},store:false};
+        body={model:chosen.model,instructions,input,max_output_tokens:maxOutput,reasoning:{effort:'none'},store:false};
         if(options.json)body.text={format:{type:'json_object'}};
       }else if(chosen.provider==='anthropic'){
         url='https://api.anthropic.com/v1/messages';headers={'x-api-key':keys.anthropic,'anthropic-version':'2023-06-01'};

@@ -1905,6 +1905,7 @@ checks['proxy-policy']=async function(){
 // Commit A1 — proxy policy tests. Pure unit tests over the fail-closed request
 // policy: no server, no network. Run: node tests/proxy-policy.mjs
 const { evaluateProxyPolicy }=await import('../backend/server/proxy-policy.mjs');
+const {IMAGE_MODEL}=await import('../backend/server/model-config.mjs');
 
 let pass = 0, fail = 0;
 function ok(name, cond) {
@@ -1944,7 +1945,7 @@ function multipart(fields, opts = {}) {
 { const r = ev(); ok('valid chat: a fallback body is prepared for the legacy name', r.ok && r.fallback && JSON.parse(r.fallback.toString()).model === 'gpt-4.1'); }
 { const r = ev({ body: json({ model: 'gpt-4o-mini', messages: [] }) }); ok('valid chat: gpt-4o-mini upgrades to Luna', r.ok && r.model === 'gpt-5.6-luna'); }
 { const r = ev({ body: json({ model: 'gpt-5.6-terra', messages: [] }) }); ok('valid chat: a tier name passes as itself, no rewrite', r.ok && r.model === 'gpt-5.6-terra' && !r.fallback); }
-{ const r = ev({ upstreamPath: 'v1/images/generations', body: json({ model: 'gpt-image-2', prompt: 'x', n: 1 }) }); ok('valid image generation: gpt-image-2, n=1', r.ok && r.model === 'gpt-image-2'); }
+{ const r = ev({ upstreamPath: 'v1/images/generations', body: json({ model: 'gpt-image-2', prompt: 'x', n: 1 }) }); ok('legacy image generation uses current image tier, n=1', r.ok && r.model === IMAGE_MODEL); }
 { const r = ev({ upstreamPath: 'v1/embeddings', body: json({ model: 'text-embedding-3-small', input: 'x' }) }); ok('valid embeddings', r.ok && r.model === 'text-embedding-3-small'); }
 { const m = multipart([['model', 'whisper-1']]); const r = ev({ upstreamPath: 'v1/audio/transcriptions', contentType: m.contentType, body: m.body }); ok('valid multipart transcription: whisper-1', r.ok && r.model === 'whisper-1'); }
 
@@ -1953,10 +1954,11 @@ function multipart(fields, opts = {}) {
 for (const model of ['gpt-image-2.6-flare', 'gpt-image-2.5-flare']) {
   const body = json({ model, prompt: 'same garment', size: '1024x1536', quality: 'medium', n: 1 });
   const generation = ev({ upstreamPath: 'v1/images/generations', body });
-  ok(model + ' generation is forwarded unchanged without model fallback', generation.ok && generation.model === model && generation.body.equals(body) && !generation.fallback);
+  ok(model + ' generation uses current model without retry and preserves options', generation.ok && generation.model === IMAGE_MODEL && generation.body.equals(json({...JSON.parse(body),model:IMAGE_MODEL})) && !generation.fallback);
   const m = multipart([['model', model], ['quality', 'medium'], ['n', '1']], { bigFileFirst: true, fileSize: 300000 });
   const edit = ev({ upstreamPath: 'v1/images/edits', ...m });
-  ok(model + ' edit preserves reference bytes', edit.ok && edit.body.equals(m.body) && !edit.fallback);
+  const expected = multipart([['model', IMAGE_MODEL], ['quality', 'medium'], ['n', '1']], { bigFileFirst: true, fileSize: 300000 });
+  ok(model + ' edit upgrades only model and preserves reference bytes', edit.ok && edit.model === IMAGE_MODEL && edit.body.equals(expected.body) && !edit.fallback);
   const wrong = ev({ body: json({ model, messages: [] }) });
   ok(model + ' cannot use chat', !wrong.ok && wrong.error === 'model_endpoint_mismatch');
   const count = ev({ upstreamPath: 'v1/images/generations', body: json({ model, n: 3 }) });
@@ -1988,7 +1990,7 @@ for (const model of ['gpt-image-2.6-flare', 'gpt-image-2.5-flare']) {
 // ── image count / quality ──
 { const r = ev({ upstreamPath: 'v1/images/generations', body: json({ model: 'gpt-image-2', prompt: 'x', n: 3 }) }); ok('n>2 is refused', !r.ok && r.error === 'too_many_images'); }
 { const r = ev({ upstreamPath: 'v1/images/generations', body: json({ model: 'gpt-image-2', prompt: 'x', quality: 'high' }) }); ok('non-admin high quality is refused', !r.ok && r.error === 'quality_not_allowed'); }
-{ const r = ev({ upstreamPath: 'v1/images/generations', isAdmin: true, body: json({ model: 'gpt-image-2', prompt: 'x', quality: 'high', n: 2 }) }); ok('admin high quality n=2 is allowed', r.ok && r.model === 'gpt-image-2'); }
+{ const r = ev({ upstreamPath: 'v1/images/generations', isAdmin: true, body: json({ model: 'gpt-image-2', prompt: 'x', quality: 'high', n: 2 }) }); ok('admin high quality n=2 is allowed', r.ok && r.model === IMAGE_MODEL); }
 
 // ── multipart policy after a large file, and ambiguity ──
 { const m = multipart([['model', 'gpt-image-2'], ['n', '9']], { bigFileFirst: true, fileSize: 300000 });
@@ -2198,6 +2200,45 @@ console.log('Shared drawer and auto-hide scrollbar schema: legacy compatibility,
 
 };
 
+checks['logic-models']=async function(){
+ const {default:assert}=await import('node:assert/strict');
+ const {spawnSync}=await import('node:child_process');
+ const {MODEL_TERRA,MODEL_LUNA,MODEL_SOL,MODEL_UPGRADES,chatBody}=await import('../backend/server/model-config.mjs');
+ const {evaluateProxyPolicy}=await import('../backend/server/proxy-policy.mjs');
+ const {createCrmAI,ECONOMY_MODELS}=await import('../backend/server/crm-ai.mjs');
+ const models={TERRA:MODEL_TERRA,LUNA:MODEL_LUNA,SOL:MODEL_SOL,upgrades:MODEL_UPGRADES};
+ const evaluate=(body,isAdmin=false)=>evaluateProxyPolicy({method:'POST',upstreamPath:'v1/chat/completions',contentType:'application/json',body:Buffer.from(JSON.stringify(body)),isAdmin,models});
+ const messages=[{role:'user',content:[{type:'text',text:'Interpret this pattern'},{type:'image_url',image_url:{url:'data:image/png;base64,YQ=='}}]}];
+ for(const [alias,expected,effort]of [['gpt-4.1',MODEL_TERRA,'none'],['gpt-4o-mini',MODEL_LUNA,'none'],['gpt-5.6-sol',MODEL_SOL,'low'],['gpt-6-sol',MODEL_SOL,'low']]){
+  const r=evaluate({model:alias,messages,stream:true,max_tokens:4000,temperature:.2,top_p:.9,response_format:{type:'json_object'}},true);
+  assert.equal(r.ok,true);assert.equal(r.model,expected);assert.equal(r.streamRequested,true);
+  const b=JSON.parse(r.body);assert.deepEqual(b.messages,messages);assert.equal(b.reasoning_effort,effort);assert.equal(b.max_completion_tokens,4000);assert.equal(b.temperature,undefined);assert.equal(b.top_p,undefined);assert.equal(b.max_tokens,undefined);assert.deepEqual(b.response_format,{type:'json_object'});
+  assert.equal(JSON.parse(r.fallback).model,'gpt-4o-mini','Existing pre-inference entitlement fallback remains');
+ }
+ for(const model of ['gpt-5.6-sol','gpt-6-sol',MODEL_SOL])assert.equal(evaluate({model,messages}).status,403);
+ assert.equal(chatBody({reasoning_effort:'high',max_tokens:9000,logprobs:true,top_logprobs:2},MODEL_SOL).reasoning_effort,'high');
+ assert.equal(chatBody({reasoning_effort:'none',logprobs:true,top_logprobs:2},MODEL_SOL).logprobs,undefined);
+ assert.equal(chatBody({reasoning_effort:'minimal'},MODEL_SOL).reasoning_effort,'low');
+ for(const extra of [{tools:[{type:'function',function:{name:'test'}}]},{functions:[{name:'test'}]},{messages:[{role:'tool',content:'result',tool_call_id:'x'}]}])assert.equal(evaluate({model:MODEL_TERRA,messages,...extra},true).error,'responses_required');
+ assert.equal(evaluate({model:MODEL_LUNA,messages,tools:[{type:'function',function:{name:'test'}}]}).ok,true);
+ assert.equal(evaluate({model:MODEL_LUNA,messages,reasoning_effort:'low',tools:[{type:'function',function:{name:'test'}}]}).error,'responses_required');
+ const overrides=spawnSync(process.execPath,['--input-type=module','-e',"const m=await import('./backend/server/model-config.mjs');console.log(JSON.stringify([m.MODEL_TERRA,m.MODEL_SOL,m.MODEL_LUNA,m.MODEL_UPGRADES['gpt-5.6-sol']]));"],{cwd:new URL('../',import.meta.url),env:{PATH:process.env.PATH,MODEL_TERRA:'owner-terra',MODEL_SOL:'owner-sol',MODEL_LUNA:'owner-luna'},encoding:'utf8'});
+ assert.equal(overrides.status,0,overrides.stderr);assert.deepEqual(JSON.parse(overrides.stdout),['owner-terra','owner-sol','owner-luna','owner-sol']);
+ const records=new Map();let revision=0,calls=0,mode='ok',sent;
+ const ai=createCrmAI({keys:{openai:'fixture'},now:()=>new Date('2026-11-11T12:00:00Z'),read:async key=>records.get(key)||{ok:false,status:404},write:async(key,buf,type,expected)=>{assert.equal(expected,records.get(key)?.generation||'0');records.set(key,{ok:true,buf,generation:String(++revision)});},fetch:async(url,options)=>{
+  calls++;assert.equal(url,'https://api.openai.com/v1/responses');sent=JSON.parse(options.body);
+  if(mode==='uncertain')throw Error('network');
+  if(mode==='refused')return new Response('',{status:429});
+  return Response.json({output:[{content:[{type:'output_text',text:'{"reply":"Ready"}'}]}],usage:{input_tokens:1000,output_tokens:200}});
+ }});
+ const completion=await ai.complete('owner','Return JSON',{request:'Draft reply'},'openai',{json:true});
+ assert.equal(sent.model,'gpt-6-luna');assert.deepEqual(sent.reasoning,{effort:'none'});assert.equal(sent.store,false);assert.deepEqual(sent.text,{format:{type:'json_object'}});assert.equal(completion.costUsd,.0002);
+ assert.deepEqual(ECONOMY_MODELS.openai,{model:'gpt-6-luna',input:.1,output:.5});assert.equal((await ai.meter('owner')).limitUsd,1);
+ mode='uncertain';await assert.rejects(ai.complete('owner','Draft',{request:'Reply'}),e=>e.code==='ai_completion_unconfirmed');const reserve=(await ai.meter('owner')).reservedUsd;assert.ok(reserve>0);
+ mode='refused';await assert.rejects(ai.complete('owner','Draft',{request:'Reply'}),e=>e.code==='ai_http_429');assert.equal((await ai.meter('owner')).reservedUsd,reserve);assert.equal(calls,3,'No automatic paid retry');
+ console.log('Current logic tiers preserve workload roles, owner overrides, admin gating, JSON/streaming and CRM cost/reservation safeguards.');
+};
+
 checks['image-models']=async function(){
 // Exercise actual image request builders with fake transport; no paid calls.
 const {default:assert}=await import('node:assert/strict');
@@ -2213,7 +2254,7 @@ function fn(source,name){
   if(firstLine.endsWith('}'))return firstLine;
   return source.slice(start,source.indexOf('\n}',start)+2);
 }
-const frontend=read('frontend/index.html'),brief=read('backend/backend.html'),operations=read('backend/operation-workspace.html');
+const frontend=read('frontend/index.html'),brief=read('backend/backend.html'),backendTwo=read('backend/backend2.html'),operations=read('backend/operation-workspace.html');
 assert.equal(IMAGE_MODEL,'gpt-image-2.6-flare');
 const calls=[],stored=new Map([['maya_image_model','gpt-image-2.5-flare']]);
 const image=new Blob(['reference-image'],{type:'image/png'});
@@ -2252,7 +2293,10 @@ assert.equal(await calls.at(-1).options.body.get('image').text(),'single referen
 await vm.runInContext("renderPiece('fixture-hero',{name:'Coat'})",context);
 await vm.runInContext("generatePattern('fixture-hero',{name:'Coat',panels:8})",context);
 await vm.runInContext("gptImageEdit('fixture-hero','pattern drawing')",context);
-assert.equal(calls.length,7,'One request per explicit generation/edit');
+vm.runInContext(['renderPiece','generatePattern'].map(name=>fn(backendTwo,name)).join('\n'),context);
+await vm.runInContext("renderPiece('fixture-hero',{name:'Coat'})",context);
+await vm.runInContext("generatePattern('fixture-hero',{name:'Coat',panels:8})",context);
+assert.equal(calls.length,9,'One request per explicit generation/edit, including Backend 2');
 for(const [i,call] of calls.entries()){
   assert.equal(call.options.headers.Authorization,'Bearer fixture-token');
   assert.equal(call.options.method,'POST');
@@ -2262,10 +2306,20 @@ for(const [i,call] of calls.entries()){
   assert.equal(form.get('model'),IMAGE_MODEL);
   if(i<4)assert.equal(form.get('complexity'),'medium');
   assert.equal(form.get('size'),'1536x1024');assert.equal(form.get('n'),'1');
-  assert.equal(form.get('quality'),i>=5?'high':'medium','Existing Admin quality choices stay intact');
+  assert.equal(form.get('quality'),[5,6,8].includes(i)?'high':'medium','Existing Admin quality choices stay intact');
   if(i>=4)assert.equal(await form.get('image').text(),'reference-image');
 }
-console.log('GPT Image 2.6 Flare requests preserve auth, sizes, quality, options, reference images and response handling across frontend, Brief and Operations.');
+const {evaluateProxyPolicy}=await import('../backend/server/proxy-policy.mjs');
+for(const oldModel of ['gpt-image-2','gpt-image-2.5-flare']){
+ const bytes=Buffer.concat([Buffer.from([0,255,128,13,10]),Buffer.from(oldModel)]);
+ const form=new FormData();form.append('image',new Blob([bytes],{type:'image/png'}),'reference.png');form.append('model',oldModel);form.append('prompt','Keep the jacket');form.append('quality','high');form.append('n','1');
+ const request=new Request('https://fixture.test',{method:'POST',body:form}),contentType=request.headers.get('Content-Type');
+ const policy=evaluateProxyPolicy({method:'POST',upstreamPath:'v1/images/edits',contentType,body:Buffer.from(await request.arrayBuffer()),isAdmin:true,models:{}});
+ assert.equal(policy.ok,true);assert.equal(policy.fallback,null);
+ const decoded=await new Response(policy.body,{headers:{'Content-Type':contentType}}).formData();
+ assert.equal(decoded.get('model'),IMAGE_MODEL);assert.equal(decoded.get('prompt'),'Keep the jacket');assert.equal(decoded.get('quality'),'high');assert.equal(decoded.get('n'),'1');assert.deepEqual(Buffer.from(await decoded.get('image').arrayBuffer()),bytes,'Model-like text in binary references is untouched');
+}
+console.log('GPT Image 2.6 Flare requests preserve auth, sizes, quality, options, reference images and response handling across frontend, Brief, Backend 2 and Operations.');
 
 };
 
@@ -2682,12 +2736,14 @@ checks['submission-drawer-reuse']=async function(){
 checks['backend-two-shell']=async function(){
  const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
  const {document,Event}=parseHTML(readFileSync('backend/backend2.html','utf8'));
- const engine=parseHTML('<html><body><select id="test-picker"><option>Coat</option></select><div id="drawer"><section class="sec" id="pattern-settings"><label for="pattern-hits">Passages</label><input id="pattern-hits" value="5"><button id="test-save">Save</button></section></div></body></html>');
- const frame=document.getElementById('operations-embed');let edits=0,clicks=0,reads=0,flushed=0;
+ const engine=parseHTML('<html><body><select id="test-picker"><option>Coat</option></select><div id="drawer"><section class="sec" id="pattern-settings"><label for="pattern-hits">Passages</label><input id="pattern-hits" value="5"><button id="test-save">Save</button><p id="pattern-save-status" role="status"></p><div id="pattern-history"><button>Old version</button></div></section></div></body></html>');
+ const frame=document.getElementById('operations-embed');let edits=0,clicks=0,reads=0,flushed=0,historyClicks=0;
+ let scope={sid:'project',account:'owner',local:1,hero:'photo'},garmentId='coat';
+ Object.defineProperty(document,'activeElement',{value:null,writable:true,configurable:true});
  engine.document.getElementById('pattern-hits').addEventListener('input',()=>edits++);engine.document.getElementById('test-save').addEventListener('click',()=>clicks++);
- Object.defineProperty(frame,'contentDocument',{value:engine.document});Object.defineProperty(frame,'contentWindow',{value:{Event:engine.Event,postMessage(){},flushPatternBeforeNavigation:async()=>{flushed++;return true;}}});
+ Object.defineProperty(frame,'contentDocument',{value:engine.document});Object.defineProperty(frame,'contentWindow',{value:{Event:engine.Event,postMessage(){},backendTwoContext:()=>({account:scope.account,submissionId:scope.sid,local:scope.local,revision:0,garmentId}),flushPatternBeforeNavigation:async()=>{flushed++;return true;}}});
  const listeners=new Map(),c=vm.createContext({document,location:{origin:'https://maya.test',href:''},queueMicrotask,URLSearchParams,
-  _savedOperation:null,_piecesContext:()=>({sid:'project',account:'owner',local:1,hero:'photo'}),_publishSavedOperations(){},_clearBriefPrivate(){},_postPiecesToOps(){},_updateBrandSub(){},goToScreen(){},toggleWorkspaceDrawer(){},showBriefFabrics(){},toggleBriefFabrics(){},showBriefItem(){},_briefView:'item',beginDissection(){},
+  _savedOperation:null,_operationsRevision:0,_piecesContext:()=>({...scope}),showBackendToast(){},_publishSavedOperations(){},_clearBriefPrivate(){},_postPiecesToOps(){},_updateBrandSub(){},goToScreen(){},toggleWorkspaceDrawer(){},showBriefFabrics(){},toggleBriefFabrics(){},showBriefItem(){},_briefView:'item',beginDissection(){},
   openClientsDrawer:async()=>reads++,toggleClientsDrawer(force){const d=document.getElementById('clients-drawer');d.classList.toggle('open',force===undefined?!d.classList.contains('open'):force);},
   addEventListener:(name,fn)=>listeners.set(name,fn),MayaFabricAssistant:{reset(){},open:async()=>{}}
  });c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/backend-two.js','utf8'),c);
@@ -2698,10 +2754,28 @@ checks['backend-two-shell']=async function(){
  document.getElementById('backend-two-tab-settings').click();assert.equal(document.getElementById('backend-two-settings').hidden,false);
  const field=document.getElementById('b2-setting-pattern-hits');assert.ok(field);field.value='8';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(engine.document.getElementById('pattern-hits').value,'8');assert.equal(edits,1);
  document.getElementById('b2-setting-test-save').click();assert.equal(clicks,1);
+ document.activeElement=field;
+ engine.document.getElementById('pattern-save-status').textContent='Save failed. Retry.';
+ engine.document.getElementById('test-save').hidden=true;
+ const history=engine.document.getElementById('pattern-history'),newVersion=engine.document.createElement('button');newVersion.textContent='New version';newVersion.onclick=()=>historyClicks++;history.replaceChildren(newVersion);
+ listeners.get('message')({origin:c.location.origin,source:frame.contentWindow,data:{maya:'backend-two-settings',account:scope.account,submissionId:scope.sid,local:scope.local,revision:0}});
+ assert.equal(document.getElementById('b2-setting-pattern-hits'),field,'Focused input stays mounted during save updates');
+ assert.equal(document.getElementById('b2-setting-pattern-save-status').textContent,'Save failed. Retry.');
+ assert.equal(document.getElementById('b2-setting-test-save').hidden,true,'Save updates synchronize control visibility');
+ document.querySelector('#b2-setting-pattern-history button').click();assert.equal(historyClicks,1,'Refreshed history is wired to current engine buttons');
+ scope={...scope,local:2};field.value='99';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(edits,1,'A stale mirror cannot write into a later project generation');scope={...scope,local:1};document.activeElement=null;
+ garmentId='pants';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(edits,1,'A stale mirror cannot edit the newly selected garment before its message arrives');garmentId='coat';
+
  document.getElementById('backend-two-tab-submissions').click();assert.equal(reads,1);assert.equal(document.getElementById('backend-two-settings').hidden,true);
  c.toggleWorkspaceDrawer();assert.equal(document.getElementById('clients-drawer').inert,true);
  await c.openBackendTwoSubmission({id:'project-B',name:'Second'});assert.equal(flushed,1);assert.match(c.location.href,/^\/backend2.html\?submission=project-B/);
  frame.contentWindow.flushPatternBeforeNavigation=async()=>false;c.location.href='unchanged';await c.openBackendTwoSubmission({id:'project-C'});assert.equal(c.location.href,'unchanged','Failed settings saves block submission navigation');
+ let release;frame.contentWindow.flushPatternBeforeNavigation=()=>new Promise(resolve=>release=resolve);
+ const old=c.openBackendTwoSubmission({id:'project-D'});scope={...scope,account:'next-owner'};release(true);await old;assert.equal(c.location.href,'unchanged','Account changes cancel pending submission navigation');
+ const waiting=[];frame.contentWindow.flushPatternBeforeNavigation=()=>new Promise(resolve=>waiting.push(resolve));
+ const first=c.openBackendTwoSubmission({id:'older'}),latest=c.openBackendTwoSubmission({id:'latest'});waiting[1](true);await latest;waiting[0](true);await first;assert.match(c.location.href,/submission=latest/,'Only the latest submission click navigates');
+ listeners.get('message')({origin:c.location.origin,source:frame.contentWindow,data:{maya:'backend-two-open-settings',account:scope.account,submissionId:scope.sid,local:scope.local,revision:0,open:true}});
+ assert.equal(document.getElementById('backend-two-settings').hidden,false,'Engine settings requests open the parent drawer');
  console.log('Backend 2: snapshot DOM, drawer tabs, engine-backed settings and failed-save navigation passed without a browser.');
 };
 
@@ -2710,24 +2784,33 @@ checks['backend-two-operation']=async function(){
  const {document,MutationObserver}=parseHTML(readFileSync('backend/operation-workspace.html','utf8'));
  // Linkedom exposes select.value as a getter; browsers also provide the setter.
  const picker=document.getElementById('test-picker');Object.defineProperty(picker,'value',{value:'',writable:true});
- const notices=[],context={account:'owner',submissionId:'project',referenceImage:'data:image/png;base64,ZnVsbA=='};
- const c=vm.createContext({document,MutationObserver,URLSearchParams,location:{search:'?layout=backend2',origin:'https://maya.test'},EMBEDDED:true,RUNNING:false,queueMicrotask,
+ let pendingPick=null;const notices=[],context={account:'owner',submissionId:'project',local:1,referenceImage:'data:image/png;base64,ZnVsbA=='};
+ const c=vm.createContext({document,MutationObserver,URLSearchParams,location:{search:'?layout=backend2',origin:'https://maya.test'},EMBEDDED:true,RUNNING:false,_operationRevision:0,_patternNavigation:0,queueMicrotask,syncPlan(){},toggleDrawer(){},
   $:id=>document.getElementById(id),parent:{postMessage:data=>notices.push(data)},operationAccount:()=> 'owner',operationSubmission:()=> 'project',FILES:{},TESTS:{},ACTIVE_TEST:null,_operationInputContext:context,
-  renderPassPills(){},setOperationRunning(value){c.RUNNING=value;},syncPatternSettings(){},lockPatternSettings(){},renderPatternHistory(){},viewGrounded(){},
+  renderPassPills(){},setOperationRunning(value){c.RUNNING=value;},syncPatternSettings(){},lockPatternSettings(){},renderPatternHistory(){},viewGrounded(){},initTests(){picker.innerHTML='<option>waiting for pieces…</option>';},
   showView(){document.getElementById('hero-img').src=c.FILES.front;},
   pickTest(name){c.ACTIVE_TEST=name;c.FILES=c.TESTS[name];},
-  async onPickTest(name){c.pickTest(name);},
+  async onPickTest(name){const navigation=++c._patternNavigation;if(pendingPick)await pendingPick;if(navigation===c._patternNavigation)c.pickTest(name);},
   installOperationContext(next){c._operationInputContext=next;c.TESTS={Coat:{front:'data:image/png;base64,Y29hdA==',piece:{id:'coat'}}};picker.innerHTML='<option value="Coat">Coat</option>';c.pickTest('Coat');}
- });vm.runInContext(readFileSync('docs/aesthetics/ui/backend-two-operation.js','utf8'),c);
+ });c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/backend-two-operation.js','utf8'),c);
  c.installOperationContext(context);assert.equal(picker.value,'__full__');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);
  assert.equal(picker.querySelector('optgroup').label,'Dissected view');assert.equal(c.FILES.piece.id,'coat','Full view does not replace the active pattern input');
  await c.onPickTest('Coat');assert.equal(picker.value,'Coat');assert.equal(document.getElementById('hero-img').getAttribute('src'),c.FILES.front);
  document.getElementById('backend-two-pipeline-tab').click();assert.equal(document.getElementById('stage').hidden,true);assert.equal(document.getElementById('backend-two-pipeline').hidden,false);
  assert.ok(document.querySelector('#backend-two-pipeline #t-chunks'));assert.ok(document.querySelector('#backend-two-pipeline #live-log'));
+ const patternTab=document.getElementById('backend-two-pattern-tab');
  c.setOperationRunning(true);assert.equal(document.querySelector('.backend-two-pipeline-dot').classList.contains('running'),true);
+ assert.equal(document.getElementById('backend-two-pattern-tab'),patternTab,'Live updates retain keyboard focus targets');
  c.setOperationRunning(false);assert.equal(document.querySelector('.backend-two-pipeline-dot').classList.contains('running'),false);
  document.getElementById('backend-two-pattern-tab').click();assert.equal(document.getElementById('stage').hidden,false);
  await c.onPickTest('__full__');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);assert.equal(c.FILES.piece.id,'coat');
+ let finishPick;pendingPick=new Promise(resolve=>finishPick=resolve);
+ const selecting=c.onPickTest('Coat');await c.onPickTest('__full__');finishPick();await selecting;pendingPick=null;
+ assert.equal(picker.value,'__full__','A later Full view choice cancels an earlier pending garment choice');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);
+ document.getElementById('plan-a-view').style.display='none';document.getElementById('plan-b-view').style.display='';c.syncPlan();assert.equal(document.getElementById('plan-a-view').style.display,'');assert.equal(document.getElementById('plan-b-view').style.display,'none');
+ c.toggleDrawer(true);assert.ok(notices.some(n=>n.maya==='backend-two-open-settings'&&n.open&&n.local===1));
+ const noticeCount=notices.length;document.getElementById('pattern-save-status').textContent='Save failed';await Promise.resolve();assert.ok(notices.slice(noticeCount).some(n=>n.maya==='backend-two-settings'),'Direct save failures refresh the mirrored settings');
+ c.initTests();assert.ok(picker.querySelector('option[value="__full__"]'),'Initialization and account reset retain Full view');
  assert.ok(notices.some(n=>n.garmentId==='coat'));
  console.log('Backend 2: full/dissected images, stable pattern input, Pipeline/Mark 1 and running indicator passed without a browser.');
 };

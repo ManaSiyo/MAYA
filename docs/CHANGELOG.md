@@ -4,6 +4,17 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 11 — Backend 2 review and model tiers:** fix pending Full view and
+  submission navigation races, scope mirrored Settings to the current operation,
+  synchronize save errors/history while typing, and keep engine settings in the
+  parent drawer. Fix source-card action overlap, short-strip access, preview
+  clipping and circular tabs. Upgrade logic defaults to Terra/Sol 6.1 with Luna 6
+  for routine work; update CRM OpenAI pricing and parameters. Route legacy image
+  clients to Flare 2.6 without retry or altering reference bytes. Preserve owner
+  overrides, admin gates, budgets and existing chat entitlement fallback. Node20
+  code-only release checks pass; CI geometry coverage extended. No Push, Chrome,
+  live provider inference or claimed visual acceptance.
+
 - **November 11 — CLO asset sourcing research:** document desktop and CLO-SET API
   inventory, distinguish CONNECT marketplace coverage from account libraries,
   inspect the existing Plan B proxy, and propose OpenAI-selected digital garment

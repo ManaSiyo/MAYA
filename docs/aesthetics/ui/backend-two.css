@@ -5,11 +5,11 @@ body.backend-two #screen-operating{display:block;min-height:0;height:100%;paddin
 body.backend-two #operations-embed{height:100%!important;min-height:0;display:block}
 #backend-two-fabric-strip{min-height:0;overflow:hidden}
 body.backend-two #brief-fabrics{display:flex!important;width:100%;height:100%;min-height:0;margin:0;padding:0}
-#backend-two-fabric-strip .fabric-assistant.is-inline{overflow:hidden}
+#backend-two-fabric-strip .fabric-assistant.is-inline{overflow:auto}
 #backend-two-fabric-strip .fa-header{flex-wrap:nowrap;gap:var(--maya-form-field-gap,8px)}
 #backend-two-fabric-strip .fa-header .fa-tabs{flex:1 1 auto;flex-wrap:nowrap;overflow-x:auto}
-#backend-two-fabric-strip .fa-toolbar{flex-wrap:nowrap}
-#backend-two-fabric-strip .fa-body{min-height:0;flex:1 1 0;overflow:hidden}
+#backend-two-fabric-strip .fa-toolbar{flex-wrap:nowrap;flex:0 1 auto;max-width:100%;overflow-x:auto}
+#backend-two-fabric-strip .fa-body{min-height:120px;flex:1 0 120px;overflow:hidden}
 #backend-two-fabric-strip .fa-results{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:clamp(150px,15vw,230px);grid-template-rows:minmax(0,1fr);grid-auto-rows:auto;overflow-x:auto;overflow-y:hidden;flex:1 1 0;align-content:stretch;align-items:stretch}
 #backend-two-fabric-strip .fa-product{height:auto;min-height:0;grid-column:auto;align-self:stretch}
 #backend-two-fabric-strip .fa-empty{grid-column:auto;width:max-content;max-width:72vw;align-self:center}
@@ -17,6 +17,10 @@ body.backend-two #brief-fabrics{display:flex!important;width:100%;height:100%;mi
 #backend-two-fabric-strip .fa-product-link{height:100%}
 #backend-two-fabric-strip .fa-card-actions{top:4px;right:4px;flex-wrap:nowrap}
 #backend-two-fabric-strip .fa-save-status{flex:none}
+/* Source-only cards keep both caption rows clear of the heart and dismiss pair. */
+#backend-two-fabric-strip .fa-product.has-missing-photo{display:flex;flex-direction:column;overflow:auto;gap:var(--maya-form-label-gap,6px)}
+#backend-two-fabric-strip .has-missing-photo .fa-card-actions{position:static;order:-1;align-self:flex-end;flex:none;max-width:100%}
+#backend-two-fabric-strip .has-missing-photo .fa-product-link{height:auto;padding-right:0;flex:1 1 auto;align-content:start}
 body.backend-two #clients-drawer{display:flex;flex-direction:column;overflow:hidden}
 body.backend-two #clients-drawer [hidden]{display:none!important}
 .backend-two-tabs{display:flex;gap:var(--maya-icon-pill-gap,6px);flex:none;justify-content:center;margin-bottom:var(--maya-form-field-gap,12px)}
@@ -46,6 +50,8 @@ body.backend-two-operation [hidden]{display:none!important}
 #backend-two-pipeline .trace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 #backend-two-pipeline pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:none}
 #backend-two-pipeline .live{margin-top:0}
+#backend-two-pipeline .live .lh{flex-wrap:wrap;overflow-wrap:anywhere}
+#backend-two-pipeline .live .lstatus{min-width:0;max-width:100%}
 .backend-two-pipeline-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good,#5acf6e);margin-left:8px;opacity:.4}
 .backend-two-pipeline-dot.running{opacity:1;animation:backend-two-live 1.4s ease-in-out infinite}
 @keyframes backend-two-live{50%{opacity:.25}}
@@ -56,5 +62,5 @@ body.backend-two-operation [hidden]{display:none!important}
 body.backend-two .backend-two-tabs{justify-content:flex-start;gap:14px;position:relative}
 body.backend-two .backend-two-tabs .pg-tab{flex:none;position:relative;overflow:visible}
 body.backend-two .pg-tab.on::after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-5px;border:5px solid transparent;border-top-color:var(--maya-glass-border,currentColor)}
-body.backend-two .pg-tabtitle{flex:1;min-width:0;padding-left:4px}
+body.backend-two .pg-tabtitle{flex:1;min-width:0;padding-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html.embedded body.backend-two-operation #hscroll>.hpane-main>.wrap{padding:0}
