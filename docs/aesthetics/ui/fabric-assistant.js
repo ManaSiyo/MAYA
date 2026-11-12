@@ -169,7 +169,7 @@
   function syncLayout() {
     if(!els)return;
     const compact=!!context.compactRail,rail=compact&&workspace.classList.contains('is-inline');
-    workspace.classList.toggle('fa-compact-cards',compact);workspace.classList.toggle('is-rail',rail);
+    workspace.classList.toggle('fa-compact-cards',compact);workspace.classList.toggle('is-rail',rail);workspace.classList.toggle('fa-original-grid',!!context.originalGrid&&!compact);
     if(rail){if(els.rail.parentNode!==els.body)els.body.insertBefore(els.rail,els.saveStatus);els.rail.append(els.header,els.results);}
     else {if(els.header.parentNode!==workspace)workspace.prepend(els.header);if(els.results.parentNode!==els.body)els.body.insertBefore(els.results,els.saveStatus);els.rail.remove();}
   }
@@ -461,19 +461,20 @@
   }
   // Photo evidence can arrive late. It updates the mounted image without
   // discarding a healthy photograph or restarting URLs that already failed.
-  const cardSignature=p=>JSON.stringify([view,!!context.automatic,!!context.compactRail,p.url]);
+  const cardSignature=p=>JSON.stringify([view,!!context.automatic,!!context.compactRail,!!context.originalGrid,p.url]);
   function card(p) {
+    const originalGrid=!!context.originalGrid&&!context.compactRail,overlay=!!context.compactRail||originalGrid;
     const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);item._fabricView=view;
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
     mountProductPhoto(item,link,p);
-    const title=node('h3','fa-card-title',p.title);title.dataset.mayaType=context.compactRail?'P1':'H4';
-    const caption=node('p','fa-card-caption');caption.dataset.mayaType='P3';
+    const title=node('h3','fa-card-title',p.title);title.dataset.mayaType=overlay?'P1':'H4';
+    const caption=node('p','fa-card-caption');caption.dataset.mayaType=originalGrid?'P1':'P3';
     item._fabricUpdateText=updated=>{
       p=updated;const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
       const use=[p.garment?'For '+p.garment:'',p.materialLabel].filter(Boolean).join(' · '),source=p.evidence==='atelier_inventory'?'Atelier inventory':p.merchant||'View fabric source';
       title.textContent=p.title;caption.textContent=[knownPrice,source].filter(Boolean).join(' · ');link.setAttribute('aria-label',[p.title,use,source,knownPrice,p.reason].filter(Boolean).join(' · '));
     };item._fabricUpdateText(p);
-    if(context.compactRail){
+    if(overlay){
       const copy=node('div','fa-card-copy'),unavailable=node('span','fa-preview-unavailable','Preview unavailable');unavailable.dataset.mayaType='P3';copy.append(unavailable,title,caption);link.append(copy);
       // First touch exposes the caption; a second activates the source/inspector.
       // Keyboard focus reveals the same content without changing link semantics.
@@ -483,10 +484,10 @@
     item.append(link);
     const controls=node('div','fa-card-actions');
     const favorite=icon('Save to studio favorites','M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z',()=>toggleFavorite(p));
-    favorite.classList.add('fa-favorite');if(context.compactRail)favorite.dataset.mayaShape='circle';controls.append(favorite);
+    favorite.classList.add('fa-favorite');if(overlay)favorite.dataset.mayaShape='circle';controls.append(favorite);
     let removing=false,remove;
     if(view==='search'&&context.automatic){
-      remove=icon('Remove this source','M6 6l12 12M18 6L6 18',async()=>{if(removing)return;removing=true;try{await dismiss(p,remove);}finally{removing=false;item._fabricUpdateControls?.();}});if(context.compactRail)remove.dataset.mayaShape='circle';controls.append(remove);
+      remove=icon('Remove this source','M6 6l12 12M18 6L6 18',async()=>{if(removing)return;removing=true;try{await dismiss(p,remove);}finally{removing=false;item._fabricUpdateControls?.();}});if(overlay)remove.dataset.mayaShape='circle';controls.append(remove);
     }
     item._fabricUpdateControls=()=>{
       const saved=favorites.items.some(row=>row.url===p.url),label=saved?'Remove from studio favorites':'Save to studio favorites';

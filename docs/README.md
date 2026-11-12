@@ -34,8 +34,8 @@ server code, test helpers and dependencies never enter .hosting.
 
 Vercel is retired for MAYA. The source has no Vercel config, functions, analytics
 scripts or dependencies; obsolete deployment comments were removed on November 8.
-The external Vercel project/GitHub connection still requires account access to
-remove. Repository cleanup alone does not stop that external connection's builds.
+The owner reported disconnecting the external Vercel project/GitHub connection
+on November 12; historical preview checks remain in GitHub.
 
 Project **pro-maya**, Firebase Hosting **maya.manasiyo.com** and **pro-maya.web.app**.
 /api/** and /mcp rewrite to Cloud Run **maya-api**, region **us-west1**. Storage is
@@ -208,6 +208,21 @@ runs are bounded to 25 MB/100 versions per garment and research to 100 links/500
 dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
+
+November 12 — original Backend drawer, Pipeline and card consistency:
+Four square fabric tiles per row (two on phones for readable captions and touch
+actions) use white Community-style hover descriptions and matching line spacing.
+The original pattern toolbar is Mark 1 / Pipeline; its green dot pulses only while
+running. SVG exports from the shared Submissions / Settings drawer on either
+original Backend screen. Settings edits and export retain submission/garment scope.
+The screen indicator moves 6px left and matches the frontend's half-pixel border.
+Frontend captions stay white, saved hearts remain visible, and action bubbles are
+25% smaller on desktop while retaining touch targets. Backend 2's layout is unchanged.
+Functional previews and consolidated runtime/CI checks follow the revised controls.
+The full Node20 code-only release gate passed. Opening the new Settings drawer
+no longer triggers the legacy paid key-status probe.
+The prior release `0ddef69` passed Google build `b013e6bd` including live verification.
+No local browser or Chrome was used; visual acceptance remains with the owner.
 
 November 12 — demo release verification in progress:
 GitHub contains all changes through `87dace3`, but build `d5919532` stopped in the

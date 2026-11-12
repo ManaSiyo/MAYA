@@ -1409,9 +1409,10 @@
 <script src="/aesthetics/ui/presentation-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=29"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=19">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=22"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=20">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=23"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=4"><script src="/aesthetics/ui/image-viewer.js?v=5"></script>
+<link rel="stylesheet" href="/aesthetics/ui/original-backend.css?v=1">
 </head>
 <body class="backend-original">
 
@@ -3887,7 +3888,7 @@ async function showBriefFabrics() {
   document.querySelectorAll('#piece-pills [data-maya-segment]').forEach((node,i)=>{node.setAttribute('aria-pressed',String(i===_pieceState.idx));node.classList.toggle('active',i===_pieceState.idx);});
   document.getElementById('op-image-frame').style.display='none';
   const host=document.getElementById('brief-fabrics');host.style.display='flex';
-  return window.MayaFabricAssistant.open({host,automatic:true,reopenSaved:showBriefFabrics,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces});
+  return window.MayaFabricAssistant.open({host,originalGrid:true,automatic:true,reopenSaved:showBriefFabrics,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces});
 }
 function setPatternPage(page) {
   const swiper = document.getElementById('op-pattern-swiper');
@@ -5118,6 +5119,7 @@ window.renderActivePiece3D = function() {
 // Shared handle/edge gestures are mounted after the workspace adapter.
 </script>
 <script>MayaImageViewer.watch("#op-image-frame img");</script>
+<script src="/aesthetics/ui/original-backend.js?v=1"></script>
 <script src="/aesthetics/ui/drawer-gestures.js?v=1"></script>
 </body>
 </html>

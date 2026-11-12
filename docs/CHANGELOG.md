@@ -4,6 +4,14 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 12 — original Backend consistency:** four square fabric columns
+  (two on phones), white Community-style hover captions, one Submissions/Settings
+  drawer across Brief and Operations, Pipeline with a running indicator and SVG
+  export in Settings. Align the screen indicator border and move it left. Restore
+  frontend saved-heart visibility, white copy and matching line spacing; shrink
+  desktop action bubbles 25% while preserving touch targets. Backend 2 unchanged.
+  The preceding release `0ddef69` passed all Google deployment/verification gates.
+
 - **November 12 — demo release diagnostics:** the first full frontend build
   stopped on the UI subprocess's old two-minute deadline, after code and fabric
   checks passed. Give the expanded UI gate a bounded five-minute budget with

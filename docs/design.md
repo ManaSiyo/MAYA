@@ -70,7 +70,7 @@ glyphs 5% larger on desktop; touch keeps the shared minimum hit area. The active
 frontend centers project names/dates across the full row while actions are hidden;
 hover/keyboard reveal the unchanged-size actions with half the shared icon gap.
 Inspo, Favorites, Community, Pinterest and fabric descriptions share Community's
-italic treatment: H2 font family and P1 size, weight and color. Desktop descriptions
+italic treatment: H2 font family and P1 size/weight, white text and 1.35 line height. Desktop descriptions
 appear only on hover or visible keyboard focus, never persistent pointer selection.
 They sit on a bottom tint; Community copy omits the author/yours line while retaining
 accessible attribution. Dissect, stack and X align in one shared Glass row. Frontend
@@ -110,14 +110,15 @@ padding, trimmed one pixel in X/Y for the original Backend, with equal space abo
 and below. Shared grid rows keep garment/pattern
 frames and outer panels aligned before, during and after generation; raster
 images fit inside without resizing the frame. SVG retains its interactive canvas.
-The original pattern window switches Mark 1 → Logic → SVG. Logic contains Pipeline
+The original pattern window switches Mark 1 → Pipeline, with a green dot pulsing only while running. SVG export lives in Settings. Pipeline contains Pipeline
 Live, retrieval details, book passages and the composed prompt, scrolling within
 the same frame. It stays open during pipeline updates and resets with the project
 or garment. The former separate Retrieval Trace section is removed only here;
 Backend 2 keeps its Pattern / CLO 3D / Pipeline layout. Fabrics belongs only in the
-original Brief, with square photos, two caption rows and adjacent heart/X actions.
+original Brief, with four square fabric cards per row (two on phones), hover-only
+white Community captions and adjacent heart/X actions.
 The parent Brief owns vertical scrolling between screens, with section snap stops;
-Logic owns only its internal overflow. Ordinary vertical wheel input scrolls over SVG too;
+Pipeline owns only its internal overflow. Ordinary vertical wheel input scrolls over SVG too;
 Ctrl/Command-wheel zooms its canvas. SVG tracing runs on demand in a bounded
 worker, never automatically after the drawing. New versions generate only Mark
 One. Required pocket pieces are individual outlines; displayed mirrored halves
@@ -126,7 +127,9 @@ The version label uses P3 beside the H1 title; editable Settings reuse shared fi
 Drawer and roles. The active Operation Room preview lives in Aesthetic Control.
 Pointer selection releases the original garment control's focus ring; keyboard
 focus remains visible. The original page indicator uses the frontend's white active
-dot. Brief settings uses the same shared Drawer surface without a second dark fill.
+dot. Brief and Operations share one Submissions / Settings drawer, including the actual
+engine settings and context-bound SVG export. The page indicator has a half-pixel
+border like the frontend and sits six pixels farther left on desktop.
 
 Fromsa's November 6 instruction supersedes local browser/visual acceptance:
 **do not use Chrome; Fromsa performs live visual and interaction checks after

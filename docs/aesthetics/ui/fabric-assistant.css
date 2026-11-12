@@ -40,6 +40,26 @@
 :is(body.backend-original .fabric-assistant,.workspace-fabric-gallery) .fa-product-image{width:100%;height:auto;aspect-ratio:1/1;align-self:start}
 :is(body.backend-original .fabric-assistant,.workspace-fabric-gallery) .fa-card-actions{gap:calc(var(--maya-icon-pill-gap,6px)/2)}
 
+/* Original Brief only: four square photos, with the Community caption treatment.
+   This opt-in remains separate from Backend 2's compact horizontal rail. */
+html body .fa-original-grid .fa-results{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:max-content;align-content:start;gap:var(--maya-form-field-gap,12px)}
+html body .fa-original-grid .fa-product:not(.has-missing-photo){padding:0!important;aspect-ratio:1;height:auto;min-height:0;align-self:start;overflow:hidden}
+html body .fa-original-grid .fa-product:not(.has-missing-photo) .fa-product-link{display:block;position:relative;width:100%;height:100%;aspect-ratio:1;padding:0;overflow:hidden}
+html body .fa-original-grid .fa-product-image{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:1;object-fit:cover;border-radius:0}
+html body .fa-original-grid .fa-card-copy{position:absolute;inset:auto 0 0;padding:30px 10px 14px;background:linear-gradient(to top,rgba(0,0,0,.82),transparent);opacity:0;pointer-events:none;transition:opacity .22s ease;text-align:center}
+html body .fa-original-grid :is(.fa-card-title,.fa-card-caption,.fa-preview-unavailable){font-family:var(--maya-type-H2-font,'Cormorant Garamond',serif)!important;font-size:var(--maya-type-P1-size,12px)!important;font-weight:var(--maya-type-P1-weight,300)!important;font-style:italic!important;line-height:1.35!important;color:#fff!important;text-transform:none!important;letter-spacing:normal;text-align:center;margin:0!important;padding:0}
+html body .fa-original-grid .fa-card-title{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .fa-original-grid .fa-card-caption{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .fa-original-grid .fa-product:is(:hover,:focus-visible,:has(:focus-visible)) .fa-card-copy{opacity:1}
+html body .fa-original-grid .fa-preview-unavailable{display:none}
+html body .fa-original-grid .has-missing-photo .fa-card-copy{position:static;opacity:1;padding:0;background:none}
+html body .fa-original-grid .has-missing-photo .fa-preview-unavailable{display:block}
+html body .fa-original-grid .fa-card-actions{top:4px;right:4px;max-width:calc(100% - 8px);gap:calc(var(--maya-icon-pill-gap,6px)/2);--fa-action-base:calc(max(calc(var(--maya-type-P3-size,10px)*1.4),calc(var(--maya-control-icon-size,28px)*.6)) + max(var(--maya-control-pillX,14px),var(--maya-control-pillY,6px))*2 + 2px);--fa-action-size:calc(var(--fa-action-base)*.75);--maya-icon-glyph:calc(var(--maya-control-icon-size,28px)*.6*.75)}
+html body :is(#fabric-assistant,.workspace-fabric-gallery).fa-original-grid .fa-card-actions>button{inline-size:var(--fa-action-size)!important;block-size:var(--fa-action-size)!important;min-inline-size:var(--fa-action-size)!important;min-block-size:var(--fa-action-size)!important;padding:0!important}
+@media(max-width:600px){html body .fa-original-grid .fa-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(any-pointer:coarse){html body .fa-original-grid .fa-card-actions{--fa-action-size:max(var(--maya-touch-target,44px),calc(var(--fa-action-base)*.75))}html body .fa-original-grid .fa-product.is-revealed .fa-card-copy{opacity:1}html body .fa-original-grid .fa-product.is-revealed .fa-card-actions{opacity:1;pointer-events:auto}}
+@media(prefers-reduced-motion:reduce){html body .fa-original-grid .fa-card-copy{transition:none}}
+
 /* Backend 2: photos fill square cards; the same component also powers its preview.
    The leading controls belong to the horizontal rail, so they travel with it. */
 html body :is(#fabric-assistant,#backend-two-layout-preview .fabric-assistant).fa-compact-cards{--maya-icon-pill-gap:2px}

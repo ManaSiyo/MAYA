@@ -2856,40 +2856,70 @@ checks['backend-two-shell']=async function(){
  console.log('Backend 2: snapshot DOM, drawer tabs, engine-backed settings and failed-save navigation passed without a browser.');
 };
 
+checks['original-backend-drawer']=async function(){
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const {document,Event}=parseHTML(readFileSync('backend/backend.html','utf8'));
+ const engine=parseHTML('<html><body><div id="drawer"><section class="sec"><input id="pattern-hits" value="5"><button id="save">Save</button><p id="pattern-save-status" role="status"></p><div id="pattern-history"></div></section></div></body></html>');
+ let scope={account:'owner',sid:'project',local:1},garmentId='coat',edits=0,exports=0,reads=0,clicks=0;const listeners=new Map();
+ const frame=document.getElementById('operations-embed');Object.defineProperty(document,'activeElement',{value:null,writable:true,configurable:true});
+ engine.document.getElementById('pattern-hits').addEventListener('input',()=>edits++);engine.document.getElementById('save').addEventListener('click',()=>clicks++);
+ Object.defineProperty(frame,'contentDocument',{value:engine.document});Object.defineProperty(frame,'contentWindow',{value:{Event:engine.Event,originalOperationContext:()=>({account:scope.account,submissionId:scope.sid,local:scope.local,revision:0,garmentId}),exportOriginalSVG:async()=>{exports++;return true;}}});
+ const c=vm.createContext({document,queueMicrotask,location:{origin:'https://maya.test'},_operationsRevision:0,_piecesContext:()=>({...scope}),_syncQualityPills(){},showBackendToast(){},_clearBriefPrivate(){},_updateBrandSub(){},openBackendSettings(){},closeDrawerSettings(){},toggleWorkspaceDrawer(){},openClientsDrawer:async()=>reads++,addEventListener:(name,fn)=>listeners.set(name,fn),toggleClientsDrawer(force){document.getElementById('clients-drawer').classList.toggle('open',force===undefined?!document.getElementById('clients-drawer').classList.contains('open'):force);}});c.window=c;
+ vm.runInContext(readFileSync('docs/aesthetics/ui/original-backend.js','utf8'),c);
+ const drawer=document.getElementById('clients-drawer');assert.deepEqual([...drawer.querySelectorAll('[role=tab]')].map(e=>e.getAttribute('aria-label')),['Submissions','Settings']);
+ c.toggleWorkspaceDrawer(true);assert.equal(drawer.inert,false);assert.equal(document.getElementById('original-submissions').hidden,false);
+ c.openBackendSettings();assert.equal(document.getElementById('drawer-settings').hidden,false);
+ const field=document.getElementById('original-setting-pattern-hits');field.value='8';field.dispatchEvent(new Event('input'));assert.equal(edits,1);assert.equal(engine.document.getElementById('pattern-hits').value,'8');
+ document.getElementById('original-setting-save').click();assert.equal(clicks,1);document.getElementById('original-export-svg').click();assert.equal(exports,1);
+ scope={...scope,local:2};field.value='99';field.dispatchEvent(new Event('input'));document.getElementById('original-export-svg').click();assert.equal(edits,1,'Stale fields cannot change another project');assert.equal(exports,1,'Stale drawer cannot export another project');scope={...scope,local:1};
+ garmentId='pants';field.dispatchEvent(new Event('input'));assert.equal(edits,1,'Old garment field cannot edit newly selected garment');garmentId='coat';
+ c.closeDrawerSettings();assert.equal(document.getElementById('drawer-settings').hidden,true);assert.equal(document.getElementById('original-submissions').hidden,false);
+ const notice={origin:c.location.origin,source:frame.contentWindow,data:{maya:'original-operation-open-settings',account:scope.account,submissionId:scope.sid,local:scope.local,revision:0,open:true}};listeners.get('message')(notice);assert.equal(document.getElementById('drawer-settings').hidden,false,'Operation settings use the same two-tab drawer');
+ listeners.get('message')({...notice,source:{},data:{...notice.data,open:false}});assert.equal(drawer.inert,false,'Other frame cannot control drawer');
+ listeners.get('message')({...notice,data:{maya:'original-operation-pointer'}});assert.equal(drawer.inert,true);
+ c._clearBriefPrivate();assert.equal(document.getElementById('original-pattern-settings').childElementCount,0);assert.equal(document.getElementById('original-export-svg').disabled,true);assert.ok(reads>0);
+ const clone=parseHTML(readFileSync('backend/backend2.html','utf8'));const cloneContext=vm.createContext({document:clone.document});cloneContext.window=cloneContext;vm.runInContext(readFileSync('docs/aesthetics/ui/original-backend.js','utf8'),cloneContext);assert.equal(clone.document.querySelector('.original-drawer-tabs'),null,'Backend 2 is excluded');
+ console.log('Original drawer: shared tabs, delegated fields/export, stale-scope guards and Backend 2 isolation passed.');
+};
+
 checks['original-operation']=async function(){
  const {default:assert}=await import('node:assert/strict'),{parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
  const html=readFileSync('backend/operation-workspace.html','utf8'),adapter=readFileSync('docs/aesthetics/ui/original-operation.js','utf8');
  function fixture(search=''){
-  const {document,Event}=parseHTML(html);let traces=0,invalidations=0,blurs=0,lastTraceSource='';
-  const c=vm.createContext({document,Event,URLSearchParams,location:{search},EMBEDDED:true,PASSES:[{img:'saved-pattern',acc:{design:90,measure:85}}],TRACE:null,RD:null,ANSWER:null,RUNNING:false,
-   $:id=>document.getElementById(id),cancelPatternTrace(){},mountTrace(){},buildSVGfromGrounded(){traces++;lastTraceSource=document.getElementById('img-grounded').getAttribute('src');},setOperationRunning(value){c.RUNNING=value;},
-   invalidateOperation(){invalidations++;c.PASSES=[];c.applyView();}
+  const {document,Event}=parseHTML(html);let traces=0,exports=0,invalidations=0,blurs=0,lastTraceSource='',identity=0;const messages=[];
+  const c=vm.createContext({document,Event,URLSearchParams,setTimeout,location:{search,origin:'https://maya.test'},EMBEDDED:true,PASSES:[{img:'saved-pattern',acc:{design:90,measure:85}}],TRACE:null,RD:null,ANSWER:null,RUNNING:false,
+   _operationInputContext:{account:'owner',submissionId:'saved-submission',local:false},_operationRevision:3,FILES:{piece:{id:'coat'}},_traceTask:null,
+   parent:{postMessage(message){messages.push(message);}},MutationObserver:class{observe(){}},installOperationContext(){},operationContext:()=>({identity}),operationCurrent:context=>context.identity===identity,
+   $:id=>document.getElementById(id),cancelPatternTrace(){c._traceTask=null;},mountTrace(){},buildSVGfromGrounded(source){traces++;lastTraceSource=source||document.getElementById('img-grounded').getAttribute('src');c.TRACE={source:lastTraceSource,svg:'<svg/>'};},exportSVG(){exports++;},toast(){},setOperationRunning(value){c.RUNNING=value;},
+   invalidateOperation(){identity++;invalidations++;c.PASSES=[];c.setOperationRunning(false);c.applyView();}
   });c.window=c;
   vm.runInContext(html.slice(html.indexOf("let CUR = {kind:'grounded'"),html.indexOf('/* ============================ test harness')).replace('let ANSWER = null;',''),c);
   document.getElementById('test-picker').blur=()=>blurs++;
   vm.runInContext(adapter,c);
-  return {c,document,Event,counts:()=>({traces,invalidations,blurs,lastTraceSource})};
+  return {c,document,Event,messages,counts:()=>({traces,exports,invalidations,blurs,lastTraceSource})};
  }
- const {c,document,Event,counts}=fixture(),stage=document.getElementById('stage'),logic=document.getElementById('original-operation-logic'),host=document.getElementById('pass-pills');
- const tab=label=>[...host.querySelectorAll('button')].find(b=>b.textContent===label);
- assert.equal(logic.parentElement,stage);assert.equal(document.querySelector('#plan-a-view > .trace'),null);assert.equal(logic.querySelector('h3').textContent,'Logic');
+ const {c,document,Event,messages,counts}=fixture(),stage=document.getElementById('stage'),logic=document.getElementById('original-operation-logic'),host=document.getElementById('pass-pills');
+ const tab=label=>[...host.querySelectorAll('button')].find(b=>b.textContent===label),dot=()=>host.querySelector('.original-operation-pipeline-dot');
+ assert.equal(logic.parentElement,stage);assert.equal(document.querySelector('#plan-a-view > .trace'),null);assert.equal(logic.querySelector('h3').textContent,'Pipeline');
  assert.ok(logic.querySelector('#live-log'));assert.ok(logic.querySelector('#t-chunks'));assert.ok(logic.querySelector('#t-prompt'));assert.equal(logic.hidden,true);
- assert.deepEqual([...host.querySelectorAll('button')].map(b=>b.textContent),['Mark 1','Logic','SVG']);
- const logicTab=tab('Logic');logicTab.click();assert.equal(logic.hidden,false);assert.equal(vm.runInContext('CUR.kind',c),'logic');assert.equal(document.getElementById('stage-empty').style.display,'none');assert.equal(counts().traces,0,'Logic must never start SVG or paid generation');
+ assert.deepEqual([...host.querySelectorAll('button')].map(b=>b.textContent),['Mark 1','Pipeline']);assert.equal(tab('SVG'),undefined);assert.ok(dot());assert.equal(dot().classList.contains('running'),false);
+ const logicTab=tab('Pipeline');logicTab.click();assert.equal(logic.hidden,false);assert.equal(vm.runInContext('CUR.kind',c),'logic');assert.equal(document.getElementById('stage-empty').style.display,'none');assert.equal(counts().traces,0,'Pipeline must never start SVG or paid generation');
  assert.equal(document.getElementById('img-grounded').style.display,'none');assert.ok(document.getElementById('trace-view').classList.contains('off'));
- c.setOperationRunning(true);assert.ok(logic.classList.contains('is-running'));c.viewGrounded(0);c.viewRD();assert.equal(vm.runInContext('CUR.kind',c),'logic','Internal pipeline views preserve a selected Logic tab');
- document.getElementById('img-grounded').removeAttribute('src');c.TRACE={source:'old-pattern'};c.PASSES=[{img:'new-pattern'}];c.viewGrounded(0);c.setOperationRunning(false);assert.equal(logic.hidden,false);assert.equal(logic.classList.contains('is-running'),false);assert.equal(tab('Logic'),logicTab,'Progress updates keep focus targets mounted');
- assert.equal(c.TRACE,null,'A new drawing invalidates the earlier SVG even while Logic is open');tab('SVG').click();assert.equal(counts().lastTraceSource,'new-pattern','Logic can open the new SVG directly without visiting Mark 1');tab('Logic').click();
- tab('Mark 1').click();assert.equal(logic.hidden,true);assert.equal(document.getElementById('img-grounded').getAttribute('src'),'new-pattern');
- const beforeSVG=counts().traces;tab('SVG').click();assert.equal(counts().traces,beforeSVG+1);assert.equal(logic.hidden,true);tab('Logic').click();assert.equal(counts().traces,beforeSVG+1,'Returning to Logic does not retrace');
- let focused=false;tab('SVG').focus=()=>focused=true;const key=new Event('keydown',{cancelable:true});key.key='ArrowRight';logicTab.dispatchEvent(key);assert.equal(focused,true);assert.equal(vm.runInContext('CUR.kind',c),'svg');assert.equal(key.defaultPrevented,true);
+ c.setOperationRunning(true);assert.ok(logic.classList.contains('is-running'));assert.ok(dot().classList.contains('running'));assert.equal(await c.exportOriginalSVG(),false,'Export waits until the current pattern run finishes');c.viewGrounded(0);c.viewRD();assert.equal(vm.runInContext('CUR.kind',c),'logic','Internal pipeline views preserve a selected Pipeline tab');
+ document.getElementById('img-grounded').removeAttribute('src');c.TRACE={source:'old-pattern'};c.PASSES=[{img:'new-pattern'}];c.viewGrounded(0);c.setOperationRunning(false);assert.equal(logic.hidden,false);assert.equal(logic.classList.contains('is-running'),false);assert.equal(dot().classList.contains('running'),false);assert.equal(tab('Pipeline'),logicTab,'Progress updates keep focus targets mounted');
+ assert.equal(c.TRACE,null,'A new drawing invalidates the earlier SVG even while Pipeline is open');assert.equal(await c.exportOriginalSVG(),true);assert.equal(counts().lastTraceSource,'new-pattern');assert.equal(counts().exports,1,'Settings exports in one call');assert.equal(logic.hidden,false,'Export preserves the selected Pipeline view');
+ const beforeSVG=counts().traces;assert.equal(await c.exportOriginalSVG(),true);assert.equal(counts().traces,beforeSVG,'Repeated export reuses the saved trace');
+ tab('Mark 1').click();assert.equal(logic.hidden,true);assert.equal(document.getElementById('img-grounded').getAttribute('src'),'new-pattern');tab('Pipeline').click();
+ let focused=false;tab('Mark 1').focus=()=>focused=true;const key=new Event('keydown',{cancelable:true});key.key='ArrowRight';logicTab.dispatchEvent(key);assert.equal(focused,true);assert.equal(vm.runInContext('CUR.kind',c),'grounded');assert.equal(key.defaultPrevented,true);
  c.PASSES=[{img:'old-1'},{img:'old-2'}];c.renderPassPills();assert.ok(tab('Mark 2'),'Historical saved passes remain accessible');tab('Mark 2').click();assert.equal(document.getElementById('img-grounded').getAttribute('src'),'old-2');
- tab('Logic').click();c.invalidateOperation();assert.equal(counts().invalidations,1);assert.equal(logic.hidden,true);assert.equal(vm.runInContext('CUR.kind',c),'grounded');
+ assert.equal(await c.exportOriginalSVG(),true);assert.equal(counts().lastTraceSource,'old-2','Export uses the selected saved mark');
+ assert.equal(c.originalOperationContext().submissionId,'saved-submission');assert.equal(c.originalOperationContext().garmentId,'coat');c.toggleDrawer(true);assert.equal(messages.at(-1).maya,'original-operation-open-settings');assert.equal(messages.at(-1).open,true);assert.equal(messages.at(-1).submissionId,'saved-submission');
+ c.TRACE=null;c.buildSVGfromGrounded=()=>{c._traceTask={};};const pending=c.exportOriginalSVG(),same=c.exportOriginalSVG();assert.equal(pending,same,'Repeated clicks join one pending export');tab('Pipeline').click();c.invalidateOperation();assert.equal(await pending,false,'A changed garment cancels the pending export');assert.equal(counts().invalidations,1);assert.equal(logic.hidden,true);assert.equal(vm.runInContext('CUR.kind',c),'grounded');assert.equal(await c.exportOriginalSVG(),false,'Empty work cannot export');
  c.viewRD();assert.equal(tab('Mark 1').getAttribute('aria-selected'),'true');assert.equal(tab('Mark 1').getAttribute('tabindex'),'0','Internal redraw cannot remove every tab from keyboard navigation');
  const picker=document.getElementById('test-picker');picker.dispatchEvent(new Event('pointerdown'));picker.dispatchEvent(new Event('change'));assert.equal(counts().blurs,1,'Pointer selection releases its native focus ring');
  picker.dispatchEvent(new Event('pointerdown'));picker.dispatchEvent(new Event('keydown'));picker.dispatchEvent(new Event('change'));assert.equal(counts().blurs,1,'Keyboard selection retains accessible focus');
- const clone=fixture('?layout=backend2');assert.ok(clone.document.querySelector('#plan-a-view > .trace'));assert.equal(clone.document.getElementById('original-operation-logic'),null);assert.equal(clone.document.documentElement.classList.contains('original-operation'),false);
- console.log('Original Operation Room: integrated Logic, stable live updates, lazy SVG, legacy marks, identity reset and pointer/keyboard focus passed.');
+ const clone=fixture('?layout=backend2');assert.ok(clone.document.querySelector('#plan-a-view > .trace'));assert.equal(clone.document.getElementById('original-operation-logic'),null);assert.equal(clone.document.documentElement.classList.contains('original-operation'),false);assert.equal(clone.c.exportOriginalSVG,undefined);
+ console.log('Original Operation Room: integrated Pipeline, truthful running dot, scoped drawer, one-click SVG export/cancellation, legacy marks and focus passed.');
 };
 
 checks['backend-two-operation']=async function(){
@@ -3100,8 +3130,13 @@ checks['fabric-compact-rail']=async function(){
  api.expand();assert.equal(workspace.parentElement,host);assert.equal(workspace.classList.contains('is-rail'),true);assert.deepEqual([...rail.children],[header,results]);assert.equal(card.querySelector('img'),photo,'Collapse restores the rail without rebuilding cards');
  const dialog=document.querySelector('dialog');api.expand();dialog.close();assert.equal(workspace.parentElement,host);assert.equal(workspace.classList.contains('is-rail'),true,'Native dialog close restores inline controls as well');
  await api.open({host,automatic:true,savedOnly:true,compactRail:false});assert.equal(workspace.classList.contains('is-rail'),false);assert.equal(workspace.classList.contains('fa-compact-cards'),false);assert.equal(header.parentElement,workspace);assert.equal(results.parentElement.className,'fa-body');const regular=api.fixtureCard(product);assert.equal(regular.querySelector('.fa-card-title').dataset.mayaType,'H4');assert.equal(regular.querySelector('.fa-card-copy'),null,'The ordinary gallery retains its original caption structure');
+ await api.open({host,automatic:true,savedOnly:true,originalGrid:true});assert.equal(workspace.classList.contains('fa-original-grid'),true);assert.equal(workspace.classList.contains('fa-compact-cards'),false);assert.equal(workspace.classList.contains('is-rail'),false);
+ const original=api.fixtureCard({...product,image:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>'});results.append(original);const originalPhoto=original.querySelector('img');assert.ok(originalPhoto);assert.equal(original.querySelector('.fa-card-copy .fa-card-title').dataset.mayaType,'P1');assert.equal(original.querySelector('.fa-card-copy .fa-card-caption').dataset.mayaType,'P1');assert.equal(original.querySelectorAll('.fa-card-actions [data-maya-shape="circle"]').length,2);assert.equal(original.querySelector('.fa-product-link').href,product.url,'Original overlay retains its source link');
+ api.expand();assert.equal(workspace.classList.contains('fa-original-grid'),true);assert.equal(original.querySelector('img'),originalPhoto,'Original expansion retains its photograph');api.expand();assert.equal(original.querySelector('img'),originalPhoto);
+ originalPhoto.dispatchEvent(new Event('error'));assert.equal(original.classList.contains('has-missing-photo'),true);assert.equal(original.querySelector('.fa-card-title').textContent,product.title,'Missing original photos retain the titled source link');
+ await api.open({host,automatic:true,savedOnly:true,compactRail:true});assert.equal(workspace.classList.contains('fa-original-grid'),false);assert.equal(workspace.classList.contains('is-rail'),true);assert.equal(api.fixtureCard(product).querySelector('.fa-card-caption').dataset.mayaType,'P3','Backend 2 keeps its own caption role after an original-grid visit');
  assert.equal(requests,0,'Layout transitions and card reveal never call a provider');
- console.log('Fabric rail: shared scrolling structure, compact roles/actions, first-touch reveal, expansion/collapse and ordinary-layout restoration passed.');
+ console.log('Fabric layouts: compact rail, original hover grid, isolated roles/actions, first-touch reveal, photo failure/retention and expansion/collapse passed.');
 };
 
 checks['frontend-card-performance']=async function(){
@@ -3173,5 +3208,10 @@ checks['frontend-card-performance']=async function(){
  const staleData=transfer(),staleDrag=new Event('dragstart',{bubbles:true});staleDrag.dataTransfer=staleData;thumbnail.dispatchEvent(staleDrag);scope.epoch++;const beforeStale=requests;
  await listeners.drop({preventDefault(){},dataTransfer:staleData,clientX:400,clientY:300});assert.equal(requests,beforeStale);assert.equal(placed.length,1,'A drag started in another project cannot import into this one');
  assert.match(html,/\_boardEpoch\+\+;\s*_cancelPictureImports\(\);\s*_clearViewerImage\(\)/);
+ load('function toggleFavorite(', '// ════════════════════════════════════════════════════════════');
+ let favoriteRenders=0;Object.assign(c,{currentScreen:2,SHOWCASE_VIDEO_ENABLED:false,_renderDrawerStats(){},_renderFavoritesScroller(){favoriteRenders++;}});
+ const favorite=document.createElement('div');favorite.innerHTML='<button class="fav-btn" aria-pressed="false"></button>';c.items=[{id:17,el:favorite,card:{image:'https://pictures.example/saved.jpg',favorited:false,_dissection:{}}}];
+ c.toggleFavorite(17);assert.equal(favorite.querySelector('.fav-btn').getAttribute('aria-pressed'),'true');assert.equal(favorite.querySelector('.fav-btn').classList.contains('is-fav'),true);assert.equal(c.items[0].card.favorited,true);
+ c.toggleFavorite(17);assert.equal(favorite.querySelector('.fav-btn').getAttribute('aria-pressed'),'false');assert.equal(c.items[0].card.favorited,false);assert.equal(favoriteRenders,2,'Heart changes immediately refresh the open Favorites gallery');
  console.log('Frontend performance: 30 fabric opens/1 manifest read; 24 cards retained across 30 picker opens; 30 viewer updates/1 source write; 240 moves/1 paint; isolated drag/import and picker races passed.');
 };

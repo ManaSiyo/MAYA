@@ -1,0 +1,22 @@
+/* One filing drawer on both original Backend screens, with shared materials. */
+body.backend-original #page-indicator{left:12px;border-width:.5px!important}
+body.backend-original .original-workspace-drawer{overflow:hidden}
+body.backend-original .original-workspace-drawer [hidden],.original-drawer-preview [hidden]{display:none!important}
+.original-drawer-tabs{display:flex;align-items:center;gap:var(--maya-icon-pill-gap,6px);flex:none;margin-bottom:var(--maya-form-field-gap,12px);padding-bottom:8px}
+.original-drawer-tabs .pg-tab{flex:none;position:relative;overflow:visible}
+.original-drawer-tabs .pg-tab.on::after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-5px;border:5px solid transparent;border-top-color:var(--maya-glass-border,currentColor)}
+.original-drawer-tabs .pg-tabtitle{flex:1;min-width:0;padding-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+body.backend-original #original-submissions{display:flex;flex-direction:column;min-height:0;flex:1}
+body.backend-original #original-submissions #clients-list{flex:1;min-height:0;overflow:auto}
+body.backend-original .original-workspace-drawer #drawer-settings{position:static;inset:auto;transform:none;transition:none;visibility:visible;pointer-events:auto;opacity:1;min-height:0;flex:1;overflow:auto;padding:0}
+body.backend-original .original-workspace-drawer:has(#drawer-settings.open)>:not(#drawer-settings){visibility:visible;pointer-events:auto}
+body.backend-original .original-workspace-drawer .drawer-meta-row{flex:none;margin-top:var(--maya-form-field-gap,12px)}
+#original-pattern-settings .sec,#drawer-settings> .sec{margin-bottom:var(--maya-form-field-gap,16px)}
+#original-pattern-settings :is(input,select,textarea){max-width:100%;width:100%;box-sizing:border-box}
+#original-pattern-settings .row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--maya-form-field-gap,8px)}
+#original-pattern-settings :is(.pillrow,.logic-actions){display:flex;flex-wrap:wrap;gap:var(--maya-icon-pill-gap,6px)}
+#original-pattern-settings .logic textarea{display:none}
+#original-pattern-settings .logic.editing textarea{display:block}
+#original-pattern-settings .logic.editing .logic-chips{display:none}
+#original-pattern-settings :is(p,pre){overflow-wrap:anywhere;white-space:pre-wrap}
+@media(max-width:640px){body.backend-original #page-indicator{left:6px}}

@@ -1,5 +1,5 @@
-import {setupPresentation} from './presentation-controls.js?v=12';
-import {setupSharedSurfaces} from './shared-surfaces.js?v=3';
+import {setupPresentation} from './presentation-controls.js?v=13';
+import {setupSharedSurfaces} from './shared-surfaces.js?v=4';
 import {setupInputControls} from './input-controls.js';
 import {formatTools,formatIcon,formatIcons} from './format-tools.js';
 import {addRestore,highlightPadding} from './restore-controls.js';
