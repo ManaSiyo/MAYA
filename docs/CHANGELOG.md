@@ -9,6 +9,9 @@ under _to_delete/2026-11-05-cleanup for owner review.
   checks passed. Give the expanded UI gate a bounded five-minute budget with
   twelve-second individual waits and section progress; preserve all assertions.
   The prior public release remains active until deployment verification succeeds.
+  The next build exposed a desktop fixture with no overflow; add temporary probe
+  tiles so its existing moving-controls assertion exercises a real scroll at
+  every width. Owner will check the next deployment without continued polling.
 
 - **November 12 — frontend demo polish and performance (local):** unify hover
   descriptions with Community typography/tint, restore square fabric cards and

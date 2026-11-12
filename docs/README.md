@@ -216,6 +216,11 @@ overall deadline after the fabric gallery passed. Production remained coherent
 at `83c3c94`. The UI gate now has a five-minute overall budget, twelve-second
 individual waits and per-section progress, retaining every assertion. Deployment
 is not considered verified until the Google check and all live stamps agree.
+Build `0b84ee50` then passed frontend/fabric and mobile/tablet Backend 2 checks,
+exposing a desktop fixture assumption: the catalog fits, so a 100px scroll is
+clamped. The scroll probe now adds temporary fixture tiles to guarantee overflow
+and verifies the header moves by the actual offset at every width. All assertions
+remain active. The owner requested no further polling after this corrective push.
 
 November 12 — frontend demo polish and reuse (local, not pushed):
 Hover-only card descriptions share Community typography and bottom tint. Frontend
