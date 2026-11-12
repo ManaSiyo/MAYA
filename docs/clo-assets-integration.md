@@ -1,8 +1,10 @@
 # CLO asset sourcing in MAYA
 
-Implemented locally on November 11, 2026. The feature is ready for code review;
-The owner has authorized production deployment, queue activation and live matching
-evaluation. The current release adds automated provisioning and a one-time check. CLO source files are neither purchased nor downloaded automatically.
+Live on November 12, 2026 as `006c575799e7eb6f20f4ef3697d3c36f9bc228fe`.
+Google build, full CI, queue setup, Cloud Run, Hosting and rules succeeded.
+Seven release endpoints were independently verified. A newly queued real submission
+search saved two source-backed assets; purchases/downloads are never automatic.
+[Release evidence](https://github.com/ManaSiyo/MAYA/runs/131365347622).
 
 ## Delivery checklist
 
@@ -11,7 +13,7 @@ evaluation. The current release adds automated provisioning and a one-time check
    Google Cloud Build, including seven live endpoint checks. The latter finished
    around 9:02 PM Pacific November 11; independent `/release.json` and
    `/api/healthz` reads matched it. Those newer aesthetics are live. Backend 2
-   has its own `/backend2.html` entry; this CLO implementation is still local.
+   has its own `/backend2.html` entry; CLO is now deployed there as well.
 2. **Done — integrate the right panel.** Backend 2 now has Pattern → CLO 3D →
    Pipeline tabs. The image remains on the left and the fabric strip below. The
    existing 34/66 desktop/tablet and 40/60 phone image/right-panel ratios remain.
@@ -31,16 +33,15 @@ evaluation. The current release adds automated provisioning and a one-time check
    Saving dissection prepares up to 12 garment jobs; additional garments can be
    searched individually. Durable claims prevent duplicate task deliveries from
    issuing another paid search. Failed/uncertain attempts require explicit retry.
-6. **Authorized rollout — activate automatic dispatch.** Cloud Build now configures a dedicated
+6. **Done — activate automatic dispatch.** Cloud Build now configures a dedicated
    Cloud Tasks queue, dispatch service account and OIDC settings listed below.
    Without them, pending work remains saved and Find assets works interactively
    through the existing OpenAI connection. No new CLO account token is required
    for public-listing discovery.
-7. **Authorized release — Push and live verification.** Local commits do not deploy.
-   After an owner-authorized Push, inspect Google Cloud Build, verify all seven
-   release stamps and test one real submission through matching and saved
-   selection. Review the layout on phone, tablet and desktop. Code checks do not
-   establish live provider quality or owner visual acceptance.
+7. **Done — Push and live verification; owner visual review remains.** Google
+   Cloud Build and all seven release stamps passed. One real queued submission
+   saved two source-backed matches. CI checked phone/tablet/desktop layouts.
+   Signed-in selection and visual/match-quality acceptance remain owner review.
 8. **Optional later integration — owned library and desktop CLO.** Add a documented
    CLO-SET account-library adapter once account scope/access is available. Broader
    CONNECT catalog access needs vendor confirmation. Acquired native projects can
@@ -92,8 +93,8 @@ requests and discard late responses; an uncertain attempt is not retried silentl
 | `POST /api/admin/digital-assets/review` | Admin-only; select, clear, hide or restore, bound to research fingerprint and review generation. |
 | `POST /api/tasks/clo-assets` | Dedicated OIDC worker identity/audience; executes only the matching pending attempt. |
 
-All routes remain same-origin behind the current Cloud Run API. No credential or
-production environment setting was changed during implementation.
+All routes remain same-origin behind the current Cloud Run API. No credential was changed. The four CLO settings were activated by the
+owner-authorized deployment; existing provider environment values were preserved.
 
 Research/job state is stored at
 `submissions/{id}/digital-assets/research/look.json` or
@@ -118,7 +119,7 @@ pending work available for manual search or a later idempotent ready request.
 
 ## Automatic dispatch setup
 
-The service reads these settings; they must be provisioned separately by the owner:
+The deployed service reads these settings, provisioned through the authorized build:
 
 | Setting | Required value |
 | --- | --- |
@@ -188,8 +189,8 @@ Aesthetic Control has a functional CLO gallery sample using a local fixture;
 CI assertions check tab/frame containment at phone, tablet and desktop sizes and
 changed aesthetic settings. No local browser was launched.
 
-Live match usefulness, actual provider entitlement, queue activation and native
-CLO file compatibility remain unverified until the corresponding live checks.
+Live dispatch, provider execution and saved results are verified. Match usefulness
+and native CLO file compatibility still require review.
 
 ## November 11 rollout
 
@@ -215,3 +216,21 @@ references up to the existing 25MiB limit are accepted. Compact Backend 2 keeps
 Inner materials, removes outer panels, uses 5px toolbar padding/9px toolbar text,
 and opens Submissions/Bio/Settings in the drawer. Default and changed shared
 materials remain covered by CI; no local browser has been launched.
+
+### Verified rollout outcome
+
+The first provisioning attempt created the queue/account but could not inspect
+queue IAM. The final script tested existing runtime permissions instead; both
+`cloudtasks.tasks.create` and `iam.serviceAccounts.actAs` were present. It used the
+SDK's bundled Python and the existing Cloud Tasks service-agent OIDC role, with
+application-level signed worker identity/audience checks preserved. No broad
+permissions were added. Cloud Run revision `maya-api-00222-tcl` received 100% traffic.
+
+The one-time check logged `pending queued`, then completed with these two listings:
+- https://connect.clo-set.com/detail/3001c20cd5d2481fa7f3357acc5ff44c
+- https://connect.clo-set.com/detail/c54b579e46d84c49a43a803d658b87f8
+
+This establishes a new queue → deployed worker → OpenAI → saved-results flow,
+not just reuse of old research. Signed-in browser interaction and a human judgment
+of match quality were not claimed. The screenshot submission itself was reused;
+no synthetic customer submission was created.

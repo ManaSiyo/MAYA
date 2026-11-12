@@ -4,6 +4,13 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 12 — CLO live verification:** release `006c575` passed full CI,
+  Cloud Tasks setup, Cloud Run/Hosting deployment and all seven public release
+  checks. A real queued search saved two sourced CONNECT assets. Existing enqueue
+  and actAs permissions sufficed; no broader IAM grants. Resolved preview sizing,
+  iframe coordinate test and slim-SDK interpreter issues before release.
+  Owner visual and match-quality review remain distinct from automated evidence.
+
 - **November 11 — compact Backend 2 and CLO rollout:** remove nested outer
   panels, tighten controls to 5px vertical padding/9px text, thin the fabric strip
   and cards, and order drawer Submissions/Bio/Settings using shared materials.

@@ -209,22 +209,24 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
-November 11 — compact Backend 2 and authorized CLO rollout:
-Remove the outer operation/fabric surfaces; retain the shared Inner frames.
-Use 5px toolbar padding and 9px toolbar text within Backend 2 only, a thinner
-fabric strip and narrower fabric cards. Drawer opens Submissions (folder), Bio,
-Settings and retains shared Drawer/Glass/icon materials. Aesthetic Control preview
-mirrors the layout; the compact sizing is an explicit owner-requested exception.
-Server-side image/summary upload completion now schedules CLO, with the frontend
-ready request as a duplicate-safe fallback. Canonical image limit matches 25MiB.
-Cloud Build provisions the dedicated `maya-clo-assets` queue and
-`maya-clo-dispatch` identity, adds scoped grants, and updates only CLO env values.
-The owner authorized this production setup and Push. A one-time live check uses
-the screenshot submission and saves a rollout receipt after source-backed results;
-future releases reuse the receipt without paid searches or depending on that
-submission remaining. Build results and live verification remain pending until
-the authorized release completes. No Chrome or local browser testing.
-
+November 12 — Backend 2 and automatic CLO sourcing live:
+Release `006c575799e7eb6f20f4ef3697d3c36f9bc228fe` passed Google build
+`47e99920-7633-45d4-80d1-74d0f47bea4d`; all seven public release endpoints
+were independently verified. The dedicated us-west1 `maya-clo-assets` queue and
+`maya-clo-dispatch` identity are active. Existing runtime enqueue and actAs
+permissions were verified; no broad IAM grants or credential changes were needed.
+A newly dispatched job for the owner's screenshot submission completed and saved
+two source-backed CONNECT assets. Later builds reuse a rollout receipt rather
+than repeat a paid test. No asset was purchased or downloaded.
+Backend 2 now has Pattern / CLO 3D / Pipeline, one Inner surface per frame,
+5px vertical pill padding and 9px toolbar text, a thinner fabric strip/narrower
+cards, and Submissions (folder) / Bio / Settings drawer order. Shared materials
+remain active. CI checks passed at phone/tablet/desktop widths and changed saved
+settings. Owner visual review and match usefulness remain separate from these checks.
+Server-side final image/summary uploads schedule sourcing; frontend readiness is
+an idempotent fallback. Canonical images accept the existing 25MiB upload bound.
+[Successful production build](https://github.com/ManaSiyo/MAYA/runs/131365347622).
+No Chrome or local browser was used. This post-release record is documentation-only.
 
 November 11 — integrated CLO asset sourcing in Backend 2 (local):
 The right window now switches Pattern → CLO 3D → Pipeline, retaining the larger
