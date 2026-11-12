@@ -2443,12 +2443,14 @@ for(const [final,interim,fail] of [['','',false],['','silk',false],['','blue sil
   const ctx=vm.createContext({console:{warn(){},error(){}},Date:{now:()=>now},setTimeout:(resolve,ms)=>{now+=ms;queueMicrotask(resolve);},
     _opContext:()=>({}),_opStillValid:()=>valid,getApiKey:()=> 'fixture',pushRenderStatus(){},popRenderStatus(){},
     callLiveExtract:async()=>{calls++;if(fail)throw Error('fake unavailable');return [];},placeItemUnique(){},titlesAreSimilar:()=>false});
-  vm.runInContext('let isListening=false,batchInFlight=false,lastProcessedLength=0,items=[];let liveTranscriptBuffer='+JSON.stringify(final)+',liveInterimBuffer='+JSON.stringify(interim)+';'+fn('_waitForVoicePipelineQuiet')+fn('processLiveBatch'),ctx);
-  await vm.runInContext('_waitForVoicePipelineQuiet()',ctx);
+  vm.runInContext('let isListening=false,batchInFlight=false,lastProcessedLength=0,items=[],_voiceBatchError=null,_voicePreparationSeq=0,_voiceSettledSeq=0;let liveTranscriptBuffer='+JSON.stringify(final)+',liveInterimBuffer='+JSON.stringify(interim)+';'+fn('_waitForVoicePipelineQuiet')+fn('processLiveBatch'),ctx);
+  if(fail) await assert.rejects(vm.runInContext('_waitForVoicePipelineQuiet()',ctx),/could not read/);
+  else await vm.runInContext('_waitForVoicePipelineQuiet()',ctx);
   assert.equal(calls,final||interim?1:0,'A transcript tail gets one extraction, even on failure');
   assert.ok(now<500,'No artificial 30-second pause: '+JSON.stringify({final,interim}));
   assert.equal(vm.runInContext('isListening',ctx),false);
-  await vm.runInContext('_waitForVoicePipelineQuiet()',ctx);assert.equal(calls,final||interim?1:0,'Consumed interim text cannot restart paid extraction');
+  if(fail) await assert.rejects(vm.runInContext('_waitForVoicePipelineQuiet()',ctx),/could not read/);
+  else await vm.runInContext('_waitForVoicePipelineQuiet()',ctx);assert.equal(calls,final||interim?1:0,'Consumed interim text cannot restart paid extraction');
 }
 let anchors;
 const edit=vm.createContext({callOpenAIImageEdit:async value=>{anchors=value;return 'image';},isSafetyRejection:()=>false,
@@ -2458,6 +2460,88 @@ await vm.runInContext("callOpenAIImageEditSafe(['portrait-face','landscape-refer
 assert.deepEqual(Array.from(anchors),['portrait-face','landscape-reference'],'Full original references retain their order without PNG upscale/cropping');
 console.log('Visualization preparation: empty/short/interim speech settles once without 30-second stalls; edits preserve original references without duplicate resizing.');
 
+};
+
+checks['visualize-request-isolation']=async function(){
+const {default:assert}=await import('node:assert/strict');
+const {default:vm}=await import('node:vm');
+const {readFileSync}=await import('node:fs');
+const source=readFileSync(new URL('../frontend/index.html',import.meta.url),'utf8');
+const fn=name=>{const start=source.search(new RegExp('(?:async )?function '+name+'\\('));assert.ok(start>=0,name);return source.slice(start,source.indexOf('\n}',start)+2);};
+const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
+const reads=new Map(),errors=[];
+let epoch=1;
+const context=vm.createContext({console,setTimeout,clearTimeout,Date,
+  _opContext:()=>({epoch}),_opStillValid:c=>c.epoch===epoch,getApiKey:()=> 'fixture',
+  _consultationWork:null,_voicePreparationSeq:0,_voiceSettledSeq:0,_voiceBatchError:null,_pendingTitles:[],
+  items:[],lastSummary:{dream_outcome:'old coat'},isListening:false,batchInFlight:false,
+  liveTranscriptBuffer:'',liveInterimBuffer:'',lastProcessedLength:0,
+  _persistSession(){},setThinking(){},updateCount(){},showError:e=>errors.push(e),showToast(){},
+  pushRenderStatus(){},popRenderStatus(){},_queueAvatarSave(){},renderNotesPanel(){},attachCaptionToImages(){},
+  generateOnePagerParagraphs:async()=>{},titlesAreSimilar:()=>false,
+  callOpenAIChat:text=>{const d=deferred();reads.set(text,d);return d.promise;},
+  callLiveExtract:async()=>[{tag:'detail',title:'striped detailing'}],
+});
+context.placeItemUnique=card=>{context._pendingTitles.push(card.title);setTimeout(()=>{context._pendingTitles.splice(context._pendingTitles.indexOf(card.title),1);context.items.push({card});},15);};
+context.placeConsultationCards=summary=>context.placeItemUnique({tag:'silhouette',title:summary.dream_outcome});
+vm.runInContext(['processConsultation','processLiveBatch','_waitForVoicePipelineQuiet','buildGarmentPrompt'].map(fn).join('\n'),context);
+const first=context.processConsultation('old coat'),second=context.processConsultation('new bomber jacket');
+const ready=context._waitForVoicePipelineQuiet();
+reads.get('new bomber jacket').resolve({dream_outcome:'bomber jacket'});
+await second;await ready;
+assert.match(context.buildGarmentPrompt(),/bomber jacket/,'Visualize waits for delayed cards from the latest consultation');
+assert.equal(context._pendingTitles.length,0);
+reads.get('old coat').resolve({dream_outcome:'old coat'});await first;
+assert.equal(context.lastSummary.dream_outcome,'bomber jacket','An older same-project response cannot replace the latest description');
+const failed=context.processConsultation('failed description');reads.get('failed description').reject(Error('fixture offline'));await failed;
+await assert.rejects(context._waitForVoicePipelineQuiet(),/could not read/,'Failed preparation never proceeds with the old summary');
+context.liveTranscriptBuffer='striped detailing';await context._waitForVoicePipelineQuiet();
+assert.equal(context._voiceBatchError,null,'A later successful live utterance recovers a failed consultation');
+context._voiceBatchError={context:{epoch},seq:context._voicePreparationSeq};
+const recovered=context.processConsultation('recovered');reads.get('recovered').resolve({dream_outcome:'new suit'});await recovered;await context._waitForVoicePipelineQuiet();
+assert.equal(context._voiceBatchError,null,'A later successful consultation recovers a failed live utterance');
+const oldBatchRead=deferred();context.callLiveExtract=()=>oldBatchRead.promise;
+context.liveTranscriptBuffer+=' older failing batch';context.isListening=true;
+const oldBatch=context.processLiveBatch({flush:true});
+const newerGood=context.processConsultation('latest successful description');reads.get('latest successful description').resolve({dream_outcome:'latest good jacket'});await newerGood;
+oldBatchRead.reject(Error('older batch failed late'));await oldBatch;context.isListening=false;
+await context._waitForVoicePipelineQuiet();
+assert.equal(context._voiceBatchError,null,'An older failure cannot replace a newer settled success');
+
+context._consultationWork={context:{epoch},pending:true};
+await assert.rejects(context._waitForVoicePipelineQuiet({maxMs:1}),/still being prepared/);
+const cancelled=context._waitForVoicePipelineQuiet();epoch++;assert.equal(await cancelled,false,'Project switches cancel preparation');
+
+for(const failure of [false,true]){
+  const gate=deferred(),provider=deferred(),timers=[],placed=[],requests=[];
+  const card=(id,title)=>({id,card:{tag:'silhouette',title},el:{style:{left:'12px',top:'24px'},parentNode:true,remove(){this.parentNode=null;}}});
+  const original=card(1,'bomber jacket'),next=card(2,'new pants');
+  const c=vm.createContext({console,Date,Math,_boardEpoch:1,_facePhotoVersion:0,
+    _opContext:()=>({epoch:1}),_opStillValid:()=>true,_waitForVoicePipelineQuiet:()=>gate.promise,
+    getImageModel:()=> 'fixture-model',selectedFabricsForVisualize:[{name:'chosen silk'}],selectedImageReferences:[{title:'chosen style',dataUrl:'chosen-ref'}],selectedImageReference:null,
+    visualizeModifications:['striped detailing'],lastSummary:{dream_outcome:'bomber jacket',_face_photo:'client-face',_measurements:{height:70}},items:[original],
+    setTimeout:(callback,delay)=>{const entry={callback,delay};timers.push(entry);return entry;},clearTimeout:entry=>{if(entry)entry.cancelled=true;},
+    pushRenderStatus(){},popRenderStatus(){},showToast(){},showError(){},updateCount(){},_persistSession(){},
+    buildFaceDescriptorClause:()=>'',_findLineageAnchor:()=> 'previous-vision',_promptTuning:()=>'',FRAMING_MANDATE:'',fabricToPromptLine:f=>f.name,window:{},isSafetyRejection:()=>false,
+    callOpenAIImageEditSafe:(anchors,prompt)=>{requests.push({anchors,prompt});return provider.promise;},
+    placeItem:card=>placed.push(card),_restorePlace:snapshot=>{c.items.push({...snapshot,el:{style:{}}});},
+  });
+  vm.runInContext(['buildGarmentPrompt','restoreFadedCards','fadeOutFloatingCards','_runVisualizeNow'].map(fn).join('\n'),c);
+  const render=c._runVisualizeNow();
+  assert.equal(c.selectedImageReferences.length,0,'Selections belong to their request before the first await');
+  c.selectedImageReferences=[{title:'later choice',dataUrl:'later-ref'}];c.selectedFabricsForVisualize=[{name:'later wool'}];
+  gate.resolve(true);await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(requests.length,1);assert.match(requests[0].prompt,/bomber jacket/);assert.match(requests[0].prompt,/chosen silk/);assert.doesNotMatch(requests[0].prompt,/later wool/);
+  assert.ok(Array.from(requests[0].anchors).includes('chosen-ref'));assert.ok(!Array.from(requests[0].anchors).includes('later-ref'));
+  c.items.push(next);c.lastSummary={dream_outcome:'later pants'};
+  if(failure)provider.reject(Error('fixture image failure'));else provider.resolve('new-image');
+  await render;
+  for(const timer of timers)if(!timer.cancelled)timer.callback();
+  assert.ok(c.items.includes(next)&&!next._removing&&!next.consumed,'Speech arriving during generation remains for the next request');
+  if(failure){assert.equal(placed.length,0,'A failed render never substitutes an older image');assert.ok(c.items.includes(original)&&!original._removing,'Failed render restores only its own references');}
+  else{assert.equal(placed[0].image,'new-image');assert.equal(placed[0].caption,'bomber jacket','Result metadata is the request snapshot');assert.equal(c.items.includes(original),false);}
+}
+console.log('Visualization requests: latest speech and queued cards settle; failures/timeouts stop safely and recover; render inputs, captions and faded references stay request-scoped.');
 };
 
 checks['submission-deletion']=async function(){
@@ -2700,7 +2784,7 @@ checks['favorites-incremental-render']=async function(){
  const {default:assert}=await import('node:assert/strict'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');const source=readFileSync('frontend/index.html','utf8');let creations=0;
  const wrap={children:[],dataset:{},insertBefore(card,before){card.remove();this.children.splice(before?this.children.indexOf(before):this.children.length,0,card);}};
  const document={body:{classList:{toggle(){}}},getElementById:()=>wrap,createElement:tag=>{
-  assert.equal(tag,'template');return {set innerHTML(value){creations++;const card={dataset:{id:value.match(/data-id="([^"]+)"/)[1]},caption:{textContent:value.match(/class="fc-summary">([^<]*)/)[1]},querySelector(){return this.caption;},remove(){const i=wrap.children.indexOf(this);if(i>=0)wrap.children.splice(i,1);}};this.content={firstElementChild:card};}};
+  assert.equal(tag,'template');return {set innerHTML(value){creations++;const card={style:{},dataset:{id:value.match(/data-id="([^"]+)"/)[1]},caption:{textContent:value.match(/class="fc-summary">([^<]*)/)[1]},querySelector(){return this.caption;},remove(){const i=wrap.children.indexOf(this);if(i>=0)wrap.children.splice(i,1);}};this.content={firstElementChild:card};}};
  }};
  const c=vm.createContext({document,items:[{id:1,card:{favorited:true,image:'https://photos.test/one',caption:'First coat'}}],_buildPieceSummaryLine:f=>f.card.caption,escapeHtml:v=>v,SHOWCASE_VIDEO_ENABLED:false,location:{search:''}});
  vm.runInContext(source.slice(source.indexOf('function _renderFavoritesScroller()'),source.indexOf('// v9.12: open the standard image viewer')),c);
@@ -2710,6 +2794,42 @@ checks['favorites-incremental-render']=async function(){
  c.items.reverse();vm.runInContext('_renderFavoritesScroller()',c);assert.equal(wrap.children[1],original);c.items.shift();vm.runInContext('_renderFavoritesScroller()',c);assert.equal(wrap.children[0],original);assert.equal(creations,2);
  c.items[0].card.image='https://photos.test/replacement';vm.runInContext('_renderFavoritesScroller()',c);assert.notEqual(wrap.children[0],original);assert.equal(creations,3,'A genuinely changed image gets a fresh card');
  console.log('Favorites: additions, removals, reordering and caption changes retain photos; replacements update correctly.');
+};
+
+checks['favorites-restore-recovery']=async function(){
+ const {default:assert}=await import('node:assert/strict'),vm=await import('node:vm'),{readFileSync}=await import('node:fs'),{parseHTML}=await import('linkedom');
+ const source=readFileSync('frontend/index.html','utf8'),{document}=parseHTML('<html><body><div id="maya-canvas"></div><div id="favorites-scroller"></div><div id="item-count"></div><button id="visualize-btn"></button></body></html>');
+ const timers=[],frames=[];let serial=0,headRelease,refreshRelease;
+ const c=vm.createContext({document,console,items:[],currentScreen:2,currentClientName:null,lastSummary:null,viewerDeselected:new Set(),visualizeListening:false,itemIdCounter:1,
+  innerWidth:1440,innerHeight:900,location:{search:''},navigator:{onLine:true},SHOWCASE_VIDEO_ENABLED:false,
+  setTimeout:fn=>{timers.push(fn);return ++serial;},requestAnimationFrame:fn=>{frames.push(fn);return ++serial;},
+  _cancelPictureImports(){},_clearViewerImage(){},renderNotesPanel(){},toggleNotesDrawer(){},makeDraggable(){},_refreshLatestVision(){},
+  _safeRealism:()=>null,_safeImgSrc:v=>v,escapeHtml:v=>String(v??''),_dedupeStems:v=>v,findFreeSpot:()=>({x:80,y:120}),
+  _buildPieceSummaryLine:f=>f.card.caption||f.card.title,_glog(){},_persistSession(){},
+  fetch:()=>new Promise(resolve=>{headRelease=resolve;}),_refreshStorageUrl:()=>new Promise(resolve=>{refreshRelease=resolve;})
+ });c.window=c;const run=code=>vm.runInContext(code,c),load=(start,end)=>run(source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start))));
+ c._opContext=()=>({epoch:run('_boardEpoch')});c._opStillValid=ctx=>ctx.epoch===run('_boardEpoch');
+ load('function updateCount()','// ════════════════════════════════════════════════════════════\n// cards');
+ load('function placeItemAt(','// v13.4: persistent click-to-front');
+ load('let _boardEpoch =','// ── client-name modal');
+ load('function _restorePlace(','// v11.13: stable content');
+ load('function _cardSig(','// v12.9: identity is not enough');
+ load('let _lastPaintDropped =','function _itemSig(');
+ load('let _favoritesRenderFrame =','// v9.12: open the standard image viewer');
+ load('function _favImgLoaded(','// ════════════════════════════════════════════════════════════\n// v13.3: THE COMMUNITY WALL.');
+ const paint=()=>{while(timers.length)timers.shift()();},frame=()=>{while(frames.length)frames.shift()();},wrap=document.getElementById('favorites-scroller');
+ const saved=(name)=>[{x:80,y:120,card:{kind:'inspo',tag:'design',title:name,caption:name,inspirationId:name,imageUrl:'https://photos.test/'+name,favorited:true}}];
+ c.saved=saved('first');run('_paintItems(saved)');assert.equal(wrap.children.length,0);paint();frame();assert.equal(wrap.children.length,1);assert.equal(wrap.querySelector('img').src,'https://photos.test/first');
+ // Match project.open/_watch: clear the old strip, schedule restored placements,
+ // and render immediately while Favorites remains the current screen.
+ c.saved=saved('second');run('_doClear();_paintItems(saved);_renderFavoritesScroller()');assert.equal(wrap.children.length,0);paint();assert.equal(wrap.children.length,0);frame();assert.equal(wrap.children.length,1);assert.equal(wrap.querySelector('img').src,'https://photos.test/second','Delayed project restore refreshes the still-selected Favorites screen');
+ const retained=wrap.firstElementChild;run('_renderFavoritesScroller()');assert.equal(wrap.firstElementChild,retained,'Healthy favorites retain their decoded image');
+ retained.style.display='none';run('_renderFavoritesScroller()');assert.notEqual(wrap.firstElementChild,retained,'Reopening retries only a previously failed photo');
+ const photo=wrap.querySelector('img');wrap.firstElementChild.style.display='none';c.photo=photo;run('_favImgLoaded(photo)');assert.equal(wrap.firstElementChild.style.display,'','A successfully loaded image is visible again');
+ run('_favImgBroken(photo,items[0].id)');headRelease({status:403,ok:false});await Promise.resolve();assert.equal(typeof refreshRelease,'function');
+ c.saved=saved('third');run('_doClear();_paintItems(saved);_renderFavoritesScroller()');paint();refreshRelease({url:'https://photos.test/stale-refreshed'});await Promise.resolve();frame();assert.equal(wrap.querySelector('img').src,'https://photos.test/third','A late old-project URL refresh never replaces the current project');
+ run('_doClear()');frame();assert.equal(wrap.children.length,0,'Clearing the account or board removes the previous Favorites immediately');
+ console.log('Favorites: delayed cloud restore repaints the active screen, healthy photos remain, failed photos recover and stale URL repair is isolated.');
 };
 
 checks['fabric-refresh-preparation']=async function(){
@@ -3137,6 +3257,28 @@ checks['fabric-compact-rail']=async function(){
  await api.open({host,automatic:true,savedOnly:true,compactRail:true});assert.equal(workspace.classList.contains('fa-original-grid'),false);assert.equal(workspace.classList.contains('is-rail'),true);assert.equal(api.fixtureCard(product).querySelector('.fa-card-caption').dataset.mayaType,'P3','Backend 2 keeps its own caption role after an original-grid visit');
  assert.equal(requests,0,'Layout transitions and card reveal never call a provider');
  console.log('Fabric layouts: compact rail, original hover grid, isolated roles/actions, first-touch reveal, photo failure/retention and expansion/collapse passed.');
+};
+
+checks['frontend-card-content']=async function(){
+ const {default:assert}=await import('node:assert/strict'),{parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const html=readFileSync('frontend/index.html','utf8'),{document}=parseHTML('<body><div id="maya-canvas"></div></body>'),timers=[];
+ const c=vm.createContext({document,URL,items:[],itemIdCounter:1,_boardEpoch:1,_zCounter:200,
+  setTimeout:fn=>timers.push(fn),findFreeSpot:()=>({x:10,y:10}),_safeRealism:()=>'',_dedupeStems:value=>value,
+  fabricSwatchUrl:()=>'',makeDraggable(){},updateCount(){},_refreshLatestVision(){}});c.window=c;
+ for(const [start,end]of [['function _safeImgSrc(','function _safeRealism('],['function escapeHtml(','// v8.1: collapse'],['function _placeItemInternal(','// v13.4: persistent click-to-front']]){
+  const at=html.indexOf(start),to=html.indexOf(end,at);assert.ok(at>=0&&to>at,start);vm.runInContext(html.slice(at,to),c);
+ }
+ for(const [tag,title]of [['color','Black'],['silhouette','Bomber jacket'],['detail','Striped detailing'],['visual ref',"Assassin's Creed helmet"]]){
+  c._placeItemInternal({tag,title},0,null,true);timers.shift()();const chip=document.querySelector('#maya-canvas').lastElementChild;
+  assert.equal(chip.querySelector('.item-title').textContent,title);assert.equal(chip.querySelector('.item-caption'),null,'Spoken attributes have one label, never a duplicate photo caption');
+ }
+ for(const card of [{kind:'inspo',title:'Reference coat',image:'https://photos.test/reference.jpg'},
+  {kind:'inspo',title:'v1',image:'https://photos.test/vision.jpg',inspirationId:'new-vision',caption:'A white silk bomber jacket'}]){
+  c._placeItemInternal(card,0,null,true);timers.shift()();const photo=document.querySelector('#maya-canvas').lastElementChild;
+  assert.equal(photo.querySelectorAll('.item-caption').length,1);assert.equal(photo.querySelector('.item-caption').textContent,card.caption||card.title);assert.ok(photo.querySelector('.inspo-thumb'));
+ }
+ c._placeItemInternal({tag:'color',title:'Late old-board label'},0,null,true);c._boardEpoch++;timers.shift()();assert.equal(c.items.length,6,'Delayed speech chips cannot enter a different project');
+ console.log('Frontend content: spoken attributes keep one label; uploaded/generated photographs retain one hover description; stale placements stay isolated.');
 };
 
 checks['frontend-card-performance']=async function(){

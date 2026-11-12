@@ -4016,7 +4016,7 @@
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=29"></script>
 <link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=4"><script src="/aesthetics/ui/image-viewer.js?v=5"></script>
-<link rel="stylesheet" href="/aesthetics/ui/frontend-cards.css?v=2">
+<link rel="stylesheet" href="/aesthetics/ui/frontend-cards.css?v=3">
 </head>
 <body class="maya-frontend">
 <!-- v14.21: this is the Playground, promoted whole. The amber badge is the
@@ -5693,6 +5693,9 @@ function updateCount() {
   // friction; safety + fabric anchoring carry more of the load now.
   const threshold = hasImage ? 1 : 2;
   visualizeBtn.style.display = (floating >= threshold) ? 'inline-flex' : 'none';
+  // Restored cards arrive asynchronously. If a project is opened while the
+  // Favorites screen stays selected, its screen observer will not fire again.
+  if (typeof currentScreen === 'number' && currentScreen === 2) _queueFavoritesRender();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -5814,7 +5817,9 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
     // "cartoon inspired cartoonish pants" collapse to "cartoon inspired pants".
     if (card.caption) card.caption = _dedupeStems(card.caption);
 
-    const hoverDescription=card.caption||card.profile?.bio||card.title||'';
+    // Voice attributes already have a title. Only photos receive the hover
+    // description; adding it to text chips repeats every spoken label.
+    const hoverDescription=isImage ? (card.caption||card.profile?.bio||card.title||'') : '';
     const captionHtml = hoverDescription
       ? '<div class="item-caption" data-maya-type="P3">' + escapeHtml(hoverDescription) + '</div>'
       : '';
@@ -6255,7 +6260,7 @@ function removeItem(id) {
 // hover-cluster on its image card.
 // v12.9: remember what a fade removed, so a Visualize that fails can put the
 // references back instead of leaving the designer with nothing at all.
-let _lastFaded = [];
+let _lastFaded = []; // legacy teardown only; active fades are request-scoped
 // Pictures whose card has gone, waiting for the save that makes that official.
 const _pendingAssetDeletes = [];
 const _pendingLegacyDeletes = [];
@@ -6281,20 +6286,30 @@ function _drainAssetDeletes(projectId, stillReferenced) {
   }
   for (const e of keepL) if (e) _pendingLegacyDeletes.push(e);
 }
-function restoreFadedCards() {
-  if (!_lastFaded.length) return;
-  const back = _lastFaded.slice();
-  _lastFaded = [];
-  for (const sav of back) {
-    try { _restorePlace(sav); } catch (_) {}
-  }
-  showToast('References restored.');
+function restoreFadedCards(batch) {
+  if (!batch || batch.cancelled) return;
+  batch.cancelled = true;
+  clearTimeout(batch.timer);
+  if (!_opStillValid(batch.context)) return;
+  batch.targets.forEach((it, index) => {
+    if (items.includes(it) && it.el) {
+      it._removing = false;
+      it.el.style.transition = '';
+      it.el.style.willChange = '';
+      it.el.style.opacity = '';
+      it.el.style.pointerEvents = '';
+    } else if (batch.removed.has(it)) { try { _restorePlace(batch.snapshots[index]); } catch (_) {} }
+  });
+  if (batch.targets.length) showToast('References restored.');
 }
 function fadeOutFloatingCards() {
   const targets = items.filter(it =>
-    it.el && !(it.card.kind === 'inspo' && it.card.image)
+    it.el && !it.consumed && !it._removing && !(it.card.kind === 'inspo' && it.card.image)
   );
-  if (!targets.length) return;
+  const batch = { context: _opContext(), targets, removed: new Set(), cancelled: false, snapshots: targets.map(it => ({
+    id: it.id, x: parseFloat(it.el.style.left) || 0, y: parseFloat(it.el.style.top) || 0, card: { ...it.card },
+  })) };
+  if (!targets.length) return batch;
   // v11.10: slower, softer fade, 2.4 s opacity with an "ease-in-out" feel.
   // Total animation window ≈ 2.6 s end-to-end including the per-card stagger.
   targets.forEach((it, idx) => {
@@ -6305,18 +6320,16 @@ function fadeOutFloatingCards() {
     it.el.style.transition = 'opacity 2.4s cubic-bezier(0.4, 0, 0.2, 1)';
     it.el.style.willChange = 'opacity';
     setTimeout(() => {
+      if (batch.cancelled || !_opStillValid(batch.context) || !items.includes(it) || !it.el) return;
       it.el.style.opacity = '0';
       it.el.style.pointerEvents = 'none';
     }, idx * 30);
   });
-  setTimeout(() => {
-    _lastFaded = targets.map(it => ({
-      id: it.id,
-      x: it.el ? parseFloat(it.el.style.left) || 0 : 0,
-      y: it.el ? parseFloat(it.el.style.top) || 0 : 0,
-      card: { ...it.card },
-    }));
+  batch.timer = setTimeout(() => {
+    if (batch.cancelled || !_opStillValid(batch.context)) return;
     targets.forEach(it => {
+      if (!items.includes(it)) return;
+      batch.removed.add(it);
       if (it.el && it.el.parentNode) it.el.remove();
       const idx = items.indexOf(it);
       if (idx >= 0) items.splice(idx, 1);
@@ -6324,6 +6337,7 @@ function fadeOutFloatingCards() {
     updateCount();
     if (typeof _persistSession === 'function') _persistSession();
   }, 2700);
+  return batch;
 }
 
 // After a successful Visualize, every floating (non-image, non-consumed) card
@@ -6810,11 +6824,17 @@ function _glog(msg) {
 const _favProbeSeen = new Set();  // v11.51: per-load probe memory (never persisted)
 // v11.52: fired by the favorite's own <img>, hide instantly, delete when the
 // server confirms the picture is gone (404) or present-but-corrupt (2xx).
+function _favImgLoaded(imgEl) {
+  const cardEl = imgEl.closest('.favorite-card');
+  if (cardEl) cardEl.style.display = '';
+}
 function _favImgBroken(imgEl, itemId) {
   const cardEl = imgEl.closest('.favorite-card');
   if (cardEl) cardEl.style.display = 'none';
   const it = items.find(i => i.id === itemId);
   const src = it && it.card && it.card.image ? String(it.card.image) : '';
+  const ctx = _opContext();
+  const current = () => _opStillValid(ctx) && items.includes(it) && it?.card?.image === src && imgEl.isConnected;
   _glog('fav#' + itemId + ' image failed to render (' + (src ? src.slice(0, 40) : 'NO SRC') + '…), hidden');
   const kill = (why) => { _glog('fav#' + itemId + ' hidden, ' + why + ' (nothing is auto-deleted)'); };
   if (!src || src.startsWith('data:')) { kill(src ? 'embedded image undecodable' : 'no image data'); return; }
@@ -6825,10 +6845,12 @@ function _favImgBroken(imgEl, itemId) {
   if (imgEl.dataset.reissued === '1') return;
   imgEl.dataset.reissued = '1';
   fetch(src, { method: 'HEAD' }).then(r => {
+    if (!current()) return;
     if (r.status === 404 || r.ok) kill('server said ' + r.status);
     else {
       _glog('fav#' + itemId + ' got ' + r.status + ', trying to re-issue a fresh link');
       _refreshStorageUrl(src).then(res => {
+        if (!current()) return;
         if (res.url && it) {
           it.card.image = res.url; it.card.imageUrl = res.url;
           _glog('fav#' + itemId + ' RESTORED, fresh link issued');
@@ -7431,6 +7453,15 @@ const communityBoard = {
   },
 };
 
+let _favoritesRenderFrame = 0;
+function _queueFavoritesRender() {
+  if (_favoritesRenderFrame) return;
+  _favoritesRenderFrame = requestAnimationFrame(() => {
+    _favoritesRenderFrame = 0;
+    // Read the current board here, never a captured list from another project.
+    if (currentScreen === 2) _renderFavoritesScroller();
+  });
+}
 function _renderFavoritesScroller() {
   const wrap = document.getElementById('favorites-scroller');
   if (!wrap) return;
@@ -7460,7 +7491,7 @@ function _renderFavoritesScroller() {
       ? '<div class="fc-rendering">rendering 360°…</div>'
       : '';
     const previous=existing.get(String(f.id)),media={image:f.card.image,video:videoHtml,pending:pendingHtml};
-    if(previous?._favoriteMedia&&Object.keys(media).every(key=>previous._favoriteMedia[key]===media[key])){
+    if(previous?._favoriteMedia&&previous.style.display!=='none'&&Object.keys(media).every(key=>previous._favoriteMedia[key]===media[key])){
       const caption=previous.querySelector('.fc-summary');if(caption.textContent!==summary)caption.textContent=summary;
       return previous;
     }
@@ -7468,7 +7499,7 @@ function _renderFavoritesScroller() {
     template.innerHTML = '<div class="favorite-card" role="button" tabindex="0" aria-label="Open saved design" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}" data-id="' + f.id + '" ' +
       'onmouseenter="_favHoverIn(this)" onmouseleave="_favHoverOut(this)" ' +
       'onclick="openFavoriteForSubmit(' + f.id + ')">' +
-      '<div class="fc-image"><img class="fc-img" src="' + escapeHtml(f.card.image) + '" alt="" loading="lazy" decoding="async" onerror="_favImgBroken(this,' + f.id + ')"/></div>' +
+      '<div class="fc-image"><img class="fc-img" src="' + escapeHtml(f.card.image) + '" alt="" loading="lazy" decoding="async" onload="_favImgLoaded(this)" onerror="_favImgBroken(this,' + f.id + ')"/></div>' +
       videoHtml +
       pendingHtml +
       '<div class="fc-summary">' + escapeHtml(summary) + '</div>' +
@@ -9245,10 +9276,17 @@ function processMoodboardText(text) {
 // ════════════════════════════════════════════════════════════
 // CONSULTATION MODE, GPT-4o structured extraction
 // ════════════════════════════════════════════════════════════
+let _consultationWork = null;
+let _voicePreparationSeq = 0;
+let _voiceSettledSeq = 0;
 async function processConsultation(transcript) {
   const _ctx = _opContext();
   if (!transcript || !transcript.trim()) return;
   if (!getApiKey()) { showError('Session expired. Sign in again.'); if (typeof _showGate==='function') _showGate(); return; }
+  // Visualize must wait for this exact utterance, not the previous summary.
+  // A newer consultation supersedes an older response in the same project.
+  const work = { context: _ctx, transcript, pending: true, seq: ++_voicePreparationSeq };
+  _consultationWork = work;
 
   // MERGE, don't wipe. The live extraction has already placed cards while the
   // user was talking; the deep pass should only ADD what's missing. Image
@@ -9260,6 +9298,7 @@ async function processConsultation(transcript) {
 
   try {
     const summary = await callOpenAIChat(transcript);
+    if (_consultationWork !== work || !_opStillValid(_ctx)) return;
     // v10.11: preserve user-entered + cached runtime fields (anything
     // prefixed with `_`) that the LLM summary doesn't include ,
     // _measurements, _face_photo, _face_descriptors, _paragraphs cache.
@@ -9278,6 +9317,7 @@ async function processConsultation(transcript) {
       return;
     }
     lastSummary = summary;
+    if (work.seq >= _voiceSettledSeq) { _voiceSettledSeq = work.seq; _voiceBatchError = null; }
     if (summary._face_photo) _queueAvatarSave();
     placeConsultationCards(summary);   // uses placeItemUnique under the hood
     renderNotesPanel(summary);
@@ -9294,9 +9334,13 @@ async function processConsultation(transcript) {
     updateCount();
     showToast('Consultation read.');
   } catch (e) {
+    if (_consultationWork !== work || !_opStillValid(_ctx)) return;
+    if (work.seq >= _voiceSettledSeq) { _voiceSettledSeq = work.seq; _voiceBatchError = { context: _ctx, seq: work.seq }; }
     setThinking(false);
     updateCount();
     showError(e.message || String(e));
+  } finally {
+    work.pending = false;
   }
 }
 
@@ -10017,6 +10061,7 @@ const LIVE_EXTRACT_SCHEMA = {
 let lastProcessedLength = 0;
 let batchInterval = null;
 let batchInFlight = false;
+let _voiceBatchError = null;
 
 async function callLiveExtract(text) {
   // Pass EVERY canvas ref (floating + consumed pills) as dedupe context.
@@ -10137,19 +10182,26 @@ function _clearPendingTitle(t) {
 // nothing is in flight and there's no unprocessed text waiting.
 async function _waitForVoicePipelineQuiet(opts = {}) {
   const maxMs = opts.maxMs || 30000, start = Date.now(), context = _opContext();
-  const havePending = () => batchInFlight || liveTranscriptBuffer.slice(lastProcessedLength).trim() || liveInterimBuffer.trim();
-  if (!havePending()) return;
+  const consultation = () => typeof _consultationWork !== 'undefined' && _consultationWork && _opStillValid(_consultationWork.context) ? _consultationWork : null;
+  const haveSpeech = () => batchInFlight || liveTranscriptBuffer.slice(lastProcessedLength).trim() || liveInterimBuffer.trim();
+  const havePending = () => haveSpeech() || consultation()?.pending || (typeof _pendingTitles !== 'undefined' && _pendingTitles.length);
   const wasListening = isListening;
-  isListening = true; // Let the current final batch settle after Stop.
-  pushRenderStatus('waiting');
+  const waiting = !!havePending();
+  if (waiting) { isListening = true; pushRenderStatus('waiting'); }
   try {
     while (havePending() && _opStillValid(context) && Date.now() - start < maxMs) {
-      if (!batchInFlight) processLiveBatch({flush:true}).catch(() => {});
+      if (haveSpeech() && !batchInFlight) processLiveBatch({flush:true}).catch(() => {});
       await new Promise(resolve => setTimeout(resolve, 50));
     }
+    if (!_opStillValid(context)) return false;
+    if (havePending()) throw new Error('Your latest description is still being prepared. Try Visualize again in a moment.');
+    if (typeof _voiceBatchError !== 'undefined' && _voiceBatchError && _opStillValid(_voiceBatchError.context)) {
+      throw new Error('I could not read your latest description. Please repeat it before visualizing.');
+    }
+    return true;
   } finally {
     if (_opStillValid(context)) isListening = wasListening;
-    popRenderStatus();
+    if (waiting) popRenderStatus();
   }
 }
 
@@ -10164,6 +10216,7 @@ async function processLiveBatch(opts = {}) {
   if (!newPortion || (newPortion.length < 15 && !opts.flush)) return;
 
   batchInFlight = true;
+  const preparationSeq = ++_voicePreparationSeq;
   const consumeUpTo = liveTranscriptBuffer.length;
 
   try {
@@ -10173,6 +10226,7 @@ async function processLiveBatch(opts = {}) {
       return;
     }
     lastProcessedLength = consumeUpTo;
+    if (preparationSeq >= _voiceSettledSeq) { _voiceSettledSeq = preparationSeq; _voiceBatchError = null; }
     if (liveInterimBuffer.trim() === interim) liveInterimBuffer = '';
     // v5.23: belt + suspenders dedupe. The LLM is instructed not to repeat,
     // but if it slips up we filter again locally before placement, AND we
@@ -10193,6 +10247,7 @@ async function processLiveBatch(opts = {}) {
   } catch (e) {
     console.error('[Maya live extract]', e);
     if (_opStillValid(ctx)) {
+      if (preparationSeq >= _voiceSettledSeq) { _voiceSettledSeq = preparationSeq; _voiceBatchError = { context: ctx, seq: preparationSeq }; }
       lastProcessedLength = consumeUpTo;
       if (liveInterimBuffer.trim() === interim) liveInterimBuffer = '';
     }
@@ -11243,7 +11298,7 @@ function buildGarmentPrompt(opts = {}) {
   // Only floating (non-consumed, non-image) refs drive the next vision ,
   // consumed pills in the tray have already done their job.
   items.forEach(i => {
-    if (i.consumed) return;
+    if (i.consumed || i._removing) return;
     if (i.card.kind === 'inspo' && i.card.image) return;
     const cat = i.card.tag;
     if (!groups[cat]) groups[cat] = [];
@@ -11848,8 +11903,8 @@ async function applyModifications() {
       placeItem(newCard, 0);
     }
     visualizeModifications = [];
-    // Used refs fall to the tray after a successful modify too
-    setTimeout(consumeFloatingCards, 400);
+    // Modify uses this image's captured references and modifications. Floating
+    // speech may describe a separate next design, so leave it on the board.
   } catch (e) {
     showError(e.message || 'Could not modify image');
   } finally {
@@ -12265,7 +12320,6 @@ async function callOpenAIImage(prompt, size, quality, opts) {
 // pill while gpt-image-2 runs, then drops the finished image onto the canvas
 // as a draggable card, exactly like a piece of inspo. No fullscreen modal.
 async function visualizeGarment() {
-  if (items.length < 2) return;
   if (!getApiKey()) {
     showError('Session expired. Sign in again.');
     if (typeof _showGate==='function') _showGate();
@@ -12283,8 +12337,10 @@ async function visualizeGarment() {
   const visualizeContext = _opContext(), visualizeAvatarVersion = _facePhotoVersion;
   if (_pendingAvatarPhoto) await _pendingAvatarPhoto;
   if (!_opStillValid(visualizeContext) || _facePhotoVersion !== visualizeAvatarVersion) return;
-  await _waitForVoicePipelineQuiet();
+  try { if (await _waitForVoicePipelineQuiet() === false) return; }
+  catch (e) { showError(e.message); return; }
   if (!_opStillValid(visualizeContext) || _facePhotoVersion !== visualizeAvatarVersion) return;
+  if (items.length < 2) { showError('Add a few design details before visualizing.'); return; }
   // v10.16: avatar safety check. If no face photo AND no measurements,
   // ask before proceeding. If either is set, that's enough, render goes.
   const facePhoto = (lastSummary && lastSummary._face_photo) || null;
@@ -12328,6 +12384,7 @@ function _continueVisualize() {
 // in-house with one or more fabrics (selectedFabricsForVisualize = [...]).
 async function _runVisualizeNow() {
   const _ctx = _opContext();   // v12.9: which client's project this render belongs to
+  const avatarVersion = _facePhotoVersion;
   const generatedBy = getImageModel();
   const myBoardEpoch = _boardEpoch;  // v11.49: which project this render belongs to
   // v9.8: SNAPSHOT every input synchronously into local consts, then reset
@@ -12341,12 +12398,20 @@ async function _runVisualizeNow() {
                           ? selectedImageReferences.slice()
                           : (selectedImageReference ? [selectedImageReference] : []);
   const modsSnap      = visualizeModifications.slice();
-  const facePhotoSnap = (lastSummary && lastSummary._face_photo) || null;
-  const mSnap         = (lastSummary && lastSummary._measurements) || {};
   // Reset globals so the next click starts on a clean slate.
   visualizeModifications = [];
+  selectedFabricsForVisualize = null;
   selectedImageReference = null;
   selectedImageReferences = [];
+
+  // Speech may continue while the fabric/reference chooser is open. Own
+  // chooser selections before waiting, then snapshot the completed description.
+  try { if (await _waitForVoicePipelineQuiet() === false) return; }
+  catch (e) { showError(e.message); return; }
+  if (!_opStillValid(_ctx) || _facePhotoVersion !== avatarVersion) return;
+  const facePhotoSnap = (lastSummary && lastSummary._face_photo) || null;
+  const mSnap         = { ...((lastSummary && lastSummary._measurements) || {}) };
+  const captionSnap   = lastSummary?.dream_outcome || null;
 
   pushRenderStatus('visualizing');
   const basePrompt = buildGarmentPrompt({ fabrics: fabricsSnap });
@@ -12358,11 +12423,12 @@ async function _runVisualizeNow() {
   // fade animation removes them, so the resulting render still gets a
   // refs hover-cluster showing what fed it.
   const cardsRefsSnap = items
-    .filter(i => !i.consumed && !(i.card.kind === 'inspo' && i.card.image))
+    .filter(i => !i.consumed && !i._removing && !(i.card.kind === 'inspo' && i.card.image))
     .map(i => ({ tag: i.card.tag, title: i.card.title }));
   // Fire the quiet fade. ~2 s; runs in parallel with the API call below.
   // Only non-image cards fade, image cards stay exactly where they are.
-  try { fadeOutFloatingCards(); } catch (_) {}
+  let fadedRefs;
+  try { fadedRefs = fadeOutFloatingCards(); } catch (_) {}
   try {
     // Three paths, all face-locked:
     //   path 1: face photo set                  → /edits on the face photo (face wins, refs are text hints)
@@ -12480,7 +12546,6 @@ async function _runVisualizeNow() {
     // that asked for it? If not, keep the picture out of the wrong client's
     // board and say so rather than silently misfiling it.
     if (!_opStillValid(_ctx)) {
-      _lastFaded = [];                       // v13.0: they belong to the other project
       showToast('That render finished after you moved on.');
       return;
     }
@@ -12488,7 +12553,7 @@ async function _runVisualizeNow() {
     placeItem({
       tag: 'inspo', title: 'v1', kind: 'inspo', image: dataUrl,
       inspirationId, version: 1, generatedBy,
-      caption: lastSummary?.dream_outcome || null,
+      caption: captionSnap,
       fabricMode: fabricsSnap ? 'inhouse' : 'sourceable',
       fabrics: fabricsSnap
         ? fabricsSnap.map(f => ({
@@ -12502,15 +12567,14 @@ async function _runVisualizeNow() {
       refs: cardsRefsSnap.length ? cardsRefsSnap : null,
       visualReferenceTitle: refsSnap[0] ? refsSnap[0].title : null
     }, 0);
-    // (guarded above: nothing is placed if the designer moved to another project)
-    setTimeout(consumeFloatingCards, 400);
-    _lastFaded = [];                       // it worked, the references are spent
+    // This request's fade owns its exact inputs. New speech arriving while
+    // the image renders must remain available for the next visualization.
   } catch (e) {
     // v12.9: the references were faded off the canvas before the render ran.
     // If the render fails, the designer used to be left with no references and
     // no picture, and had to describe everything again. Put them back.
-    try { restoreFadedCards(); } catch (_) {}
-    showError((e.message || 'Could not generate image') + '. Your references are still here, try again.');
+    try { restoreFadedCards(fadedRefs); } catch (_) {}
+    if (_opStillValid(_ctx)) showError((e.message || 'Could not generate image') + '. Your references are still here, try again.');
   } finally {
     popRenderStatus();
   }

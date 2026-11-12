@@ -14,7 +14,7 @@
 }
 :is(body.maya-frontend,.frontend-card-preview) :is(.item-card.inspo .item-title,.item-card.inspo .item-caption,.favorite-card .fc-summary,.community-card .cc-meta,.pin-caption,.fabric-meta){
   box-sizing:border-box;position:absolute;inset:auto 0 0;margin:0;
-  padding:30px 16px 14px;max-height:75%;overflow:hidden;
+  padding:30px 16px 10px;max-height:75%;overflow:hidden;
   background:linear-gradient(to top,rgba(0,0,0,.82),transparent);
   text-align:center;opacity:0!important;pointer-events:none;
   transition:opacity .22s ease;

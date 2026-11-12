@@ -209,6 +209,19 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 12 — frontend regression repair:
+Photo hover captions no longer duplicate spoken attribute labels. Keep the white
+card styling and drawer, with descriptions four pixels lower. Favorites refreshes
+after asynchronous project restoration and retries previously hidden failed photos
+without rebuilding healthy ones; late URL repairs remain project-bound. Visualize
+waits for the latest description and queued cards, and each render owns only its
+input cards so newer speech survives an older request's completion.
+The preceding release `cafa316` passed Google build `b5580b62`, including live
+verification of all seven endpoints. This repair passed the full Node20 code-only
+gate, including new speech, render-isolation and Favorites-restore regressions.
+No local browser or live provider call was used; deployment and owner visual
+acceptance remain separate checks.
+
 November 12 — original fabric release correction:
 Build `8adab27e` for `13a7370` passed runtime, original drawer/operation and frontend
 browser checks, then stopped on fabric card padding. The generated Inner selector

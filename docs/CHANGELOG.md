@@ -4,6 +4,15 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 12 — frontend regression repair:** restrict photo descriptions to
+  image cards, restoring single voice labels, and move white captions down 4px.
+  Refresh Favorites after delayed project restoration and recover hidden failed
+  photos while retaining healthy media. Bind visualization preparation to the
+  latest description and isolate each render's consumed references so newer
+  speech remains on the board. Preserve the drawer and backend layouts. The full
+  Node20 code-only gate passes with speech/render/Favorites regression fixtures;
+  no local browser or live provider calls.
+
 - **November 12 — original fabric release correction:** fix CSS specificity so
   shared Inner padding cannot override edge-to-edge square fabric cards. The
   Google browser gate caught the conflict and blocked deployment of `13a7370`;
