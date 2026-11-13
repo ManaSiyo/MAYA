@@ -168,10 +168,7 @@
   }
   function syncLayout() {
     if(!els)return;
-    const compact=!!context.compactRail,rail=compact&&workspace.classList.contains('is-inline');
-    workspace.classList.toggle('fa-compact-cards',compact);workspace.classList.toggle('is-rail',rail);workspace.classList.toggle('fa-original-grid',!!context.originalGrid&&!compact);
-    if(rail){if(els.rail.parentNode!==els.body)els.body.insertBefore(els.rail,els.saveStatus);els.rail.append(els.header,els.results);}
-    else {if(els.header.parentNode!==workspace)workspace.prepend(els.header);if(els.results.parentNode!==els.body)els.body.insertBefore(els.results,els.saveStatus);els.rail.remove();}
+    workspace.classList.toggle('fa-original-grid',!!context.originalGrid);
   }
   function collapse() {
     if(dialog.open)dialog.close();
@@ -212,7 +209,6 @@
     const storeWrap=node('div','fa-store-wrap');storeWrap.hidden=true;storeWrap.setAttribute('role','group');storeWrap.setAttribute('aria-label','Optional separate retailer searches');
     const storeButtons=storeGroups.map(group=>{const button=action(group.label,()=>chooseSearch('retailers',group.id));button.classList.add('fa-store-filter');button.dataset.mayaSegment='';button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
     tabs.append(inhouse,search,saved,filter,fresh);
-    const rail=node('div','fa-rail');rail.dataset.mayaScrollbar='visible';rail.tabIndex=0;rail.setAttribute('aria-label','Fabric views and suggestions');
     const body=node('div','fa-body');body.dataset.mayaScrollbar='visible';body.tabIndex=0;body.setAttribute('aria-label','Fabric results');
     const transcript=node('div','fa-transcript');transcript.setAttribute('aria-label','Your requests');
     const observation=node('p','fa-observation'),results=node('div','fa-results'),saveStatus=node('p','fa-save-status');saveStatus.setAttribute('role','status');results.dataset.mayaScrollbar='visible';results.tabIndex=0;results.setAttribute('aria-label','Fabric suggestions');body.append(transcript,observation,results,saveStatus);
@@ -239,7 +235,7 @@
     dialog.addEventListener('pointerdown',event=>{outsideDown=outside(event);});
     dialog.addEventListener('click',event=>{if(outsideDown&&outside(event)){if(host)collapse();else close();}outsideDown=false;});
     dialog.addEventListener('close',()=>{if(dialog.open)return;if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');syncLayout();}else{controller?.abort();recognition?.stop();}});
-    els={header,rail,exportButton,details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,upload,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
+    els={header,exportButton,details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,upload,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
   }
   let recognition;
   function dictate() {
@@ -461,9 +457,9 @@
   }
   // Photo evidence can arrive late. It updates the mounted image without
   // discarding a healthy photograph or restarting URLs that already failed.
-  const cardSignature=p=>JSON.stringify([view,!!context.automatic,!!context.compactRail,!!context.originalGrid,p.url]);
+  const cardSignature=p=>JSON.stringify([view,!!context.automatic,!!context.originalGrid,p.url]);
   function card(p) {
-    const originalGrid=!!context.originalGrid&&!context.compactRail,overlay=!!context.compactRail||originalGrid;
+    const originalGrid=!!context.originalGrid,overlay=originalGrid;
     const item=node('article','fa-product');item.dataset.mayaPanel='inner';item._fabricURL=p.url;item._fabricSignature=cardSignature(p);item._fabricView=view;
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
     mountProductPhoto(item,link,p);

@@ -149,7 +149,7 @@ try{
  await deletion.evaluate(()=>{window.deleteValid=false;window.deleted=0;MayaSubmissionCards.requestDelete({id:'fixture-submission'},{token:'fixture-owner',valid:()=>deleteValid,onDeleted:()=>deleted++});});
  await deletion.locator('[data-delete]').click();assert.equal(deleteRequests.length,0);assert.match(await deletion.locator('.submission-confirm-status').textContent(),/account changed/);
  await deletion.evaluate(()=>deleteValid=true);await deletion.locator('[data-delete]').click();await deletion.waitForFunction(()=>deleted===1);assert.deepEqual(deleteRequests,[{method:'DELETE',auth:'Bearer fixture-owner'}]);await deletion.close();
- for(const [name,check]of [['Submission drawer',checkSubmissionDrawer],['Original operation layout',checkOperationLayout],['Project actions',checkProjectActions],['Frontend cards',checkFrontendCards],['Fabric gallery',checkFabricGallery],['Backend 2',checkBackendTwo]]){
+ for(const [name,check]of [['Submission drawer',checkSubmissionDrawer],['Original operation layout',checkOperationLayout],['Project actions',checkProjectActions],['Frontend cards',checkFrontendCards],['Fabric gallery',checkFabricGallery],['CLO preview',checkCloPreview]]){
   const started=performance.now();console.log('UI START '+name);await check();console.log('UI PASS '+name+' ('+Math.round(performance.now()-started)+'ms)');
  }
  console.log('UI, responsive layout, sharing performance and saved aesthetics passed',JSON.stringify(measure));
@@ -204,7 +204,7 @@ async function checkOperationLayout(){
   const compact=await geometry();assert.ok(compact.start.bottom<=compact.hero.top);assert.ok(compact.picker.bottom<=compact.hero.top);
   assert.ok(compact.logicInStage&&compact.pipelineInLogic,'Retrieval and Pipeline belong to the Logic view inside the pattern frame');assert.equal(compact.traceHeading,'Pipeline');
   assert.equal(await frame.locator('#plan-a-view > .trace').count(),0,'Retrieval no longer adds a second section beneath the two frames');
-  assert.deepEqual(await frame.locator('#pass-pills button').allTextContents(),['Mark 1','Pipeline']);
+  assert.deepEqual(await frame.locator('#pass-pills button').allTextContents(),['Mark 1','CLO 3D','Pipeline']);
   for(const pill of compact.pills)assert.deepEqual(pill,compact.pills[0],'Operation toolbar pills share P3 and Glass padding');
   const basePadding=await frame.evaluate(()=>({x:MayaTypographyControls.defaults.pillX,y:MayaTypographyControls.defaults.pillY,font:MayaTypographyControls.defaults.type.P3.size}));
   assert.equal(parseFloat(compact.pills[0][0]),Math.max(0,(changed?9:basePadding.y)-1));assert.equal(parseFloat(compact.pills[0][2]),Math.max(0,(changed?18:basePadding.x)-1));assert.equal(parseFloat(compact.pills[0][3]),changed?14:basePadding.font);
@@ -265,6 +265,7 @@ async function checkOperationLayout(){
  await frame.evaluate(()=>{exportOriginalSVG=window.fixtureDrawerExport;});
  await page.setViewportSize({width:1440,height:900});
  await frame.locator('#original-operation-tab-grounded-0').focus();await frame.locator('#original-operation-tab-grounded-0').press('ArrowRight');
+ assert.equal(await frame.evaluate(()=>CUR.kind),'clo');await frame.locator('#original-operation-tab-clo-0').press('ArrowRight');
  assert.equal(await frame.evaluate(()=>CUR.kind),'logic');await frame.evaluate(()=>applyView());assert.equal(await frame.evaluate(()=>document.activeElement?.id),'original-operation-tab-logic-0','Live repaint retains the keyboard-focused tab');
  await frame.locator('#original-operation-tab-logic-0').press('Home');assert.equal(await frame.evaluate(()=>CUR.kind),'grounded');
  // Native selector focus is released only for pointer selection. Keyboard
@@ -502,22 +503,18 @@ try{
  }
  await page.evaluate(()=>MayaTypographyControls.apply(MayaTypographyControls.defaults));
  const drawerPreview=page.locator('#original-drawer-preview');await drawerPreview.getByRole('tab',{name:'Settings',exact:true}).click();assert.equal(await drawerPreview.getByRole('button',{name:'Export as SVG',exact:true}).isVisible(),true);await drawerPreview.getByRole('tab',{name:'Submissions',exact:true}).click();assert.equal(await drawerPreview.locator('#original-preview-settings').isVisible(),false);
- const backendTwoPreview=page.locator('#backend-two-layout-preview');
- const snapshotBounds=()=>backendTwoPreview.locator('.backend-two-preview-columns').evaluate(el=>{const origin=el.getBoundingClientRect(),rect=e=>{const r=e.getBoundingClientRect();return {left:r.left-origin.left,right:r.right-origin.left,top:r.top-origin.top,bottom:r.bottom-origin.top,width:r.width,height:r.height};};return {width:origin.width,height:origin.height,panels:[...el.children].map(rect),frames:[...el.querySelectorAll('.operation-layout-garment,.operation-layout-pattern')].map(rect)};});
- for(const width of [390,768,1440]){
-  await page.setViewportSize({width,height:1000});await backendTwoPreview.getByRole('button',{name:'Pattern',exact:true}).click();
-  const snapshot=await snapshotBounds(),[left,right]=snapshot.panels,[garment,pattern]=snapshot.frames;
-  assert.ok(await backendTwoPreview.locator('.backend-two-preview-columns').evaluate(el=>[...el.children].every(c=>!c.hasAttribute('data-maya-panel'))&&[...el.querySelectorAll('.operation-layout-garment,.operation-layout-pattern')].every(c=>c.dataset.mayaPanel==='inner')),'Compact preview puts Inner material on frames only');
-  assert.equal(await backendTwoPreview.getByRole('button',{name:'Start',exact:true}).evaluate(e=>getComputedStyle(e).fontSize),'9px');
-  assert.ok(left.right<=right.left+1&&right.right<=snapshot.width+1,'Backend 2 preview keeps both panels side by side at '+width);
-  assert.ok(Math.abs(garment.top-pattern.top)<2&&Math.abs(garment.bottom-pattern.bottom)<2,'Backend 2 preview aligns garment and pattern frames despite wrapped controls at '+width);
-  for(const frame of snapshot.frames)assert.ok(frame.width>0&&frame.height>0&&frame.top>=0&&frame.bottom<=snapshot.height+1,'Backend 2 preview contains both complete frames at '+width);
-  await backendTwoPreview.getByRole('button',{name:'CLO 3D',exact:true}).click();
-  await backendTwoPreview.locator('.clo-card').waitFor();
-  assert.deepEqual(await snapshotBounds(),snapshot,'CLO references preserve the paired frame geometry');
-  await backendTwoPreview.getByRole('button',{name:'Pipeline',exact:true}).click();
-  assert.deepEqual(await snapshotBounds(),snapshot,'Backend 2 preview keeps its paired geometry when Pipeline replaces the pattern at '+width);
+ for(const changed of [false,true])for(const width of [390,768,1440]){
+  await page.setViewportSize({width,height:1000});await page.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.type.P1.size=16;d.inner.paddingX=19;d.inner.paddingY=13;}MayaTypographyControls.apply(d);},changed);
+  await operationPreview.getByRole('button',{name:'Mark 1',exact:true}).click();const geometry=await previewBounds();
+  await operationPreview.getByRole('button',{name:'CLO 3D',exact:true}).click();
+  const clo=operationPreview.locator('#original-operation-clo-preview');await clo.locator('.clo-photo img').first().evaluate(img=>img.decode());
+  assert.deepEqual(await previewBounds(),geometry,'CLO sample keeps the original frame geometry');
+  const card=clo.locator('.clo-card').first(),box=await card.boundingBox();assert.ok(Math.abs(box.width-box.height)<2&&box.width<=220,'CLO preview photos stay square and bounded');
+  const style=await card.locator('.clo-title').evaluate(e=>{const s=getComputedStyle(e);return {color:s.color,size:s.fontSize,lineHeight:s.lineHeight};});assert.equal(style.color,'rgb(255, 255, 255)');assert.equal(style.size,changed?'16px':'12px');assert.ok(Math.abs(parseFloat(style.lineHeight)/parseFloat(style.size)-1.35)<.01);
+  await clo.locator('.clo-photo').first().focus();await clo.locator('.clo-photo').first().press('Enter');await page.locator('.maya-image-viewer').waitFor();await page.keyboard.press('Escape');await page.locator('.maya-image-viewer').waitFor({state:'detached'});
+  await operationPreview.getByRole('button',{name:'Pipeline',exact:true}).click();assert.deepEqual(await previewBounds(),geometry);
  }
+ await page.evaluate(()=>MayaTypographyControls.apply(MayaTypographyControls.defaults));
  const projectPreview=page.locator('#project-actions-preview');await projectPreview.locator('.session-item').hover();await projectPreview.getByRole('button',{name:'Rename preview project'}).click();await projectPreview.getByRole('textbox',{name:'Rename preview project'}).fill('Renamed preview');await projectPreview.getByRole('textbox',{name:'Rename preview project'}).press('Tab');assert.equal(await projectPreview.locator('[data-maya-type=H4]').textContent(),'Renamed preview');
  const preview=page.locator('#workspace-previews');await preview.getByRole('button',{name:'Global',exact:true}).click();assert.equal(await preview.locator('.fa-status').textContent(),'Searching for Fabrics');assert.equal(await preview.locator('.fa-status').getAttribute('data-maya-type'),'P1');await preview.locator('.fa-product-image').first().evaluate(image=>image.decode());
  for(const width of [390,768,1440]){await page.setViewportSize({width,height:1000});const rect=()=>preview.locator('.fa-results').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight,rows:getComputedStyle(el).gridTemplateRows,columns:getComputedStyle(el).gridTemplateColumns,cards:[...el.children].map(c=>[c.clientWidth,c.clientHeight,c.querySelector('img').clientWidth,c.querySelector('img').clientHeight])}));await preview.getByRole('button',{name:'In House',exact:true}).click();const local=await rect();await preview.getByRole('button',{name:'Global',exact:true}).click();assert.deepEqual(await rect(),local);assert.equal(local.columns.split(' ').length,width<=600?2:4);assert.ok(local.cards.every(([cw,ch,w,h])=>Math.abs(cw-ch)<1&&Math.abs(w-h)<1),'Original fabric preview keeps square cards and photographs at '+width);}
@@ -535,68 +532,41 @@ try{
 }
 
 // CI-only geometry and keyboard checks; local code-only verification never launches this.
-async function checkBackendTwo(){
+async function checkCloPreview(){
  for(const [width,height]of [[390,844],[768,1024],[1440,900]]){
-  console.log('UI Backend 2 viewport '+width+'x'+height);
-  const page=await open('/backend/backend2.html',width,height);
+  const page=await open('/backend/backend.html',width,height);let reads=0,writes=0;
   await page.route('**/api/admin/patterns?*',route=>route.fulfill({json:{generation:'0',runs:[],settings:{}}}));
-  await page.route('**/api/admin/fabrics/research?*',route=>route.fulfill({json:{generation:'0',items:[],searched:true}}));
-  await page.route('**/api/admin/fabrics/favorites',route=>route.fulfill({json:{generation:'0',items:[]}}));
-  await page.route('**/api/admin/digital-assets/research?*',route=>route.fulfill({json:{status:'complete',items:[{url:'https://connect.clo-set.com/detail/3001c20cd5d2481fa7f3357acc5ff44c',title:'Saved jacket reference',image:'https://maya.test/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',thumbnail:'',formats:[],price:null,priceType:'unknown',patternStatus:'unknown',physicalProduction:'unknown',match:'Preview fixture only',alterations:'Review length'}],fingerprint:'preview',generation:'1',searchReady:true,review:{selected:null,dismissed:[],generation:'0'}}}));
+  await page.route('**/api/admin/digital-assets/**',route=>{if(route.request().method()==='GET')reads++;else writes++;return route.fulfill({json:{status:'complete',items:[{url:'https://connect.clo-set.com/detail/3001c20cd5d2481fa7f3357acc5ff44c',title:'Saved jacket reference',image:'https://maya.test/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',formats:[],price:null,priceType:'unknown',patternStatus:'unknown',physicalProduction:'unknown',match:'Preview fixture only',alterations:'Review length'}],fingerprint:'preview',generation:'1',searchReady:true,review:{selected:null,dismissed:[],generation:'0'}}});});
   await page.evaluate(()=>{
-   localStorage.setItem('maya_admin_tok','fixture.'+btoa(JSON.stringify({sub:'snapshot-owner',exp:Math.floor(Date.now()/1000)+3600}))+'.fixture');
-   document.getElementById('upload-gate').classList.add('hidden');
+   localStorage.setItem('maya_admin_tok','fixture.'+btoa(JSON.stringify({sub:'clo-owner',exp:Math.floor(Date.now()/1000)+3600}))+'.fixture');
+   document.getElementById('upload-gate').style.display='none';
    const photo='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400"><rect width="900" height="400" fill="gray"/></svg>');
-   const pieces=[{id:'coat',name:'Coat',_image:photo,fabric:'Wool'}];window._openedSubmission={id:'snapshot-project'};window._currentSnap={lastSummary:{}};window._dissectTarget={hero:photo,card:{_dissection:{pieces}}};_publishSavedOperations({pieces});
+   const pieces=[{id:'coat',name:'Coat',_image:photo,fabric:'Wool'}];window._openedSubmission={id:'clo-project'};window._currentSnap={lastSummary:{}};window._dissectTarget={hero:photo,card:{_dissection:{pieces}}};_publishSavedOperations({pieces});goToScreen(1);
   });
-  const engineFrame=page.frames().find(f=>f.url().includes('operation-workspace.html'));
-  await engineFrame.waitForFunction(()=>document.getElementById('test-picker').value==='__full__'&&window.backendTwoContext?.()?.submissionId==='snapshot-project');
-  console.log('UI Backend 2 iframe ready '+width);
-  assert.ok(await page.locator('#workspace-title').evaluate(e=>parseFloat(getComputedStyle(e.querySelector('.backend-two-number')).fontSize)<parseFloat(getComputedStyle(e).fontSize)),'Backend 2 numeral is smaller than the title');
+  const frame=page.frames().find(f=>f.url().includes('operation-workspace.html'));
+  await frame.waitForFunction(()=>window.originalOperationContext?.()?.submissionId==='clo-project'&&window.originalOperationContext?.()?.garmentId==='coat');
+  const stageBounds=()=>frame.locator('#stage').evaluate(e=>{const r=e.getBoundingClientRect();return {width:r.width,height:r.height};});
   for(const changed of [false,true]){
-   console.log('UI Backend 2 '+width+' '+(changed?'saved':'default')+' controls');
-   for(const target of [page,engineFrame])await target.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.pillX=18;d.pillY=9;d.inner.paddingX=18;d.inner.paddingY=19;d.inner.background='blue';d.inner.fill=65;d.inner.blur=12;d.type.P3.size=14;d.drawer.background='green';d.drawer.fill=80;d.drawer.paddingX=20;d.drawer.paddingY=22;d.drawer.blur=14;d.drawer.radius=12;}MayaTypographyControls.apply(d);},changed);
-   const bounds=await page.evaluate(()=>{const r=id=>{const b=document.getElementById(id).getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right,height:b.height};};return {screen:r('screens'),image:r('operations-embed'),fabric:r('backend-two-fabric-strip')};});
-   assert.ok(bounds.image.height>height*.65&&bounds.fabric.height>=112&&bounds.fabric.height<=153,'Square rail gives the upper workspace most of the height');assert.ok(bounds.image.bottom<bounds.fabric.top);assert.ok(bounds.fabric.bottom<=height&&bounds.screen.right<=width);
-   assert.equal(await engineFrame.locator('#plan-a-view > .cols > .panel').count(),0,'Backend 2 has no outer column panels');
-   const pair=await engineFrame.locator('#plan-a-view > .cols > .backend-two-column').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right};}));
-   assert.ok(pair[0].right<pair[1].left&&Math.abs(pair[0].bottom-pair[1].bottom)<2);assert.ok(pair[1].right<=bounds.image.right-bounds.image.left+1);
-   const compact=await engineFrame.evaluate(()=>{const style=e=>{const s=getComputedStyle(e);return {padding:s.paddingTop,paddingX:s.paddingLeft,border:s.borderTopWidth,bg:s.backgroundColor,blur:s.backdropFilter,font:s.fontSize};};return {columns:[...document.querySelectorAll('.backend-two-column')].map(style),frames:[...document.querySelectorAll('#hero-frame,#stage')].map(e=>({...style(e),inner:e.dataset.mayaPanel})),controls:[...document.querySelectorAll('.operation-layout-toolbar button:not([hidden]),.operation-layout-toolbar select')].map(e=>({...style(e),right:e.getBoundingClientRect().right})),width:innerWidth};});
-   assert.ok(compact.columns.every(c=>c.padding==='0px'&&c.border==='0px'&&c.bg==='rgba(0, 0, 0, 0)'),'Column wrappers contribute no nested material or padding');
-   assert.ok(compact.frames.every(f=>f.inner==='inner'&&f.padding==='0px'&&f.paddingX==='0px'&&parseFloat(f.border)>0),'Only the image/pattern frames retain Inner material, without image padding');
-   if(changed)assert.ok(compact.frames.every(f=>f.bg==='rgba(35, 76, 125, 0.65)'&&f.blur.includes('blur(12px)')),'Saved Inner material still reaches compact frames');
-   assert.ok(compact.controls.every(c=>c.font==='9px'&&c.padding==='5px'&&c.right<=compact.width+1),'Compact toolbar text and padding remain scoped and contained with either saved preset');
-   const fabricCompact=await page.locator('#backend-two-fabric-strip .fabric-assistant').evaluate(e=>{const s=getComputedStyle(e),b=getComputedStyle(e.querySelector('.fa-tabs button'));return {padding:s.paddingTop,paddingX:s.paddingLeft,border:s.borderTopWidth,bg:s.backgroundColor,font:b.fontSize,pillY:b.paddingTop};});
-   assert.deepEqual(fabricCompact,{padding:'0px',paddingX:'0px',border:'0px',bg:'rgba(0, 0, 0, 0)',font:'9px',pillY:'3px'});
-   await page.locator('#backend-two-fabric-strip').getByRole('button',{name:'In House',exact:true}).click();
-   await page.waitForFunction(()=>document.querySelector('#backend-two-fabric-strip .fa-rail .fa-product'));
-   console.log('UI Backend 2 '+width+' '+(changed?'saved':'default')+' fabrics ready');
-   const rail=page.locator('#backend-two-fabric-strip .fa-rail');
-   const railGeometry=await rail.evaluate(e=>{const h=e.querySelector('.fa-header').getBoundingClientRect(),card=e.querySelector('.fa-product').getBoundingClientRect();return {headerLeft:h.left,headerRight:h.right,cardLeft:card.left,width:card.width,height:card.height};});
-   assert.ok(railGeometry.headerRight<=railGeometry.cardLeft+1,'Fabric controls sit to the left of the photos');assert.ok(await rail.locator('.fa-header').evaluate(e=>{const box=e.getBoundingClientRect();return [...e.querySelectorAll('button')].filter(b=>!b.hidden&&getComputedStyle(b).display!=='none').every(b=>{const r=b.getBoundingClientRect();return r.top>=box.top-1&&r.bottom<=box.bottom+1;});}),'Leading controls fit without a nested vertical scroll');assert.ok(Math.abs(railGeometry.width-railGeometry.height)<2,'Fabric tiles are square');
-   // Ensure the fixture overflows even when the full catalog fits a desktop rail.
-   await rail.evaluate(e=>{for(let i=0;e.scrollWidth-e.clientWidth<120&&i<30;i++){const card=e.querySelector('.fa-product').cloneNode(true);card.dataset.scrollProbe='true';e.append(card);}e.scrollLeft=100;});
-   assert.ok(await rail.evaluate((e,before)=>e.scrollLeft>=99&&Math.abs(e.querySelector('.fa-header').getBoundingClientRect().left-(before-e.scrollLeft))<2,railGeometry.headerLeft),'Controls scroll away with the fabrics');await rail.evaluate(e=>{e.scrollLeft=0;e.querySelectorAll('[data-scroll-probe]').forEach(card=>card.remove());});
-   const firstCard=rail.locator('.fa-product').first();assert.equal(await firstCard.locator('.fa-card-title').getAttribute('data-maya-type'),'P1');
-   await firstCard.locator('.fa-product-link').focus();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#backend-two-fabric-strip .fa-card-copy')).opacity==='1');await firstCard.locator('.fa-product-link').evaluate(e=>e.blur());
-   const drawerStyle=await page.locator('#clients-drawer').evaluate(e=>{const s=getComputedStyle(e);return {role:e.hasAttribute('data-maya-drawer'),padding:s.paddingTop,paddingX:s.paddingLeft,radius:s.borderTopLeftRadius,bg:s.backgroundColor,blur:s.backdropFilter};});
-   assert.equal(drawerStyle.role,true);assert.equal(drawerStyle.padding,changed?'22px':'16px');assert.equal(drawerStyle.paddingX,changed?'20px':'12px');assert.equal(drawerStyle.radius,changed?'12px':'18px');assert.equal(drawerStyle.bg,changed?'rgba(23, 91, 59, 0.8)':'rgba(3, 15, 29, 0.9)');assert.ok(drawerStyle.blur.includes(changed?'blur(14px)':'blur(28px)'),'Backend 2 drawer follows shared saved Drawer effects');
-   await engineFrame.getByRole('tab',{name:'CLO 3D',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-clo').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
-   const cloBounds=await engineFrame.locator('#backend-two-clo').boundingBox();assert.ok(cloBounds.width>0&&cloBounds.height>0&&cloBounds.x>=bounds.image.left-1&&cloBounds.x+cloBounds.width<=bounds.image.right+1);
-   try{await engineFrame.waitForFunction(()=>document.querySelector('#backend-two-clo .clo-photo img')?.naturalWidth>0);}
-   catch(error){console.error('UI Backend 2 CLO diagnostics',await engineFrame.evaluate(()=>({status:document.querySelector('#backend-two-clo .clo-status')?.textContent,image:document.querySelector('#backend-two-clo .clo-photo img')?.currentSrc,context:window.backendTwoContext?.()})));throw error;}
-   console.log('UI Backend 2 '+width+' '+(changed?'saved':'default')+' CLO ready');
-   const cloCard=await engineFrame.locator('#backend-two-clo .clo-card').first().boundingBox();assert.ok(Math.abs(cloCard.width-cloCard.height)<2&&cloCard.width<400,'CLO uses bounded square photo previews');
-   await engineFrame.getByRole('tab',{name:'Pipeline',exact:true}).click();assert.ok(await engineFrame.locator('#backend-two-pipeline').isVisible());assert.equal(await engineFrame.locator('#stage').isVisible(),false);
-   await engineFrame.getByRole('tab',{name:'Pattern',exact:true}).click();assert.ok(await engineFrame.locator('#stage').isVisible());
+   for(const target of [page,frame])await target.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.inner.paddingX=19;d.inner.paddingY=13;d.inner.background='blue';d.inner.fill=65;d.type.P1.size=16;d.type.P3.size=14;d.pillX=18;d.pillY=9;}MayaTypographyControls.apply(d);},changed);
+   await frame.getByRole('tab',{name:'Mark 1',exact:true}).click();const before=await stageBounds();
+   await frame.getByRole('tab',{name:'CLO 3D',exact:true}).click();
+   const clo=frame.locator('#operation-clo'),card=clo.locator('.clo-card').first(),photo=card.locator('.clo-photo');
+   await photo.locator('img').evaluate(img=>img.decode());await frame.waitForFunction(()=>!document.querySelector('#operation-clo .clo-photo').disabled);
+   assert.deepEqual(await stageBounds(),before,'CLO does not resize the original pattern frame');
+   assert.equal(await frame.locator('#original-operation-logic').isVisible(),false);
+   const layout=await clo.evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),p=e.parentNode.getBoundingClientRect(),c=e.querySelector('.clo-card').getBoundingClientRect(),caption=getComputedStyle(e.querySelector('.clo-title')),image=getComputedStyle(e.querySelector('.clo-photo'));return {contained:r.left>=p.left-1&&r.right<=p.right+1&&r.top>=p.top-1&&r.bottom<=p.bottom+1,card:[c.width,c.height],pad:[parseFloat(s.paddingLeft),parseFloat(s.paddingTop)],color:caption.color,size:caption.fontSize,line:caption.lineHeight,fit:image.borderRadius};});
+   assert.ok(layout.contained);assert.ok(layout.card[0]>0&&layout.card[0]<=220&&Math.abs(layout.card[0]-layout.card[1])<2,'CLO cards use bounded square photos');assert.equal(layout.color,'rgb(255, 255, 255)');assert.equal(layout.size,changed?'16px':'12px');assert.ok(Math.abs(parseFloat(layout.line)/parseFloat(layout.size)-1.35)<.01);
+   const inner=await frame.evaluate(()=>MayaTypographyControls.defaults.inner);assert.deepEqual(layout.pad,changed?[19,13]:[inner.paddingX,inner.paddingY]);
+   await page.mouse.move(0,0);await frame.locator('#original-operation-tab-clo-0').focus();await frame.waitForFunction(()=>getComputedStyle(document.querySelector('#operation-clo .clo-caption')).opacity==='0');
+   await photo.focus();await frame.waitForFunction(()=>getComputedStyle(document.querySelector('#operation-clo .clo-caption')).opacity==='1');await photo.press('Enter');const viewer=page.locator('.maya-image-viewer');await viewer.waitFor();await viewer.locator('img').evaluate(img=>img.decode());assert.equal(await viewer.locator('img').evaluate(img=>img.referrerPolicy),'no-referrer','Expansion preserves the thumbnail request policy');const expanded=await viewer.boundingBox();assert.equal(expanded.width,width);assert.equal(expanded.height,height,'Expanded CLO photograph fills the parent viewport');assert.equal(await frame.locator('.maya-image-viewer').count(),0);
+   await page.keyboard.press('Escape');await viewer.waitFor({state:'detached'});
+   await frame.evaluate(()=>window.fixtureCloPhoto=document.querySelector('#operation-clo .clo-photo img'));
+   await frame.getByRole('tab',{name:'Pipeline',exact:true}).click();assert.equal(await clo.isVisible(),false);assert.equal(await frame.locator('#original-operation-logic').isVisible(),true);assert.deepEqual(await stageBounds(),before);
+   await frame.getByRole('tab',{name:'CLO 3D',exact:true}).click();assert.equal(await frame.evaluate(()=>fixtureCloPhoto===document.querySelector('#operation-clo .clo-photo img')),true,'Returning to CLO retains its loaded photograph');
   }
-  await page.locator('#top-actions .hamburger').click();assert.deepEqual(await page.locator('.backend-two-tabs button').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label'))),['Submissions','Bio','Settings']);assert.equal(await page.getByRole('tab',{name:'Submissions',exact:true}).getAttribute('aria-selected'),'true');assert.equal(await page.locator('#clients-drawer>.drawer-title').isVisible(),false);
-  await page.waitForFunction(()=>document.getElementById('clients-drawer').getBoundingClientRect().right<=innerWidth+1);
-  const drawerBounds=await page.locator('#clients-drawer').boundingBox();assert.ok(drawerBounds.x>=0&&drawerBounds.x+drawerBounds.width<=width+1,'Drawer stays within the viewport');
-  await page.getByRole('tab',{name:'Bio',exact:true}).click();assert.ok(await page.locator('#backend-two-bio').isVisible());
-  await page.getByRole('tab',{name:'Settings',exact:true}).click();assert.ok(await page.locator('#backend-two-settings').isVisible());
-  await page.getByRole('tab',{name:'Submissions',exact:true}).click();assert.ok(await page.locator('#backend-two-submissions').isVisible());
-  await page.keyboard.press('Escape');assert.equal(await page.locator('#clients-drawer').evaluate(e=>e.inert),true);
+  assert.equal(reads,1,'Opening and tab switching reuse the saved shortlist');assert.equal(writes,0,'Viewing CLO never starts paid research');
+  await frame.locator('#operation-clo .clo-photo').first().focus();await frame.locator('#operation-clo .clo-photo').first().press('Enter');await page.locator('.maya-image-viewer').waitFor();
+  await frame.evaluate(()=>MayaOperationPanels.unregister('clo'));await page.locator('.maya-image-viewer').waitFor({state:'detached'});assert.equal(await frame.getByRole('tab',{name:'CLO 3D',exact:true}).count(),0);assert.equal(await frame.evaluate(()=>CUR.kind),'grounded');assert.ok(await frame.getByRole('tab',{name:'Pipeline',exact:true}).isVisible(),'Removing CLO leaves the original pattern controls intact');
   assert.deepEqual(page.errors,[]);await page.close();
  }
  const admin=await open('/backend/status.html');

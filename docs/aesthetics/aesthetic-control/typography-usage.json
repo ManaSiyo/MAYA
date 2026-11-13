@@ -2,7 +2,6 @@
   "method": "Mapped authored HTML and JavaScript role locations. A rendered template counts once; this is not a live DOM census. Categories equal the sum of visible role subtotals.",
   "files": [
     "backend/backend.html",
-    "backend/backend2.html",
     "backend/operation-workspace.html",
     "backend/privacy.html",
     "backend/status.html",
@@ -12,13 +11,13 @@
     "docs/aesthetics/ui/admin-design.js",
     "docs/aesthetics/ui/admin-systems.js",
     "docs/aesthetics/ui/avatar-camera.js",
-    "docs/aesthetics/ui/backend-two-operation.js",
-    "docs/aesthetics/ui/backend-two.js",
     "docs/aesthetics/ui/clo-assets.js",
+    "docs/aesthetics/ui/clo-preview-bridge.js",
     "docs/aesthetics/ui/drawer-gestures.js",
     "docs/aesthetics/ui/fabric-assistant.js",
     "docs/aesthetics/ui/image-viewer.js",
     "docs/aesthetics/ui/lead-stage-menu.js",
+    "docs/aesthetics/ui/operation-clo.js",
     "docs/aesthetics/ui/original-backend.js",
     "docs/aesthetics/ui/original-operation.js",
     "docs/aesthetics/ui/pill-runtime.js",
@@ -56,7 +55,7 @@
       }
     },
     "H1": {
-      "count": 8,
+      "count": 7,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -69,18 +68,8 @@
           "snippet": "<span id=\"workspace-title\" data-maya-type=\"H1\">Backend</span></a><span id=\"workspace-version\" data-maya-type=\"P3\" hidden>\u2013 version 2</spa"
         },
         {
-          "page": "backend/backend2.html",
-          "line": 1413,
-          "tag": "span",
-          "id": "workspace-title",
-          "class": "",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<span id=\"workspace-title\" data-maya-type=\"H1\">Backend</span></a><span id=\"workspace-version\" data-maya-type=\"P3\" hidden>\u2013 version 2</spa"
-        },
-        {
           "page": "backend/operation-workspace.html",
-          "line": 278,
+          "line": 274,
           "tag": "h1",
           "id": null,
           "class": "",
@@ -141,15 +130,11 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 2,
+          "count": 1,
           "locations": [
             {
               "page": "backend/backend.html",
               "line": 1424
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1413
             }
           ]
         },
@@ -158,7 +143,7 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 278
+              "line": 274
             },
             {
               "page": "backend/verify.html",
@@ -200,7 +185,7 @@
       }
     },
     "H2": {
-      "count": 7,
+      "count": 6,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -213,18 +198,8 @@
           "snippet": "<div class=\"drawer-title\">Submissions</div>"
         },
         {
-          "page": "backend/backend2.html",
-          "line": 1495,
-          "tag": "div",
-          "id": null,
-          "class": "drawer-title",
-          "reason": "drawer",
-          "role": "drawer",
-          "snippet": "<div class=\"drawer-title\">Submissions</div>"
-        },
-        {
           "page": "backend/operation-workspace.html",
-          "line": 401,
+          "line": 371,
           "tag": "h2",
           "id": "operation-settings-title",
           "class": "",
@@ -275,15 +250,11 @@
       ],
       "roles": {
         "drawer": {
-          "count": 6,
+          "count": 5,
           "locations": [
             {
               "page": "backend/backend.html",
               "line": 1506
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1495
             },
             {
               "page": "backend/status.html",
@@ -308,14 +279,14 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 401
+              "line": 371
             }
           ]
         }
       }
     },
     "H3": {
-      "count": 74,
+      "count": 72,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -338,28 +309,8 @@
           "snippet": "<time id=\"op-date\" data-maya-type=\"H3\"></time></div>"
         },
         {
-          "page": "backend/backend2.html",
-          "line": 1452,
-          "tag": "div",
-          "id": "op-hero-name",
-          "class": "op-hero",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<div class=\"op-hero\" id=\"op-hero-name\" data-maya-type=\"H3\">Client</div><time id=\"op-date\" data-maya-type=\"H3\"></time></div>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1452,
-          "tag": "time",
-          "id": "op-date",
-          "class": "",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<time id=\"op-date\" data-maya-type=\"H3\"></time></div>"
-        },
-        {
           "page": "backend/operation-workspace.html",
-          "line": 321,
+          "line": 317,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -369,7 +320,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 343,
+          "line": 339,
           "tag": "h3",
           "id": null,
           "class": "col-head",
@@ -379,7 +330,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 415,
+          "line": 376,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -1060,7 +1011,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 8,
+          "count": 6,
           "locations": [
             {
               "page": "backend/backend.html",
@@ -1071,16 +1022,8 @@
               "line": 1463
             },
             {
-              "page": "backend/backend2.html",
-              "line": 1452
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1452
-            },
-            {
               "page": "backend/operation-workspace.html",
-              "line": 321
+              "line": 317
             },
             {
               "page": "backend/status.html",
@@ -1101,11 +1044,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 343
+              "line": 339
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 415
+              "line": 376
             },
             {
               "page": "backend/privacy.html",
@@ -1382,7 +1325,7 @@
       "locations": [
         {
           "page": "backend/operation-workspace.html",
-          "line": 435,
+          "line": 396,
           "tag": "h4",
           "id": null,
           "class": "",
@@ -1392,7 +1335,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 435,
+          "line": 396,
           "tag": "h4",
           "id": null,
           "class": "",
@@ -1457,11 +1400,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 435
+              "line": 396
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 435
+              "line": 396
             },
             {
               "page": "docs/aesthetics/ui/fabric-assistant.js",
@@ -1524,7 +1467,7 @@
       }
     },
     "P1": {
-      "count": 187,
+      "count": 184,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -1547,28 +1490,8 @@
           "snippet": "<p class=\"op-text\" id=\"op-vision\">\u2026</p>"
         },
         {
-          "page": "backend/backend2.html",
-          "line": 1455,
-          "tag": "p",
-          "id": "op-biography",
-          "class": "op-text italic",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<p class=\"op-text italic\" id=\"op-biography\">\u2026</p>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1459,
-          "tag": "p",
-          "id": "op-vision",
-          "class": "op-text",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<p class=\"op-text\" id=\"op-vision\">\u2026</p>"
-        },
-        {
           "page": "backend/operation-workspace.html",
-          "line": 323,
+          "line": 319,
           "tag": "input",
           "id": "m-waist",
           "class": "",
@@ -1578,7 +1501,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 324,
+          "line": 320,
           "tag": "input",
           "id": "m-hip",
           "class": "",
@@ -1588,7 +1511,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 327,
+          "line": 323,
           "tag": "input",
           "id": "m-crotch",
           "class": "",
@@ -1598,7 +1521,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 328,
+          "line": 324,
           "tag": "input",
           "id": "m-inseam",
           "class": "",
@@ -1608,7 +1531,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 331,
+          "line": 327,
           "tag": "input",
           "id": "m-length",
           "class": "",
@@ -1618,7 +1541,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 341,
+          "line": 337,
           "tag": "pre",
           "id": "live-log",
           "class": "",
@@ -1628,7 +1551,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 359,
+          "line": 355,
           "tag": "pre",
           "id": "t-prompt",
           "class": "",
@@ -1638,17 +1561,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 411,
-          "tag": "div",
-          "id": null,
-          "class": "kb-status",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<div class=\"kb-status\" data-maya-type=\"P1\">A drafts a pattern from the photo. B sources similar CLO garment references for review.</d"
-        },
-        {
-          "page": "backend/operation-workspace.html",
-          "line": 416,
+          "line": 377,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1658,7 +1571,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 417,
+          "line": 378,
           "tag": "select",
           "id": "pattern-type",
           "class": "",
@@ -1668,7 +1581,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 418,
+          "line": 379,
           "tag": "input",
           "id": "pattern-hits",
           "class": "",
@@ -1678,7 +1591,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 419,
+          "line": 380,
           "tag": "textarea",
           "id": "pattern-direction",
           "class": "",
@@ -1688,7 +1601,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 421,
+          "line": 382,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1698,7 +1611,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 422,
+          "line": 383,
           "tag": "textarea",
           "id": "pattern-grammar",
           "class": "",
@@ -1708,7 +1621,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 423,
+          "line": 384,
           "tag": "textarea",
           "id": "pattern-classifier",
           "class": "",
@@ -1718,7 +1631,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 426,
+          "line": 387,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1728,7 +1641,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 427,
+          "line": 388,
           "tag": "input",
           "id": "pattern-band",
           "class": "",
@@ -1738,7 +1651,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 427,
+          "line": 388,
           "tag": "input",
           "id": "pattern-underlap",
           "class": "",
@@ -1748,7 +1661,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 427,
+          "line": 388,
           "tag": "input",
           "id": "pattern-yoke",
           "class": "",
@@ -1758,7 +1671,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 428,
+          "line": 389,
           "tag": "textarea",
           "id": "pattern-prompt",
           "class": "",
@@ -1768,7 +1681,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 429,
+          "line": 390,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1778,7 +1691,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 432,
+          "line": 393,
           "tag": "p",
           "id": "pattern-save-status",
           "class": "",
@@ -1788,7 +1701,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 435,
+          "line": 396,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1798,7 +1711,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 435,
+          "line": 396,
           "tag": "p",
           "id": null,
           "class": "",
@@ -1808,7 +1721,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 441,
+          "line": 402,
           "tag": "textarea",
           "id": "logic-edit",
           "class": "",
@@ -1818,7 +1731,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 540,
+          "line": 501,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3399,7 +3312,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 119,
+          "count": 116,
           "locations": [
             {
               "page": "backend/backend.html",
@@ -3410,48 +3323,36 @@
               "line": 1470
             },
             {
-              "page": "backend/backend2.html",
-              "line": 1455
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1459
+              "page": "backend/operation-workspace.html",
+              "line": 377
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 411
+              "line": 382
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 416
+              "line": 387
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 421
+              "line": 390
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 426
+              "line": 393
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 429
+              "line": 396
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 432
+              "line": 396
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 435
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 435
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 540
+              "line": 501
             },
             {
               "page": "backend/privacy.html",
@@ -3884,6 +3785,14 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
+              "line": 319
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 320
+            },
+            {
+              "page": "backend/operation-workspace.html",
               "line": 323
             },
             {
@@ -3896,51 +3805,43 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 328
+              "line": 378
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 331
+              "line": 379
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 417
+              "line": 380
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 418
+              "line": 383
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 419
+              "line": 384
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 422
+              "line": 388
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 423
+              "line": 388
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 427
+              "line": 388
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 427
+              "line": 389
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 427
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 428
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 441
+              "line": 402
             },
             {
               "page": "backend/status.html",
@@ -3989,11 +3890,11 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 341
+              "line": 337
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 359
+              "line": 355
             },
             {
               "page": "backend/status.html",
@@ -4179,7 +4080,7 @@
       }
     },
     "P2": {
-      "count": 21,
+      "count": 18,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -4202,38 +4103,8 @@
           "snippet": "<div class=\"op-eyebrow\" data-maya-type=\"P2\">Vision</div>"
         },
         {
-          "page": "backend/backend2.html",
-          "line": 1454,
-          "tag": "div",
-          "id": null,
-          "class": "op-eyebrow",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<div class=\"op-eyebrow\" data-maya-type=\"P2\">Biography</div>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1458,
-          "tag": "div",
-          "id": null,
-          "class": "op-eyebrow",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<div class=\"op-eyebrow\" data-maya-type=\"P2\">Vision</div>"
-        },
-        {
           "page": "backend/operation-workspace.html",
-          "line": 406,
-          "tag": "div",
-          "id": null,
-          "class": "sec-title",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<div class=\"sec-title\" data-maya-type=\"P2\">Plan</div>"
-        },
-        {
-          "page": "backend/operation-workspace.html",
-          "line": 437,
+          "line": 398,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4243,7 +4114,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 452,
+          "line": 413,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4253,7 +4124,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 461,
+          "line": 422,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4394,7 +4265,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 21,
+          "count": 18,
           "locations": [
             {
               "page": "backend/backend.html",
@@ -4405,28 +4276,16 @@
               "line": 1469
             },
             {
-              "page": "backend/backend2.html",
-              "line": 1454
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1458
+              "page": "backend/operation-workspace.html",
+              "line": 398
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 406
+              "line": 413
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 437
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 452
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 461
+              "line": 422
             },
             {
               "page": "backend/status.html",
@@ -4485,7 +4344,7 @@
       }
     },
     "P3": {
-      "count": 367,
+      "count": 324,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -4809,388 +4668,18 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2971,
+          "line": 2972,
           "tag": "button",
           "id": null,
           "class": "' + cls + (nonFabric?' piece-non-fabric':'') + '",
           "reason": "pill",
           "role": "pill",
           "snippet": "<button class=\"' + cls + (nonFabric?' piece-non-fabric':'') + '\" data-maya-segment aria-pressed=\"'+String(i===0)+'\"'+(nonFabric?' data-maya-semantic=\"non-fabric"
-        },
-        {
-          "page": "backend/backend.html",
-          "line": 2976,
-          "tag": "button",
-          "id": "dissect-start-pill",
-          "class": "piece-pill dissect-start",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"piece-pill dissect-start\" id=\"dissect-start-pill\" onclick=\"beginDissection()\">Dissect</button>') +"
         },
         {
           "page": "backend/backend.html",
           "line": 2977,
           "tag": "button",
-          "id": "dissect-missing-pill",
-          "class": "piece-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"piece-pill\" id=\"dissect-missing-pill\" onclick=\"renderMissingPieces()\">Render missing pieces</button>' : '') +"
-        },
-        {
-          "page": "backend/backend.html",
-          "line": 2978,
-          "tag": "button",
-          "id": "dissect-save-pill",
-          "class": "piece-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"piece-pill\" id=\"dissect-save-pill\" onclick=\"retryDissectionSave()\">Save dissection</button>' : '');"
-        },
-        {
-          "page": "backend/backend.html",
-          "line": 3298,
-          "tag": "button",
-          "id": null,
-          "class": "",
-          "reason": "JavaScript-created button",
-          "role": "pill",
-          "snippet": "createElement('button')"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1413,
-          "tag": "span",
-          "id": "workspace-version",
-          "class": "",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<span id=\"workspace-version\" data-maya-type=\"P3\" hidden>\u2013 version 2</span>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1414,
-          "tag": "span",
-          "id": "dissect-status",
-          "class": "status-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<span class=\"status-pill\" id=\"dissect-status\" style=\"display:none\">Dissecting\u2026</span>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1418,
-          "tag": "button",
-          "id": null,
-          "class": "top-btn hamburger",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"top-btn hamburger\" onclick=\"toggleWorkspaceDrawer()\" title=\"Workspace menu\" aria-expanded=\"false\" aria-controls=\"clients-drawer\">"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1425,
-          "tag": "button",
-          "id": "dot-1",
-          "class": "page-dot active",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"page-dot active\" id=\"dot-1\" onclick=\"goToScreen(0)\" aria-label=\"Backend\" title=\"Backend\" aria-current=\"page\"></button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1426,
-          "tag": "button",
-          "id": "dot-2",
-          "class": "page-dot",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"page-dot\" id=\"dot-2\" onclick=\"goToScreen(1)\" aria-label=\"Operation Room\" title=\"Operation Room\"></button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1447,
-          "tag": "button",
-          "id": "brief-fabrics-button",
-          "class": "piece-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"piece-pill\" id=\"brief-fabrics-button\" data-maya-type=\"P3\" aria-pressed=\"false\" onclick=\"toggleBriefFabrics()\" disabled>Fabrics</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1482,
-          "tag": "button",
-          "id": null,
-          "class": "upload-btn",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"upload-btn\" onclick=\"grantMayaFolder()\">Choose MAYA folder</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1509,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label for=\"sheet-x\">X \u00b7 width</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1514,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label for=\"sheet-y\">Y \u00b7 length</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1519,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label for=\"sheet-spacing\">Spacing</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1527,
-          "tag": "button",
-          "id": "drawer-nest-download",
-          "class": "piece-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"piece-pill\" id=\"drawer-nest-download\" style=\"display:none\" onclick=\"downloadNestSvg()\">Download</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1532,
-          "tag": "button",
-          "id": "unit-in",
-          "class": "piece-pill active",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"piece-pill active\" id=\"unit-in\"  onclick=\"setNestUnit('in')\">Inches</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1533,
-          "tag": "button",
-          "id": "unit-mm",
-          "class": "piece-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"piece-pill\"        id=\"unit-mm\" onclick=\"setNestUnit('mm')\">Millimeters</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1540,
-          "tag": "button",
-          "id": null,
-          "class": "drawer-settings-link",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"drawer-settings-link\" onclick=\"openBackendSettings()\">Settings</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1541,
-          "tag": "button",
-          "id": null,
-          "class": "drawer-settings-link",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"drawer-settings-link\" onclick=\"backendLogout()\">Logout</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1550,
-          "tag": "button",
-          "id": null,
-          "class": "settings-back",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"settings-back\" onclick=\"closeDrawerSettings()\">Back</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1556,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label>OpenAI, LLM dissect and image renders</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1560,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label>fal.ai, Rodin image to 3D</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1564,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label style=\"opacity:0.6\">Both keys live on MAYA's server. Your Google sign in authorises every call, nothing is kep"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1574,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label>3D mesh quality \u00b7 Rodin</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1576,
-          "tag": "button",
-          "id": "q-extralow",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"q-extralow\" onclick=\"setRodinQuality('extra-low')\">extra-low</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1577,
-          "tag": "button",
-          "id": "q-low",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"q-low\"      onclick=\"setRodinQuality('low')\">low</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1578,
-          "tag": "button",
-          "id": "q-medium",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"q-medium\"   onclick=\"setRodinQuality('medium')\">medium</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1579,
-          "tag": "button",
-          "id": "q-high",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"q-high\"     onclick=\"setRodinQuality('high')\">high</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1583,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label>3D tier \u00b7 Sketch is faster, Regular is higher fidelity</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1585,
-          "tag": "button",
-          "id": "t-sketch",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"t-sketch\"  onclick=\"setRodinTier('Sketch')\">Sketch</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1586,
-          "tag": "button",
-          "id": "t-regular",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"t-regular\" onclick=\"setRodinTier('Regular')\">Regular</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1590,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label>Hyper mode \u00b7 slower but cleaner surface</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1592,
-          "tag": "button",
-          "id": "q-hyper",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"q-hyper\" onclick=\"setRodinHyper(!getRodinHyper())\">Hyper \u00b7 on / off</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1596,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<label>Pattern raster quality \u00b7 GPT Image 2.5</label>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1598,
-          "tag": "button",
-          "id": "p-medium",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"p-medium\" onclick=\"setPatternQuality('medium')\">medium</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 1599,
-          "tag": "button",
-          "id": "p-high",
-          "class": "quality-pill",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"quality-pill\" id=\"p-high\"   onclick=\"setPatternQuality('high')\">high</button>"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 2946,
-          "tag": "button",
-          "id": null,
-          "class": "' + cls + (nonFabric?' piece-non-fabric':'') + '",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"' + cls + (nonFabric?' piece-non-fabric':'') + '\" data-maya-segment aria-pressed=\"'+String(i===0)+'\"'+(nonFabric?' data-maya-semantic=\"non-fabric"
-        },
-        {
-          "page": "backend/backend2.html",
-          "line": 2951,
-          "tag": "button",
           "id": "dissect-start-pill",
           "class": "piece-pill dissect-start",
           "reason": "pill",
@@ -5198,8 +4687,8 @@
           "snippet": "<button class=\"piece-pill dissect-start\" id=\"dissect-start-pill\" onclick=\"beginDissection()\">Dissect</button>') +"
         },
         {
-          "page": "backend/backend2.html",
-          "line": 2952,
+          "page": "backend/backend.html",
+          "line": 2978,
           "tag": "button",
           "id": "dissect-missing-pill",
           "class": "piece-pill",
@@ -5208,8 +4697,8 @@
           "snippet": "<button class=\"piece-pill\" id=\"dissect-missing-pill\" onclick=\"renderMissingPieces()\">Render missing pieces</button>' : '') +"
         },
         {
-          "page": "backend/backend2.html",
-          "line": 2953,
+          "page": "backend/backend.html",
+          "line": 2979,
           "tag": "button",
           "id": "dissect-save-pill",
           "class": "piece-pill",
@@ -5218,8 +4707,8 @@
           "snippet": "<button class=\"piece-pill\" id=\"dissect-save-pill\" onclick=\"retryDissectionSave()\">Save dissection</button>' : '');"
         },
         {
-          "page": "backend/backend2.html",
-          "line": 3273,
+          "page": "backend/backend.html",
+          "line": 3299,
           "tag": "button",
           "id": null,
           "class": "",
@@ -5229,7 +4718,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 280,
+          "line": 276,
           "tag": "button",
           "id": null,
           "class": "icon-btn hamburger",
@@ -5239,7 +4728,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 291,
+          "line": 287,
           "tag": "select",
           "id": "test-picker",
           "class": "head-select",
@@ -5249,7 +4738,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 292,
+          "line": 288,
           "tag": "button",
           "id": "start-test",
           "class": "pill primary",
@@ -5259,7 +4748,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 293,
+          "line": 289,
           "tag": "button",
           "id": "retry-pattern-save",
           "class": "pill",
@@ -5269,7 +4758,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 323,
+          "line": 319,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5279,7 +4768,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 324,
+          "line": 320,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5289,7 +4778,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 327,
+          "line": 323,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5299,7 +4788,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 328,
+          "line": 324,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5309,7 +4798,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 331,
+          "line": 327,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5319,7 +4808,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 334,
+          "line": 330,
           "tag": "div",
           "id": "dim-derived",
           "class": "kb-status",
@@ -5329,7 +4818,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 353,
+          "line": 349,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5339,7 +4828,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 354,
+          "line": 350,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5349,7 +4838,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 355,
+          "line": 351,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5359,7 +4848,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 356,
+          "line": 352,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5369,7 +4858,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 398,
+          "line": 368,
           "tag": "button",
           "id": null,
           "class": "maya-icon-button drawer-burger",
@@ -5379,27 +4868,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 408,
-          "tag": "button",
-          "id": null,
-          "class": "pill sm",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button type=\"button\" class=\"pill sm\" data-plan=\"A\" onclick=\"setPlan('A')\">Plan A \u00b7 Photo \u2192 Pattern</button>"
-        },
-        {
-          "page": "backend/operation-workspace.html",
-          "line": 409,
-          "tag": "button",
-          "id": null,
-          "class": "pill sm",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button type=\"button\" class=\"pill sm\" data-plan=\"B\" onclick=\"setPlan('B')\">Plan B \u00b7 CLO Route</button>"
-        },
-        {
-          "page": "backend/operation-workspace.html",
-          "line": 417,
+          "line": 378,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5409,7 +4878,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 418,
+          "line": 379,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5419,7 +4888,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 419,
+          "line": 380,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5429,7 +4898,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 422,
+          "line": 383,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5439,7 +4908,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 423,
+          "line": 384,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5449,7 +4918,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 427,
+          "line": 388,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5459,7 +4928,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 427,
+          "line": 388,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5469,7 +4938,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 427,
+          "line": 388,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5479,7 +4948,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 428,
+          "line": 389,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5489,7 +4958,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 431,
+          "line": 392,
           "tag": "button",
           "id": null,
           "class": "pill",
@@ -5499,7 +4968,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 443,
+          "line": 404,
           "tag": "button",
           "id": "logic-edit-btn",
           "class": "pill sm",
@@ -5509,7 +4978,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 444,
+          "line": 405,
           "tag": "button",
           "id": "logic-save-btn",
           "class": "pill sm",
@@ -5519,7 +4988,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 445,
+          "line": 406,
           "tag": "button",
           "id": "logic-reset-btn",
           "class": "pill sm",
@@ -5529,7 +4998,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 446,
+          "line": 407,
           "tag": "button",
           "id": "logic-lock-btn",
           "class": "pill sm",
@@ -5539,7 +5008,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 454,
+          "line": 415,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5549,7 +5018,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 455,
+          "line": 416,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5559,7 +5028,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 456,
+          "line": 417,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5569,7 +5038,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 465,
+          "line": 426,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5579,7 +5048,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 466,
+          "line": 427,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5589,7 +5058,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 474,
+          "line": 435,
           "tag": "div",
           "id": "toast",
           "class": "",
@@ -5599,7 +5068,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1025,
+          "line": 949,
           "tag": "button",
           "id": null,
           "class": "pill ${act}",
@@ -5609,7 +5078,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1027,
+          "line": 951,
           "tag": "button",
           "id": null,
           "class": "pill ${CUR.kind==='grounded'?'active':''}",
@@ -5619,7 +5088,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 1029,
+          "line": 953,
           "tag": "button",
           "id": null,
           "class": "pill ${CUR.kind==='svg'?'active':''}",
@@ -5629,7 +5098,7 @@
         },
         {
           "page": "backend/operation-workspace.html",
-          "line": 538,
+          "line": 499,
           "tag": "button",
           "id": null,
           "class": "",
@@ -6125,17 +5594,7 @@
           "class": "pg-chip",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<a class=\"pg-chip\" data-maya-type=\"P3\" href=\"/backend.html\" onclick=\"event.stopPropagation()\">Backend</a><a class=\"pg-chip\" data-maya-type=\"P3\" href=\"/backend2."
-        },
-        {
-          "page": "backend/status.html",
-          "line": 1031,
-          "tag": "a",
-          "id": null,
-          "class": "pg-chip",
-          "reason": "paragraph",
-          "role": "paragraph",
-          "snippet": "<a class=\"pg-chip\" data-maya-type=\"P3\" href=\"/backend2.html\" onclick=\"event.stopPropagation()\">Backend 2</a></span>"
+          "snippet": "<a class=\"pg-chip\" data-maya-type=\"P3\" href=\"/backend.html\" onclick=\"event.stopPropagation()\">Backend</a></span>"
         },
         {
           "page": "backend/status.html",
@@ -6608,36 +6067,6 @@
           "snippet": "<button id=\"watch\">Watch for a new deploy</button>"
         },
         {
-          "page": "docs/aesthetics/ui/backend-two-operation.js",
-          "line": 29,
-          "tag": "button",
-          "id": null,
-          "class": "",
-          "reason": "JavaScript-created button",
-          "role": "pill",
-          "snippet": "createElement('button')"
-        },
-        {
-          "page": "docs/aesthetics/ui/backend-two-operation.js",
-          "line": 72,
-          "tag": "button",
-          "id": null,
-          "class": "",
-          "reason": "JavaScript-created button",
-          "role": "pill",
-          "snippet": "createElement('button')"
-        },
-        {
-          "page": "docs/aesthetics/ui/backend-two.js",
-          "line": 14,
-          "tag": "button",
-          "id": null,
-          "class": "",
-          "reason": "JavaScript-created button",
-          "role": "pill",
-          "snippet": "createElement('button')"
-        },
-        {
           "page": "docs/aesthetics/ui/fabric-assistant.js",
           "line": 6,
           "tag": "button",
@@ -6709,7 +6138,7 @@
         },
         {
           "page": "docs/aesthetics/ui/original-operation.js",
-          "line": 28,
+          "line": 51,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8160,31 +7589,23 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 13,
+          "count": 11,
           "locations": [
             {
               "page": "backend/backend.html",
               "line": 1424
             },
             {
-              "page": "backend/backend2.html",
-              "line": 1413
+              "page": "backend/operation-workspace.html",
+              "line": 330
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 334
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 474
+              "line": 435
             },
             {
               "page": "backend/status.html",
               "line": 926
-            },
-            {
-              "page": "backend/status.html",
-              "line": 1031
             },
             {
               "page": "backend/status.html",
@@ -8217,7 +7638,7 @@
           ]
         },
         "pill": {
-          "count": 311,
+          "count": 270,
           "locations": [
             {
               "page": "backend/backend.html",
@@ -8345,11 +7766,7 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 2971
-            },
-            {
-              "page": "backend/backend.html",
-              "line": 2976
+              "line": 2972
             },
             {
               "page": "backend/backend.html",
@@ -8361,231 +7778,83 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 3298
+              "line": 2979
             },
             {
-              "page": "backend/backend2.html",
-              "line": 1414
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1418
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1425
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1426
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1447
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1482
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1509
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1514
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1519
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1527
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1532
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1533
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1540
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1541
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1550
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1556
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1560
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1564
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1574
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1576
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1577
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1578
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1579
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1583
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1585
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1586
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1590
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1592
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1596
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1598
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 1599
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 2946
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 2951
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 2952
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 2953
-            },
-            {
-              "page": "backend/backend2.html",
-              "line": 3273
+              "page": "backend/backend.html",
+              "line": 3299
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 280
+              "line": 276
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 292
+              "line": 288
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 293
+              "line": 289
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 398
+              "line": 368
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 408
+              "line": 392
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 409
+              "line": 404
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 431
+              "line": 405
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 443
+              "line": 406
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 444
+              "line": 407
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 445
+              "line": 415
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 446
+              "line": 416
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 454
+              "line": 417
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 455
+              "line": 426
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 456
+              "line": 427
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 465
+              "line": 949
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 466
+              "line": 951
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1025
+              "line": 953
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 1027
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 1029
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 538
+              "line": 499
             },
             {
               "page": "backend/status.html",
@@ -8860,18 +8129,6 @@
               "line": 74
             },
             {
-              "page": "docs/aesthetics/ui/backend-two-operation.js",
-              "line": 29
-            },
-            {
-              "page": "docs/aesthetics/ui/backend-two-operation.js",
-              "line": 72
-            },
-            {
-              "page": "docs/aesthetics/ui/backend-two.js",
-              "line": 14
-            },
-            {
               "page": "docs/aesthetics/ui/fabric-assistant.js",
               "line": 6
             },
@@ -8897,7 +8154,7 @@
             },
             {
               "page": "docs/aesthetics/ui/original-operation.js",
-              "line": 28
+              "line": 51
             },
             {
               "page": "docs/aesthetics/ui/submission-cards.js",
@@ -9470,13 +8727,21 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 291
+              "line": 287
             }
           ]
         },
         "label": {
           "count": 23,
           "locations": [
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 319
+            },
+            {
+              "page": "backend/operation-workspace.html",
+              "line": 320
+            },
             {
               "page": "backend/operation-workspace.html",
               "line": 323
@@ -9491,47 +8756,39 @@
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 328
+              "line": 378
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 331
+              "line": 379
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 417
+              "line": 380
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 418
+              "line": 383
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 419
+              "line": 384
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 422
+              "line": 388
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 423
+              "line": 388
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 427
+              "line": 388
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 427
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 427
-            },
-            {
-              "page": "backend/operation-workspace.html",
-              "line": 428
+              "line": 389
             },
             {
               "page": "backend/status.html",
@@ -9576,19 +8833,19 @@
           "locations": [
             {
               "page": "backend/operation-workspace.html",
-              "line": 353
+              "line": 349
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 354
+              "line": 350
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 355
+              "line": 351
             },
             {
               "page": "backend/operation-workspace.html",
-              "line": 356
+              "line": 352
             },
             {
               "page": "backend/status.html",

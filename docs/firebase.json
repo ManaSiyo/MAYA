@@ -156,10 +156,6 @@
         "destination": "/backend/backend.html"
       },
       {
-        "source": "/backend2.html",
-        "destination": "/backend/backend2.html"
-      },
-      {
         "source": "/privacy.html",
         "destination": "/backend/privacy.html"
       },

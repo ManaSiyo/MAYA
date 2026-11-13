@@ -1409,9 +1409,9 @@
 <script src="/aesthetics/ui/presentation-runtime.js?v=5"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=7"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=29"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=21">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=23"></script>
-<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=4"><script src="/aesthetics/ui/image-viewer.js?v=5"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=22">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=24"></script>
+<link rel="stylesheet" href="/aesthetics/ui/image-viewer.css?v=4"><script src="/aesthetics/ui/image-viewer.js?v=6"></script>
 <link rel="stylesheet" href="/aesthetics/ui/original-backend.css?v=1">
 </head>
 <body class="backend-original">
@@ -2498,12 +2498,13 @@ function _publishSavedOperations(dissection, context=_piecesContext()) {
   const summary=window._currentSnap?.lastSummary||{};
   const pieces=(dissection?.pieces||[]).flatMap((p,index)=>p&&!p.skip?[{...p,id:p.id||'saved-piece-'+index,name:p.name||p.label||'Item '+(index+1),fabric:p.fabric||dissection.fabric_type||'',fabric_spec:p.fabric_spec||{}}]:[]);
   const next={account:context.account,submissionId:context.sid,local:context.local,referenceImage:context.hero,preferences:summary.fabric_preferences||'',measurements:summary._measurements||{},pieces};
-  if(JSON.stringify(next)!==JSON.stringify(_savedOperation)){_savedOperation=JSON.parse(JSON.stringify(next));_operationsRevision++;window.MayaFabricAssistant?.reset();showBriefItem();}
+  if(JSON.stringify(next)!==JSON.stringify(_savedOperation)){_savedOperation=JSON.parse(JSON.stringify(next));_operationsRevision++;window.MayaBriefCloPreview?.update();window.MayaFabricAssistant?.reset();showBriefItem();}
   window._lastOpsPieces=pieces;
   const button=document.getElementById('brief-fabrics-button');if(button)button.disabled=!context.sid||!context.account||!pieces.length;
   _postPiecesToOps();
 }
 function _postPiecesToOps(selectionChanged=false) {
+  if(selectionChanged)window.MayaBriefCloPreview?.close();
   const frame=document.getElementById('operations-embed'),context=_piecesContext();
   if(!frame?.contentWindow||!_savedOperation)return;
   const valid=_savedOperation.account===context.account&&_savedOperation.submissionId===context.sid&&_savedOperation.local===context.local&&_savedOperation.referenceImage===context.hero;
@@ -5119,7 +5120,14 @@ window.renderActivePiece3D = function() {
 // Shared handle/edge gestures are mounted after the workspace adapter.
 </script>
 <script>MayaImageViewer.watch("#op-image-frame img");</script>
+<script src="/aesthetics/ui/clo-preview-bridge.js?v=1"></script>
+<script>
+window.MayaBriefCloPreview=MayaCloPreviewBridge.create({frame:document.getElementById('operations-embed'),getContext:()=>{
+  const context=_piecesContext(),frame=document.getElementById('operations-embed');
+  return {account:context.account,submissionId:context.sid,local:context.local,revision:_operationsRevision,garmentId:frame?.contentWindow?.originalOperationContext?.()?.garmentId||''};
+}});
+</script>
 <script src="/aesthetics/ui/original-backend.js?v=1"></script>
-<script src="/aesthetics/ui/drawer-gestures.js?v=1"></script>
+<script src="/aesthetics/ui/drawer-gestures.js?v=2"></script>
 </body>
 </html>

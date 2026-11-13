@@ -9,7 +9,7 @@
  function eligible(target,x){
   if(target?.closest?.('#top-actions .hamburger'))return true;
   if(target?.closest?.(interactive))return false;
-  if(isOpen())return !!target?.closest?.('#clients-drawer>.drawer-title,.backend-two-tabs,.drawer-head-title');
+  if(isOpen())return !!target?.closest?.('#clients-drawer>.drawer-title,.original-drawer-tabs,.drawer-head-title');
   return x>=innerWidth-32&&!target?.closest?.('#clients-drawer,#drawer-settings,#brief-fabrics,.fab-grid,.op-image-col,.op-room-col,#piece-swiper');
  }
  function setOpen(value){if(value!==isOpen())window.toggleWorkspaceDrawer?.(value);}

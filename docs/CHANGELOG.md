@@ -4,6 +4,14 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 13 — consolidate Backend and repair CLO previews:** move CLO 3D into
+  the current pattern frame through an optional panel lifecycle. Separate gallery
+  styles and preview scope from pattern/fabric state; expand sourced photos in the
+  parent viewer, retain healthy images and fall back only to evidenced alternatives.
+  Remove Backend 2's page, assets, route, Admin link and compact fabric rail. Migrate
+  the active Aesthetic Control sample and CI geometry checks to the current Backend.
+  Add runtime coverage for preview replacement, teardown and stale scope messages.
+
 - **November 12 — frontend regression repair:** restrict photo descriptions to
   image cards, restoring single voice labels, and move white captions down 4px.
   Refresh Favorites after delayed project restoration and recover hidden failed

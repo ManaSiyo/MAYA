@@ -1,4 +1,4 @@
-/* The original Brief and Operations share one drawer; Backend 2 stays separate. */
+/* The Brief and Operations share one drawer. */
 (function(){
  'use strict';
  function createTabs(drawer,panels,onSelect=()=>{}){

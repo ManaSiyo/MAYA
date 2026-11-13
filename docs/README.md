@@ -3,7 +3,7 @@
 MAYA turns client references and an avatar into garment visualizations, favorites,
 community designs and private atelier submissions. Admin manages submissions,
 leads, messages and advertising. The Brief includes dissection, pattern work and
-Fabrics; there is no separate public Operation Room or WR workspace.
+Fabrics and CLO references; there is no separate public Operation Room or WR workspace.
 
 ## Source layout
 
@@ -12,7 +12,6 @@ Fabrics; there is no separate public Operation Room or WR workspace.
 | frontend/index.html | Client app: Inspo → Favorites → Community, drawer and sharing |
 | backend/status.html | Admin at /status.html |
 | backend/backend.html | Brief at /backend.html |
-| backend/backend2.html | Separate Backend 2 playground at /backend2.html |
 | backend/operation-workspace.html | Brief's embedded pattern workspace; direct visits return to Brief |
 | backend/privacy.html | Privacy and Terms; old Terms URLs redirect to #terms |
 | backend/verify.html | Public deployment check page |
@@ -208,6 +207,21 @@ runs are bounded to 25 MB/100 versions per garment and research to 100 links/500
 dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
+
+November 13 — one Backend, independent CLO preview:
+The current Brief's pattern window now has Mark 1 / CLO 3D / Pipeline. CLO mounts
+through an optional panel registry and owns its gallery, requests and cleanup;
+removing it leaves the pattern engine and Fabrics independent. Source-backed square
+photos expand in the parent viewport using the shared image viewer. Loaded photos
+survive filters/review/tab switches; failed sources try their evidenced alternatives
+with bounded timeouts. Scope changes close previews and discard stale responses.
+Backend 2's page, scripts, CSS, Admin link, Hosting rewrite and compact fabric rail
+are deleted at the owner's request. Aesthetic Control and CI now exercise the
+current Backend's CLO panel with default/saved settings at three widths. Six live
+endpoints remain. Prior frontend repair `cf8adb3` passed Google build `02788917`,
+including deployment verification. The full Node20 code-only gate passes, including CLO preview and isolation fixtures.
+This change still needs deployment and owner visual review; no local browser or
+paid provider call is used.
 
 November 12 — frontend regression repair:
 Photo hover captions no longer duplicate spoken attribute labels. Keep the white

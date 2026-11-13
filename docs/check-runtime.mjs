@@ -61,8 +61,8 @@ checks['deployment-verification']=async function(){
   const actual=fault===path?'b'.repeat(40):commit;
   return path==='/release.json'||path==='/api/healthz'?Response.json({commit:actual}):new Response(fault==='missing'&&path==='/backend.html'?'<head></head>':'<head><meta name="maya-build" content="'+actual+'"></head>');
  };
- assert.equal((await verifyDeployment(commit,{fetchImpl})).paths.length,7);assert.equal(seen.length,7);
- for(fault of ['/api/healthz','/backend.html','/backend2.html','/backend/operation-workspace.html','missing','http'])await assert.rejects(verifyDeployment(commit,{fetchImpl}),/Production release is not verified/);
+ assert.equal((await verifyDeployment(commit,{fetchImpl})).paths.length,6);assert.equal(seen.length,6);
+ for(fault of ['/api/healthz','/backend.html','/backend/operation-workspace.html','missing','http'])await assert.rejects(verifyDeployment(commit,{fetchImpl}),/Production release is not verified/);
  await assert.rejects(verifyDeployment('short',{fetchImpl}),/full Git commit/);
  console.log('Production verification: exact Hosting/API/Brief/iframe stamps required; stale, missing and failed responses cannot report success.');
 };
@@ -2304,7 +2304,7 @@ function fn(source,name){
   if(firstLine.endsWith('}'))return firstLine;
   return source.slice(start,source.indexOf('\n}',start)+2);
 }
-const frontend=read('frontend/index.html'),brief=read('backend/backend.html'),backendTwo=read('backend/backend2.html'),operations=read('backend/operation-workspace.html');
+const frontend=read('frontend/index.html'),brief=read('backend/backend.html'),operations=read('backend/operation-workspace.html');
 assert.equal(IMAGE_MODEL,'gpt-image-2.6-flare');
 const calls=[],stored=new Map([['maya_image_model','gpt-image-2.5-flare']]);
 const image=new Blob(['reference-image'],{type:'image/png'});
@@ -2343,10 +2343,7 @@ assert.equal(await calls.at(-1).options.body.get('image').text(),'single referen
 await vm.runInContext("renderPiece('fixture-hero',{name:'Coat'})",context);
 await vm.runInContext("generatePattern('fixture-hero',{name:'Coat',panels:8})",context);
 await vm.runInContext("gptImageEdit('fixture-hero','pattern drawing')",context);
-vm.runInContext(['renderPiece','generatePattern'].map(name=>fn(backendTwo,name)).join('\n'),context);
-await vm.runInContext("renderPiece('fixture-hero',{name:'Coat'})",context);
-await vm.runInContext("generatePattern('fixture-hero',{name:'Coat',panels:8})",context);
-assert.equal(calls.length,9,'One request per explicit generation/edit, including Backend 2');
+assert.equal(calls.length,7,'One request per explicit generation/edit');
 for(const [i,call] of calls.entries()){
   assert.equal(call.options.headers.Authorization,'Bearer fixture-token');
   assert.equal(call.options.method,'POST');
@@ -2356,7 +2353,7 @@ for(const [i,call] of calls.entries()){
   assert.equal(form.get('model'),IMAGE_MODEL);
   if(i<4)assert.equal(form.get('complexity'),'medium');
   assert.equal(form.get('size'),'1536x1024');assert.equal(form.get('n'),'1');
-  assert.equal(form.get('quality'),[5,6,8].includes(i)?'high':'medium','Existing Admin quality choices stay intact');
+  assert.equal(form.get('quality'),[5,6].includes(i)?'high':'medium','Existing Admin quality choices stay intact');
   if(i>=4)assert.equal(await form.get('image').text(),'reference-image');
 }
 const {evaluateProxyPolicy}=await import('../backend/server/proxy-policy.mjs');
@@ -2369,7 +2366,7 @@ for(const oldModel of ['gpt-image-2','gpt-image-2.5-flare']){
  const decoded=await new Response(policy.body,{headers:{'Content-Type':contentType}}).formData();
  assert.equal(decoded.get('model'),IMAGE_MODEL);assert.equal(decoded.get('prompt'),'Keep the jacket');assert.equal(decoded.get('quality'),'high');assert.equal(decoded.get('n'),'1');assert.deepEqual(Buffer.from(await decoded.get('image').arrayBuffer()),bytes,'Model-like text in binary references is untouched');
 }
-console.log('GPT Image 2.6 Flare requests preserve auth, sizes, quality, options, reference images and response handling across frontend, Brief, Backend 2 and Operations.');
+console.log('GPT Image 2.6 Flare requests preserve auth, sizes, quality, options, reference images and response handling across frontend, Brief and Operations.');
 
 };
 
@@ -2732,7 +2729,7 @@ checks['fabric-loading-reuse']=async function(){
  await vm.runInContext('open(next)',c);await vm.runInContext('open(next)',c);
  assert.equal(resets,0,'Reopening saved research does not compare the source to an unprepared image');assert.equal(researchReads,0);assert.equal(searches,0);assert.equal(c.context.inhouse.length,1);
  c.next={...reference,referenceImage:'changed-reference'};await vm.runInContext('open(next)',c);assert.equal(resets,1,'A changed input still resets');
- c.autoStarted=false;c.research=null;c.loadResearch=async()=>null;c.next={...reference,savedOnly:true,referenceImage:'snapshot-reference'};await vm.runInContext('open(next)',c);assert.equal(searches,0,'Backend 2 snapshot never starts a paid search on opening');
+ c.autoStarted=false;c.research=null;c.loadResearch=async()=>null;c.next={...reference,savedOnly:true,referenceImage:'snapshot-reference'};await vm.runInContext('open(next)',c);assert.equal(searches,0,'Saved-only fabric review never starts a paid search on opening');
  let fetches=0,resolveFetch,activeEpoch=1;const paints=[];
  const inventory=vm.createContext({epoch:1,context:{},inventoryRequest:null,inventoryData:null,inventoryVersion:0,inventoryStatus:'',AbortSignal,fetch:()=>{fetches++;return new Promise(resolve=>resolveFetch=resolve);},current:stamp=>stamp===activeEpoch,paint:()=>paints.push(activeEpoch)});
  vm.runInContext(fn('  async function loadInventory(','  async function loadContext('),inventory);
@@ -2930,52 +2927,6 @@ checks['submission-drawer-reuse']=async function(){
  console.log('Submission drawer: shared feed, concurrent opens, retained cards/photos, refresh failure, account reset and deletion races passed.');
 };
 
-checks['backend-two-shell']=async function(){
- const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
- const {document,Event}=parseHTML(readFileSync('backend/backend2.html','utf8'));
- const engine=parseHTML('<html><body><select id="test-picker"><option>Coat</option></select><div id="drawer"><section class="sec" id="pattern-settings"><label for="pattern-hits">Passages</label><input id="pattern-hits" value="5"><button id="test-save">Save</button><p id="pattern-save-status" role="status"></p><div id="pattern-history"><button>Old version</button></div></section></div></body></html>');
- const frame=document.getElementById('operations-embed');let edits=0,clicks=0,reads=0,flushed=0,historyClicks=0;
- let scope={sid:'project',account:'owner',local:1,hero:'photo'},garmentId='coat';
- Object.defineProperty(document,'activeElement',{value:null,writable:true,configurable:true});
- engine.document.getElementById('pattern-hits').addEventListener('input',()=>edits++);engine.document.getElementById('test-save').addEventListener('click',()=>clicks++);
- Object.defineProperty(frame,'contentDocument',{value:engine.document});Object.defineProperty(frame,'contentWindow',{value:{Event:engine.Event,postMessage(){},backendTwoContext:()=>({account:scope.account,submissionId:scope.sid,local:scope.local,revision:0,garmentId}),flushPatternBeforeNavigation:async()=>{flushed++;return true;}}});
- const listeners=new Map(),c=vm.createContext({document,location:{origin:'https://maya.test',href:''},queueMicrotask,URLSearchParams,
-  _savedOperation:null,_operationsRevision:0,_piecesContext:()=>({...scope}),showBackendToast(){},_publishSavedOperations(){},_clearBriefPrivate(){},_postPiecesToOps(){},_updateBrandSub(){},goToScreen(){},toggleWorkspaceDrawer(){},showBriefFabrics(){},toggleBriefFabrics(){},showBriefItem(){},_briefView:'item',beginDissection(){},
-  openClientsDrawer:async()=>reads++,toggleClientsDrawer(force){const d=document.getElementById('clients-drawer');d.classList.toggle('open',force===undefined?!d.classList.contains('open'):force);},
-  addEventListener:(name,fn)=>listeners.set(name,fn),MayaFabricAssistant:{reset(){},open:async()=>{}}
- });c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/backend-two.js','utf8'),c);
- assert.equal(document.getElementById('workspace-title').textContent,'Backend 2');
- assert.ok(document.querySelector('#backend-two-bio #op-biography'));assert.ok(document.querySelector('#backend-two-bio #op-measurements'));
- assert.ok(document.querySelector('#backend-two-submissions #clients-list'));assert.ok(document.querySelector('#backend-two-fabric-strip #brief-fabrics'));assert.equal(document.getElementById('screen-onepager').hidden,true);
- c.toggleWorkspaceDrawer();assert.equal(document.getElementById('clients-drawer').inert,false);assert.deepEqual([...document.querySelectorAll('.backend-two-tabs [role=tab]')].map(e=>e.getAttribute('aria-label')),['Submissions','Bio','Settings']);assert.equal(document.getElementById('backend-two-tab-submissions').getAttribute('aria-selected'),'true');
- document.getElementById('backend-two-tab-settings').click();assert.equal(document.getElementById('backend-two-settings').hidden,false);
- const field=document.getElementById('b2-setting-pattern-hits');assert.ok(field);field.value='8';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(engine.document.getElementById('pattern-hits').value,'8');assert.equal(edits,1);
- document.getElementById('b2-setting-test-save').click();assert.equal(clicks,1);
- document.activeElement=field;
- engine.document.getElementById('pattern-save-status').textContent='Save failed. Retry.';
- engine.document.getElementById('test-save').hidden=true;
- const history=engine.document.getElementById('pattern-history'),newVersion=engine.document.createElement('button');newVersion.textContent='New version';newVersion.onclick=()=>historyClicks++;history.replaceChildren(newVersion);
- listeners.get('message')({origin:c.location.origin,source:frame.contentWindow,data:{maya:'backend-two-settings',account:scope.account,submissionId:scope.sid,local:scope.local,revision:0}});
- assert.equal(document.getElementById('b2-setting-pattern-hits'),field,'Focused input stays mounted during save updates');
- assert.equal(document.getElementById('b2-setting-pattern-save-status').textContent,'Save failed. Retry.');
- assert.equal(document.getElementById('b2-setting-test-save').hidden,true,'Save updates synchronize control visibility');
- document.querySelector('#b2-setting-pattern-history button').click();assert.equal(historyClicks,1,'Refreshed history is wired to current engine buttons');
- scope={...scope,local:2};field.value='99';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(edits,1,'A stale mirror cannot write into a later project generation');scope={...scope,local:1};document.activeElement=null;
- garmentId='pants';field.dispatchEvent(new Event('input',{bubbles:true}));assert.equal(edits,1,'A stale mirror cannot edit the newly selected garment before its message arrives');garmentId='coat';
-
- document.getElementById('backend-two-tab-submissions').click();assert.equal(reads,2);assert.equal(document.getElementById('backend-two-settings').hidden,true);
- c.toggleWorkspaceDrawer();assert.equal(document.getElementById('clients-drawer').inert,true);
- await c.openBackendTwoSubmission({id:'project-B',name:'Second'});assert.equal(flushed,1);assert.match(c.location.href,/^\/backend2.html\?submission=project-B/);
- frame.contentWindow.flushPatternBeforeNavigation=async()=>false;c.location.href='unchanged';await c.openBackendTwoSubmission({id:'project-C'});assert.equal(c.location.href,'unchanged','Failed settings saves block submission navigation');
- let release;frame.contentWindow.flushPatternBeforeNavigation=()=>new Promise(resolve=>release=resolve);
- const old=c.openBackendTwoSubmission({id:'project-D'});scope={...scope,account:'next-owner'};release(true);await old;assert.equal(c.location.href,'unchanged','Account changes cancel pending submission navigation');
- const waiting=[];frame.contentWindow.flushPatternBeforeNavigation=()=>new Promise(resolve=>waiting.push(resolve));
- const first=c.openBackendTwoSubmission({id:'older'}),latest=c.openBackendTwoSubmission({id:'latest'});waiting[1](true);await latest;waiting[0](true);await first;assert.match(c.location.href,/submission=latest/,'Only the latest submission click navigates');
- listeners.get('message')({origin:c.location.origin,source:frame.contentWindow,data:{maya:'backend-two-open-settings',account:scope.account,submissionId:scope.sid,local:scope.local,revision:0,open:true}});
- assert.equal(document.getElementById('backend-two-settings').hidden,false,'Engine settings requests open the parent drawer');
- console.log('Backend 2: snapshot DOM, drawer tabs, engine-backed settings and failed-save navigation passed without a browser.');
-};
-
 checks['original-backend-drawer']=async function(){
  const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
  const {document,Event}=parseHTML(readFileSync('backend/backend.html','utf8'));
@@ -2998,8 +2949,7 @@ checks['original-backend-drawer']=async function(){
  listeners.get('message')({...notice,source:{},data:{...notice.data,open:false}});assert.equal(drawer.inert,false,'Other frame cannot control drawer');
  listeners.get('message')({...notice,data:{maya:'original-operation-pointer'}});assert.equal(drawer.inert,true);
  c._clearBriefPrivate();assert.equal(document.getElementById('original-pattern-settings').childElementCount,0);assert.equal(document.getElementById('original-export-svg').disabled,true);assert.ok(reads>0);
- const clone=parseHTML(readFileSync('backend/backend2.html','utf8'));const cloneContext=vm.createContext({document:clone.document});cloneContext.window=cloneContext;vm.runInContext(readFileSync('docs/aesthetics/ui/original-backend.js','utf8'),cloneContext);assert.equal(clone.document.querySelector('.original-drawer-tabs'),null,'Backend 2 is excluded');
- console.log('Original drawer: shared tabs, delegated fields/export, stale-scope guards and Backend 2 isolation passed.');
+ console.log('Original drawer: shared tabs, delegated fields/export and stale-scope guards passed.');
 };
 
 checks['original-operation']=async function(){
@@ -3009,7 +2959,7 @@ checks['original-operation']=async function(){
   const {document,Event}=parseHTML(html);let traces=0,exports=0,invalidations=0,blurs=0,lastTraceSource='',identity=0;const messages=[];
   const c=vm.createContext({document,Event,URLSearchParams,setTimeout,location:{search,origin:'https://maya.test'},EMBEDDED:true,PASSES:[{img:'saved-pattern',acc:{design:90,measure:85}}],TRACE:null,RD:null,ANSWER:null,RUNNING:false,
    _operationInputContext:{account:'owner',submissionId:'saved-submission',local:false},_operationRevision:3,FILES:{piece:{id:'coat'}},_traceTask:null,
-   parent:{postMessage(message){messages.push(message);}},MutationObserver:class{observe(){}},installOperationContext(){},operationContext:()=>({identity}),operationCurrent:context=>context.identity===identity,
+   getKey:()=> 'fixture-token',pickTest(name){c.FILES={piece:{id:name}};},parent:{postMessage(message){messages.push(message);}},MutationObserver:class{observe(){}},installOperationContext(){},operationContext:()=>({identity}),operationCurrent:context=>context.identity===identity,
    $:id=>document.getElementById(id),cancelPatternTrace(){c._traceTask=null;},mountTrace(){},buildSVGfromGrounded(source){traces++;lastTraceSource=source||document.getElementById('img-grounded').getAttribute('src');c.TRACE={source:lastTraceSource,svg:'<svg/>'};},exportSVG(){exports++;},toast(){},setOperationRunning(value){c.RUNNING=value;},
    invalidateOperation(){identity++;invalidations++;c.PASSES=[];c.setOperationRunning(false);c.applyView();}
   });c.window=c;
@@ -3038,46 +2988,22 @@ checks['original-operation']=async function(){
  c.viewRD();assert.equal(tab('Mark 1').getAttribute('aria-selected'),'true');assert.equal(tab('Mark 1').getAttribute('tabindex'),'0','Internal redraw cannot remove every tab from keyboard navigation');
  const picker=document.getElementById('test-picker');picker.dispatchEvent(new Event('pointerdown'));picker.dispatchEvent(new Event('change'));assert.equal(counts().blurs,1,'Pointer selection releases its native focus ring');
  picker.dispatchEvent(new Event('pointerdown'));picker.dispatchEvent(new Event('keydown'));picker.dispatchEvent(new Event('change'));assert.equal(counts().blurs,1,'Keyboard selection retains accessible focus');
- const clone=fixture('?layout=backend2');assert.ok(clone.document.querySelector('#plan-a-view > .trace'));assert.equal(clone.document.getElementById('original-operation-logic'),null);assert.equal(clone.document.documentElement.classList.contains('original-operation'),false);assert.equal(clone.c.exportOriginalSVG,undefined);
- console.log('Original Operation Room: integrated Pipeline, truthful running dot, scoped drawer, one-click SVG export/cancellation, legacy marks and focus passed.');
-};
+ const lifecycle=[],mounts=[];c.MayaCloAssets={create(options){mounts.push(options);return {update(){lifecycle.push(['update',options.getContext()?.garmentId]);},setActive(on){lifecycle.push(['active',on]);},reset(){lifecycle.push(['reset']);},destroy(){lifecycle.push(['destroy']);}};}};
+ vm.runInContext(readFileSync('docs/aesthetics/ui/operation-clo.js','utf8'),c);
+ assert.deepEqual([...host.querySelectorAll('button')].map(b=>b.textContent),['Mark 1','CLO 3D','Pipeline']);
+ assert.equal(mounts.length,1);assert.equal(mounts[0].getToken(),'fixture-token');
+ const clo=document.getElementById('operation-clo');assert.equal(clo.parentElement,stage);assert.equal(clo.hidden,true);
+ const beforeClo=counts().traces;tab('CLO 3D').click();assert.equal(clo.hidden,false);assert.equal(logic.hidden,true);assert.equal(vm.runInContext('CUR.kind',c),'clo');assert.equal(counts().traces,beforeClo,'Opening CLO never starts the pattern engine');
+ assert.equal(lifecycle.at(-1)[0],'active');assert.equal(lifecycle.at(-1)[1],true);c.viewGrounded();assert.equal(clo.hidden,false,'Pattern progress cannot replace the active independent panel');
+ c.pickTest('pants');assert.equal(mounts[0].getContext().garmentId,'pants');assert.deepEqual(lifecycle.at(-1),['update','pants'],'Garment updates reach CLO independently');
+ const closePreview=mounts[0].openPreview({src:'https://images.example.com/clo.jpg',alt:'Coat'});assert.equal(messages.at(-1).maya,'ops-clo-inspect');assert.equal(messages.at(-1).garmentId,'pants');const inspection=messages.at(-1).inspectionId;
+ closePreview();assert.equal(messages.at(-1).maya,'ops-clo-inspect-close');assert.equal(messages.at(-1).inspectionId,inspection);
+ c.invalidateOperation();assert.ok(lifecycle.some(event=>event[0]==='reset'));assert.equal(clo.hidden,true);
+ assert.equal(c.MayaOperationPanels.unregister('clo'),true);assert.equal(document.getElementById('operation-clo'),null);assert.equal(tab('CLO 3D'),undefined);assert.ok(tab('Pipeline'));assert.ok(lifecycle.some(event=>event[0]==='destroy'));
+ assert.equal(c.MayaOperationPanels.register({id:'broken',label:'Broken',create(){throw Error('fixture mount failed');}}),false);assert.equal(tab('Broken'),undefined);assert.ok(tab('Mark 1'),'A failed optional mount cannot break the current pattern window');
+ assert.doesNotMatch(html,/plan-b-view|backend-two|MayaLegacyCloAssets/);
 
-checks['backend-two-operation']=async function(){
- const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
- const {document,MutationObserver}=parseHTML(readFileSync('backend/operation-workspace.html','utf8'));
- // Linkedom exposes select.value as a getter; browsers also provide the setter.
- const picker=document.getElementById('test-picker');Object.defineProperty(picker,'value',{value:'',writable:true});
- let pendingPick=null;const notices=[],context={account:'owner',submissionId:'project',local:1,referenceImage:'data:image/png;base64,ZnVsbA=='};
- const c=vm.createContext({document,MutationObserver,URLSearchParams,location:{search:'?layout=backend2',origin:'https://maya.test'},EMBEDDED:true,RUNNING:false,_operationRevision:0,_patternNavigation:0,queueMicrotask,syncPlan(){},toggleDrawer(){},
-  $:id=>document.getElementById(id),parent:{postMessage:data=>notices.push(data)},operationAccount:()=> 'owner',operationSubmission:()=> 'project',FILES:{},TESTS:{},ACTIVE_TEST:null,_operationInputContext:context,
-  renderPassPills(){},setOperationRunning(value){c.RUNNING=value;},syncPatternSettings(){},lockPatternSettings(){},renderPatternHistory(){},viewGrounded(){},initTests(){picker.innerHTML='<option>waiting for pieces…</option>';},
-  showView(){document.getElementById('hero-img').src=c.FILES.front;},
-  pickTest(name){c.ACTIVE_TEST=name;c.FILES=c.TESTS[name];},
-  async onPickTest(name){const navigation=++c._patternNavigation;if(pendingPick)await pendingPick;if(navigation===c._patternNavigation)c.pickTest(name);},
-  installOperationContext(next){c._operationInputContext=next;c.TESTS={Coat:{front:'data:image/png;base64,Y29hdA==',piece:{id:'coat'}}};picker.innerHTML='<option value="Coat">Coat</option>';c.pickTest('Coat');}
- });c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/backend-two-operation.js','utf8'),c);
- c.installOperationContext(context);assert.equal(picker.value,'__full__');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);
- assert.equal(picker.querySelector('optgroup').label,'Dissected view');assert.equal(c.FILES.piece.id,'coat','Full view does not replace the active pattern input');
- await c.onPickTest('Coat');assert.equal(picker.value,'Coat');assert.equal(document.getElementById('hero-img').getAttribute('src'),c.FILES.front);
- assert.deepEqual([...document.querySelectorAll('#pass-pills [role=tab]')].map(b=>b.textContent),['Pattern','CLO 3D','Pipeline']);
- document.getElementById('backend-two-clo-tab').click();assert.equal(document.getElementById('backend-two-clo').hidden,false);assert.equal(document.getElementById('stage').hidden,true);
- document.getElementById('backend-two-pipeline-tab').click();assert.equal(document.getElementById('backend-two-clo').hidden,true);assert.equal(document.getElementById('stage').hidden,true);assert.equal(document.getElementById('backend-two-pipeline').hidden,false);
- assert.ok(document.querySelector('#backend-two-pipeline #t-chunks'));assert.ok(document.querySelector('#backend-two-pipeline #live-log'));
- const patternTab=document.getElementById('backend-two-pattern-tab');
- c.setOperationRunning(true);assert.equal(document.querySelector('.backend-two-pipeline-dot').classList.contains('running'),true);
- assert.equal(document.getElementById('backend-two-pattern-tab'),patternTab,'Live updates retain keyboard focus targets');
- c.setOperationRunning(false);assert.equal(document.querySelector('.backend-two-pipeline-dot').classList.contains('running'),false);
- document.getElementById('backend-two-pattern-tab').click();assert.equal(document.getElementById('stage').hidden,false);
- await c.onPickTest('__full__');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);assert.equal(c.FILES.piece.id,'coat');
- let finishPick;pendingPick=new Promise(resolve=>finishPick=resolve);
- const selecting=c.onPickTest('Coat');await c.onPickTest('__full__');finishPick();await selecting;pendingPick=null;
- assert.equal(picker.value,'__full__','A later Full view choice cancels an earlier pending garment choice');assert.equal(document.getElementById('hero-img').getAttribute('src'),context.referenceImage);
- document.getElementById('plan-a-view').style.display='none';document.getElementById('plan-b-view').style.display='';c.syncPlan();assert.equal(document.getElementById('plan-a-view').style.display,'');assert.equal(document.getElementById('plan-b-view').style.display,'none');
- c.toggleDrawer(true);assert.ok(notices.some(n=>n.maya==='backend-two-open-settings'&&n.open&&n.local===1));
- const noticeCount=notices.length;document.getElementById('pattern-save-status').textContent='Save failed';await Promise.resolve();assert.ok(notices.slice(noticeCount).some(n=>n.maya==='backend-two-settings'),'Direct save failures refresh the mirrored settings');
- c.initTests();assert.ok(picker.querySelector('option[value="__full__"]'),'Initialization and account reset retain Full view');
- assert.ok(notices.some(n=>n.garmentId==='coat'));
- console.log('Backend 2: full/dissected images, stable pattern input, Pipeline/Mark 1 and running indicator passed without a browser.');
+ console.log('Current Operation Room: independent CLO mount/update/reset/unmount and scoped inspection; Pipeline, SVG, legacy marks and focus preserved.');
 };
 
 checks['studio-favorites-client']=async function(){
@@ -3181,14 +3107,48 @@ checks['clo-preview-evidence']=async function(){
  const request=cloSearchBody({garment:{},image:'data:image/png;base64,YQ==',preferences:''});assert.match(request.instructions,/Use web image search/);assert.equal(request.max_tool_calls,1,'Preview sourcing stays within the original single provider call');
  const {document,Event}=parseHTML('<html><head></head><body><section id="clo"></section></body></html>');
  const c=vm.createContext({document,URL,URLSearchParams,AbortController,Date,setTimeout,clearTimeout,console,matchMedia:()=>({matches:true})});c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/clo-assets.js','utf8'),c);
- const state={status:'complete',generation:'1',fingerprint:'scope',items:result,review:{generation:'0',selected:null,dismissed:[]},searchReady:true};let calls=0;
- const host=document.getElementById('clo'),ui=c.MayaCloAssets.create({host,getContext:()=>({account:'A',submissionId:'sub-one'}),getToken:()=> 'token',fetchImpl:async()=>{calls++;return {ok:true,json:async()=>state};}});ui.setActive(true);for(let i=0;i<20;i++)await Promise.resolve();
- assert.equal(document.querySelectorAll('#maya-clo-assets-style').length,1);assert.equal(calls,1,'Opening only reads saved research');
- const card=host.querySelector('.clo-card'),img=card.querySelector('img');assert.equal(img.src,images[0]);img.onerror();assert.equal(img.src,images[1]);img.onerror();assert.equal(img.src,images[2]);img.onerror();assert.ok(card.classList.contains('has-missing-photo'));assert.match(card.querySelector('.clo-photo').textContent,/Preview unavailable/);assert.ok(card.querySelector('.clo-caption .clo-title'));assert.equal(card.querySelector('.clo-title').dataset.mayaType,'P1');
- assert.equal(card.querySelector('.clo-card-actions button').getAttribute('aria-label'),'Select Jacket');assert.ok(card.querySelector('.clo-card-actions svg'));
- card.focus=()=>{};const click=new Event('click',{bubbles:true,cancelable:true});card.querySelector('.clo-photo').dispatchEvent(click);assert.equal(click.defaultPrevented,true);assert.ok(card.classList.contains('is-revealed'),'First touch reveals source details rather than unexpectedly navigating');
- assert.match(host.querySelector('.clo-status').textContent,/Refresh to search for missing previews/);assert.equal(calls,1,'Image failures do not trigger another paid search');ui.reset();
- console.log('CLO previews: sourced alternatives, unsafe/invented image rejection, thumbnail fallbacks, hover/focus card structure and touch reveal passed.');
+ const state={status:'complete',generation:'1',fingerprint:'scope',items:result,review:{generation:'0',selected:null,dismissed:[]},searchReady:true};let calls=0,expanded=null,closed=0,context={account:'A',submissionId:'sub-one'};
+ const host=document.getElementById('clo'),ui=c.MayaCloAssets.create({host,getContext:()=>context,getToken:()=> 'token',openPreview:image=>{expanded=image;return ()=>closed++;},fetchImpl:async()=>{calls++;return {ok:true,json:async()=>state};}});ui.setActive(true);for(let i=0;i<20;i++)await Promise.resolve();
+ try{
+  assert.equal(document.querySelectorAll('#maya-clo-assets-style').length,1);assert.equal(calls,1,'Opening only reads saved research');
+  const card=host.querySelector('.clo-card');let img=card.querySelector('img');assert.equal(img.src,images[0]);assert.equal(card.querySelector('.clo-photo').disabled,true);
+  img.onerror();img=card.querySelector('img');assert.equal(img.src,images[1]);img.onload();assert.equal(card.querySelector('.clo-photo').disabled,false);
+  card.focus=()=>{};const click=()=>{const e=new Event('click',{bubbles:true,cancelable:true});card.querySelector('.clo-photo').dispatchEvent(e);return e;};
+  assert.equal(click().defaultPrevented,true);assert.ok(card.classList.contains('is-revealed'),'First touch reveals source details');assert.equal(expanded,null);
+  click();assert.equal(expanded,img,'Second tap opens the actual loaded photograph');
+  const filters=host.querySelector('select');Object.defineProperty(filters,'value',{value:'free',writable:true});filters.onchange();assert.equal(closed,1,'Filtering the active card closes its preview');filters.value='all';filters.onchange();assert.equal(card.querySelector('img'),img,'Filter changes retain the decoded photograph');
+  ui.setActive(false);ui.setActive(true);assert.equal(card.querySelector('img'),img);assert.equal(calls,1,'Tab switches reuse saved research and loaded photos');
+  await card.querySelector('[data-clo-action="select"]').onclick();assert.equal(card.querySelector('img'),img,'Review updates preserve the healthy image');assert.equal(calls,2);
+  click();context={account:'B',submissionId:'sub-two'};ui.update();assert.equal(closed,2,'Account/project switches close the old expanded photo');for(let i=0;i<20;i++)await Promise.resolve();
+  const nextCard=host.querySelector('.clo-card');for(const source of images){const current=nextCard.querySelector('img');assert.equal(current.src,source);current.onerror();}
+  assert.ok(nextCard.classList.contains('has-missing-photo'));assert.match(nextCard.querySelector('.clo-photo').textContent,/Preview unavailable/);assert.ok(nextCard.querySelector('.clo-caption .clo-title'));assert.equal(nextCard.querySelector('.clo-title').dataset.mayaType,'P1');
+  assert.equal(nextCard.querySelector('.clo-card-actions button').getAttribute('aria-label'),'Select Jacket');assert.ok(nextCard.querySelector('.clo-card-actions svg'));assert.equal(calls,3,'Image failures never start another provider search');
+  ui.setActive(false);ui.setActive(true);assert.equal(nextCard.querySelector('img').src,images[0],'Reopening can retry unavailable photos without another provider search');assert.equal(calls,3);
+ }finally{ui.destroy();}
+ assert.equal(host.children.length,0);
+ console.log('CLO previews: evidence, safe image fallbacks, full-screen callbacks, retained photos, scope/filter cleanup and touch reveal passed.');
+};
+
+
+checks['clo-preview-bridge']=async function(){
+ const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
+ const {document,Event}=parseHTML('<html><body><iframe id="frame"></iframe></body></html>'),frame=document.getElementById('frame'),listeners=new Map();let opened=0,closed=0;
+ const eventTarget={addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:(name,fn)=>{if(listeners.get(name)===fn)listeners.delete(name);}};
+ const c=vm.createContext({document,URL,location:{origin:'https://maya.test'}});c.window=c;vm.runInContext(readFileSync('docs/aesthetics/ui/clo-preview-bridge.js','utf8'),c);
+ let context={account:'A',submissionId:'one',local:2,revision:7,garmentId:'coat'};
+ const api=c.MayaCloPreviewBridge.create({frame,getContext:()=>context,eventTarget,viewer:{open(image,{onClose}){opened++;assert.equal(image.src,'https://images.example.com/photo.jpg');return {close(){closed++;onClose();}};}}});
+ const data={maya:'ops-clo-inspect',...context,inspectionId:'clo-1',src:'https://images.example.com/photo.jpg'},send=(patch={},event={})=>listeners.get('message')?.({origin:'https://maya.test',source:frame.contentWindow,data:{...data,...patch},...event});
+ for(const event of [{origin:'https://other.test'},{source:{}}])send({},event);
+ for(const patch of [{account:'B'},{submissionId:'two'},{local:3},{revision:8},{garmentId:'pants'},{inspectionId:'../bad'},...['http://localhost/x','https://127.0.0.1/x','https://user:password@images.example.com/x','data:image/png;base64,a'].map(src=>({src}))])send(patch);
+ assert.equal(opened,0,'Wrong frame/origin/scope and unsafe photos cannot open a preview');
+ send();assert.equal(opened,1);assert.equal(document.querySelectorAll('body>img').length,1);
+ send({inspectionId:'clo-2'});assert.equal(opened,2);assert.equal(closed,1);
+ send({maya:'ops-clo-inspect-close'});assert.equal(closed,1,'A stale close cannot close a newer inspection');
+ send({maya:'ops-clo-inspect-close',inspectionId:'clo-2'});assert.equal(closed,2);assert.equal(document.querySelectorAll('body>img').length,0);
+ send();context={...context,revision:8};api.update();assert.equal(closed,3,'Input changes close the parent preview');
+ context={...context,revision:7};send();frame.dispatchEvent(new Event('load'));assert.equal(closed,4,'Frame navigation closes its preview');
+ send();api.destroy();assert.equal(closed,5);assert.equal(listeners.size,0);assert.equal(document.querySelectorAll('body>img').length,0);
+ console.log('CLO parent preview: scoped opens, replacement, stale messages, input/frame invalidation and independent teardown passed.');
 };
 
 
@@ -3225,12 +3185,12 @@ checks['drawer-gestures']=async function(){
  fire('pointerdown');fire('pointermove',{clientX:900});fire('pointercancel');fire('pointerup',{clientX:850});assert.equal(actions.length,2,'Cancelled gestures never toggle');
  fire('wheel',{deltaX:80,deltaY:0,deltaMode:0});fire('wheel',{deltaX:-100,deltaY:0,deltaMode:0});assert.deepEqual(actions,[true,false,true],'One wheel burst only toggles once');timer();fire('wheel',{deltaX:-80,deltaY:0,deltaMode:0});assert.equal(actions.at(-1),false);
  fire('wheel',{deltaX:100,deltaY:0,deltaMode:0,ctrlKey:true});assert.equal(actions.length,4,'Zoom gestures never move the drawer');
- for(const path of ['backend/backend.html','backend/backend2.html'])assert.match(readFileSync(path,'utf8'),/drawer-gestures.js/);
+ for(const path of ['backend/backend.html'])assert.match(readFileSync(path,'utf8'),/drawer-gestures.js/);
  assert.match(readFileSync('backend/backend.html','utf8'),/open:force===undefined\?!_operationsSettingsOpen:!!force/,'Original drawer gestures use the same screen-specific target as the hamburger');
  console.log('Drawer gestures: handle/edge scope, direction lock, cancelled drags, click suppression and wheel-burst isolation passed.');
 };
 
-checks['fabric-compact-rail']=async function(){
+checks['fabric-original-grid']=async function(){
  const {parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
  const {document,Event,HTMLElement,Element,CustomEvent}=parseHTML('<html><head></head><body><section id="host"></section></body></html>');
  const matches=Element.prototype.matches;Element.prototype.matches=function(selector){return selector===':popover-open'?false:matches.call(this,selector);};
@@ -3238,25 +3198,23 @@ checks['fabric-compact-rail']=async function(){
  let requests=0;const c=vm.createContext({document,HTMLElement,CustomEvent,URL,URLSearchParams,AbortController,AbortSignal,structuredClone,atob,Date,console,queueMicrotask,localStorage:{getItem:()=>''},setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,addEventListener(){},dispatchEvent(){},fetch:async()=>{requests++;throw Error('No provider call expected');}});c.window=c;
  const source=readFileSync('docs/aesthetics/ui/fabric-assistant.js','utf8');
  vm.runInContext(source.replace('window.MayaFabricAssistant={open,','window.MayaFabricAssistant={fixtureCard:card,open,'),c);
- const api=c.MayaFabricAssistant,host=document.getElementById('host');await api.open({host,automatic:true,savedOnly:true,compactRail:true});
- const workspace=host.querySelector('.fabric-assistant'),rail=workspace.querySelector('.fa-rail'),results=workspace.querySelector('.fa-results'),header=workspace.querySelector('.fa-header');
- assert.ok(workspace.classList.contains('is-rail'));assert.ok(workspace.classList.contains('fa-compact-cards'));assert.equal(rail.parentElement.className,'fa-body');assert.deepEqual([...rail.children],[header,results],'Controls and cards share the same scroll container');
+ const api=c.MayaFabricAssistant,host=document.getElementById('host');await api.open({host,automatic:true,savedOnly:true,originalGrid:true});
+ const workspace=host.querySelector('.fabric-assistant'),results=workspace.querySelector('.fa-results'),header=workspace.querySelector('.fa-header');
+ assert.ok(workspace.classList.contains('fa-original-grid'));assert.equal(header.parentElement,workspace);assert.equal(results.parentElement.className,'fa-body');assert.equal(workspace.querySelector('.fa-rail'),null);
  const product={url:'https://cloth.example/wool',title:'Wool cloth',image:'https://images.example/wool.jpg',merchant:'Cloth source'};
  const card=api.fixtureCard(product);results.append(card);const photo=card.querySelector('img'),link=card.querySelector('.fa-product-link');
- assert.equal(card.querySelector('.fa-card-copy .fa-card-title').dataset.mayaType,'P1');assert.equal(card.querySelector('.fa-card-copy .fa-card-caption').dataset.mayaType,'P3');assert.equal(card.querySelectorAll('.fa-card-actions [data-maya-shape="circle"]').length,2);
+ assert.equal(card.querySelector('.fa-card-copy .fa-card-title').dataset.mayaType,'P1');assert.equal(card.querySelector('.fa-card-copy .fa-card-caption').dataset.mayaType,'P1');assert.equal(card.querySelectorAll('.fa-card-actions [data-maya-shape="circle"]').length,2);
  let focused=0;link.focus=()=>focused++;const pointer=new Event('pointerdown',{bubbles:true});pointer.pointerType='touch';link.dispatchEvent(pointer);const first=new Event('click',{bubbles:true,cancelable:true});first.detail=1;link.dispatchEvent(first);assert.equal(first.defaultPrevented,true);assert.ok(card.classList.contains('is-revealed'));assert.equal(focused,1,'First touch reveals and focuses captions without navigating');
  link.dispatchEvent(pointer);const second=new Event('click',{bubbles:true,cancelable:true});second.detail=1;link.dispatchEvent(second);assert.equal(second.defaultPrevented,false,'Second touch can activate the source or image inspector');
- api.expand();assert.equal(workspace.parentElement.tagName,'DIALOG');assert.equal(workspace.classList.contains('is-rail'),false);assert.equal(header.parentElement,workspace);assert.equal(results.parentElement.className,'fa-body');assert.equal(rail.isConnected,false);assert.equal(card.querySelector('img'),photo,'Expansion preserves decoded image nodes');
- api.expand();assert.equal(workspace.parentElement,host);assert.equal(workspace.classList.contains('is-rail'),true);assert.deepEqual([...rail.children],[header,results]);assert.equal(card.querySelector('img'),photo,'Collapse restores the rail without rebuilding cards');
- const dialog=document.querySelector('dialog');api.expand();dialog.close();assert.equal(workspace.parentElement,host);assert.equal(workspace.classList.contains('is-rail'),true,'Native dialog close restores inline controls as well');
- await api.open({host,automatic:true,savedOnly:true,compactRail:false});assert.equal(workspace.classList.contains('is-rail'),false);assert.equal(workspace.classList.contains('fa-compact-cards'),false);assert.equal(header.parentElement,workspace);assert.equal(results.parentElement.className,'fa-body');const regular=api.fixtureCard(product);assert.equal(regular.querySelector('.fa-card-title').dataset.mayaType,'H4');assert.equal(regular.querySelector('.fa-card-copy'),null,'The ordinary gallery retains its original caption structure');
- await api.open({host,automatic:true,savedOnly:true,originalGrid:true});assert.equal(workspace.classList.contains('fa-original-grid'),true);assert.equal(workspace.classList.contains('fa-compact-cards'),false);assert.equal(workspace.classList.contains('is-rail'),false);
- const original=api.fixtureCard({...product,image:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>'});results.append(original);const originalPhoto=original.querySelector('img');assert.ok(originalPhoto);assert.equal(original.querySelector('.fa-card-copy .fa-card-title').dataset.mayaType,'P1');assert.equal(original.querySelector('.fa-card-copy .fa-card-caption').dataset.mayaType,'P1');assert.equal(original.querySelectorAll('.fa-card-actions [data-maya-shape="circle"]').length,2);assert.equal(original.querySelector('.fa-product-link').href,product.url,'Original overlay retains its source link');
- api.expand();assert.equal(workspace.classList.contains('fa-original-grid'),true);assert.equal(original.querySelector('img'),originalPhoto,'Original expansion retains its photograph');api.expand();assert.equal(original.querySelector('img'),originalPhoto);
+ api.expand();assert.equal(workspace.parentElement.tagName,'DIALOG');assert.equal(workspace.classList.contains('fa-original-grid'),true);assert.equal(header.parentElement,workspace);assert.equal(results.parentElement.className,'fa-body');assert.equal(card.querySelector('img'),photo,'Expansion preserves decoded image nodes');
+ api.expand();assert.equal(workspace.parentElement,host);assert.equal(workspace.classList.contains('fa-original-grid'),true);assert.equal(card.querySelector('img'),photo,'Collapse retains the current card image');
+ const dialog=document.querySelector('dialog');api.expand();dialog.close();assert.equal(workspace.parentElement,host);assert.equal(header.parentElement,workspace,'Native dialog close restores inline controls as well');
+ await api.open({host,automatic:true,savedOnly:true,originalGrid:false});assert.equal(workspace.classList.contains('fa-original-grid'),false);const regular=api.fixtureCard(product);assert.equal(regular.querySelector('.fa-card-title').dataset.mayaType,'H4');assert.equal(regular.querySelector('.fa-card-copy'),null,'The ordinary gallery retains its original caption structure');
+ await api.open({host,automatic:true,savedOnly:true,originalGrid:true});assert.equal(workspace.classList.contains('fa-original-grid'),true);
+ const original=api.fixtureCard({...product,image:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>'});results.append(original);const originalPhoto=original.querySelector('img');assert.ok(originalPhoto);assert.equal(original.querySelector('.fa-product-link').href,product.url,'Original overlay retains its source link');
  originalPhoto.dispatchEvent(new Event('error'));assert.equal(original.classList.contains('has-missing-photo'),true);assert.equal(original.querySelector('.fa-card-title').textContent,product.title,'Missing original photos retain the titled source link');
- await api.open({host,automatic:true,savedOnly:true,compactRail:true});assert.equal(workspace.classList.contains('fa-original-grid'),false);assert.equal(workspace.classList.contains('is-rail'),true);assert.equal(api.fixtureCard(product).querySelector('.fa-card-caption').dataset.mayaType,'P3','Backend 2 keeps its own caption role after an original-grid visit');
  assert.equal(requests,0,'Layout transitions and card reveal never call a provider');
- console.log('Fabric layouts: compact rail, original hover grid, isolated roles/actions, first-touch reveal, photo failure/retention and expansion/collapse passed.');
+ console.log('Fabric original grid: independent roles/actions, first-touch reveal, photo failure/retention and expansion/collapse passed.');
 };
 
 checks['frontend-card-content']=async function(){

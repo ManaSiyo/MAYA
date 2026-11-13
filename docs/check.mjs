@@ -18,6 +18,8 @@ for(const file of readdirSync('backend/server').filter(x=>/\.(?:mjs|js)$/.test(x
 const output=buildSite('a'.repeat(40));
 assert.ok(!existsSync(output+'/docs'));assert.ok(!existsSync(output+'/backend/server'));
 assert.ok(!existsSync(output+'/aesthetics/headshots'));assert.ok(!existsSync(output+'/backend/wr.html'));
+for(const path of ['backend/backend2.html','aesthetics/ui/backend-two.js','aesthetics/ui/backend-two-operation.js','aesthetics/ui/backend-two.css'])assert.ok(!existsSync(output+'/'+path),'Retired Backend 2 asset shipped: '+path);
+assert.ok(!config.hosting.rewrites.some(r=>r.source==='/backend2.html'),'Retired clone route returned');
 const docker=readFileSync('backend/server/Dockerfile','utf8');
 for(const match of docker.matchAll(/^COPY\s+(.+?)\s+\.\//gm))for(const file of match[1].split(/\s+/))assert.ok(existsSync('backend/server/'+file),'Docker source missing: '+file);
 const imported=[...readFileSync('backend/server/server.js','utf8').matchAll(/from\s+['"]\.\/([^'"]+)/g)].map(x=>x[1]);for(const file of imported)assert.ok(docker.includes(file),'Docker does not package '+file);
@@ -32,7 +34,7 @@ for(const folder of ['frontend','backend'])for(const file of readdirSync(output+
   const path=decodeURIComponent(match[1]);if(redirects.has(path))continue;assert.ok(existsSync(output+path),'Missing served asset '+path+' in '+file);
  }
 }
-for(const file of ['backend-two.js','backend-two-operation.js','original-operation.js','original-backend.js','clo-assets.js','drawer-gestures.js','fabric-assistant.js','presentation-runtime.js'])new vm.Script(readFileSync('docs/aesthetics/ui/'+file,'utf8'),{filename:file});
+for(const file of ['clo-preview-bridge.js','original-operation.js','operation-clo.js','original-backend.js','clo-assets.js','drawer-gestures.js','fabric-assistant.js','presentation-runtime.js'])new vm.Script(readFileSync('docs/aesthetics/ui/'+file,'utf8'),{filename:file});
 console.log('Packaging and syntax passed');
 // A separate process keeps provider fixtures and environment mutations isolated.
 const {checks}=await import('./check-runtime.mjs');

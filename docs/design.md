@@ -110,11 +110,10 @@ padding, trimmed one pixel in X/Y for the original Backend, with equal space abo
 and below. Shared grid rows keep garment/pattern
 frames and outer panels aligned before, during and after generation; raster
 images fit inside without resizing the frame. SVG retains its interactive canvas.
-The original pattern window switches Mark 1 → Pipeline, with a green dot pulsing only while running. SVG export lives in Settings. Pipeline contains Pipeline
+The original pattern window switches Mark 1 → CLO 3D → Pipeline, with a green dot pulsing only while running. SVG export lives in Settings. Pipeline contains Pipeline
 Live, retrieval details, book passages and the composed prompt, scrolling within
 the same frame. It stays open during pipeline updates and resets with the project
-or garment. The former separate Retrieval Trace section is removed only here;
-Backend 2 keeps its Pattern / CLO 3D / Pipeline layout. Fabrics belongs only in the
+or garment. The former separate Retrieval Trace section is removed. Fabrics belongs only in the
 original Brief, with four square fabric cards per row (two on phones), hover-only
 white Community captions and adjacent heart/X actions.
 The parent Brief owns vertical scrolling between screens, with section snap stops;
@@ -140,39 +139,21 @@ from code checks or fixtures. Record visual acceptance as pending until reviewed
 Regenerate authored role locations with `python3 docs/typography-usage.py` after
 markup changes. Counts are source locations, never invented live usage metrics.
 
-Backend 2 is the separate November 11 playground, not a replacement for Brief.
-Its image/pattern upper window retains 34/66 proportions at desktop/tablet (40/60
-on a phone for usable controls), with contained images and original garment pan.
-Full view only changes the displayed image, never the active garment's pattern
-input. Pattern, CLO 3D and Pipeline swap the right panel; green pulses only while
-the pattern engine is running. CLO keeps source-backed reference cards, filters,
-alteration details and per-admin selections inside the same right-panel frame.
-The bottom strip uses the same fabric cards/captions with horizontal scrolling.
-Bio, Submissions and Settings use the frontend's three circular filing tabs and
-shared Drawer material. Small-height windows may scroll for access; content never
-shrinks images by changing their aspect ratio. Shared favorites belongs to the
-whole backend, with a Glass heart immediately left of Global's X. Active hearts
-use the existing icon color. Aesthetic Control includes matching interactive
-snapshot/fabric/drawer samples. All collapsed Admin folds use Closed sections
-spacing, with wrappers contributing no extra vertical gap.
-
-Backend 2 compact experiment (owner requested November 11): remove outer
-operation and fabric panels, keep one Inner frame, and use 5px toolbar padding
-with 9px P3 controls locally. These size exceptions do not alter global Aesthetic
-Control defaults. Shared Inner/Drawer/Glass colors, materials and icons retain
-authority. Drawer order/default is Submissions (folder), Bio, Settings. Fabric
-strip/card dimensions are smaller to recover vertical and horizontal space.
-
-Backend 2 sourcing update (November 12): its fabric strip is a single horizontal
-rail with view tabs/tools first, followed by square edge-to-edge photographs.
-The controls scroll away with the photos. P1 titles/P3 source captions overlay
-photos on hover/focus/first touch; source-only failures stay readable. Smaller
-heart/X actions cluster at top right, preserving shared coarse-pointer targets.
-The strip is 112–152px so the upper image/pattern workspace receives more height.
-CLO uses bounded square photo cards with equivalent captions/actions and truthful
-missing-preview fallbacks. Its imagery must come from source evidence. The
-Backend 2 numeral uses 0.62em on the title baseline. Shared materials/fonts remain
-controlled centrally; the compact control-size exception remains local.
-Pipeline stages report real run/restored/error states; previews explicitly label
-sample transitions. Drawer gestures must originate on handles or empty edges,
+CLO is an optional panel in the current pattern frame. Its module uses the panel
+registry's create/update/active/reset/destroy lifecycle and owns no pattern or fabric
+state. Removing it removes its tab and returns to Mark 1. Saved research and private
+review state remain account/submission/garment-bound; opening a tab never starts a
+paid search. Square photos use shared Inner material and white Community-style
+hover/focus captions, with explicit source links and unknown-fact labels. First
+touch reveals details; a second tap or keyboard activation expands a healthy photo.
+Expansion uses the parent viewport's shared viewer so it is not clipped by the
+iframe. Source/origin/context validation and close-on-scope-change prevent stale
+inspection; image failure tries only evidenced alternatives, then shows a source
+link with Preview unavailable. Repeated reads retain healthy DOM images.
+Aesthetic Control has a working illustrated CLO sample inside the original Operation
+Room preview. It is explicitly a layout sample, not a generated asset photograph.
+Backend 2 and its compact fabric rail are deleted, including all live navigation,
+entry points, styles and scripts. The shared Submissions/Settings drawer, four-column
+fabric grid and original 34/66 pattern layout remain. All collapsed Admin folds use
+Closed sections spacing. Drawer gestures originate on handles or empty edges and
 never hijack card/fabric scrolling or interactive controls.

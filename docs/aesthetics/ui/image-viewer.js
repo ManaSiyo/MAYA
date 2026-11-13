@@ -134,7 +134,7 @@
     if(!source?.src)return;active?.close();const previous=document.activeElement;
     const dialog=document.createElement('dialog');dialog.className='maya-image-viewer';dialog.setAttribute('aria-label','Expanded image');
     const stage=document.createElement('div');stage.className='maya-image-stage';
-    const image=document.createElement('img');image.src=source.currentSrc||source.src;image.alt=source.alt;
+    const image=document.createElement('img');image.referrerPolicy=source.referrerPolicy||'';image.src=source.currentSrc||source.src;image.alt=source.alt;
     const lens=document.createElement('div');lens.className='maya-image-lens';lens.dataset.mayaPanel='inner';lens.hidden=true;lens.setAttribute('aria-hidden','true');
     const close=document.createElement('button');close.className='maya-icon-button maya-image-close';close.dataset.mayaShape='circle';close.dataset.mayaDismiss='';close.dataset.mayaType='P3';close.setAttribute('aria-label','Close expanded image');close.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';close.onclick=()=>dialog.close();
     stage.append(image,lens);dialog.append(stage,close);document.body.append(dialog);bind(image,{expand:()=>{},lens,inspect:true});

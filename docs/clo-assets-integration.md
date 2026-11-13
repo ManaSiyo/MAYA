@@ -6,18 +6,22 @@ Seven release endpoints were independently verified. A newly queued real submiss
 search saved two source-backed assets; purchases/downloads are never automatic.
 [Release evidence](https://github.com/ManaSiyo/MAYA/runs/131365347622).
 
+## Current UI migration — November 13
+
+CLO now belongs to the original Backend: Mark 1 → CLO 3D → Pipeline. The existing
+34/66 image/pattern layout and Submissions/Settings drawer stay intact. Backend 2,
+its compact rail and the old Plan B sourcing pane are deleted. The dated rollout
+above describes the existing server/queue, not verification of this UI migration.
+
 ## Delivery checklist
 
-1. **Done — verify Backend 2 deployment.** Both the initial `1af6666` push and
-   the newer `27d446ec40ce9d5cdaed9361e83f62fe66943c00` aesthetic/model push passed
-   Google Cloud Build, including seven live endpoint checks. The latter finished
-   around 9:02 PM Pacific November 11; independent `/release.json` and
-   `/api/healthz` reads matched it. Those newer aesthetics are live. Backend 2
-   has its own `/backend2.html` entry; CLO is now deployed there as well.
-2. **Done — integrate the right panel.** Backend 2 now has Pattern → CLO 3D →
-   Pipeline tabs. The image remains on the left and the fabric strip below. The
-   existing 34/66 desktop/tablet and 40/60 phone image/right-panel ratios remain.
-   Tab switching retains pattern state and never initiates a paid search.
+1. **Current Backend integration:** optional CLO panel, independent gallery/CSS,
+   shared parent image viewer and account/submission/garment/revision-bound cleanup.
+2. **Preview repair:** square photos retain their decoded image across saved reads,
+   reviews, filters and tab switches. Candidate failures/timeouts use only source
+   evidence alternatives; a missing photo keeps a truthful listing link. CI tests
+   default and changed aesthetics at phone/tablet/desktop widths. Owner visual
+   review follows deployment; no local browser or new paid search is used.
 3. **Done — implement CONNECT sourcing.** One server-side OpenAI Responses search
    uses the saved reference and CONNECT domain restriction. OpenAI orders up to
    ten source-backed garment references. Free/paid and editable-pattern filters,
@@ -54,8 +58,11 @@ search saved two source-backed assets; purchases/downloads are never automatic.
 `backend/server/digital-assets.mjs` owns sourcing, parsing, canonical input reads,
 research storage, durable execution claims, queue dispatch and HTTP routes.
 `docs/aesthetics/ui/clo-assets.js` owns the gallery, selection, filters and saved-only
-polling. Backend 2 mounts it through `backend-two-operation.js`; the older Plan B
-opens the same component. The legacy configurable `/api/admin/clo-search` proxy
+polling. `operation-clo.js` registers it with `MayaOperationPanels` in
+`original-operation.js`. `clo-preview-bridge.js` validates iframe/context messages
+and expands healthy photographs in the parent viewer. Unregistering the panel
+aborts requests, disposes images, closes its preview and restores Mark 1. No
+pattern/fabric state is stored by the CLO module. The legacy configurable `/api/admin/clo-search` proxy
 returns 410. Its arbitrary endpoint mapping and local tag-ranking fallback are
 retired, and the unsupported automatic-grading copy has been removed.
 
@@ -212,10 +219,9 @@ browser interactions and match usefulness still need owner review.
 
 The server upload path now prepares the job before returning the final image or
 summary upload acknowledgment; the browser ready request is a fallback. Large
-references up to the existing 25MiB limit are accepted. Compact Backend 2 keeps
-Inner materials, removes outer panels, uses 5px toolbar padding/9px toolbar text,
-and opens Submissions/Bio/Settings in the drawer. Default and changed shared
-materials remain covered by CI; no local browser has been launched.
+references up to the existing 25MiB limit are accepted. The current Backend keeps
+shared Inner materials and its existing toolbar/Drawer geometry. Default and changed
+shared materials remain covered by CI; no local browser has been launched.
 
 ### Verified rollout outcome
 
