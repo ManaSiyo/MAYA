@@ -512,6 +512,11 @@ try{
   const card=clo.locator('.clo-card').first(),box=await card.boundingBox();assert.ok(Math.abs(box.width-box.height)<2&&box.width<=220,'CLO preview photos stay square and bounded');
   const style=await card.locator('.clo-title').evaluate(e=>{const s=getComputedStyle(e);return {color:s.color,size:s.fontSize,lineHeight:s.lineHeight};});assert.equal(style.color,'rgb(255, 255, 255)');assert.equal(style.size,changed?'16px':'12px');assert.ok(Math.abs(parseFloat(style.lineHeight)/parseFloat(style.size)-1.35)<.01);
   await clo.locator('.clo-photo').first().focus();await clo.locator('.clo-photo').first().press('Enter');await page.locator('.maya-image-viewer').waitFor();await page.keyboard.press('Escape');await page.locator('.maya-image-viewer').waitFor({state:'detached'});
+  if(width===1440&&!changed){
+   const heart=card.locator('[data-clo-action="favorite"]');await heart.focus();await heart.press('Enter');await page.waitForFunction(()=>document.querySelector('#original-operation-clo-preview [data-clo-action="favorite"]').getAttribute('aria-pressed')==='true');
+   assert.equal(await heart.locator('svg path').evaluate(e=>getComputedStyle(e).fill===getComputedStyle(e).color),true,'Saved CLO favorite has a filled heart');
+   await clo.getByRole('combobox',{name:'Filter CLO assets'}).selectOption('favorites');assert.equal(await clo.locator('.clo-card').count(),1);await heart.focus();await heart.press('Enter');await page.waitForFunction(()=>document.querySelectorAll('#original-operation-clo-preview .clo-card').length===0);await clo.getByRole('combobox',{name:'Filter CLO assets'}).selectOption('all');assert.equal(await clo.locator('.clo-card').count(),1);
+  }
   await operationPreview.getByRole('button',{name:'Pipeline',exact:true}).click();assert.deepEqual(await previewBounds(),geometry);
  }
  await page.evaluate(()=>MayaTypographyControls.apply(MayaTypographyControls.defaults));

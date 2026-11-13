@@ -28,7 +28,8 @@ above describes the existing server/queue, not verification of this UI migration
    match reasons, alterations, source links and available commercial facts appear
    in the CLO tab. Fewer results and unknown facts are valid outcomes.
 4. **Done — retain private work.** Research survives reopening. Each admin's
-   selection and dismissed URLs are saved separately. Stale inputs, conflicting
+   favorites, selection and dismissed URLs are saved separately. Multiple favorite
+   snapshots survive later research refreshes; the Favorites filter restores them. Stale inputs, conflicting
    writes, unreadable records and deleted submissions cannot silently replace
    current work. Refresh is explicit and may incur another provider charge.
 5. **Done — implement submission automation.** After the saved image/summary writes, the server schedules work. As a fallback, the
@@ -57,7 +58,7 @@ above describes the existing server/queue, not verification of this UI migration
 
 `backend/server/digital-assets.mjs` owns sourcing, parsing, canonical input reads,
 research storage, durable execution claims, queue dispatch and HTTP routes.
-`docs/aesthetics/ui/clo-assets.js` owns the gallery, selection, filters and saved-only
+`docs/aesthetics/ui/clo-assets.js` owns the gallery, favorite toggles, filters and saved-only
 polling. `operation-clo.js` registers it with `MayaOperationPanels` in
 `original-operation.js`. `clo-preview-bridge.js` validates iframe/context messages
 and expands healthy photographs in the parent viewer. Unregistering the panel
@@ -87,7 +88,8 @@ Full view sources the complete submitted look. A dissected selection sources tha
 saved garment. Initial preparation and subsequent reads do not pay for model
 calls; the configured worker or explicit Find/Refresh performs the search.
 Background work survives the browser closing when the task queue is active.
-Tab navigation only reads stored results. Scope changes cancel interactive
+Tab navigation and revisiting a submission only read stored results; a fresh
+page restores the saved shortlist and favorites without a provider call. Scope changes cancel interactive
 requests and discard late responses; an uncertain attempt is not retried silently.
 
 ## Routes and stored data

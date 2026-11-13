@@ -24,3 +24,9 @@ html body :is(#operation-clo,#original-operation-clo-preview,.maya-clo-assets) .
 @media(pointer:fine){html body :is(#operation-clo,#original-operation-clo-preview,.maya-clo-assets) .clo-card-actions button{width:24px!important;height:24px!important;min-width:24px!important;min-height:24px!important;min-inline-size:24px!important;min-block-size:24px!important;padding:0!important}html body :is(#operation-clo,#original-operation-clo-preview,.maya-clo-assets) .clo-card-actions svg{width:14px!important;height:14px!important;inline-size:14px!important;block-size:14px!important;min-inline-size:14px!important;min-block-size:14px!important}}
 @media(hover:none){html body :is(#operation-clo,#original-operation-clo-preview,.maya-clo-assets) .clo-card-actions{opacity:1;pointer-events:auto}html body :is(#operation-clo,#original-operation-clo-preview,.maya-clo-assets) .clo-caption{max-height:calc(100% - 52px)}}
 @media(prefers-reduced-motion:reduce){.maya-clo-assets :is(.clo-caption,.clo-card-actions){transition:none!important}}
+
+/* A saved heart remains visible while captions and Hide stay hover-only. */
+html body .maya-clo-assets [data-clo-action="favorite"][aria-pressed="true"] svg path{fill:currentColor}
+html body .maya-clo-assets .clo-card.is-favorite .clo-card-actions{opacity:1}
+html body .maya-clo-assets .clo-card.is-favorite [data-clo-action="favorite"]{pointer-events:auto}
+@media(hover:hover){html body .maya-clo-assets .clo-card.is-favorite:not(:hover):not(:focus-within):not(.is-revealed) [data-clo-action="dismiss"]{opacity:0;pointer-events:none}}

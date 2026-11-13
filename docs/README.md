@@ -208,6 +208,19 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 13 — CLO favorites and submission retention:
+CLO hearts now toggle multiple saved favorites; Favorites filters the saved list,
+including references absent from a later search. Existing selected hearts migrate
+when the review has no favorites field. Research remains durable per submission
+and garment, and reviews retain their existing admin scope. Reopening uses saved
+reads, never another paid search. Fresh-instance, cross-submission and stale-account
+fixtures cover restoration. The preceding `223ca71` release was blocked at its
+phone preview height assertion (816px instead of 844px): the dense-page generic
+dialog cap overrode the image viewer. The viewer's specific layout rule now wins;
+CI retains the full-viewport assertion and adds favorite interaction coverage.
+The full Node20 code-only gate passes; deployment and owner visual acceptance
+remain separate.
+
 November 13 — one Backend, independent CLO preview:
 The current Brief's pattern window now has Mark 1 / CLO 3D / Pipeline. CLO mounts
 through an optional panel registry and owns its gallery, requests and cleanup;

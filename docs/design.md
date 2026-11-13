@@ -157,3 +157,10 @@ entry points, styles and scripts. The shared Submissions/Settings drawer, four-c
 fabric grid and original 34/66 pattern layout remain. All collapsed Admin folds use
 Closed sections spacing. Drawer gestures originate on handles or empty edges and
 never hijack card/fabric scrolling or interactive controls.
+
+CLO's heart toggles a durable favorite with a filled saved state. The Favorites
+filter shows all saved references for the current submission/garment, including
+ones absent from a refreshed shortlist. The existing private admin scope remains.
+Loaded research restores on revisiting a submission; navigation never starts a
+paid search. Hiding a result does not delete its favorite. Full-screen image
+inspection overrides the dense page's compact-dialog height cap.

@@ -133,16 +133,31 @@ export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetch
   try{return await schedule(id);}catch(e){if([404,409,410].includes(e.status))return {status:'waiting'};throw e;}
  }
  function reviewPath(user,id,gid){if(!user?.sub)throw problem('Sign in to Admin.',401);scope(id,gid);return 'submissions/'+id+'/digital-assets/reviews/'+encodeURIComponent(user.sub)+'/'+(gid?'garment-'+gid:'look')+'.json';}
- async function review(user,id,gid=''){const r=await record(reviewPath(user,id,gid),{selected:null,dismissed:[]});if(!Array.isArray(r.data.dismissed))throw problem('Saved CLO selections could not be read.',503);return {...r.data,generation:r.generation};}
+ async function review(user,id,gid=''){
+  const r=await record(reviewPath(user,id,gid),{selected:null,dismissed:[],favorites:[]});
+  // Older hearts represented one selected reference. Preserve that saved heart
+  // on read; an explicit empty favorites array must never re-import it.
+  const favorites=Object.hasOwn(r.data,'favorites')?r.data.favorites:r.data.selected&&cloListingURL(r.data.selected.url)===r.data.selected.url?[r.data.selected]:[];
+  if(!Array.isArray(r.data.dismissed)||!Array.isArray(favorites)||favorites.length>500||favorites.some(item=>!item||typeof item!=='object'||Array.isArray(item)||!item.url||cloListingURL(item.url)!==item.url)||new Set(favorites.map(item=>item.url)).size!==favorites.length)throw problem('Saved CLO selections could not be read. Existing work was kept.',503);
+  return {...r.data,favorites,generation:r.generation};
+ }
  async function view(user,id,gid=''){const state=await load(id,gid),saved=await review(user,id,gid);const {path,...publicState}=state;return {...publicState,review:saved};}
  async function saveReview(user,body){const id=body.submissionId,gid=body.garmentId||'',state=await load(id,gid),saved=await review(user,id,gid),url=cloListingURL(body.url);
-  if(String(body.generation)!==saved.generation||body.fingerprint!==state.fingerprint||state.stale)throw problem('CLO research changed. Reload before selecting.',409);
-  if(!['select','dismiss','clear','restore'].includes(body.action))throw problem('Choose a CLO action.');
-  const item=state.items.find(v=>v.url===url);if(['select','dismiss'].includes(body.action)&&!item)throw problem('Choose an asset from this shortlist.');
-  const next={selected:saved.selected,dismissed:saved.dismissed};
+  // Removing a known favorite does not approve changed research. It is safe on
+  // stale inputs, but still requires the exact saved review/research versions.
+  if(String(body.generation)!==saved.generation||body.fingerprint!==state.fingerprint||state.stale&&body.action!=='unfavorite')throw problem('CLO research changed. Reload before selecting.',409);
+  if(!['select','dismiss','clear','restore','favorite','unfavorite'].includes(body.action))throw problem('Choose a CLO action.');
+  const item=state.items.find(v=>v.url===url);if(['select','dismiss','favorite'].includes(body.action)&&!item)throw problem('Choose an asset from this shortlist.');
+  if(body.action==='unfavorite'&&!saved.favorites.some(item=>item.url===url))throw problem('Choose a saved CLO favorite.');
+  const next={selected:saved.selected,dismissed:saved.dismissed,favorites:saved.favorites};
   if(body.action==='select')next.selected={...item,fingerprint:state.fingerprint,selectedAt:now()};
   if(body.action==='clear')next.selected=null;
   if(body.action==='restore')next.dismissed=[];
+  if(body.action==='favorite'&&!next.favorites.some(value=>value.url===url)){
+   if(next.favorites.length>=500)throw problem('Remove a favorite before saving more CLO assets.',409);
+   next.favorites=[...next.favorites,{...item,fingerprint:state.fingerprint,favoritedAt:now()}];
+  }
+  if(body.action==='unfavorite'){next.favorites=next.favorites.filter(item=>item.url!==url);if(next.selected?.url===url)next.selected=null;}
   if(body.action==='dismiss'){if(next.dismissed.length>=500&&!next.dismissed.includes(url))throw problem('Restore dismissed assets before hiding more.',409);next.dismissed=[...new Set([...next.dismissed,url])];if(next.selected?.url===url)next.selected=null;}
   await put(id,reviewPath(user,id,gid),next,saved.generation);return view(user,id,gid);
  }

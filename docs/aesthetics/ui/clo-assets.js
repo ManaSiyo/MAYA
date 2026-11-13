@@ -3,14 +3,16 @@
  'use strict';
  const listing=value=>{try{const u=new URL(value);return u.protocol==='https:'&&u.hostname==='connect.clo-set.com'&&!u.username&&!u.password&&!u.port&&/^\/detail\/[a-f0-9]{28,40}$/.test(u.pathname)?u.href:'';}catch{return '';}};
  const photo=value=>{try{if(typeof value!=='string'||value.length>4096)return '';const u=new URL(value),host=u.hostname.toLowerCase().replace(/\.$/,'');return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&host.includes('.')&&!/^[\d.]+$|:|(?:^|\.)(?:localhost|local|internal|lan|home|onion)$/.test(host)?u.href:'';}catch{return '';}};
- if(!document.getElementById('maya-clo-assets-style')){const css=document.createElement('link');css.id='maya-clo-assets-style';css.rel='stylesheet';css.href='/aesthetics/ui/clo-assets.css?v=2';document.head.append(css);}
+ if(!document.getElementById('maya-clo-assets-style')){const css=document.createElement('link');css.id='maya-clo-assets-style';css.rel='stylesheet';css.href='/aesthetics/ui/clo-assets.css?v=3';document.head.append(css);}
  window.MayaCloAssets={create({host,getContext,getToken,fetchImpl=(...args)=>fetch(...args),openPreview=image=>window.MayaImageViewer?.open(image)}){
   let context=null,key='',state=null,serial=0,controller=null,poll=null,active=false,busy=false,loaded=false,filter='all',destroyed=false,previewRecord=null,previewClose=null;
   const cards=new Map();
+  const favorites=()=>Array.isArray(state?.review?.favorites)?state.review.favorites:state?.review?.selected?[state.review.selected]:[];
+  const isFavorite=url=>favorites().some(item=>item.url===url);
   const node=(tag,label,role='P3')=>{const el=document.createElement(tag);el.dataset.mayaType=role;if(label)el.textContent=label;return el;};
   const toolbar=node('div');toolbar.className='clo-toolbar';
   const search=node('button','Find assets');search.type='button';search.className='pill';
-  const filters=node('select');filters.dataset.mayaControl='field';filters.dataset.mayaPill='glass';filters.setAttribute('aria-label','Filter CLO assets');for(const [value,label]of [['all','All assets'],['free','Free'],['paid','Paid'],['editable','Editable patterns']]){const option=node('option',label);option.value=value;filters.append(option);}
+  const filters=node('select');filters.dataset.mayaControl='field';filters.dataset.mayaPill='glass';filters.setAttribute('aria-label','Filter CLO assets');for(const [value,label]of [['all','All assets'],['favorites','Favorites'],['free','Free'],['paid','Paid'],['editable','Editable patterns']]){const option=node('option',label);option.value=value;filters.append(option);}
   filters.onchange=()=>{filter=filters.value;render();};
   const restore=node('button','Restore hidden');restore.type='button';restore.className='pill';restore.hidden=true;
   toolbar.append(search,filters,restore);
@@ -67,15 +69,15 @@
     e.preventDefault();showPreview(record);
    };
    card.addEventListener('keydown',e=>{if(e.key==='Escape'){card.classList.remove('is-revealed');card.blur();}});
-   for(const action of ['select','dismiss']){
+   for(const action of ['favorite','dismiss']){
     const b=node('button');b.type='button';b.className='pill maya-icon-button';b.dataset.mayaShape='circle';b.dataset.cloAction=action;
     const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('fill','none');icon.setAttribute('stroke','currentColor');icon.setAttribute('aria-hidden','true');
-    const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',action==='select'?'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z':'M6 6l12 12M18 6L6 18');icon.append(path);
-    const label=node('span');label.className='clo-action-label';b.append(icon,label);b.onclick=()=>mutate(action,item.url);actions.append(b);
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',action==='favorite'?'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z':'M6 6l12 12M18 6L6 18');icon.append(path);
+    const label=node('span');label.className='clo-action-label';b.append(icon,label);b.onclick=()=>mutate(action==='favorite'?(isFavorite(item.url)?'unfavorite':'favorite'):action,item.url);actions.append(b);
    }
    card.append(button,caption,actions);return record;
   }
-  function updateCard(record,item){
+  function updateCard(record,item,loadPhoto=true){
    const {card,photo:button,caption,actions}=record,title=item.title||'CLO asset';card.setAttribute('aria-label',title);button.setAttribute('aria-label','Preview '+title);
    const metadata=JSON.stringify([title,item.priceType,item.price,item.currency,item.formats,item.match,item.alterations,item.patternStatus,item.physicalProduction,item.licenseTier,item.factsEvidence]);
    if(record.metadata!==metadata){
@@ -87,8 +89,9 @@
     details.append(node('p','Alterations: '+(item.alterations||'Review in CLO.')),node('p','Patterns: '+({editable:'Editable candidate reported',mesh:'Mesh reference',unknown:'Contents unknown'}[item.patternStatus]||'Contents unknown')),node('p','Physical production: '+({allowed:'Allowed according to listing',prohibited:'Not permitted by listing',unknown:'Permission unknown'}[item.physicalProduction]||'Permission unknown')));
     if(item.licenseTier)details.append(node('p','License: '+item.licenseTier));if(item.factsEvidence)details.append(node('p',item.factsEvidence));details.append(node('p','Based on listing search evidence. Inspect the file before pattern work.'));caption.append(details);record.metadata=metadata;
    }
-   for(const b of actions.children){const action=b.dataset.cloAction,label=action==='dismiss'?'Hide':state?.review?.selected?.url===item.url?'Selected':'Select';b.setAttribute('aria-label',label+' '+title);b.title=label;b.disabled=busy||state?.stale||label==='Selected';if(action==='select')b.setAttribute('aria-pressed',String(label==='Selected'));b.querySelector('.clo-action-label').textContent=label;}
-   if(record.image)record.image.alt=title;mountPhoto(record,item);
+   const saved=isFavorite(item.url),inShortlist=(state?.items||[]).some(i=>i.url===item.url);card.classList.toggle('is-favorite',saved);
+   for(const b of actions.children){const action=b.dataset.cloAction,label=action==='dismiss'?'Hide':saved?'Unfavorite':'Favorite';b.setAttribute('aria-label',label+' '+title);b.title=label;b.disabled=busy||!loaded||!!state?.stale&&!(action==='favorite'&&saved)||action==='dismiss'&&!inShortlist;if(action==='favorite')b.setAttribute('aria-pressed',String(saved));b.querySelector('.clo-action-label').textContent=label;}
+   if(record.image)record.image.alt=title;if(loadPhoto)mountPhoto(record,item);
   }
   function render(){
    if(destroyed)return;
@@ -98,12 +101,13 @@
    filters.disabled=busy;restore.hidden=!state?.review?.dismissed?.length;restore.disabled=busy||state?.stale;
    selected.replaceChildren();
    if(state?.review?.selected){const item=state.review.selected;selected.append(node('span','Selected reference: '),link(item.url,item.title));if(item.fingerprint!==state.fingerprint||state.stale)selected.append(node('span',' · Review for the changed garment'));const clear=node('button','Clear');clear.className='pill';clear.type='button';clear.disabled=busy||state.stale;clear.onclick=()=>mutate('clear');selected.append(clear);}
-   const dismissed=new Set(state?.review?.dismissed||[]),items=(state?.items||[]).filter(i=>listing(i.url)&&!dismissed.has(i.url)),keep=new Set(items.map(i=>i.url)),visible=[];
+   const dismissed=new Set(state?.review?.dismissed||[]),shortlist=(state?.items||[]).filter(i=>listing(i.url)),currentURLs=new Set(shortlist.map(i=>i.url));
+   const stored=favorites().filter(i=>listing(i.url)),items=[...shortlist,...stored.filter(i=>!currentURLs.has(i.url))],keep=new Set(items.map(i=>i.url)),visible=[];
    for(const [url,record]of cards)if(!keep.has(url)){disposeCard(record);cards.delete(url);}
-   for(const item of items){let record=cards.get(item.url);if(!record){record=makeCard(item);cards.set(item.url,record);}updateCard(record,item);if(filter==='all'||filter==='editable'&&item.patternStatus==='editable'||item.priceType===filter)visible.push(record.card);}
+   for(const item of items){const show=filter==='favorites'?isFavorite(item.url):currentURLs.has(item.url)&&!dismissed.has(item.url)&&(filter==='all'||filter==='editable'&&item.patternStatus==='editable'||item.priceType===filter);let record=cards.get(item.url);if(!record&&!show)continue;if(!record){record=makeCard(item);cards.set(item.url,record);}updateCard(record,item,show);if(show)visible.push(record.card);}
    const shown=new Set(visible);if(previewRecord&&!shown.has(previewRecord.card))closePreview();for(const child of [...gallery.children])if(!shown.has(child))child.remove();
    visible.forEach((card,index)=>{if(gallery.children[index]!==card)gallery.insertBefore(card,gallery.children[index]||null);});
-   if(!visible.length)gallery.append(node('p',state?.status==='complete'?'No matching assets in this view. Try another filter or refresh.':'Find digital garment references similar to this saved look.','P1'));
+   if(!visible.length)gallery.append(node('p',filter==='favorites'?'Favorite CLO assets to keep them with this submission.':state?.status==='complete'?'No matching assets in this view. Try another filter or refresh.':'Find digital garment references similar to this saved look.','P1'));
   }
   async function request(path,body,signal,token){const r=await fetchImpl('/api/admin/digital-assets/'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal});const j=await r.json();if(!r.ok)throw Error(j.error||'CLO assets are unavailable.');return j;}
   function schedulePoll(){clearTimeout(poll);if(active&&(state?.status==='running'||state?.automationReady&&state.status==='pending')&&Date.now()-(state.requestedAt||0)<180000)poll=setTimeout(()=>load(),4000);}
@@ -127,8 +131,8 @@
   async function mutate(action,url=''){
    if(destroyed)return;
    if(identity()!==key){update();return;}
-   if(busy||!loaded||state?.stale)return;clearTimeout(poll);const captured=identity(),ticket=++serial,token=getToken();controller?.abort();controller=new AbortController();busy=true;render();
-   try{const result=await request('review',{submissionId:context.submissionId,garmentId:context.garmentId||'',action,url,generation:state.review.generation,fingerprint:state.fingerprint},controller.signal,token);if(!current(ticket,captured))return;state=result;message(action==='select'?'CLO reference saved.':savedStatus());}
+   if(busy||!loaded||state?.stale&&action!=='unfavorite')return;clearTimeout(poll);const captured=identity(),ticket=++serial,token=getToken();controller?.abort();controller=new AbortController();busy=true;render();
+   try{const result=await request('review',{submissionId:context.submissionId,garmentId:context.garmentId||'',action,url,generation:state.review.generation,fingerprint:state.fingerprint},controller.signal,token);if(!current(ticket,captured))return;state=result;message(action==='favorite'?'Favorite saved for this submission.':action==='unfavorite'?'Favorite removed.':action==='select'?'CLO reference saved.':savedStatus());}
    catch(e){if(current(ticket,captured))message(e.message);}
    finally{if(current(ticket,captured)){busy=false;render();schedulePoll();}}
   }
