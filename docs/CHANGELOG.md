@@ -4,6 +4,14 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 13 — recover CLO listing previews and broaden matches:** resolve
+  missing photographs through CONNECT's public item metadata and bounded listing
+  Open Graph fallback. Repair persisted research and historical favorites without
+  another AI search; retain conflict/deletion barriers. Broaden discovery through
+  up to three searches in one Responses request, targeting ten useful construction
+  alternatives rather than one exact appearance match. The preceding `dfe9ed1`
+  release passed Google build `a3a7780e`.
+
 - **November 13 — fix visible legacy garments in CLO:** resolve the same
   saved-piece-N IDs and saved image variants used by the Brief, eliminating false
   “Choose a garment” errors without requiring Pattern Start. Preserve CLO/Pipeline

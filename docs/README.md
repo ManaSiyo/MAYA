@@ -208,6 +208,24 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 13 — CLO listing previews and broader discovery:
+The preceding `dfe9ed1` release passed Google build `a3a7780e`. Its source-only
+matches still lacked photographs because the gallery relied on search image
+results. CLO now resolves missing previews from CONNECT's own public item metadata,
+with bounded listing Open Graph fallback, and saves the recovered photographs.
+Existing research and historical favorites are repaired on reopen without another
+AI search, preserving submission/garment scope and generation-checked writes.
+Real public metadata returned the exact Victorian suit and hooded jacket from the
+owner's screenshots; the corresponding image hosts serve the actual thumbnails.
+New searches can broaden through three tool calls inside one Responses request,
+seeking ten useful construction alternatives and stating adaptations honestly.
+The catalog total is not a promise that every garment has ten matching assets.
+The full Node20 code-only release gate passed, including preview repair, saved
+favorites, public-request bounds and in-flight research races. CI retains the
+full-screen preview assertions using a source-only result and real metadata
+resolution. No local browser or paid provider call was used.
+
+
 November 13 — CLO legacy garment repair and centered workspace:
 The preceding `28129f9` release passed Google build `c8707412`. The new screenshot
 exposed an input mismatch: Brief/Fabrics/patterns assign legacy ID-less garments

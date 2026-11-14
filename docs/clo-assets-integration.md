@@ -18,8 +18,10 @@ above describes the existing server/queue, not verification of this UI migration
 1. **Current Backend integration:** optional CLO panel, independent gallery/CSS,
    shared parent image viewer and account/submission/garment/revision-bound cleanup.
 2. **Preview repair:** square photos retain their decoded image across saved reads,
-   reviews, filters and tab switches. Candidate failures/timeouts use only source
-   evidence alternatives; a missing photo keeps a truthful listing link. CI tests
+   reviews, filters and tab switches. Candidate failures/timeouts use source evidence alternatives; missing photos
+   are resolved from the official public item metadata and bounded listing
+   Open Graph fallback. Old saved results and historical favorites are repaired
+   on reopen without a paid search; unavailable sources retain a truthful link. CI tests
    default and changed aesthetics at phone/tablet/desktop widths. Owner visual
    review follows deployment; no local browser or new paid search is used.
 3. **Done — implement CONNECT sourcing.** One server-side OpenAI Responses search
@@ -58,6 +60,7 @@ above describes the existing server/queue, not verification of this UI migration
 
 `backend/server/digital-assets.mjs` owns sourcing, parsing, canonical input reads,
 research storage, durable execution claims, queue dispatch and HTTP routes.
+`backend/server/clo-preview.mjs` independently resolves public listing photographs;
 `docs/aesthetics/ui/clo-assets.js` owns the gallery, favorite toggles, filters and saved-only
 polling. `operation-clo.js` registers it with `MayaOperationPanels` in
 `original-operation.js`. `clo-preview-bridge.js` validates iframe/context messages
@@ -69,10 +72,20 @@ retired, and the unsupported automatic-grading copy has been removed.
 
 The implementation follows the existing Fabrics conventions but keeps digital
 assets separate from physical fabric sourcing. It uses one bounded Responses
-image/text web-search call, with `connect.clo-set.com` as the allowed domain.
+request with up to three image/text web-search tool calls, with `connect.clo-set.com`
+as the allowed domain. Searches broaden from garment type/silhouette to compatible
+construction bases until ten useful distinct alternatives are found or the search
+budget is exhausted. Missing images do not exclude a relevant listing.
 Only sourced `/detail/` URLs can become cards; model text cannot introduce an
 uncited listing or photograph. Model-selected order is retained without a custom
-server ranking formula. Free prices preserve numeric zero. Commercial facts
+server ranking formula. The preview resolver reads CONNECT
+`/api/Details/Items/{id}/context?isTempPage=false` on `connect.api.clo-set.com`,
+requiring the matching published item ID; it can also read listing Open Graph,
+Twitter or Product JSON-LD metadata. Fixed vendor hosts, bounded redirects, body
+limits, deadlines and a bounded public-URL cache keep this separate from private
+submission data. It never fetches garment references or follows arbitrary server
+URLs. Missing preview repairs save only sourced image metadata under the existing
+research/review generations; conflicts reread the winner instead of overwriting it. Free prices preserve numeric zero. Commercial facts
 require listing-evidence text; unknown formats, price, currency, pattern contents
 and physical-production permission remain unknown.
 [OpenAI web-search documentation](https://developers.openai.com/api/docs/guides/tools-web-search).

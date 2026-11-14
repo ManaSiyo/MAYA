@@ -1,4 +1,4 @@
-/* Private source-backed CLO shortlist. Opening and polling only read saved work. */
+/* Private source-backed CLO shortlist. Reopening repairs public previews without AI search. */
 (function(){
  'use strict';
  const listing=value=>{try{const u=new URL(value);return u.protocol==='https:'&&u.hostname==='connect.clo-set.com'&&!u.username&&!u.password&&!u.port&&/^\/detail\/[a-f0-9]{28,40}$/.test(u.pathname)?u.href:'';}catch{return '';}};
@@ -112,7 +112,7 @@
   }
   async function request(path,body,signal,token){const r=await fetchImpl('/api/admin/digital-assets/'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal});const j=await r.json();if(!r.ok)throw Error(j.error||'CLO assets are unavailable.');return j;}
   function schedulePoll(){clearTimeout(poll);if(active&&(state?.status==='running'||state?.automationReady&&state.status==='pending')&&Date.now()-(state.requestedAt||0)<180000)poll=setTimeout(()=>load(),4000);}
-  function savedStatus(){return state?.stale?'The garment changed. Refresh to find new matches.':state?.status==='running'?'Searching for CLO assets':state?.status==='pending'?state.automationReady?'Preparing CLO assets':'Choose Find assets to prepare this look.':state?.status==='failed'?'Search stopped. Saved results were kept. Refresh to retry.':state?.status==='complete'?'Up to 10 CONNECT references · '+(state.items||[]).length+' found'+((state.items||[]).some(i=>!photo(i.image)&&!photo(i.thumbnail)&&!(i.imageCandidates||[]).some(photo))?' · Refresh to search for missing previews':''):'CLO references for '+(context?.garmentId?'this garment':'the full look');}
+  function savedStatus(){return state?.stale?'The garment changed. Refresh to find new matches.':state?.status==='running'?'Searching for CLO assets':state?.status==='pending'?state.automationReady?'Preparing CLO assets':'Choose Find assets to prepare this look.':state?.status==='failed'?'Search stopped. Saved results were kept. Refresh to retry.':state?.status==='complete'?'Up to 10 CONNECT references · '+(state.items||[]).length+' found'+((state.items||[]).some(i=>!photo(i.image)&&!photo(i.thumbnail)&&!(i.imageCandidates||[]).some(photo))?' · Some listing previews are unavailable':''):'CLO references for '+(context?.garmentId?'this garment':'the full look');}
   async function load(){
    if(destroyed)return;
    if(!context?.submissionId||!getToken()){loaded=false;render();message('Open a saved submission to find CLO assets.');return;}
