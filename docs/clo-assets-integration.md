@@ -85,7 +85,10 @@ as listing-search evidence; it does not claim native-file inspection or a separa
 visual comparison of every candidate.
 
 Full view sources the complete submitted look. A dissected selection sources that
-saved garment. Initial preparation and subsequent reads do not pay for model
+saved garment directly, without Pattern Start or a successful pattern read. Legacy
+pieces without IDs resolve as saved-piece-N using their original array position;
+_image, front, and views.front use the same priority as the visible picker. Ambiguous
+IDs are rejected rather than selecting a different garment. Initial preparation and subsequent reads do not pay for model
 calls; the configured worker or explicit Find/Refresh performs the search.
 Background work survives the browser closing when the task queue is active.
 Tab navigation and revisiting a submission only read stored results; a fresh

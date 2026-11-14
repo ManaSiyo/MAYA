@@ -208,6 +208,18 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 13 — CLO legacy garment repair and centered workspace:
+The preceding `28129f9` release passed Google build `c8707412`. The new screenshot
+exposed an input mismatch: Brief/Fabrics/patterns assign legacy ID-less garments
+`saved-piece-N`, while CLO required a stored id. CLO now resolves the same original
+array index and saved image fields, rejecting ambiguous IDs. It uses the dissected
+image without a pattern run. Switching garments retains CLO/Pipeline; pattern
+input locks leave optional-panel controls alone. Controls, cards, captions, empty
+state and status are centered. CI now routes the real CLO service behind a legacy
+submission fixture and explicitly searches before any pattern exists. Saved
+favorites/results stay in their existing submission/garment stores. The full
+Node20 code-only gate passes; no local browser or live provider call was used.
+
 November 13 — CLO favorites and submission retention:
 CLO hearts now toggle multiple saved favorites; Favorites filters the saved list,
 including references absent from a later search. Existing selected hearts migrate

@@ -164,3 +164,11 @@ ones absent from a refreshed shortlist. The existing private admin scope remains
 Loaded research restores on revisiting a submission; navigation never starts a
 paid search. Hiding a result does not delete its favorite. Full-screen image
 inspection overrides the dense page's compact-dialog height cap.
+
+CLO's toolbar, selected-reference line, result tracks, captions and status are
+centered; an empty gallery centers its message vertically within the available
+frame. Square photos remain bounded at 220px. Changing the saved garment keeps
+CLO or Pipeline selected while replacing only garment-bound data. Pattern-run
+input locking excludes optional panels; the shared garment selector stays protected
+during generation. CLO reads the selected saved dissection directly, including
+legacy saved-piece-N identities and the same image-field priority as the picker.

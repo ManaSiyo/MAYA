@@ -126,7 +126,19 @@
  const install=installOperationContext;
  installOperationContext=function(...args){const result=install(...args);window.MayaOperationPanels.update();notifySettings();return result;};
  const pick=pickTest;
- pickTest=function(...args){const result=pick(...args);window.MayaOperationPanels.update();return result;};
+ pickTest=function(...args){
+  const before=inputScope(),selectedPanel=watchingPanel,selectedLogic=watchingLogic;
+  const result=pick(...args),after=inputScope();
+  // A successful garment change resets that garment's data, not the chosen
+  // workspace view. Keep CLO/Pipeline open without bypassing pending saves or
+  // the shared selector's protection while a pattern run owns its inputs.
+  const sameWorkspace=before&&after&&['account','submissionId','local','revision'].every(key=>before[key]===after[key]);
+  if(sameWorkspace&&before.garmentId!==after.garmentId&&after.garmentId&&ACTIVE_TEST===args[0]){
+   if(selectedPanel&&panels.has(selectedPanel))choose(selectedPanel,0);
+   else if(selectedLogic)choose('logic',0);
+  }
+  window.MayaOperationPanels.update();return result;
+ };
  $('drawer').addEventListener('change',notifySettings);
  const picker=$('test-picker');let pointerSelection=false;
  picker.addEventListener('pointerdown',()=>pointerSelection=true);

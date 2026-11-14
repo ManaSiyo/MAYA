@@ -2956,17 +2956,20 @@ checks['original-operation']=async function(){
  const {default:assert}=await import('node:assert/strict'),{parseHTML}=await import('linkedom'),vm=await import('node:vm'),{readFileSync}=await import('node:fs');
  const html=readFileSync('backend/operation-workspace.html','utf8'),adapter=readFileSync('docs/aesthetics/ui/original-operation.js','utf8');
  function fixture(search=''){
-  const {document,Event}=parseHTML(html);let traces=0,exports=0,invalidations=0,blurs=0,lastTraceSource='',identity=0;const messages=[];
-  const c=vm.createContext({document,Event,URLSearchParams,setTimeout,location:{search,origin:'https://maya.test'},EMBEDDED:true,PASSES:[{img:'saved-pattern',acc:{design:90,measure:85}}],TRACE:null,RD:null,ANSWER:null,RUNNING:false,
+  const {document,Event}=parseHTML(html);let traces=0,exports=0,invalidations=0,blurs=0,lastTraceSource='',identity=0,patternReads=0;const messages=[];
+  const c=vm.createContext({document,Event,URL,URLSearchParams,AbortController,setTimeout,clearTimeout,location:{search,origin:'https://maya.test'},EMBEDDED:true,PASSES:[{img:'saved-pattern',acc:{design:90,measure:85}}],TRACE:null,RD:null,ANSWER:null,RUNNING:false,
    _operationInputContext:{account:'owner',submissionId:'saved-submission',local:false},_operationRevision:3,FILES:{piece:{id:'coat'}},_traceTask:null,
-   getKey:()=> 'fixture-token',pickTest(name){c.FILES={piece:{id:name}};},parent:{postMessage(message){messages.push(message);}},MutationObserver:class{observe(){}},installOperationContext(){},operationContext:()=>({identity}),operationCurrent:context=>context.identity===identity,
-   $:id=>document.getElementById(id),cancelPatternTrace(){c._traceTask=null;},mountTrace(){},buildSVGfromGrounded(source){traces++;lastTraceSource=source||document.getElementById('img-grounded').getAttribute('src');c.TRACE={source:lastTraceSource,svg:'<svg/>'};},exportSVG(){exports++;},toast(){},setOperationRunning(value){c.RUNNING=value;},
-   invalidateOperation(){identity++;invalidations++;c.PASSES=[];c.setOperationRunning(false);c.applyView();}
+   RUN:0,_garmentSequence:0,_patternNavigation:0,_patternTimer:null,_lockedOperationInputs:[],ACTIVE_TEST:'coat',TESTS:{coat:{front:'coat-image',piece:{id:'coat'},saved:true},pants:{front:'pants-image',piece:{id:'pants'},saved:true}},
+   getKey:()=> 'fixture-token',parent:{postMessage(message){messages.push(message);}},MutationObserver:class{observe(){}},installOperationContext(){},operationContext:()=>({identity}),operationCurrent:context=>context.identity===identity,
+   $:id=>document.getElementById(id),cancelPatternTrace(){c._traceTask=null;},mountTrace(){},buildSVGfromGrounded(source){traces++;lastTraceSource=source||document.getElementById('img-grounded').getAttribute('src');c.TRACE={source:lastTraceSource,svg:'<svg/>'};},exportSVG(){exports++;},toast(){},
+   getMeasures:()=>({}),getQuality:()=> 'medium',patternDefaults:()=>({}),renderPatternHistory(){},pipelineReset(){},syncMeasures(){},selectOperationGarment(){},loadPatternWork(){patternReads++;return new Promise(()=>{});},fixtureInvalidated(){identity++;invalidations++;}
   });c.window=c;
   vm.runInContext(html.slice(html.indexOf("let CUR = {kind:'grounded'"),html.indexOf('/* ============================ test harness')).replace('let ANSWER = null;',''),c);
+  vm.runInContext(html.slice(html.indexOf('function setOperationRunning(on){'),html.indexOf('let _operationAccount=')).replace('function invalidateOperation(){','function invalidateOperation(){fixtureInvalidated();'),c);
+  vm.runInContext(html.slice(html.indexOf('function pickTest(name){'),html.indexOf('MayaImageViewer.panGarment')),c);
   document.getElementById('test-picker').blur=()=>blurs++;
   vm.runInContext(adapter,c);
-  return {c,document,Event,messages,counts:()=>({traces,exports,invalidations,blurs,lastTraceSource})};
+  return {c,document,Event,messages,counts:()=>({traces,exports,invalidations,blurs,lastTraceSource,patternReads})};
  }
  const {c,document,Event,messages,counts}=fixture(),stage=document.getElementById('stage'),logic=document.getElementById('original-operation-logic'),host=document.getElementById('pass-pills');
  const tab=label=>[...host.querySelectorAll('button')].find(b=>b.textContent===label),dot=()=>host.querySelector('.original-operation-pipeline-dot');
@@ -2995,7 +2998,9 @@ checks['original-operation']=async function(){
  const clo=document.getElementById('operation-clo');assert.equal(clo.parentElement,stage);assert.equal(clo.hidden,true);
  const beforeClo=counts().traces;tab('CLO 3D').click();assert.equal(clo.hidden,false);assert.equal(logic.hidden,true);assert.equal(vm.runInContext('CUR.kind',c),'clo');assert.equal(counts().traces,beforeClo,'Opening CLO never starts the pattern engine');
  assert.equal(lifecycle.at(-1)[0],'active');assert.equal(lifecycle.at(-1)[1],true);c.viewGrounded();assert.equal(clo.hidden,false,'Pattern progress cannot replace the active independent panel');
- c.pickTest('pants');assert.equal(mounts[0].getContext().garmentId,'pants');assert.deepEqual(lifecycle.at(-1),['update','pants'],'Garment updates reach CLO independently');
+ c.pickTest('pants');assert.equal(mounts[0].getContext().garmentId,'pants');assert.deepEqual(lifecycle.at(-1),['update','pants'],'Garment updates reach CLO independently');assert.equal(vm.runInContext('CUR.kind',c),'clo');assert.equal(clo.hidden,false,'Real garment invalidation preserves the chosen CLO view');assert.equal(document.getElementById('hero-img').src,'pants-image');
+ tab('Pipeline').click();c.pickTest('coat');assert.equal(vm.runInContext('CUR.kind',c),'logic');assert.equal(logic.hidden,false,'The chosen Pipeline view also survives a real garment change');
+ tab('CLO 3D').click();c.pickTest('pants');
  const closePreview=mounts[0].openPreview({src:'https://images.example.com/clo.jpg',alt:'Coat'});assert.equal(messages.at(-1).maya,'ops-clo-inspect');assert.equal(messages.at(-1).garmentId,'pants');const inspection=messages.at(-1).inspectionId;
  closePreview();assert.equal(messages.at(-1).maya,'ops-clo-inspect-close');assert.equal(messages.at(-1).inspectionId,inspection);
  c.invalidateOperation();assert.ok(lifecycle.some(event=>event[0]==='reset'));assert.equal(clo.hidden,true);
@@ -3003,7 +3008,21 @@ checks['original-operation']=async function(){
  assert.equal(c.MayaOperationPanels.register({id:'broken',label:'Broken',create(){throw Error('fixture mount failed');}}),false);assert.equal(tab('Broken'),undefined);assert.ok(tab('Mark 1'),'A failed optional mount cannot break the current pattern window');
  assert.doesNotMatch(html,/plan-b-view|backend-two|MayaLegacyCloAssets/);
 
- console.log('Current Operation Room: independent CLO mount/update/reset/unmount and scoped inspection; Pipeline, SVG, legacy marks and focus preserved.');
+ // Exercise the actual CLO client while the selected garment's pattern read
+ // stays unresolved. No Start call, drawing or saved-pattern result is needed.
+ const requests=[];c.fetch=async(url,options)=>{requests.push({url,method:options.method});return {ok:true,json:async()=>({status:'empty',items:[],generation:'0',fingerprint:'coat',searchReady:true,review:{generation:'0',favorites:[],dismissed:[]}})};};
+ vm.runInContext(readFileSync('docs/aesthetics/ui/clo-assets.js','utf8'),c);vm.runInContext(readFileSync('docs/aesthetics/ui/operation-clo.js','utf8'),c);
+ c.pickTest('coat');const readsBefore=counts().patternReads;tab('CLO 3D').click();for(let i=0;i<30;i++)await Promise.resolve();
+ const realClo=document.getElementById('operation-clo'),filter=realClo.querySelector('select'),searchButton=realClo.querySelector('.clo-toolbar button');assert.equal(searchButton.disabled,false);assert.equal(filter.disabled,false);assert.equal(requests.length,1);assert.match(requests[0].url,/digital-assets\/research/);
+ let optionalControl;c.MayaOperationPanels.register({id:'independent',label:'Independent fixture',create({host}){optionalControl=document.createElement('select');optionalControl.disabled=true;host.append(optionalControl);return {};}});
+ c.setOperationRunning(true);assert.equal(picker.disabled,true,'Pattern run retains ownership of the shared garment selector');assert.equal(filter.disabled,false,'Pattern run never locks CLO controls');
+ optionalControl.disabled=false;
+ c.pickTest('pants');assert.equal(c.originalOperationContext().garmentId,'coat','Independent CLO does not mutate an active pattern run’s selected garment');assert.equal(vm.runInContext('CUR.kind',c),'clo');
+ await searchButton.onclick();assert.equal(requests.length,2);assert.match(requests[1].url,/digital-assets\/search$/);assert.equal(c.RUNNING,true,'CLO searching does not change pattern run state');assert.equal(counts().patternReads,readsBefore,'CLO searching does not reload pattern work');
+ c.setOperationRunning(false);assert.equal(picker.disabled,false);assert.equal(filter.disabled,false);assert.equal(optionalControl.disabled,false,'Pattern unlock cannot restore stale disabled state over another feature’s completed work');
+ c.MayaOperationPanels.unregister('clo');c.MayaOperationPanels.unregister('independent');
+
+ console.log('Current Operation Room: real garment invalidation preserves CLO/Pipeline; CLO search works with pending pattern reads and running pattern locks; lifecycle, scoped inspection, SVG, marks and focus preserved.');
 };
 
 checks['studio-favorites-client']=async function(){
@@ -3098,6 +3117,25 @@ checks['clo-assets']=async function(){
  let resolve;provider=()=>new Promise(r=>resolve=r);state=await service.view(user,'test-sub');pending=await service.prepare('test-sub','',{force:true,generation:state.generation});const late=service.execute('test-sub','',pending.attempt);while(!resolve)await Promise.resolve();deleted=true;resolve(Response.json(output));await assert.rejects(late,/Deleted|deleted/);deleted=false;assert.notEqual((await service.load('test-sub')).status,'complete','Late results cannot complete after deletion');
  // A request that ignores abort is still bounded and leaves a durable failed claim.
  provider=()=>new Promise(()=>{});const short=createDigitalAssets({...deps,timeoutMs:20});state=await short.load('test-sub');now+=100000;pending=await short.prepare('test-sub','',{force:true,generation:state.generation});const keep=setTimeout(()=>{},200);await assert.rejects(short.execute('test-sub','',pending.attempt),/stopped/);clearTimeout(keep);assert.equal((await short.load('test-sub')).status,'failed');
+ // Legacy saved dissection photos are usable before a pattern exists or Start
+ // is pressed. Resolve the original index, including skipped preceding pieces.
+ const legacyPrefix='submissions/legacy-sub/',legacyJacket='data:image/png;base64,'+Buffer.from('cropped hooded shag jacket').toString('base64'),legacyPants='data:image/webp;base64,'+Buffer.from('dissected trousers').toString('base64');
+ seed(legacyPrefix+'submission.json',{openedBy:'owner@example.com'});seed(legacyPrefix+'summary.json',{fabric_preferences:'wool'});seed(legacyPrefix+'dream-garment.png',Buffer.from('full look'),'image/png');
+ const legacyPieces={fabric_type:'Wool',pieces:[{skip:true,name:'Skipped first piece',_image:'data:image/png;base64,YQ=='},{label:'Cropped hooded shag jacket',category:'jacket',front:legacyJacket},{name:'Trousers',views:{front:legacyPants}},{_virtual:true,name:'Full view',_image:'data:image/png;base64,YQ=='}]};seed(legacyPrefix+'pieces.json',legacyPieces);
+ const storedDissection=files.get(legacyPrefix+'pieces.json'),sourceReads=[];let legacyCalls=0;
+ const legacyDeps={...deps,read:async path=>{sourceReads.push(path);assert.ok(!path.includes('/patterns/'),'CLO never reads pattern generation/history');return deps.read(path);},fetchImpl:async(_url,options)=>{legacyCalls++;const body=JSON.parse(options.body),content=body.input[0].content;assert.equal(content.find(c=>c.type==='input_image').image_url,legacyJacket,'CLO uses the selected saved dissection photo, not the full-look image');const descriptor=JSON.parse(content.find(c=>c.type==='input_text').text);assert.equal(descriptor.garment.id,'saved-piece-1');assert.equal(descriptor.garment.name,'Cropped hooded shag jacket');assert.equal(descriptor.garment.fabric,'Wool');assert.equal(descriptor.scope,'garment');return Response.json(output);}};
+ const legacyService=createDigitalAssets(legacyDeps);assert.equal((await legacyService.snapshot('legacy-sub','saved-piece-1')).image,legacyJacket);assert.equal((await legacyService.snapshot('legacy-sub','saved-piece-2')).image,legacyPants);
+ for(const id of ['saved-piece-0','saved-piece-3','saved-piece-01'])await assert.rejects(legacyService.snapshot('legacy-sub',id),e=>e.status===409);
+ const legacyPending=await legacyService.prepare('legacy-sub','saved-piece-1');assert.equal(legacyCalls,0);await legacyService.execute('legacy-sub','saved-piece-1',legacyPending.attempt);assert.equal(legacyCalls,1);
+ let legacySaved=await legacyService.view(user,'legacy-sub','saved-piece-1');assert.equal(legacySaved.items.length,2);assert.equal((await legacyService.view(user,'legacy-sub','saved-piece-2')).items.length,0,'Adjacent garments keep separate research');
+ legacySaved=await legacyService.saveReview(user,{submissionId:'legacy-sub',garmentId:'saved-piece-1',action:'favorite',url:urls[0],generation:legacySaved.review.generation,fingerprint:legacySaved.fingerprint});
+ const legacyReopened=await createDigitalAssets(legacyDeps).view(user,'legacy-sub','saved-piece-1');assert.deepEqual(legacyReopened.items,legacySaved.items);assert.deepEqual(legacyReopened.review.favorites,legacySaved.review.favorites);assert.equal(legacyCalls,1,'Reopening a legacy garment preserves saved work without another search');assert.equal(files.get(legacyPrefix+'pieces.json'),storedDissection,'Compatibility reads never rewrite the saved dissection');assert.ok(files.has(legacyPrefix+'digital-assets/research/garment-saved-piece-1.json'));
+ // A synthesized index cannot alias an explicitly identified garment; duplicate
+ // explicit/fallback IDs stop safely instead of choosing the wrong photograph.
+ seed(legacyPrefix+'pieces.json',{pieces:[{id:'named-coat',_image:legacyJacket}]});await assert.rejects(legacyService.snapshot('legacy-sub','saved-piece-0'),e=>e.status===409);
+ seed(legacyPrefix+'pieces.json',{pieces:[{id:'saved-piece-1',_image:legacyJacket},{front:legacyPants}]});await assert.rejects(legacyService.snapshot('legacy-sub','saved-piece-1'),e=>e.status===503);
+ seed(legacyPrefix+'pieces.json',{pieces:[{id:'same',_image:legacyJacket},{id:'same',_image:legacyPants}]});await assert.rejects(legacyService.snapshot('legacy-sub','same'),e=>e.status===503);
+ seed(legacyPrefix+'pieces.json',{pieces:[{front:'https://arbitrary.example/private-image'}]});await assert.rejects(legacyService.snapshot('legacy-sub','saved-piece-0'),e=>e.status===409,'Legacy view compatibility still accepts only saved image data, never arbitrary server fetches');assert.equal(legacyCalls,1);
  const tasks=[];const config={queue:'projects/pro-maya/locations/us-west1/queues/clo-assets',origin:'https://maya-api-example.us-west1.run.app',email:'worker@example.com',audience:'https://maya-api-example.us-west1.run.app'};
  const queue=createCloQueue({config,token:async()=> 'fixture',fetchImpl:async(url,options)=>{tasks.push(JSON.parse(options.body).task);return new Response('',{status:409});}});assert.equal(queue.ready(),true);await queue.enqueue({submissionId:'test-sub',garmentId:'coat',attempt:'attempt'});await queue.enqueue({submissionId:'test-sub',garmentId:'coat',attempt:'attempt'});assert.equal(tasks[0].name,tasks[1].name);assert.equal(tasks[0].httpRequest.oidcToken.audience,config.origin);assert.match(tasks[0].httpRequest.url,/api\/tasks\/clo-assets$/);
  // Route authorization rejects clients before exposing research or scheduling another owner's submission.

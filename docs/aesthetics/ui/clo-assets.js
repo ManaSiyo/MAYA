@@ -3,7 +3,7 @@
  'use strict';
  const listing=value=>{try{const u=new URL(value);return u.protocol==='https:'&&u.hostname==='connect.clo-set.com'&&!u.username&&!u.password&&!u.port&&/^\/detail\/[a-f0-9]{28,40}$/.test(u.pathname)?u.href:'';}catch{return '';}};
  const photo=value=>{try{if(typeof value!=='string'||value.length>4096)return '';const u=new URL(value),host=u.hostname.toLowerCase().replace(/\.$/,'');return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&host.includes('.')&&!/^[\d.]+$|:|(?:^|\.)(?:localhost|local|internal|lan|home|onion)$/.test(host)?u.href:'';}catch{return '';}};
- if(!document.getElementById('maya-clo-assets-style')){const css=document.createElement('link');css.id='maya-clo-assets-style';css.rel='stylesheet';css.href='/aesthetics/ui/clo-assets.css?v=3';document.head.append(css);}
+ if(!document.getElementById('maya-clo-assets-style')){const css=document.createElement('link');css.id='maya-clo-assets-style';css.rel='stylesheet';css.href='/aesthetics/ui/clo-assets.css?v=4';document.head.append(css);}
  window.MayaCloAssets={create({host,getContext,getToken,fetchImpl=(...args)=>fetch(...args),openPreview=image=>window.MayaImageViewer?.open(image)}){
   let context=null,key='',state=null,serial=0,controller=null,poll=null,active=false,busy=false,loaded=false,filter='all',destroyed=false,previewRecord=null,previewClose=null;
   const cards=new Map();
@@ -107,7 +107,8 @@
    for(const item of items){const show=filter==='favorites'?isFavorite(item.url):currentURLs.has(item.url)&&!dismissed.has(item.url)&&(filter==='all'||filter==='editable'&&item.patternStatus==='editable'||item.priceType===filter);let record=cards.get(item.url);if(!record&&!show)continue;if(!record){record=makeCard(item);cards.set(item.url,record);}updateCard(record,item,show);if(show)visible.push(record.card);}
    const shown=new Set(visible);if(previewRecord&&!shown.has(previewRecord.card))closePreview();for(const child of [...gallery.children])if(!shown.has(child))child.remove();
    visible.forEach((card,index)=>{if(gallery.children[index]!==card)gallery.insertBefore(card,gallery.children[index]||null);});
-   if(!visible.length)gallery.append(node('p',filter==='favorites'?'Favorite CLO assets to keep them with this submission.':state?.status==='complete'?'No matching assets in this view. Try another filter or refresh.':'Find digital garment references similar to this saved look.','P1'));
+   gallery.classList.toggle('is-empty',!visible.length);
+   if(!visible.length){const empty=node('p',filter==='favorites'?'Favorite CLO assets to keep them with this submission.':state?.status==='complete'?'No matching assets in this view. Try another filter or refresh.':context?.garmentId?'Find CLO assets for the displayed garment.':'Find CLO assets for the saved full look.','P1');empty.className='clo-empty';gallery.append(empty);}
   }
   async function request(path,body,signal,token){const r=await fetchImpl('/api/admin/digital-assets/'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal});const j=await r.json();if(!r.ok)throw Error(j.error||'CLO assets are unavailable.');return j;}
   function schedulePoll(){clearTimeout(poll);if(active&&(state?.status==='running'||state?.automationReady&&state.status==='pending')&&Date.now()-(state.requestedAt||0)<180000)poll=setTimeout(()=>load(),4000);}
@@ -138,6 +139,6 @@
   }
   search.onclick=searchAssets;restore.onclick=()=>mutate('restore');
   function update(){if(destroyed)return false;const next=identity();if(next===key)return false;cancel();clearCards();key=next;context=getContext();state=null;loaded=false;search.onclick=searchAssets;render();message('Open a saved submission to find CLO assets.');if(active)void load();return true;}
-  return {update,setActive(value){if(destroyed)return;if(value&&!active){for(const record of cards.values())if(!record.healthy&&!record.image)record.imageKey=null;}active=value;const changed=update();if(active&&!changed){render();if(!loaded&&!busy)void load();}if(!active){clearTimeout(poll);poll=null;closePreview();}else schedulePoll();},reset(){if(destroyed)return;cancel();clearCards();key='';context=null;state=null;loaded=false;render();message('Open a saved submission to find CLO assets.');},destroy(){if(destroyed)return;destroyed=true;active=false;cancel();clearCards();host.replaceChildren();host.classList.remove('maya-clo-assets');}};
+  return {update,setActive(value){if(destroyed)return;if(value&&!active){for(const record of cards.values())if(!record.healthy&&!record.image)record.imageKey=null;}active=value;const changed=update();if(active&&!changed){render();if(!loaded&&!busy)void load();}if(!active){clearTimeout(poll);poll=null;closePreview();}else schedulePoll();},reset(){if(destroyed)return;active=false;cancel();clearCards();key='';context=null;state=null;loaded=false;render();message('Open a saved submission to find CLO assets.');},destroy(){if(destroyed)return;destroyed=true;active=false;cancel();clearCards();host.replaceChildren();host.classList.remove('maya-clo-assets');}};
  }};
 })();

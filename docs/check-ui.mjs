@@ -4,6 +4,7 @@ import {chromium,webkit} from 'playwright';
 import {readFileSync,existsSync} from 'node:fs';
 import {validDesign} from '../backend/server/design-config.mjs';
 import {createFabricSearch} from '../backend/server/fabrics.mjs';
+import {createDigitalAssets} from '../backend/server/digital-assets.mjs';
 import {resolve,extname} from 'node:path';
 const root=resolve(new URL('../',import.meta.url).pathname);
 const assets=existsSync(root+'/docs/aesthetics')?'/docs':'';
@@ -515,6 +516,7 @@ try{
   if(width===1440&&!changed){
    const heart=card.locator('[data-clo-action="favorite"]');await heart.focus();await heart.press('Enter');await page.waitForFunction(()=>document.querySelector('#original-operation-clo-preview [data-clo-action="favorite"]').getAttribute('aria-pressed')==='true');
    assert.equal(await heart.locator('svg path').evaluate(e=>getComputedStyle(e).fill===getComputedStyle(e).color),true,'Saved CLO favorite has a filled heart');
+   await page.mouse.move(0,0);await operationPreview.getByRole('button',{name:'CLO 3D',exact:true}).focus();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#original-operation-clo-preview .clo-card-actions')).opacity==='1'&&getComputedStyle(document.querySelector('#original-operation-clo-preview .clo-caption')).opacity==='0');
    await clo.getByRole('combobox',{name:'Filter CLO assets'}).selectOption('favorites');assert.equal(await clo.locator('.clo-card').count(),1);await heart.focus();await heart.press('Enter');await page.waitForFunction(()=>document.querySelectorAll('#original-operation-clo-preview .clo-card').length===0);await clo.getByRole('combobox',{name:'Filter CLO assets'}).selectOption('all');assert.equal(await clo.locator('.clo-card').count(),1);
   }
   await operationPreview.getByRole('button',{name:'Pipeline',exact:true}).click();assert.deepEqual(await previewBounds(),geometry);
@@ -539,29 +541,45 @@ try{
 // CI-only geometry and keyboard checks; local code-only verification never launches this.
 async function checkCloPreview(){
  for(const [width,height]of [[390,844],[768,1024],[1440,900]]){
-  const page=await open('/backend/backend.html',width,height);let reads=0,writes=0;
+  const page=await open('/backend/backend.html',width,height);let reads=0,searches=0,providerCalls=0,generation=0;
+  // Real saved-input lookup with a legacy ID-less garment. Only provider transport is fake.
+  const reference='data:image/jpeg;base64,'+readFileSync(root+assets+'/aesthetics/fabrics/thumbs/Midnight Velvet.jpg').toString('base64'),records=new Map(),prefix='submissions/clo-project/';
+  const seed=(path,data)=>records.set(path,{buf:Buffer.from(JSON.stringify(data)),generation:String(++generation)});
+  seed(prefix+'submission.json',{openedBy:'fixture@example.test'});seed(prefix+'summary.json',{});seed(prefix+'pieces.json',{pieces:[{name:'Coat',_image:reference,fabric:'Wool'}]});
+  const listing='https://connect.clo-set.com/detail/3001c20cd5d2481fa7f3357acc5ff44c';
+  const service=createDigitalAssets({read:async path=>records.has(path)?{ok:true,...records.get(path)}:{ok:false,status:404},write:async(path,buf,type,expected)=>{assert.equal(String(records.get(path)?.generation||'0'),expected);seed(path,JSON.parse(buf));return {generation:records.get(path).generation};},assertActive:async id=>assert.equal(id,'clo-project'),apiKey:()=> 'fixture',fetchImpl:async(url,options)=>{providerCalls++;const body=JSON.parse(options.body);assert.equal(body.input[0].content.find(c=>c.type==='input_image').image_url,reference,'CLO matches the saved dissected image before a pattern exists');return Response.json({status:'completed',output:[{type:'web_search_call',results:[{type:'image_result',source_website_url:listing,image_url:'https://maya.test/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',caption:'Saved jacket reference'}]},{type:'message',content:[{type:'output_text',text:JSON.stringify({items:[{url:listing,title:'Saved jacket reference',match:'Preview fixture only'}]})}]}]});}});
   await page.route('**/api/admin/patterns?*',route=>route.fulfill({json:{generation:'0',runs:[],settings:{}}}));
-  await page.route('**/api/admin/digital-assets/**',route=>{if(route.request().method()==='GET')reads++;else writes++;return route.fulfill({json:{status:'complete',items:[{url:'https://connect.clo-set.com/detail/3001c20cd5d2481fa7f3357acc5ff44c',title:'Saved jacket reference',image:'https://maya.test/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg',formats:[],price:null,priceType:'unknown',patternStatus:'unknown',physicalProduction:'unknown',match:'Preview fixture only',alterations:'Review length'}],fingerprint:'preview',generation:'1',searchReady:true,review:{selected:null,dismissed:[],generation:'0'}}});});
-  await page.evaluate(()=>{
+  await page.route('**/api/admin/digital-assets/**',async route=>{try{const url=new URL(route.request().url()),body=route.request().postDataJSON(),id=body?.submissionId||url.searchParams.get('submissionId'),gid=body?.garmentId||url.searchParams.get('garmentId')||'';assert.equal(id,'clo-project');assert.equal(gid,'saved-piece-0');if(url.pathname.endsWith('/search')){searches++;const pending=await service.prepare(id,gid);await service.execute(id,gid,pending.attempt);}else if(url.pathname.endsWith('/review'))return route.fulfill({json:await service.saveReview({sub:'clo-owner'},body)});else reads++;return route.fulfill({json:await service.view({sub:'clo-owner'},id,gid)});}catch(error){return route.fulfill({status:error.status||503,json:{error:error.message}});}});
+  await page.evaluate(photo=>{
    localStorage.setItem('maya_admin_tok','fixture.'+btoa(JSON.stringify({sub:'clo-owner',exp:Math.floor(Date.now()/1000)+3600}))+'.fixture');
    document.getElementById('upload-gate').style.display='none';
-   const photo='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400"><rect width="900" height="400" fill="gray"/></svg>');
-   const pieces=[{id:'coat',name:'Coat',_image:photo,fabric:'Wool'}];window._openedSubmission={id:'clo-project'};window._currentSnap={lastSummary:{}};window._dissectTarget={hero:photo,card:{_dissection:{pieces}}};_publishSavedOperations({pieces});goToScreen(1);
-  });
+   const pieces=[{name:'Coat',_image:photo,fabric:'Wool'}];window._openedSubmission={id:'clo-project'};window._currentSnap={lastSummary:{}};window._dissectTarget={hero:photo,card:{_dissection:{pieces}}};_publishSavedOperations({pieces});goToScreen(1);
+  },reference);
   const frame=page.frames().find(f=>f.url().includes('operation-workspace.html'));
-  await frame.waitForFunction(()=>window.originalOperationContext?.()?.submissionId==='clo-project'&&window.originalOperationContext?.()?.garmentId==='coat');
+  await frame.waitForFunction(()=>window.originalOperationContext?.()?.submissionId==='clo-project'&&window.originalOperationContext?.()?.garmentId==='saved-piece-0');
   const stageBounds=()=>frame.locator('#stage').evaluate(e=>{const r=e.getBoundingClientRect();return {width:r.width,height:r.height};});
   for(const changed of [false,true]){
    for(const target of [page,frame])await target.evaluate(changed=>{const d=structuredClone(MayaTypographyControls.defaults);if(changed){d.inner.paddingX=19;d.inner.paddingY=13;d.inner.background='blue';d.inner.fill=65;d.type.P1.size=16;d.type.P3.size=14;d.pillX=18;d.pillY=9;}MayaTypographyControls.apply(d);},changed);
    await frame.getByRole('tab',{name:'Mark 1',exact:true}).click();const before=await stageBounds();
    await frame.getByRole('tab',{name:'CLO 3D',exact:true}).click();
    const clo=frame.locator('#operation-clo'),card=clo.locator('.clo-card').first(),photo=card.locator('.clo-photo');
+   if(!changed){
+    assert.equal(await frame.evaluate(()=>PASSES.length),0,'CLO starts before any pattern is generated');
+    await clo.getByRole('button',{name:'Find assets',exact:true}).waitFor();
+    const centered=await clo.locator('.clo-empty').evaluate(e=>{const r=e.getBoundingClientRect(),p=e.parentNode.getBoundingClientRect();return Math.abs(r.x+r.width/2-p.x-p.width/2)<2&&Math.abs(r.y+r.height/2-p.y-p.height/2)<2;});assert.ok(centered,'Empty CLO message is centered in its available window');
+    await clo.getByRole('button',{name:'Find assets',exact:true}).click();
+   }
+
    await photo.locator('img').evaluate(img=>img.decode());await frame.waitForFunction(()=>!document.querySelector('#operation-clo .clo-photo').disabled);
    assert.deepEqual(await stageBounds(),before,'CLO does not resize the original pattern frame');
    assert.equal(await frame.locator('#original-operation-logic').isVisible(),false);
    const layout=await clo.evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),p=e.parentNode.getBoundingClientRect(),c=e.querySelector('.clo-card').getBoundingClientRect(),caption=getComputedStyle(e.querySelector('.clo-title')),image=getComputedStyle(e.querySelector('.clo-photo'));return {contained:r.left>=p.left-1&&r.right<=p.right+1&&r.top>=p.top-1&&r.bottom<=p.bottom+1,card:[c.width,c.height],pad:[parseFloat(s.paddingLeft),parseFloat(s.paddingTop)],color:caption.color,size:caption.fontSize,line:caption.lineHeight,fit:image.borderRadius};});
    assert.ok(layout.contained);assert.ok(layout.card[0]>0&&layout.card[0]<=220&&Math.abs(layout.card[0]-layout.card[1])<2,'CLO cards use bounded square photos');assert.equal(layout.color,'rgb(255, 255, 255)');assert.equal(layout.size,changed?'16px':'12px');assert.ok(Math.abs(parseFloat(layout.line)/parseFloat(layout.size)-1.35)<.01);
    const inner=await frame.evaluate(()=>MayaTypographyControls.defaults.inner);assert.deepEqual(layout.pad,changed?[19,13]:[inner.paddingX,inner.paddingY]);
+   assert.ok(await card.evaluate(e=>{const r=e.getBoundingClientRect(),p=e.parentNode.getBoundingClientRect();return Math.abs(r.x+r.width/2-p.x-p.width/2)<2;}),'A single CLO reference is centered');
+   assert.equal(await clo.locator('.clo-toolbar').evaluate(e=>getComputedStyle(e).justifyContent),'center');assert.equal(await clo.locator('.clo-status').evaluate(e=>getComputedStyle(e).textAlign),'center');
+   await frame.evaluate(()=>setOperationRunning(true));assert.equal(await clo.getByRole('combobox',{name:'Filter CLO assets'}).isEnabled(),true,'Pattern activity does not lock CLO controls');await frame.evaluate(()=>setOperationRunning(false));
+
    await page.mouse.move(0,0);await frame.locator('#original-operation-tab-clo-0').focus();await frame.waitForFunction(()=>getComputedStyle(document.querySelector('#operation-clo .clo-caption')).opacity==='0');
    await photo.focus();await frame.waitForFunction(()=>getComputedStyle(document.querySelector('#operation-clo .clo-caption')).opacity==='1');await photo.press('Enter');const viewer=page.locator('.maya-image-viewer');await viewer.waitFor();await viewer.locator('img').evaluate(img=>img.decode());assert.equal(await viewer.locator('img').evaluate(img=>img.referrerPolicy),'no-referrer','Expansion preserves the thumbnail request policy');const expanded=await viewer.boundingBox();assert.equal(expanded.width,width);assert.equal(expanded.height,height,'Expanded CLO photograph fills the parent viewport');assert.equal(await frame.locator('.maya-image-viewer').count(),0);
    await page.keyboard.press('Escape');await viewer.waitFor({state:'detached'});
@@ -569,7 +587,7 @@ async function checkCloPreview(){
    await frame.getByRole('tab',{name:'Pipeline',exact:true}).click();assert.equal(await clo.isVisible(),false);assert.equal(await frame.locator('#original-operation-logic').isVisible(),true);assert.deepEqual(await stageBounds(),before);
    await frame.getByRole('tab',{name:'CLO 3D',exact:true}).click();assert.equal(await frame.evaluate(()=>fixtureCloPhoto===document.querySelector('#operation-clo .clo-photo img')),true,'Returning to CLO retains its loaded photograph');
   }
-  assert.equal(reads,1,'Opening and tab switching reuse the saved shortlist');assert.equal(writes,0,'Viewing CLO never starts paid research');
+  assert.equal(reads,1,'Opening and tab switching reuse the saved shortlist');assert.equal(searches,1);assert.equal(providerCalls,1,'Only explicit Find assets performs the independent CLO search');assert.equal(await frame.evaluate(()=>PASSES.length),0,'CLO sourcing never generates a pattern');
   await frame.locator('#operation-clo .clo-photo').first().focus();await frame.locator('#operation-clo .clo-photo').first().press('Enter');await page.locator('.maya-image-viewer').waitFor();
   await frame.evaluate(()=>MayaOperationPanels.unregister('clo'));await page.locator('.maya-image-viewer').waitFor({state:'detached'});assert.equal(await frame.getByRole('tab',{name:'CLO 3D',exact:true}).count(),0);assert.equal(await frame.evaluate(()=>CUR.kind),'grounded');assert.ok(await frame.getByRole('tab',{name:'Pipeline',exact:true}).isVisible(),'Removing CLO leaves the original pattern controls intact');
   assert.deepEqual(page.errors,[]);await page.close();

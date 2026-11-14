@@ -64,8 +64,21 @@ export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetch
   let image='',garment={};
   if(garmentId){const saved=await record('submissions/'+id+'/pieces.json',null);const pieces=saved.data?.pieces;
    if(!Array.isArray(pieces))throw problem('Save the dissection before sourcing this garment.',409);
-   const matches=pieces.filter(p=>p?.id===garmentId&&!p.skip&&!p._virtual);if(matches.length!==1)throw problem('Choose a garment from the saved dissection.',409);const p=matches[0];
-   image=p._image;garment={id:p.id,name:text(p.name||p.label,100),category:text(p.category,100),fabric:text(p.fabric,180)};
+   // The Brief and pattern/fabric stores assign ID-less legacy pieces their
+   // original array index. Resolve the same ID from saved inputs, never from a
+   // client-supplied image or from pattern-generation state. Keep the index
+   // before filtering skipped/virtual pieces so older research keys stay stable.
+   const ids=new Set(),normalized=[];
+   for(const [index,p]of pieces.entries()){
+    if(!p||typeof p!=='object'||Array.isArray(p))throw problem('Saved dissection could not be read.',503);
+    if(p.skip||p._virtual)continue;
+    const id=p.id||'saved-piece-'+index;
+    if(typeof id!=='string'||!PIECE.test(id)||ids.has(id))throw problem('Saved dissection has ambiguous garment IDs. Existing work was kept.',503);
+    ids.add(id);normalized.push({piece:p,id,index});
+   }
+   const match=normalized.find(p=>p.id===garmentId);if(!match)throw problem('Choose a garment from the saved dissection.',409);
+   const {piece:p,id:resolvedId,index}=match;
+   image=p._image||p.front||p.views?.front;garment={id:resolvedId,name:text(p.name||p.label||'Item '+(index+1),100),category:text(p.category,100),fabric:text(p.fabric||saved.data.fabric_type,180)};
   }else{
    for(const name of ['dream-garment.png','dream-garment.jpg','dream-garment.jpeg']){const r=await read('submissions/'+id+'/'+name);if(!r.ok){if(r.status===404)continue;throw problem('Submission image is unavailable.',503);}if(r.buf.length>MAX_IMAGE_BYTES)throw problem('Use a submission reference at or below 25 MB.',413);image='data:image/'+(name.endsWith('.png')?'png':'jpeg')+';base64,'+r.buf.toString('base64');break;}
   }

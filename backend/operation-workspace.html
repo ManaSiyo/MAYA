@@ -619,7 +619,7 @@ function syncMeasures(){const panel=$('standalone-measurements');if(panel)panel.
 function setOperationRunning(on){
   if(on){_runMeasures=getMeasures();_runQuality=getQuality();}
   RUNNING=on;$('live')?.classList.toggle('is-running',!!on);
-  if(on){_lockedOperationInputs=[...document.querySelectorAll('input,select,textarea,[data-q],#logic-save-btn,#logic-reset-btn,#drawer button:not(.drawer-burger)')].map(el=>[el,el.disabled]);_lockedOperationInputs.forEach(([el])=>el.disabled=true);}
+  if(on){_lockedOperationInputs=[...document.querySelectorAll('input,select,textarea,[data-q],#logic-save-btn,#logic-reset-btn,#drawer button:not(.drawer-burger)')].filter(el=>!el.closest('.original-operation-extension')).map(el=>[el,el.disabled]);_lockedOperationInputs.forEach(([el])=>el.disabled=true);}
   else{_lockedOperationInputs.forEach(([el,disabled])=>el.disabled=disabled);_lockedOperationInputs=[];_runMeasures=null;_runQuality=null;}
 }
 function invalidateOperation(){
@@ -1927,8 +1927,8 @@ function refreshKbStatus(){
 }
 </script>
 <script>pipelineReset('Choose a saved garment.');</script>
-<script src="/aesthetics/ui/clo-assets.js?v=4"></script>
-<script src="/aesthetics/ui/original-operation.js?v=4"></script>
+<script src="/aesthetics/ui/clo-assets.js?v=5"></script>
+<script src="/aesthetics/ui/original-operation.js?v=5"></script>
 <script src="/aesthetics/ui/operation-clo.js?v=1"></script>
 </body>
 </html>

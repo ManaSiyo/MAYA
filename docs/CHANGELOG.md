@@ -4,6 +4,14 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 13 — fix visible legacy garments in CLO:** resolve the same
+  saved-piece-N IDs and saved image variants used by the Brief, eliminating false
+  “Choose a garment” errors without requiring Pattern Start. Preserve CLO/Pipeline
+  on garment changes and exclude optional-panel fields from pattern input locking.
+  Center CLO content and add a CI fixture using real saved-input lookup and an
+  explicit CLO search before any pattern is generated. The previous favorites
+  release `28129f9` passed Google deployment build `c8707412`.
+
 - **November 13 — CLO favorites and preview release correction:** replace the
   single-selection heart with multiple durable favorite snapshots and a Favorites
   filter, preserving existing selections and saved results per submission/garment.
