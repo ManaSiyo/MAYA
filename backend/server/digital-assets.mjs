@@ -3,6 +3,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {TEXT_MODEL} from './model-config.mjs';
 import {sourceURL} from './fabrics.mjs';
 import {createCloPreviewResolver} from './clo-preview.mjs';
+import {createCloCatalog,cloCatalogQueries} from './clo-catalog.mjs';
 const hash=v=>createHash('sha256').update(v).digest('hex');
 const text=(v,n=1000)=>String(v??'').replace(/\s+/g,' ').trim().slice(0,n);
 const array=v=>Array.isArray(v)?v:[];
@@ -54,8 +55,11 @@ export function cloResults(response){
  }
  return items;
 }
-export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetchImpl=fetch,model=TEXT_MODEL,now=Date.now,timeoutMs=60000,queue=null,previewResolver}={}){
+export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetchImpl=fetch,model=TEXT_MODEL,now=Date.now,timeoutMs=60000,queue=null,previewResolver,catalog}={}){
  const previews=previewResolver||createCloPreviewResolver({fetchImpl,now});
+ const catalogSearch=catalog||createCloCatalog({fetchImpl,now});
+ const combineItems=(first,second)=>{const seen=new Set();return [...first,...second].filter(item=>{const url=cloListingURL(item?.url);if(!url||seen.has(url))return false;seen.add(url);return true;}).slice(0,10).map((item,index)=>item.rank===index+1?item:{...item,rank:index+1});};
+ async function findCatalog(input,signal){try{return await catalogSearch.search(input,{signal});}catch{return [];}}
  const missingPreview=item=>![item.image,item.thumbnail,...array(item.imageCandidates)].some(sourceURL);
  async function hydratePreviews(items,signal){
   try{const result=await previews.hydrate(items,{signal});return Array.isArray(result)&&result.length===items.length?result:items;}catch{return items;}
@@ -97,7 +101,7 @@ export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetch
   if(!Array.isArray(saved.data.items)||!['empty','pending','running','complete','failed'].includes(saved.data.status))throw problem('Saved CLO research could not be read.',503);
   return {...saved.data,generation:saved.generation,path};
  }
- async function load(id,gid=''){const input=await snapshot(id,gid),state=await research(id,gid);return {...state,stale:!!state.fingerprint&&(state.fingerprint!==input.fingerprint||state.items.length>0&&(state.itemsFingerprint||state.fingerprint)!==input.fingerprint),automationReady:!!queue?.ready(),searchReady:!!apiKey()};}
+ async function load(id,gid='',input){input=input||await snapshot(id,gid);const state=await research(id,gid);return {...state,stale:!!state.fingerprint&&(state.fingerprint!==input.fingerprint||state.items.length>0&&(state.itemsFingerprint||state.fingerprint)!==input.fingerprint),automationReady:!!queue?.ready(),searchReady:!!apiKey()||cloCatalogQueries(input).length>0};}
  async function prepare(id,gid='',{force=false,generation}={}){
   const input=await snapshot(id,gid),state=await research(id,gid);
   if(force&&String(generation)!==state.generation)throw problem('CLO research changed. Reload before refreshing.',409);
@@ -110,11 +114,19 @@ export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetch
   const input=await snapshot(id,gid),state=await research(id,gid);
   if(state.attempt!==attempt||state.status!=='pending')return state;
   if(state.fingerprint!==input.fingerprint)throw problem('Submission changed. Refresh CLO research.',409);
-  if(!apiKey())throw problem('CLO search is unavailable.',503);
   const claim={...state,status:'running',startedAt:now()};delete claim.path;delete claim.generation;
   let running;try{running=await put(id,state.path,claim,state.generation);}catch(e){if(e.status===409)return research(id,gid);throw e;}
   const signal=deadline(parent,timeoutMs);
   try{
+   // A known garment can be sourced directly from the same public catalog used
+   // by CONNECT's storefront. This avoids waiting for AI to rediscover links.
+   const alternatives=await findCatalog(input,signal);
+   if(alternatives.length>=10||alternatives.length&&!apiKey()){
+    const items=await hydratePreviews(combineItems([],alternatives),parent);
+    if((await snapshot(id,gid)).fingerprint!==input.fingerprint)throw problem('Submission changed. Refresh CLO research.',409);
+    return await put(id,state.path,{...claim,status:'complete',items,itemsFingerprint:input.fingerprint,updatedAt:now(),catalogVersion:1,source:'connect_catalog'},running.generation);
+   }
+   if(!apiKey())throw problem('CLO search is unavailable.',503);
    const r=await bounded(fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+apiKey(),'Content-Type':'application/json'},body:JSON.stringify(cloSearchBody(input,model)),signal}),signal);
    if(!r.ok){
     // Internal diagnostics contain only HTTP status and a bounded machine code;
@@ -130,7 +142,7 @@ export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetch
    const response=JSON.parse(raw),sourced=cloResults(response);signal.throwIfAborted();
    // Listing metadata is a separate bounded, unpaid preview read. A missing
    // photograph must never discard successful research or trigger another AI call.
-   const items=await hydratePreviews(sourced,parent);
+   const items=await hydratePreviews(combineItems(sourced,alternatives),parent);
    if((await snapshot(id,gid)).fingerprint!==input.fingerprint)throw problem('Submission changed. Refresh CLO research.',409);
    return await put(id,state.path,{...claim,status:'complete',items,itemsFingerprint:input.fingerprint,updatedAt:now(),responseId:text(response.id,150)},running.generation);
   }catch(e){
@@ -164,20 +176,27 @@ export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetch
   return {...r.data,favorites,generation:r.generation};
  }
  async function view(user,id,gid='',{signal}={}){
-  let state=await load(id,gid),saved=await review(user,id,gid);
+  const input=await snapshot(id,gid);
+  let state=await load(id,gid,input),saved=await review(user,id,gid);
+  const expand=state.status==='complete'&&!state.stale&&state.items.length<10&&cloCatalogQueries(input).length>0;
+  // Expand legacy one-result lists through unpaid public catalog reads. Keep the
+  // original image-matched choice first and every private favorite untouched.
+  const candidates=expand?await findCatalog(input,signal):[];
+  const shortlist=candidates.length?combineItems(state.items,candidates):state.items;
   // Repair old source-only cards on reopen, including favorites no longer in the
   // shortlist. Only public listing URLs reach the metadata resolver, never the
   // saved garment image, admin identity, preferences or measurements.
-  const originals=[...state.items,...saved.favorites,...(saved.selected?[saved.selected]:[])];
+  const originals=[...shortlist,...saved.favorites,...(saved.selected?[saved.selected]:[])];
   const resolving=originals.some(missingPreview),enriched=await hydratePreviews(originals,signal);
-  const items=enriched.slice(0,state.items.length),favorites=enriched.slice(state.items.length,state.items.length+saved.favorites.length),selected=saved.selected?enriched.at(-1):saved.selected;
+  const items=enriched.slice(0,shortlist.length),favorites=enriched.slice(shortlist.length,shortlist.length+saved.favorites.length),selected=saved.selected?enriched.at(-1):saved.selected;
   // A running/queued worker owns the research generation as its durable paid
   // claim. Preview maintenance must not consume that version or defeat its save.
-  const itemsChanged=!['pending','running'].includes(state.status)&&items.some((item,index)=>item!==state.items[index]);
+  const inputCurrent=!expand||(await snapshot(id,gid)).fingerprint===input.fingerprint;
+  const itemsChanged=inputCurrent&&!['pending','running'].includes(state.status)&&items.some((item,index)=>item!==state.items[index]);
   const reviewChanged=favorites.some((item,index)=>item!==saved.favorites[index])||selected!==saved.selected;
   if(itemsChanged){
    const {path,generation,stale,automationReady,searchReady,...record}=state;
-   try{await put(id,path,{...record,items},generation);}catch(e){if(e.status!==409)throw e;}
+   try{await put(id,path,{...record,items,...(shortlist.length>state.items.length?{catalogVersion:1}:{})},generation);}catch(e){if(e.status!==409)throw e;}
   }
   if(reviewChanged){
    const {generation,...record}=saved;
@@ -185,7 +204,7 @@ export function createDigitalAssets({read,write,assertActive,apiKey=()=>'',fetch
   }
   // Never return an old selection/research version after a concurrent refresh,
   // favorite change, changed input or deletion while the public page was loading.
-  if(resolving||itemsChanged||reviewChanged){state=await load(id,gid);saved=await review(user,id,gid);}
+  if(expand||resolving||itemsChanged||reviewChanged){state=await load(id,gid);saved=await review(user,id,gid);}
   await assertActive(id);
   const {path,...publicState}=state;return {...publicState,review:saved};
  }

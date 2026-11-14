@@ -58,6 +58,26 @@ above describes the existing server/queue, not verification of this UI migration
 
 ## Current integration
 
+For known garment families, `clo-catalog.mjs` now queries the official storefront
+`POST https://connect.api.clo-set.com/api/search/store/Garments`, with two or three
+controlled category/structure queries in parallel. Only generic garment terms
+leave MAYA: no client names, images or freeform preferences. Actual source records
+supply listing IDs, preview URLs and downloadable format/access facts. Compatible
+family titles are deduplicated and native garment files win structural ties;
+unsupported, view-only and image/PDF-only downloads are excluded. The cache is
+bounded to 64 public queries for ten minutes; requests have byte/time limits and
+cannot redirect to another host.
+
+A complete, nonstale saved shortlist below ten entries is supplemented on reopen,
+keeping existing choices first. New explicit/queued searches use the direct
+catalog when ten useful results exist, avoiding a paid AI request. Other cases
+retain the image-search fallback. Reopening does not start a paid search. A fresh
+input fingerprint and storage generation are checked before adding alternatives;
+a running worker's generation remains untouched. Favorites retain their separate
+admin/submission/garment store. The catalog match is a construction alternative,
+not a claim that candidate files have been visually or physically validated.
+
+
 `backend/server/digital-assets.mjs` owns sourcing, parsing, canonical input reads,
 research storage, durable execution claims, queue dispatch and HTTP routes.
 `backend/server/clo-preview.mjs` independently resolves public listing photographs;
@@ -70,7 +90,7 @@ pattern/fabric state is stored by the CLO module. The legacy configurable `/api/
 returns 410. Its arbitrary endpoint mapping and local tag-ranking fallback are
 retired, and the unsupported automatic-grading copy has been removed.
 
-The implementation follows the existing Fabrics conventions but keeps digital
+The fallback follows the existing Fabrics conventions but keeps digital
 assets separate from physical fabric sourcing. It uses one bounded Responses
 request with up to three image/text web-search tool calls, with `connect.clo-set.com`
 as the allowed domain. Searches broaden from garment type/silhouette to compatible

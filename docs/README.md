@@ -208,6 +208,25 @@ dismissals, with a visible failure rather than silent eviction at the limit.
 
 ## Current work
 
+November 14 — faster, fuller CLO recommendations:
+The preceding `f2722a1` release passed Google build `6e2c1cc8`; the owner confirmed
+its previews work. A working preview restored the old one-item shortlist rather
+than automatically finding more options. CLO now queries CONNECT's own public
+Garments catalog in parallel using controlled garment-family/structure terms.
+The screenshot jacket returned 20 downloadable candidates with thumbnails in
+about 0.4 seconds during a public read-only check; MAYA stores ten useful options.
+Existing completed shortlists expand on reopen, keeping the original visual match
+first and private favorites intact. Known garments with ten catalog candidates no
+longer wait for an AI search; insufficient/unknown categories retain the existing
+image-search fallback. Native garment formats rank ahead of meshes on ties, while
+pattern contents and production rights remain unverified. New work is limited to
+CLO discovery; SAU modes, training and business intake changes remain proposals.
+The full Node20 code-only gate passed. A real public-catalog service check expanded
+a one-item saved fixture to ten previewed assets in 497 ms, preserving its first
+match; reopening made zero public requests. No paid AI or production data write
+was used for that check. Browser acceptance remains separate.
+
+
 November 13 — CLO listing previews and broader discovery:
 The preceding `dfe9ed1` release passed Google build `a3a7780e`. Its source-only
 matches still lacked photographs because the gallery relied on search image

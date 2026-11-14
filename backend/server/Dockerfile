@@ -15,7 +15,7 @@ COPY booking-link.mjs lead-alerts.mjs text-automations.mjs event-triggers.mjs ./
 COPY proxy-policy.mjs ./
 COPY admin-command.mjs ./
 COPY fabrics.mjs ./
-COPY digital-assets.mjs clo-preview.mjs ./
+COPY digital-assets.mjs clo-preview.mjs clo-catalog.mjs ./
 COPY design-config.mjs ./
 COPY maya-mcp.mjs ./
 COPY maya-phone.mjs realtime-voice.mjs ./

@@ -4,6 +4,13 @@ Git is the detailed change history. This file records meaningful milestones only
 old request, incident, handoff, research and repeated version histories are archived
 under _to_delete/2026-11-05-cleanup for owner review.
 
+- **November 14 — fill CLO shortlists from the public catalog:** use bounded,
+  parallel CONNECT Garments queries with category/structure terms and actual
+  downloadable source metadata. Save ten alternatives quickly, retain the old
+  match first, and expand legacy shortlists without another AI call. Preserve
+  favorites, stale-input checks, concurrent-search claims and deletion barriers.
+  Direct catalog results prefer native formats and retain unknown fit/rights.
+
 - **November 13 — recover CLO listing previews and broaden matches:** resolve
   missing photographs through CONNECT's public item metadata and bounded listing
   Open Graph fallback. Repair persisted research and historical favorites without
