@@ -1,0 +1,372 @@
+{
+  "hosting": {
+    "public": ".hosting",
+    "ignore": [
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/favicon.ico",
+        "destination": "/aesthetics/ui/favicon.ico",
+        "type": 301
+      },
+      {
+        "source": "/favicon.png",
+        "destination": "/aesthetics/ui/favicon.png",
+        "type": 301
+      },
+      {
+        "source": "/apple-touch-icon.png",
+        "destination": "/aesthetics/ui/apple-touch-icon.png",
+        "type": 301
+      },
+      {
+        "source": "/operations{,/**}",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/backend-room{,/**}",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/admin.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/marketing.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/marketing.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/playground.html",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/playground{,/**}",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/affiliates.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/affiliates{,/**}",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/affiliates.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/affiliates{,/**}",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/aesthetics/operations",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/aesthetics/operations/",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/aesthetics/operations/index.html",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/outbound.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/outbound.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/operations.html",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/operations.html",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/wr.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/wr.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/terms.html",
+        "destination": "/privacy.html#terms",
+        "type": 301
+      },
+      {
+        "source": "/backend/terms.html",
+        "destination": "/privacy.html#terms",
+        "type": 301
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "maya-api",
+          "region": "us-west1"
+        }
+      },
+      {
+        "source": "/mcp",
+        "run": {
+          "serviceId": "maya-api",
+          "region": "us-west1"
+        }
+      },
+      {
+        "source": "/status.html",
+        "destination": "/backend/status.html"
+      },
+      {
+        "source": "/backend.html",
+        "destination": "/backend/backend.html"
+      },
+      {
+        "source": "/privacy.html",
+        "destination": "/backend/privacy.html"
+      },
+      {
+        "source": "/verify.html",
+        "destination": "/backend/verify.html"
+      },
+      {
+        "source": "**",
+        "destination": "/frontend/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "SAMEORIGIN"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/{fabrics,headshots,ui}/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/typography-controls.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/pill-runtime.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/presentation-runtime.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/maya-canon.css",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/components/components.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/admin-design.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/admin-systems.{js,css}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/owner-crm.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/aesthetic-control/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/lead-stage-menu.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/components/components.css",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/fabric-assistant.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/fabric-assistant.css",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/voice-preparation.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/fabrics/fabrics.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/admin-notifications.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/submission-cards.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/submission-cards.css",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "backend/server/firestore.rules"
+  },
+  "storage": {
+    "rules": "backend/server/storage.rules"
+  }
+}

@@ -1,0 +1,62 @@
+/* Content + X/Y padding determines every shared capsule. Layout stays with pages. */
+(() => {
+  const circles='.hamburger,.session-item-share,.session-item-rename,.session-item-delete,.avatar-switch-rename,.avatar-switch-delete,.viewer-close,.viewer-heart,.modal-close.icon,.drawer-avatar-rename,.fav-btn,.delete-btn';
+  const glass = circles+',.modal-close,.maya-pill,.maya-glass-button,.maya-icon-button,button.glass-pill,.top-btn:not(.hamburger),button.action-btn,button.modal-text-btn,button.drawer-action,button.pin-cta,button.tos-agree,button.tos-decline,button.upload-choose-btn,button.tip-amt,button.primary,.pill,button.inv-btn,button.msg-call,button.msg-send,button.lead-tool,button.lead-cta,button.range-chip,button.metric-chip,button.wide,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,.toolbar button,.adm-tab,.maya-action-btn,.status-pill,maya-owner-crm button,#voice-bar,[data-maya-pill],.type-editor>summary,.finish-choice';
+
+  const usage = {
+    glass:[['Aesthetic Control','/aesthetics/aesthetic-control.html','Save, icons, status samples'],['Admin','/status.html','Messages actions, tabs, status pills, D/W/M, chart metrics'],['App','/','Listen and dialog actions'],['Brief','/backend.html','Dissect, pieces and Fabrics'],['Brief operations','/backend.html','Run, quality and Settings close']]
+  };
+  function apply(value){
+    const g=value.glass;
+    const touchSize=Number.isInteger(value.touchTargetSize)&&value.touchTargetSize>=32&&value.touchTargetSize<=56?value.touchTargetSize:44;
+    const border=name=>name==='black'?'0 0 0':name==='gray'?'170 181 196':'255 255 255';
+    let css=`:root{--maya-pill-x:${value.pillX}px;--maya-pill-y:${value.pillY}px;--maya-touch-target:${touchSize}px;--maya-icon-glyph:calc(var(--maya-control-icon-size,28px)*.6);}`;
+    const both=`html body :is(${glass})`;
+    css+=`${both}{align-self:center!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;aspect-ratio:auto!important;flex:0 0 auto;inline-size:max-content!important;block-size:auto!important;min-inline-size:0!important;min-block-size:0!important;max-inline-size:100%;max-block-size:none!important;border-radius:100px!important;line-height:1.4!important;vertical-align:middle;gap:var(--maya-icon-pill-gap,6px)!important;white-space:normal;overflow-wrap:anywhere;text-align:center;}`;
+    css+=`html body :is(${glass}){padding:var(--maya-pill-y) var(--maya-pill-x)!important;border:1px solid var(--maya-button-edge)!important;background-color:var(--maya-button-fill)!important;background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%)!important;backdrop-filter:var(--maya-button-frost)!important;-webkit-backdrop-filter:var(--maya-button-frost)!important;box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),inset 0 -1px 1px rgb(0 0 0 / .18),0 4px 16px rgb(0 0 0 / .22)!important;}`;
+    // Explicit round controls share Glass and saved padding. Their square bounds
+    // fit content plus both padded axes even when X/Y padding differs; ordinary
+    // text and icon pills keep their intrinsic capsule geometry.
+    css+=`${both}:where([data-maya-shape="circle"],${circles}){--maya-circle-content:1lh;display:inline-flex!important;aspect-ratio:1!important;min-inline-size:calc(var(--maya-circle-content) + max(var(--maya-pill-x),var(--maya-pill-y))*2 + 2px)!important;border-radius:50%!important;}${both}:where([data-maya-shape="circle"],${circles}):is(.maya-icon-button,:has(svg)){--maya-circle-content:max(1lh,var(--maya-icon-glyph));}`;
+    // Preset previews and the current unsaved editor use the same formula with local values.
+    css+=`html body :is(${glass})[data-finish]{background-color:rgb(3 15 29 / var(--finish-fill,${g.fill/100}))!important;border-color:rgb(var(--finish-border-rgb,${border(g.borderColor)}) / var(--finish-rim,${g.rim/100}))!important;backdrop-filter:blur(var(--finish-blur,${g.blur}px)) saturate(var(--finish-saturation,${g.saturation}%))!important;-webkit-backdrop-filter:blur(var(--finish-blur,${g.blur}px)) saturate(var(--finish-saturation,${g.saturation}%))!important;background-image:linear-gradient(125deg,rgb(255 255 255 / var(--finish-tint,${g.tint/100})),transparent 55%)!important;box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--finish-highlight,${g.highlight/100})),inset 0 -1px 1px rgb(0 0 0 / .18),0 4px 16px rgb(0 0 0 / .22)!important;}`;
+    css+=`${both}[hidden]{display:none!important}`;
+    // A Glass surface shares the pill material and padding, without capsule sizing.
+    css+=`html body [data-maya-material="glass"]{padding:var(--maya-pill-y) var(--maya-pill-x);border:1px solid var(--maya-button-edge);border-radius:var(--maya-inner-radius,20px);background-color:var(--maya-button-fill);background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%);backdrop-filter:var(--maya-button-frost);-webkit-backdrop-filter:var(--maya-button-frost);box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),inset 0 -1px 1px rgb(0 0 0 / .18),0 4px 16px rgb(0 0 0 / .22);}`;
+    css+=`${both}:is(:hover,[data-preview-state="hover"],[aria-pressed="true"],[data-preview-state="selected"],[data-preview-state="pressed"],:active):not(:disabled){border-color:rgb(255 255 255 / .6)!important}${both}:is(:focus-visible,[data-preview-state="focus"]){outline:2px solid var(--ui-accent,#adcdf8);outline-offset:3px}${both}:disabled{opacity:.5;cursor:not-allowed;box-shadow:none!important}`;
+    css+=`html body [data-maya-control=segmented]{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:var(--maya-icon-pill-gap,6px)}`;
+    // Native selects otherwise stretch to their flex row's height. Their box uses
+    // exactly the same P3 line + saved Glass padding as the adjacent buttons.
+    const selectArrow=`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aab5c4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
+    css+=`${both}:is(select[data-maya-pill]){block-size:calc(var(--maya-type-P3-size)*1.4 + var(--maya-pill-y)*2 + 2px)!important;align-self:center!important;padding-right:calc(var(--maya-pill-x) + var(--maya-icon-pill-gap) + var(--maya-control-icon-size)*.45)!important;white-space:nowrap!important;text-overflow:ellipsis;overflow:hidden;background-image:${selectArrow},linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%)!important;background-position:right var(--maya-pill-x) center,0 0!important;background-size:calc(var(--maya-control-icon-size)*.45) calc(var(--maya-control-icon-size)*.45),100% 100%!important;background-repeat:no-repeat!important;}`;
+    // A glyph's own dimensions cannot depend on an unsized wrapper (the old Save bug).
+    css+=`html body .maya-icon-button{aspect-ratio:auto!important;letter-spacing:normal!important}html body .maya-icon-button>span{display:grid!important;place-items:center;inline-size:var(--maya-icon-glyph);block-size:var(--maya-icon-glyph);font-size:var(--maya-icon-glyph);line-height:1!important}html body :is(.maya-icon-button svg,#save svg){display:block!important;inline-size:var(--maya-icon-glyph)!important;block-size:var(--maya-icon-glyph)!important;min-inline-size:var(--maya-icon-glyph);min-block-size:var(--maya-icon-glyph);fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;}`;
+    // Fabric toolbar icons use the same P3 line height as CSV and Expand.
+    // Saved Glass padding/material and the shared touch target remain authoritative.
+    css+=`html body .fa-toolbar .maya-icon-button{--maya-icon-glyph:calc(var(--maya-type-P3-size)*1.4);}`;
+    css+=`/* Project actions flow together, so saved padding cannot make their circles collide. */
+.session-item-actions{display:flex;align-items:center;gap:calc(var(--maya-icon-pill-gap,6px) + 2px)}
+.session-item-actions>button{position:static!important;margin:0!important}
+.session-item-actions>button>span{display:block;font:inherit;letter-spacing:inherit;line-height:inherit}
+`;
+    // Project row bubbles shrink 5%, while their glyphs grow 5% in screen space.
+    // Keep the saved Glass geometry and a full-size touch target underneath.
+    css+=`html body [data-maya-project-action]{scale:.95}html body [data-maya-project-action]>:is(span,svg){scale:1.105263}@media(any-pointer:coarse){html body [data-maya-project-action]{scale:1}html body [data-maya-project-action]>:is(span,svg){scale:1.05}}`;
+    // Native status selects remain the authenticated input over an intrinsic label.
+    css+=`html body .lead-status{padding-right:calc(var(--maya-pill-x) + var(--maya-icon-pill-gap) + var(--maya-control-icon-size)*.45)!important}html body .lead-status::after{right:var(--maya-pill-x)!important}html body .status-pill::before{flex:none}html body .lead-status select{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;padding:0!important;}`;
+    // Coarse pointers get a shared minimum hit area; saved Glass padding and
+    // materials still own each control. Ordinary desktop geometry is unchanged.
+    const touch=`${both}:is(button,summary,a,[role="button"],select,#voice-bar),html body :is(button:not(.page-dot),[role="button"],summary,[data-maya-touch])`;
+    const touchRule=`min-inline-size:var(--maya-touch-target)!important;min-block-size:var(--maya-touch-target)!important;touch-action:manipulation;`;
+    css+=`@media(any-pointer:coarse){${touch}{${touchRule}}}${both}[data-maya-touch-preview]{${touchRule}}`;
+    css+=`@media(forced-colors:active){${both}{background:ButtonFace!important;color:ButtonText!important;border-color:ButtonText!important;box-shadow:none!important;backdrop-filter:none!important}}`;
+    // Visibility is separate from the shared inline-flex sizing rule. Favorited
+    // cards keep their color but reveal their controls only on hover/focus/tap.
+    css+=`html body :is(.item-card .fav-btn,.item-card .delete-btn,#garment-image-wrap .viewer-heart,#garment-image-wrap .viewer-close,.sub-tile .submission-delete){opacity:0;pointer-events:none;transition:opacity .18s;}
+    html body :is(.item-card:hover,.item-card:has(:focus-visible),.item-card.touched,#garment-image-wrap:hover,#garment-image-wrap:has(:focus-visible),.sub-tile:hover,.sub-tile:focus-within) :is(.fav-btn,.delete-btn,.viewer-heart,.viewer-close,.submission-delete){opacity:1;pointer-events:auto;}
+    html body :is([data-maya-dismiss],.delete-btn,.viewer-close){scale:var(--maya-dismiss-scale,.8);transform-origin:center;}
+    @media(any-pointer:coarse){html body :is([data-maya-dismiss],.delete-btn,.viewer-close){scale:1;}html body :is([data-maya-dismiss],.delete-btn,.viewer-close)>svg{scale:var(--maya-dismiss-scale,.8);}}`;
+    let style=document.getElementById('maya-pill-control-style');if(!style){style=document.createElement('style');style.id='maya-pill-control-style';document.head.append(style);}style.textContent=css;
+  }
+  window.MayaPillControls={apply,usage,selectors:{glass}};
+})();

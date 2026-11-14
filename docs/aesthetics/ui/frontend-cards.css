@@ -1,0 +1,112 @@
+/* Frontend card layout, also used by the active Aesthetic Control samples.
+   The Community description is the type baseline: shared H2 face, P1 size,
+   weight and italic treatment; photo captions stay white for contrast. */
+:is(body.maya-frontend,.frontend-card-preview) :is(.item-card.inspo .item-title,.item-card.inspo .item-caption,.favorite-card .fc-summary,.community-card .cc-summary,.pin-caption,.pin-tile-name,.pin-tile-count,.fabric-card .fabric-name-input,.fabric-card .fabric-spec,.fabric-card .fabric-analyzing,.item-card .dissect-btn){
+  font-family:var(--maya-type-H2-font,'Cormorant Garamond',serif)!important;
+  font-size:var(--maya-type-P1-size,12px)!important;
+  font-weight:var(--maya-type-P1-weight,300)!important;
+  font-style:italic!important;
+  line-height:1.35!important;
+  color:#fff!important;
+  text-transform:none!important;
+  letter-spacing:normal;
+  text-align:center;
+}
+:is(body.maya-frontend,.frontend-card-preview) :is(.item-card.inspo .item-title,.item-card.inspo .item-caption,.favorite-card .fc-summary,.community-card .cc-meta,.pin-caption,.fabric-meta){
+  box-sizing:border-box;position:absolute;inset:auto 0 0;margin:0;
+  padding:30px 16px 10px;max-height:75%;overflow:hidden;
+  background:linear-gradient(to top,rgba(0,0,0,.82),transparent);
+  text-align:center;opacity:0!important;pointer-events:none;
+  transition:opacity .22s ease;
+}
+:is(body.maya-frontend,.frontend-card-preview) :is(.item-card.inspo,.favorite-card,.community-card,.pin-pic,.pin-tile,.fabric-card):is(:hover,:focus-visible,:has(:focus-visible)) :is(.item-title,.item-caption,.fc-summary,.cc-meta,.pin-caption,.fabric-meta){opacity:1!important}
+:is(body.maya-frontend,.frontend-card-preview) .fabric-card:is(:hover,:focus-visible,:has(:focus-visible),:has(.fabric-name-input:focus)) .fabric-meta{opacity:1!important;pointer-events:auto}
+:is(body.maya-frontend,.frontend-card-preview) :is(.pin-pic,.pin-tile){position:relative}
+:is(body.maya-frontend,.frontend-card-preview) .pin-caption{display:block;width:100%}
+:is(body.maya-frontend,.frontend-card-preview) .pin-caption :is(.pin-tile-name,.pin-tile-count){display:block;padding:0}
+:is(body.maya-frontend,.frontend-card-preview) :is(.pin-caption,.fc-summary,.item-caption){overflow-wrap:anywhere}
+:is(body.maya-frontend,.frontend-card-preview) :is(.item-caption,.fc-summary,.pin-pic .pin-caption){display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+:is(body.maya-frontend,.frontend-card-preview) .fabric-card{position:relative;display:block;aspect-ratio:1;min-width:0;overflow:hidden;box-sizing:border-box}
+:is(body.maya-frontend,.frontend-card-preview) .fabric-card .fabric-swatch{width:100%;height:100%;aspect-ratio:auto}
+:is(body.maya-frontend,.frontend-card-preview) .fabric-card .fabric-name-input{display:block;width:100%;min-width:0;height:1.35em;margin:0!important;background:none;border:0;padding:0!important;box-sizing:border-box}
+:is(body.maya-frontend,.frontend-card-preview) .fabric-card .fabric-spec{margin:0!important}
+:is(body.maya-frontend,.frontend-card-preview) .fabric-card>.fabrics-back{position:absolute!important;inset:6px 6px auto auto;padding:0!important;margin:0;opacity:0;pointer-events:none}
+:is(body.maya-frontend,.frontend-card-preview) .fabric-card:is(:hover,:focus-visible,:has(:focus-visible))>.fabrics-back{opacity:1;pointer-events:auto}
+:is(body.maya-frontend,.frontend-card-preview) .item-card.is-importing{pointer-events:none;animation:none}
+:is(body.maya-frontend,.frontend-card-preview) .item-card.is-importing .item-caption{opacity:1!important}
+
+/* Shared Glass controls retain their saved material, with 25% smaller desktop
+   chrome. The heart shares the row's size and stays above the photograph. */
+html body :is(#maya-canvas,.frontend-card-preview) .item-card{
+  --frontend-card-action-base:calc(max(calc(var(--maya-type-P1-size,12px)*1.4),calc(var(--maya-control-icon-size,28px)*.6)) + max(var(--maya-control-pillX,14px),var(--maya-control-pillY,6px))*2 + 2px);
+  --frontend-card-action-size:calc(var(--frontend-card-action-base)*.75);
+  --frontend-card-action-glyph:calc(var(--maya-control-icon-size,28px)*.6*.75);
+}
+html body :is(#maya-canvas,.frontend-card-preview) :is(.item-card-actions,.item-card>.fav-btn){
+  --maya-pill-x:calc(var(--maya-control-pillX,14px)*.75);
+  --maya-pill-y:calc(var(--maya-control-pillY,6px)*.75);
+}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card-actions{
+  position:absolute;top:0;right:0;z-index:4;display:flex;align-items:center;
+  gap:calc(var(--maya-icon-pill-gap,6px)/2);transform:translateY(-50%);
+  opacity:0;pointer-events:none;transition:opacity .18s;
+}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card-actions>:is(.dissect-btn,.stack-btn,.delete-btn){
+  position:static!important;inset:auto;margin:0;display:inline-flex!important;
+  align-items:center;justify-content:center;box-sizing:border-box;
+  font-size:var(--maya-type-P1-size,12px)!important;line-height:1.4!important;
+  block-size:var(--frontend-card-action-size)!important;min-block-size:var(--frontend-card-action-size)!important;
+  scale:1!important;pointer-events:none!important;
+}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card-actions>:is(.stack-btn,.delete-btn){inline-size:var(--frontend-card-action-size)!important;min-inline-size:var(--frontend-card-action-size)!important}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card-actions>:is(.stack-btn,.delete-btn)>span{display:grid;place-items:center;inline-size:var(--frontend-card-action-glyph);block-size:var(--frontend-card-action-glyph);font-size:var(--frontend-card-action-glyph);line-height:1}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card-actions>.delete-btn>span{scale:var(--maya-dismiss-scale,.8)}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card:is(:hover,:focus-visible,:has(:focus-visible)) .item-card-actions{opacity:1;pointer-events:auto}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card:is(:hover,:focus-visible,:has(:focus-visible)) .item-card-actions>button{opacity:1;pointer-events:auto!important}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card-actions>button.busy{opacity:.5!important}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card>.fav-btn{
+  position:absolute;top:0;left:0;translate:-50% -50%;z-index:4;
+  display:inline-flex!important;align-items:center;justify-content:center;
+  inline-size:var(--frontend-card-action-size)!important;min-inline-size:var(--frontend-card-action-size)!important;
+  block-size:var(--frontend-card-action-size)!important;min-block-size:var(--frontend-card-action-size)!important;
+  scale:1!important;opacity:0;pointer-events:none;
+}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card>.fav-btn .heart-svg{width:var(--frontend-card-action-glyph);height:var(--frontend-card-action-glyph);display:block}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card>.fav-btn:not(.is-fav){color:#fff}
+html body :is(#maya-canvas,.frontend-card-preview) .item-card:is(:hover,:focus-visible,:has(:focus-visible),.fav)>.fav-btn,
+html body :is(#maya-canvas,.frontend-card-preview) .item-card>.fav-btn.is-fav{opacity:1;pointer-events:auto}
+
+/* Hidden project actions no longer reserve a blank right-hand column. */
+:is(body.maya-frontend #notes-drawer,.frontend-project-preview) .session-item:has(.session-item-actions){display:grid;grid-template-columns:minmax(0,1fr);column-gap:calc(var(--maya-icon-pill-gap,6px)/2);padding-inline:8px;align-items:center}
+:is(body.maya-frontend #notes-drawer,.frontend-project-preview) .session-item-actions{position:absolute;right:8px;top:50%;translate:0 -50%;grid-column:2;grid-row:1 / span 2;gap:calc(var(--maya-icon-pill-gap,6px)/2);opacity:0;pointer-events:none}
+:is(body.maya-frontend #notes-drawer,.frontend-project-preview) :is(.session-item-title,.session-item-meta,.session-item .pg-project-rename){grid-column:1;min-width:0;width:100%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}
+:is(body.maya-frontend #notes-drawer,.frontend-project-preview) :is(.session-item-title,.session-item .pg-project-rename){grid-row:1}
+:is(body.maya-frontend #notes-drawer,.frontend-project-preview) .session-item-meta{grid-row:2}
+:is(body.maya-frontend #notes-drawer,.frontend-project-preview) .session-item:has(.session-item-actions):is(:hover,:focus-within){grid-template-columns:minmax(0,1fr) auto}
+:is(body.maya-frontend #notes-drawer,.frontend-project-preview) .session-item:is(:hover,:focus-within) .session-item-actions{position:static;translate:none;opacity:1;pointer-events:auto}
+:is(body.maya-frontend #notes-drawer,.frontend-project-preview) .session-item:is(:hover,:focus-within) .session-item-actions>button{opacity:1}
+
+/* One scroller and equal insets: keep Pinterest's current tile widths while
+   balancing its visible scrollbar gutter on the left and right. */
+body.maya-frontend #notes-drawer .pg-pane>:is(#fabrics-drawer,#pinterest-drawer){padding:0}
+body.maya-frontend #notes-drawer .pg-pane>:is(#fabrics-drawer,#pinterest-drawer)>:is(#fabrics-drawer-body,#pinterest-drawer-body){padding:4px;scrollbar-gutter:stable both-edges;overflow:auto;min-height:0}
+body.maya-frontend #notes-drawer :is(.pin-grid,.fabrics-grid){padding:0;overflow:visible;max-height:none;min-width:0}
+body.maya-frontend #notes-drawer .fabrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+@media(hover:none){
+  :is(body.maya-frontend,.frontend-card-preview) :is(.item-card.inspo,.fabric-card).touched :is(.item-title,.item-caption,.fabric-meta){opacity:1!important}
+  :is(body.maya-frontend,.frontend-card-preview) .fabric-card.touched .fabric-meta{pointer-events:auto}
+  :is(body.maya-frontend,.frontend-card-preview) .fabric-card>.fabrics-back{opacity:1;pointer-events:auto}
+  html body :is(#maya-canvas,.frontend-card-preview) .item-card.touched .item-card-actions{opacity:1;pointer-events:auto}
+  html body :is(#maya-canvas,.frontend-card-preview) .item-card.touched .item-card-actions>button{opacity:1;pointer-events:auto!important}
+  html body :is(#maya-canvas,.frontend-card-preview) .item-card.touched>.fav-btn{opacity:1;pointer-events:auto}
+}
+@media(any-pointer:coarse){
+  html body :is(#maya-canvas,.frontend-card-preview) .item-card{--frontend-card-action-size:max(var(--maya-touch-target,44px),calc(var(--frontend-card-action-base)*.75))}
+  body.maya-frontend #notes-drawer .session-item:has(.session-item-actions){grid-template-columns:minmax(0,1fr) auto}
+  body.maya-frontend #notes-drawer .session-item-actions{position:static;translate:none;opacity:1;pointer-events:auto}
+  body.maya-frontend #notes-drawer .session-item-actions>button{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+  :is(body.maya-frontend,.frontend-card-preview) :is(.item-caption,.fc-summary,.cc-meta,.pin-caption,.fabric-meta,.item-card-actions){transition:none}
+}
